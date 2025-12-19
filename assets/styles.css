@@ -136,6 +136,11 @@ input[type="number"]:focus, input[type="text"]:focus, select:focus{
   box-shadow: 0 0 0 3px rgba(94,234,212,0.14);
 }
 
+button:focus {
+  outline: 2px solid rgba(94,234,212,0.6);
+  outline-offset: 2px;
+}
+
 /* Visual cue: inputs that are editable in the current mode (forecast mix OR current customers). */
 .mode-edit{
   border-color: rgba(94,234,212,0.55) !important;

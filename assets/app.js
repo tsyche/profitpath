@@ -3,6 +3,10 @@ const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
+// Constants for business model assumptions
+const HOURS_PER_YEAR = 2080; // Standard paid hours per employee per year
+const DEFAULT_CURRENCY = 'USD';
+
 function uuid() {
   // crypto.randomUUID is ideal, but not available in every environment.
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -20,9 +24,18 @@ function uuid() {
 }
 
 const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
-const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-const fmtMoney2 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
+const fmtMoney2 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 const fmtPct1 = (n) => `${(Number.isFinite(n) ? n : 0).toFixed(1)}%`;
+
+// Safe numeric parsing with optional range clamping
+function safeParseNumber(value, defaultValue = 0, minVal = null, maxVal = null) {
+  const num = Number(value) || defaultValue;
+  if (minVal !== null && maxVal !== null) return clamp(num, minVal, maxVal);
+  if (minVal !== null) return Math.max(num, minVal);
+  if (maxVal !== null) return Math.min(num, maxVal);
+  return num;
+}
 
 function defaultOfferings() {
   return [
@@ -39,7 +52,7 @@ const state = {
   employees: 1,
   employeePay: 60000,
   monthlyCosts: 250,
-  productiveUtilizationPct: 80, // percent of 2080h available for service delivery
+  productiveUtilizationPct: 80, // percent of HOURS_PER_YEAR available for service delivery
   targetUtilizationPct: 75, // forecasting target
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings
 };
@@ -53,14 +66,14 @@ function normalizeMix(offerings) {
     const evenShare = offerings.length ? 1 / offerings.length : 0;
     return {
       sum: 0,
-      normalized: true,
+      needsNormalization: false,
       shares: offerings.map(() => evenShare),
     };
   }
 
   return {
     sum,
-    normalized: Math.abs(sum - 100) > 0.01,
+    needsNormalization: Math.abs(sum - 100) > 0.01,
     shares: offerings.map((o) => (Number(o.mixPct) || 0) / sum),
   };
 }
@@ -120,20 +133,22 @@ function rebalanceMix(changedIdx, nextMixPct) {
   }
 }
 
-function calc() {
-  const employees = Math.max(1, Number(state.employees) || 1);
-  const employeePay = Math.max(0, Number(state.employeePay) || 0);
-  const monthlyCosts = Math.max(0, Number(state.monthlyCosts) || 0);
-  const productiveUtilizationPct = clamp(Number(state.productiveUtilizationPct) || 0, 0, 100);
+function calc(stateInput) {
+  // Accept state as parameter for testability; defaults to global state if not provided
+  const s = stateInput || state;
+  const employees = Math.max(1, Number(s.employees) || 1);
+  const employeePay = Math.max(0, Number(s.employeePay) || 0);
+  const monthlyCosts = Math.max(0, Number(s.monthlyCosts) || 0);
+  const productiveUtilizationPct = clamp(Number(s.productiveUtilizationPct) || 0, 0, 100);
 
   const annualFixedCosts = monthlyCosts * 12;
   const annualPayroll = Math.max(0, employees - 1) * employeePay;
 
-  const annualPaidHours = employees * 2080;
+  const annualPaidHours = employees * HOURS_PER_YEAR;
   const annualServiceHours = annualPaidHours * (productiveUtilizationPct / 100);
 
   // sanitize offerings
-  const offerings = state.offerings
+  const offerings = s.offerings
     .map((o) => ({
       ...o,
       name: (o.name || '').trim() || 'Offering',
@@ -146,7 +161,7 @@ function calc() {
     }))
     .filter((o) => o.name.length > 0);
 
-  const mode = state.mode;
+  const mode = s.mode;
 
   if (!offerings.length) {
     return {
@@ -176,9 +191,9 @@ function calc() {
   let variableCosts = 0;
 
   if (mode === 'forecast') {
-    const { sum: mixSum, normalized: mixNormalized, shares } = normalizeMix(offerings);
+    const { sum: mixSum, needsNormalization: mixNormalized, shares } = normalizeMix(offerings);
 
-    const targetUtilizationPct = clamp(Number(state.targetUtilizationPct) || 0, 0, 150);
+    const targetUtilizationPct = clamp(Number(s.targetUtilizationPct) || 0, 0, 150);
     hoursUsed = annualServiceHours * (targetUtilizationPct / 100);
 
     // Per-customer expectations (weighted by mix shares).
@@ -319,12 +334,12 @@ function render() {
     const tr = document.createElement('tr');
 
     const mixCell = isForecast
-      ? `<input class="mode-edit" type="number" min="0" max="100" step="1" value="${(o.mixPct ?? 0).toFixed(1)}" data-k="mixPct" data-i="${idx}" />`
+      ? `<input aria-label="Mix % for ${escapeHtml(o.name)}" class="mode-edit" type="number" min="0" max="100" step="1" value="${(o.mixPct ?? 0).toFixed(1)}" data-k="mixPct" data-i="${idx}" />`
       : `<span class="muted">—</span>`;
 
     const customersCell = isForecast
       ? `<span class="muted">—</span>`
-      : `<input class="mode-edit" type="number" min="0" step="1" value="${o.currentCustomers ?? 0}" data-k="currentCustomers" data-i="${idx}" />`;
+      : `<input aria-label="Customers for ${escapeHtml(o.name)}" class="mode-edit" type="number" min="0" step="1" value="${o.currentCustomers ?? 0}" data-k="currentCustomers" data-i="${idx}" />`;
 
     const estCustomers = isForecast
       ? Math.floor(metrics.customers * ((o.mixPct || 0) / 100))
@@ -335,17 +350,17 @@ function render() {
       : Math.round((o.currentCustomers || 0) * o.visitsPerYear);
 
     tr.innerHTML = `
-      <td class="cell-edit group-start group-inputs" data-label="Offering"><input type="text" value="${escapeHtml(o.name)}" data-k="name" data-i="${idx}" /></td>
-      <td class="cell-edit group-inputs" data-label="Price / mo"><input type="number" min="0" step="10" value="${o.priceMonthly}" data-k="priceMonthly" data-i="${idx}" /></td>
-      <td class="cell-edit group-inputs" data-label="Visits / yr"><input type="number" min="0" step="1" value="${o.visitsPerYear}" data-k="visitsPerYear" data-i="${idx}" /></td>
-      <td class="cell-edit group-inputs" data-label="Hours / visit"><input type="number" min="0" step="0.1" value="${o.hoursPerVisit}" data-k="hoursPerVisit" data-i="${idx}" /></td>
-      <td class="cell-edit group-inputs group-end" data-label="Var $ / visit"><input type="number" min="0" step="1" value="${o.variableCostPerVisit}" data-k="variableCostPerVisit" data-i="${idx}" /></td>
+      <td class="cell-edit group-start group-inputs" data-label="Offering"><input aria-label="Offering name" type="text" value="${escapeHtml(o.name)}" data-k="name" data-i="${idx}" /></td>
+      <td class="cell-edit group-inputs" data-label="Price / mo"><input aria-label="Price per month for ${escapeHtml(o.name)}" type="number" min="0" step="10" value="${o.priceMonthly}" data-k="priceMonthly" data-i="${idx}" /></td>
+      <td class="cell-edit group-inputs" data-label="Visits / yr"><input aria-label="Visits per year for ${escapeHtml(o.name)}" type="number" min="0" step="1" value="${o.visitsPerYear}" data-k="visitsPerYear" data-i="${idx}" /></td>
+      <td class="cell-edit group-inputs" data-label="Hours / visit"><input aria-label="Hours per visit for ${escapeHtml(o.name)}" type="number" min="0" step="0.1" value="${o.hoursPerVisit}" data-k="hoursPerVisit" data-i="${idx}" /></td>
+      <td class="cell-edit group-inputs group-end" data-label="Var $ / visit"><input aria-label="Variable cost per visit for ${escapeHtml(o.name)}" type="number" min="0" step="1" value="${o.variableCostPerVisit}" data-k="variableCostPerVisit" data-i="${idx}" /></td>
       <td class="cell-edit group-start group-mode" data-label="Mix % (forecast)">${mixCell}</td>
       <td class="cell-edit group-mode group-end" data-label="Customers (current)">${customersCell}</td>
       <td class="cell-readonly group-start group-est" data-label="Est. customers"><span class="mono">${fmtInt(estCustomers)}</span></td>
       <td class="cell-readonly group-est group-end" data-label="Est Service Count"><span class="mono">${fmtInt(estVisits)}</span></td>
       <td class="cell-edit group-actions" data-label="Actions">
-        <button class="btn small danger" data-action="removeOffering" data-i="${idx}">Remove</button>
+        <button class="btn small danger" data-action="removeOffering" data-i="${idx}" aria-label="Remove ${escapeHtml(o.name)}">Remove</button>
       </td>
     `;
 
@@ -432,12 +447,24 @@ function onTableInput(e) {
   const o = state.offerings[i];
   if (!o) return;
 
+  // Validate and sanitize input based on field type
+  let value = el.value;
+  if (k === 'priceMonthly' || k === 'variableCostPerVisit') {
+    value = Math.max(0, safeParseNumber(value, 0));
+  } else if (k === 'visitsPerYear' || k === 'currentCustomers') {
+    value = Math.max(0, Math.floor(safeParseNumber(value, 0)));
+  } else if (k === 'hoursPerVisit') {
+    value = Math.max(0, safeParseNumber(value, 0));
+  } else if (k === 'mixPct') {
+    value = safeParseNumber(value, 0, 0, 100);
+  }
+
   if (k === 'name') {
     o.name = el.value;
   } else if (k === 'mixPct' && state.mode === 'forecast' && state.lockMix) {
-    rebalanceMix(i, el.value);
+    rebalanceMix(i, value);
   } else {
-    o[k] = el.value;
+    o[k] = value;
   }
 
   render();
@@ -482,12 +509,40 @@ function resetDefaults() {
   state.productiveUtilizationPct = 80;
   state.targetUtilizationPct = 75;
   state.mode = 'forecast';
+  localStorage.removeItem('profitpath-state');
   render();
 }
 
 function wire() {
+  // Load persisted state from localStorage if available
+  try {
+    const saved = localStorage.getItem('profitpath-state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Merge saved state with defaults to handle new fields gracefully
+      state.mode = parsed.mode ?? state.mode;
+      state.offerings = parsed.offerings ?? state.offerings;
+      state.employees = parsed.employees ?? state.employees;
+      state.employeePay = parsed.employeePay ?? state.employeePay;
+      state.monthlyCosts = parsed.monthlyCosts ?? state.monthlyCosts;
+      state.productiveUtilizationPct = parsed.productiveUtilizationPct ?? state.productiveUtilizationPct;
+      state.targetUtilizationPct = parsed.targetUtilizationPct ?? state.targetUtilizationPct;
+      state.lockMix = parsed.lockMix ?? state.lockMix;
+    }
+  } catch (e) {
+    console.warn('Failed to load saved state:', e);
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem('profitpath-state', JSON.stringify(state));
+    } catch (e) {
+      console.warn('Failed to save state:', e);
+    }
+  }
   $('#modeSelect').addEventListener('change', () => {
     setStateFromInputs();
+    saveState();
     render();
   });
 
@@ -502,12 +557,14 @@ function wire() {
       }
     }
 
+    saveState();
     render();
   });
 
   $$('#controls input').forEach((el) => {
     el.addEventListener('input', () => {
       setStateFromInputs();
+      saveState();
       render();
     });
   });
@@ -517,6 +574,10 @@ function wire() {
 
   $('#offeringsBody').addEventListener('input', onTableInput);
   $('#offeringsBody').addEventListener('click', onTableClick);
+
+  // Save state when table content changes
+  $('#offeringsBody').addEventListener('input', saveState);
+  $('#offeringsBody').addEventListener('click', () => setTimeout(saveState, 0));
 }
 
 wire();
