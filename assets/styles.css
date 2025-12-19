@@ -1,0 +1,411 @@
+:root{
+  --bg: #0b1220;
+  --panel: rgba(255,255,255,0.06);
+  --panel-2: rgba(255,255,255,0.08);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.70);
+  --border: rgba(255,255,255,0.10);
+  --accent: #5eead4;
+  --accent-2:#60a5fa;
+  --warn:#fbbf24;
+  --bad:#fb7185;
+  --good:#34d399;
+  --shadow: 0 14px 40px rgba(0,0,0,0.35);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --gap: 14px;
+  --side-max: 620px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family: var(--sans);
+  /* Keep the modern glow, but reduce intensity to avoid large color blotches behind panels. */
+  background: radial-gradient(1200px 700px at 20% 0%, rgba(96,165,250,0.14), transparent 60%),
+              radial-gradient(900px 600px at 85% 20%, rgba(94,234,212,0.10), transparent 60%),
+              var(--bg);
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-attachment: fixed;
+  color: var(--text);
+}
+
+.page{
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 14px 44px;
+}
+
+.header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom: 14px;
+}
+.header h1{
+  font-size: 18px;
+  margin: 0;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+}
+.header .subtitle{color: var(--muted); font-size: 13px; margin-top: 2px;}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+}
+.badge .dot{width:9px;height:9px;border-radius:999px;background: var(--accent); box-shadow: 0 0 0 3px rgba(94,234,212,0.14)}
+
+.grid{
+  display:grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--side-max));
+  gap: var(--gap);
+  align-items: start; /* prevent the Outputs card from stretching to match Inputs height */
+}
+
+/* Keep Outputs from getting too wide on large displays. */
+.grid > aside.card{
+  width: 100%;
+  max-width: var(--side-max);
+  justify-self: end;
+}
+@media (max-width: 980px){
+  .grid{grid-template-columns:1fr;}
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.045));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+}
+.card .card-h{
+  padding: var(--gap);
+  border-bottom: 1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: var(--gap);
+}
+.card .card-h h2{
+  margin:0;
+  font-size: 13px;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.78);
+}
+.card .card-b{padding: var(--gap);}
+
+.row{
+  /* Stack Inputs vertically so everything is left-justified and aligned. */
+  display:flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gap);
+  max-width: 360px; /* closer to the Mode selector width */
+}
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width: 0;
+}
+.field label{font-size: 12px; color: var(--muted);}
+.field .hint{font-size: 11px; color: rgba(255,255,255,0.55)}
+
+input[type="number"], input[type="text"], select{
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(10,16,28,0.7);
+  color: var(--text);
+  outline: none;
+}
+input[type="number"]:focus, input[type="text"]:focus, select:focus{
+  border-color: rgba(94,234,212,0.5);
+  box-shadow: 0 0 0 3px rgba(94,234,212,0.14);
+}
+
+/* Visual cue: inputs that are editable in the current mode (forecast mix OR current customers). */
+.mode-edit{
+  border-color: rgba(94,234,212,0.55) !important;
+  background: rgba(94,234,212,0.10) !important;
+}
+.mode-edit:focus{
+  box-shadow: 0 0 0 3px rgba(94,234,212,0.18) !important;
+}
+
+.btn{
+  appearance:none;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor:pointer;
+  transition: transform .06s ease, background-color .15s ease, border-color .15s ease;
+  font-size: 13px;
+}
+.btn:hover{background: rgba(255,255,255,0.085);}
+.btn:active{transform: translateY(1px);}
+.btn.primary{border-color: rgba(94,234,212,0.45); background: rgba(94,234,212,0.12);}
+.btn.danger{border-color: rgba(251,113,133,0.5); background: rgba(251,113,133,0.12);}
+.btn.small{padding: 7px 8px; font-size: 12px; border-radius: 9px;}
+
+.table-wrap{overflow:auto; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.18)}
+.table{
+  width:100%;
+  border-collapse: collapse;
+  min-width: 860px;
+  font-size: 12px;
+}
+.table th, .table td{padding: 10px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); vertical-align: middle;}
+.table th{color: rgba(255,255,255,0.72); font-weight: 600; text-transform: uppercase; letter-spacing: .28px; font-size: 11px;}
+.table td .mono{font-family: var(--mono); color: rgba(255,255,255,0.82)}
+.table td input{min-width: 110px;}
+.table tr:last-child td{border-bottom: none;}
+
+.kpi-grid{display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap);}
+@media (max-width: 980px){
+  .kpi-grid{grid-template-columns:1fr;}
+}
+
+.kpi{
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.045);
+}
+.kpi .k{color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .3px;}
+.kpi .v{margin-top:6px; font-size: 18px; font-weight: 700;}
+.kpi .sub{margin-top:4px; font-size: 12px; color: rgba(255,255,255,0.62)}
+
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+}
+
+.muted{color: var(--muted)}
+.hidden{display:none !important;}
+.note{font-size: 12px; color: rgba(255,255,255,0.70)}
+.note strong{color: rgba(255,255,255,0.92)}
+
+/* Mode banner styling (so the current editing mode is obvious even when Mode selector is off-screen). */
+.note.note-forecast{
+  /* Make forecast mode stand out more than current mode. */
+  border: 1px solid rgba(251,191,36,0.40);
+  background: rgba(251,191,36,0.14);
+  color: rgba(255,255,255,0.95);
+}
+.note.note-current{
+  border: 1px solid rgba(94,234,212,0.24);
+  background: rgba(94,234,212,0.08);
+  color: rgba(255,255,255,0.90);
+}
+.note.note-warn{
+  border-color: rgba(251,191,36,0.40);
+}
+.note.note-lock{
+  border-color: rgba(94,234,212,0.40);
+}
+
+/* Make default checkboxes visible on dark background */
+input[type="checkbox"]{
+  accent-color: var(--accent);
+}
+
+.capacity{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: var(--gap);
+  padding: var(--gap);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.045);
+}
+.meter{
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  overflow:hidden;
+  width: 100%;
+}
+.meter > div{height:100%; width:0%; background: linear-gradient(90deg, var(--good), var(--warn), var(--bad)); transition: width .2s ease}
+
+.footer-actions{display:flex; gap: var(--gap); flex-wrap:wrap; justify-content:flex-end}
+
+.smallprint{font-size: 11px; color: rgba(255,255,255,0.55); line-height: 1.35; margin-top: var(--gap);}
+
+.section-box{
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.14);
+  padding: var(--gap);
+}
+
+.section-box + .section-box{margin-top: calc(var(--gap) * 2);}
+
+.section-h{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+
+.section-h h3{
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.78);
+}
+
+.inputs-fields{
+  max-width: var(--side-max);
+  margin: 0 auto;
+}
+
+.offerings-section{
+  max-width: var(--side-max);
+  margin: 0 auto;
+}
+
+/* Remove the old table-wrap border/background so it doesn't look like an extra card behind offerings. */
+.offerings-section .table-wrap{
+  border: none;
+  background: transparent;
+}
+
+.offerings-section .note{
+  margin-bottom: var(--gap);
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.file-warning{
+  border: 1px solid rgba(251,191,36,0.35);
+  background: rgba(251,191,36,0.08);
+  color: rgba(255,255,255,0.90);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+/* Offerings table: always stack cells with labels so there's never horizontal scrolling.
+   Layout goal:
+   - Offerings cards are centered within the Inputs card.
+   - On wide screens, show 2 offering cards per row.
+   - On narrow screens, fall back to 1 per row.
+*/
+.table-wrap{overflow: visible;}
+.table{
+  min-width: 0;
+  width: 100%;
+  display:block;
+  max-width: var(--side-max);
+  margin: 0 auto;
+  padding: 0; /* padding handled by the section box */
+}
+.table thead{display:none;}
+
+#offeringsBody{
+  display:grid;
+  /* Automatically switches between 1-up and 2-up based on available width. */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--gap);
+  justify-content: center;
+}
+
+.table tr{
+  display:block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0; /* spacing handled by tbody grid gap */
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+}
+
+.table td{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  margin: 7px 0;
+  background: rgba(0,0,0,0.18);
+}
+
+.table td::before{
+  content: attr(data-label);
+  color: rgba(255,255,255,0.62);
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.25px;
+  font-size: 10px;
+  flex: 0 0 clamp(110px, 18vw, 150px);
+}
+
+/* Keep the editable value region comfortable, but never overflow inside narrower cards. */
+.table td > *{flex: 1 1 240px; min-width: 0;}
+.table td input,
+.table td select{
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Make the 3 conceptual groups obvious with a left accent bar + spacing. */
+.table td.group-start{margin-top: 12px;}
+.table td.group-start:first-child{margin-top: 6px;}
+.table td.group-end{margin-bottom: 12px;}
+
+.table td.group-inputs{border-left: 3px solid rgba(96,165,250,0.65);} /* accent-2 */
+.table td.group-mode{border-left: 3px solid rgba(94,234,212,0.65);}   /* accent */
+.table td.group-est{border-left: 3px solid rgba(255,255,255,0.22);}    /* neutral */
+
+/* Make edit vs read-only visually distinct. */
+.table td.cell-edit{
+  background: rgba(255,255,255,0.075);
+  border-color: rgba(255,255,255,0.12);
+}
+.table td.cell-readonly{
+  background: rgba(0,0,0,0.16);
+  border-color: rgba(255,255,255,0.08);
+}
+.table td.cell-readonly .mono{color: rgba(255,255,255,0.86);}
+
+.table td.group-actions{
+  justify-content: flex-start;
+}
+.table td.group-actions::before{
+  content: attr(data-label);
+  color: rgba(255,255,255,0.62);
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.25px;
+  font-size: 10px;
+  flex: 0 0 clamp(110px, 18vw, 150px);
+}
+.table td.group-actions > *{flex: 0 1 auto;}

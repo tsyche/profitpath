@@ -1,643 +1,206 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProfitPath - Service Plan Simulator</title>
-    <style>
-        body { font-family: 'Roboto', Arial, sans-serif; padding: 10px; background-color: #f0f2f5; margin: 0; }
-        .container { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; margin: 0 auto; }
-        .left-panel, .right-panel { flex: 1; min-width: 300px; }
-        .section { background-color: #fff; border-radius: 8px; padding: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .right-panel .section { max-height: 400px; overflow-y: auto; overflow-x: auto; }
-        table { min-width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { padding: 5px; text-align: left; border-bottom: 1px solid #ddd; }
-        h2 { margin: 0 0 10px 0; color: #2196F3; }
-        h3 { margin: 0 0 5px 0; font-size: 16px; color: #555; }
-        h4 { margin: 0 0 5px 0; font-size: 14px; color: #666; }
-        .slider-container { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
-        .slider { width: 80%; max-width: 300px; }
-        .increment-btn { width: 24px; height: 24px; font-size: 14px; background-color: #e0e0e0; border: none; border-radius: 4px; cursor: pointer; }
-        .increment-btn:hover { background-color: #d0d0d0; }
-        .reset-btn { font-size: 12px; padding: 4px 8px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .reset-btn:hover { background-color: #1976D2; }
-        .plan-buttons { display: flex; gap: 5px; margin-top: 5px; }
-        .plan-btn { padding: 4px 8px; font-size: 12px; background-color: #e0e0e0; border: none; border-radius: 4px; cursor: pointer; }
-        .plan-btn:hover { background-color: #d0d0d0; }
-        .output { margin-top: 5px; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #333; }
-        .gauge { 
-            position: relative; 
-            width: 100px; 
-            height: 50px; 
-            background: conic-gradient(from -90deg at 50% 100%, #4CAF50 0deg 144deg, #FFC107 144deg 180deg, #f44336 180deg 225deg); 
-            border-radius: 50px 50px 0 0; 
-            overflow: hidden; 
-        }
-        .gauge-needle { position: absolute; bottom: 0; left: 50%; width: 4px; height: 50px; background-color: #333; transform-origin: bottom; transition: transform 0.3s; z-index: 1; }
-        #capacityWarning { color: #f44336; font-weight: bold; font-size: 12px; display: none; }
-        .summary { margin-top: 20px; padding: 10px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .summary p { margin: 5px 0; font-size: 14px; }
-        .hidden { display: none; }
-        .toggle-btn { cursor: pointer; color: #2196F3; text-decoration: underline; font-size: 14px; }
-        @media (max-width: 600px) {
-            .slider { width: 60%; }
-            .section { padding: 8px; }
-            h3 { font-size: 14px; }
-            table { font-size: 10px; }
-        }
-        /* Disabled State Styling */
-        input[disabled], .slider[disabled] {
-            background-color: #f5f5f5;
-            opacity: 0.5;
-        }
-        /* Custom Toggle Switch */
-        .switch {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .switch input { 
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider-toggle {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 20px;
-            background-color: #2196F3; /* Blue for Current Active Service */
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .slider-toggle:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            border-radius: 50%;
-            transition: transform 0.3s;
-        }
-        input:checked + .slider-toggle {
-            background-color: #4CAF50; /* Green for Forecasting */
-        }
-        input:checked + .slider-toggle:before {
-            transform: translateX(20px);
-        }
-        .mode-label { font-size: 14px; color: #333; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProfitPath — Service Simulator</title>
+  <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
-    <h2>ProfitPath - Service Plan Simulator</h2>
-    <div class="section">
-        <h3>Mode Selection</h3>
-        <div class="switch">
-            <span class="mode-label">Current Active Service</span>
-            <label>
-                <input type="checkbox" id="forecastingMode" checked onchange="updateMetrics()">
-                <span class="slider-toggle"></span>
-            </label>
-            <span class="mode-label">Forecasting</span>
-        </div>
-    </div>
-    <div class="container">
-        <div class="left-panel">
-            <div class="section">
-                <h3>Plan Pricing Structure (Monthly Charge)</h3>
-                <div class="slider-container">
-                    <label>Weekly Tier (52 visits/year): $</label>
-                    <input type="number" id="weeklyPrice" value="200" step="10" style="width: 60px;" oninput="updateMetrics()">
-                </div>
-                <div class="slider-container" style="margin-left: 20px;">
-                    <span>Avg price/visit: </span><span id="weeklyPerVisit" style="font-weight: bold; color: #2196F3;">$46.15</span>
-                </div>
-                <div class="slider-container">
-                    <label>Biweekly Tier (26 visits/year): $</label>
-                    <input type="number" id="biweeklyPrice" value="140" step="10" style="width: 60px;" oninput="updateMetrics()">
-                </div>
-                <div class="slider-container" style="margin-left: 20px;">
-                    <span>Avg price/visit: </span><span id="biweeklyPerVisit" style="font-weight: bold; color: #2196F3;">$64.62</span>
-                </div>
-                <div class="slider-container">
-                    <label>Monthly Tier (12 visits/year): $</label>
-                    <input type="number" id="monthlyPrice" value="100" step="10" style="width: 60px;" oninput="updateMetrics()">
-                </div>
-                <div class="slider-container" style="margin-left: 20px;">
-                    <span>Avg price/visit: </span><span id="monthlyPerVisit" style="font-weight: bold; color: #2196F3;">$100.00</span>
-                </div>
-            </div>
-            <div class="section">
-                <h3>Customer Plan Mix</h3>
-                <div style="margin-bottom: 15px;">
-                    <h4>Weekly Tier <span id="weeklyCustomerCount" style="font-weight: bold; color: #2196F3;">(0)</span></h4>
-                    <div class="slider-container">
-                        <button class="increment-btn" onclick="adjustSlider('weeklySlider', -1)">-</button>
-                        <input type="range" id="weeklySlider" min="0" max="100" step="1" value="33" class="slider" oninput="document.getElementById('weeklyInput').value = this.value; updateMetrics('weeklySlider')">
-                        <button class="increment-btn" onclick="adjustSlider('weeklySlider', 1)">+</button>
-                        <input type="number" id="weeklyInput" min="0" max="100" value="33" style="width: 50px;" oninput="document.getElementById('weeklySlider').value = this.value; updateMetrics('weeklySlider')"> %
-                        <input type="checkbox" id="lockWeekly"> Lock
-                    </div>
-                    <div class="plan-buttons">
-                        <button class="plan-btn" onclick="setPlan('weekly', 0)">0%</button>
-                        <button class="plan-btn" onclick="setPlan('weekly', 25)">25%</button>
-                        <button class="plan-btn" onclick="setPlan('weekly', 33)">33%</button>
-                        <button class="plan-btn" onclick="setPlan('weekly', 50)">50%</button>
-                        <button class="plan-btn" onclick="setPlan('weekly', 100)">100%</button>
-                    </div>
-                    <div class="slider-container" style="margin-left: 20px; margin-top: 10px;">
-                        <span>Active Customer Count: </span>
-                        <input type="number" id="actualWeekly" min="0" value="0" style="width: 60px;" disabled oninput="updateMetrics()">
-                    </div>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <h4>Biweekly Tier <span id="biweeklyCustomerCount" style="font-weight: bold; color: #2196F3;">(0)</span></h4>
-                    <div class="slider-container">
-                        <button class="increment-btn" onclick="adjustSlider('biweeklySlider', -1)">-</button>
-                        <input type="range" id="biweeklySlider" min="0" max="100" step="1" value="33" class="slider" oninput="document.getElementById('biweeklyInput').value = this.value; updateMetrics('biweeklySlider')">
-                        <button class="increment-btn" onclick="adjustSlider('biweeklySlider', 1)">+</button>
-                        <input type="number" id="biweeklyInput" min="0" max="100" value="33" style="width: 50px;" oninput="document.getElementById('biweeklySlider').value = this.value; updateMetrics('biweeklySlider')"> %
-                        <input type="checkbox" id="lockBiweekly"> Lock
-                    </div>
-                    <div class="plan-buttons">
-                        <button class="plan-btn" onclick="setPlan('biweekly', 0)">0%</button>
-                        <button class="plan-btn" onclick="setPlan('biweekly', 25)">25%</button>
-                        <button class="plan-btn" onclick="setPlan('biweekly', 33)">33%</button>
-                        <button class="plan-btn" onclick="setPlan('biweekly', 50)">50%</button>
-                        <button class="plan-btn" onclick="setPlan('biweekly', 100)">100%</button>
-                    </div>
-                    <div class="slider-container" style="margin-left: 20px; margin-top: 10px;">
-                        <span>Active Customer Count: </span>
-                        <input type="number" id="actualBiweekly" min="0" value="0" style="width: 60px;" disabled oninput="updateMetrics()">
-                    </div>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <h4>Monthly Tier <span id="monthlyCustomerCount" style="font-weight: bold; color: #2196F3;">(0)</span></h4>
-                    <div class="slider-container">
-                        <button class="increment-btn" onclick="adjustSlider('monthlySlider', -1)">-</button>
-                        <input type="range" id="monthlySlider" min="0" max="100" step="1" value="34" class="slider" oninput="document.getElementById('monthlyInput').value = this.value; updateMetrics('monthlySlider')">
-                        <button class="increment-btn" onclick="adjustSlider('monthlySlider', 1)">+</button>
-                        <input type="number" id="monthlyInput" min="0" max="100" value="34" style="width: 50px;" oninput="document.getElementById('monthlySlider').value = this.value; updateMetrics('monthlySlider')"> %
-                        <input type="checkbox" id="lockMonthly"> Lock
-                    </div>
-                    <div class="plan-buttons">
-                        <button class="plan-btn" onclick="setPlan('monthly', 0)">0%</button>
-                        <button class="plan-btn" onclick="setPlan('monthly', 25)">25%</button>
-                        <button class="plan-btn" onclick="setPlan('monthly', 33)">33%</button>
-                        <button class="plan-btn" onclick="setPlan('monthly', 50)">50%</button>
-                        <button class="plan-btn" onclick="setPlan('monthly', 100)">100%</button>
-                    </div>
-                    <div class="slider-container" style="margin-left: 20px; margin-top: 10px;">
-                        <span>Active Customer Count: </span>
-                        <input type="number" id="actualMonthly" min="0" value="0" style="width: 60px;" disabled oninput="updateMetrics()">
-                    </div>
-                </div>
-                <br>
-                <div class="slider-container">
-                    <button class="reset-btn" onclick="resetAllPlanMix()">Reset All</button>
-                </div>
-            </div>
-            <div class="section">
-                <h3>Business Costs</h3>
-                <br>
-                <div class="slider-container">
-                    <label>Monthly Costs: $</label>
-                    <input type="number" id="monthlyCosts" min="0" value="250" step="10" style="width: 60px;" oninput="updateMetrics()">
-                    <button class="reset-btn" onclick="document.getElementById('monthlyCosts').value = 250; updateMetrics()">Reset</button>
-                </div>
-            </div>
-            <div class="section">
-                <h3>Staffing</h3>
-                <br>
-                <div class="slider-container">
-                    <button class="increment-btn" onclick="adjustSlider('employeeSlider', -1)">-</button>
-                    <input type="range" id="employeeSlider" min="1" max="11" step="1" value="1" class="slider" oninput="document.getElementById('employeeInput').value = this.value; updateMetrics('employeeSlider')">
-                    <button class="increment-btn" onclick="adjustSlider('employeeSlider', 1)">+</button>
-                    <input type="number" id="employeeInput" min="1" max="11" value="1" style="width: 50px;" oninput="document.getElementById('employeeSlider').value = this.value; updateMetrics('employeeSlider')">
-                    <span>Employees</span>
-                    <input type="checkbox" id="lockEmployee"> Lock
-                    <button class="reset-btn" onclick="resetSlider('employeeSlider', 1)">Reset</button>
-                </div>
-                <div class="plan-buttons">
-                    <button class="plan-btn" onclick="setPlan('employee', 1)">1</button>
-                    <button class="plan-btn" onclick="setPlan('employee', 2)">2</button>
-                    <button class="plan-btn" onclick="setPlan('employee', 3)">3</button>
-                    <button class="plan-btn" onclick="setPlan('employee', 6)">6</button>
-                    <button class="plan-btn" onclick="setPlan('employee', 11)">11</button>
-                </div>
-                <div class="slider-container">
-                    <button class="increment-btn" onclick="adjustSlider('paySlider', -5000)">-</button>
-                    <input type="range" id="paySlider" min="40000" max="100000" step="5000" value="60000" class="slider" oninput="document.getElementById('payInput').value = this.value; updateMetrics('paySlider')">
-                    <button class="increment-btn" onclick="adjustSlider('paySlider', 5000)">+</button>
-                    <input type="number" id="payInput" min="40000" max="100000" value="60000" style="width: 70px;" oninput="document.getElementById('paySlider').value = this.value; updateMetrics('paySlider')">
-                    <span>Pay ($/year)</span>
-                    <input type="checkbox" id="lockPay"> Lock
-                    <button class="reset-btn" onclick="resetSlider('paySlider', 60000)">Reset</button>
-                </div>
-                <div class="plan-buttons">
-                    <button class="plan-btn" onclick="setPlan('pay', 40000)">$40k</button>
-                    <button class="plan-btn" onclick="setPlan('pay', 50000)">$50k</button>
-                    <button class="plan-btn" onclick="setPlan('pay', 60000)">$60k</button>
-                    <button class="plan-btn" onclick="setPlan('pay', 70000)">$70k</button>
-                    <button class="plan-btn" onclick="setPlan('pay', 80000)">$80k</button>
-                </div>
-            </div>
-            <div class="section">
-                <h3>Capacity (40 hours/week)</h3>
-                <br>
-                <div class="slider-container">
-                    <button class="increment-btn" onclick="adjustSlider('capacitySlider', -1)">-</button>
-                    <input type="range" id="capacitySlider" min="0" max="150" step="1" value="75" class="slider" oninput="document.getElementById('capacityInput').value = this.value; updateMetrics('capacitySlider')">
-                    <button class="increment-btn" onclick="adjustSlider('capacitySlider', 1)">+</button>
-                    <input type="number" id="capacityInput" min="0" value="75" style="width: 50px;" oninput="document.getElementById('capacitySlider').value = this.value; updateMetrics('capacitySlider')">
-                    <span>Capacity %</span>
-                    <input type="checkbox" id="lockCapacity"> Lock
-                    <button class="reset-btn" onclick="resetSlider('capacitySlider', 75)">Reset</button>
-                </div>
-                <div class="slider-container">
-                    <button class="increment-btn" onclick="adjustSlider('avgHoursSlider', -0.1)">-</button>
-                    <input type="range" id="avgHoursSlider" min="0.5" max="2.5" step="0.1" value="1" class="slider" oninput="document.getElementById('avgHoursInput').value = this.value; updateMetrics('avgHoursSlider')">
-                    <button class="increment-btn" onclick="adjustSlider('avgHoursSlider', 0.1)">+</button>
-                    <input type="number" id="avgHoursInput" min="0.5" max="2.5" step="0.1" value="1" style="width: 50px;" oninput="document.getElementById('avgHoursSlider').value = this.value; updateMetrics('avgHoursSlider')">
-                    <span>Avg hours/visit</span>
-                    <input type="checkbox" id="lockAvgHours"> Lock
-                    <button class="reset-btn" onclick="resetSlider('avgHoursSlider', 1)">Reset</button>
-                </div>
-                <div class="output">
-                    <div class="gauge">
-                        <div class="gauge-needle" id="gaugeNeedle"></div>
-                    </div>
-                    <span id="capacityDisplay">Capacity: <span id="capacityValue" style="font-weight: bold;">0%</span></span>
-                    <span id="capacityWarning">Overtime Hours!</span>
-                </div>
-            </div>
-        </div>
-        <div class="right-panel">
-            <div class="section">
-                <h3>Reference Table</h3>
-                <table id="referenceTable">
-                    <thead>
-                        <tr>
-                            <th>Workers (w)</th>
-                            <th>Capacity %</th>
-                            <th>Customers</th>
-                            <th>Hours Worked</th>
-                            <th>Revenue</th>
-                            <th>Business Costs</th>
-                            <th>Employee Wages</th>
-                            <th>Your Income</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-            <div class="summary">
-                <h3>Summary</h3>
-                <p id="summaryMode">Mode: Forecasting</p>
-                <p id="summaryCustomers">Customers: 0</p>
-                <p id="summaryVisits">Total Visits: 0</p>
-                <p id="summaryHours">Total Hours Worked: 0</p>
-                <p id="summaryCapacity">Capacity: 0%</p>
-                <p id="summaryBusinessCosts">Business Costs: $0</p>
-                <p id="summaryPayroll">Payroll Costs: $0</p>
-                <p id="summaryRevenue">Revenue (gross): $0</p>
-                <p id="summaryIncome"><span style="font-weight: bold;">Your Income (net):</span> <span id="incomeValue">$0</span></p>
-            </div>
-            <div class="section hidden" id="fullReferenceTable">
-                <h3>Full Reference Table</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Workers (w)</th>
-                            <th>Capacity (p)</th>
-                            <th>Customers</th>
-                            <th>Hours Worked</th>
-                            <th>Revenue</th>
-                            <th>Business Costs</th>
-                            <th>Employee Wages</th>
-                            <th>Your Income</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>1 (solo)</td><td>100%</td><td>69</td><td>2,080</td><td>$121,053.60</td><td>$2,400</td><td>$0</td><td>$118,653.60</td></tr>
-                        <tr><td></td><td>75%</td><td>52</td><td>1,560</td><td>$91,228.80</td><td>$2,400</td><td>$0</td><td>$88,828.80</td></tr>
-                        <tr><td></td><td>50%</td><td>34</td><td>1,040</td><td>$59,649.60</td><td>$2,400</td><td>$0</td><td>$57,249.60</td></tr>
-                        <tr><td></td><td>25%</td><td>17</td><td>520</td><td>$29,824.80</td><td>$2,400</td><td>$0</td><td>$27,424.80</td></tr>
-                        <tr><td></td><td>10%</td><td>6</td><td>208</td><td>$10,526.40</td><td>$2,400</td><td>$0</td><td>$8,126.40</td></tr>
-                        <tr><td>2 (you + 1)</td><td>100%</td><td>139</td><td>4,160</td><td>$243,861.60</td><td>$2,400</td><td>$60,000</td><td>$181,461.60</td></tr>
-                        <tr><td></td><td>75%</td><td>104</td><td>3,120</td><td>$182,457.60</td><td>$2,400</td><td>$60,000</td><td>$120,057.60</td></tr>
-                        <tr><td></td><td>50%</td><td>69</td><td>2,080</td><td>$121,053.60</td><td>$2,400</td><td>$60,000</td><td>$58,653.60</td></tr>
-                        <tr><td></td><td>25%</td><td>34</td><td>1,040</td><td>$59,649.60</td><td>$2,400</td><td>$60,000</td><td>($2,750.40)</td></tr>
-                        <tr><td></td><td>10%</td><td>13</td><td>416</td><td>$22,807.20</td><td>$2,400</td><td>$60,000</td><td>($39,592.80)</td></tr>
-                        <tr><td>3 (you + 2)</td><td>100%</td><td>209</td><td>6,240</td><td>$366,669.60</td><td>$2,400</td><td>$120,000</td><td>$244,269.60</td></tr>
-                        <tr><td></td><td>75%</td><td>156</td><td>4,680</td><td>$273,686.40</td><td>$2,400</td><td>$120,000</td><td>$151,286.40</td></tr>
-                        <tr><td></td><td>50%</td><td>104</td><td>3,120</td><td>$182,457.60</td><td>$2,400</td><td>$120,000</td><td>$60,057.60</td></tr>
-                        <tr><td></td><td>25%</td><td>52</td><td>1,560</td><td>$91,228.80</td><td>$2,400</td><td>$120,000</td><td>($31,171.20)</td></tr>
-                        <tr><td></td><td>10%</td><td>20</td><td>624</td><td>$35,088.00</td><td>$2,400</td><td>$120,000</td><td>($87,312.00)</td></tr>
-                        <tr><td>4 (you + 3)</td><td>100%</td><td>278</td><td>8,320</td><td>$487,723.20</td><td>$2,400</td><td>$180,000</td><td>$305,323.20</td></tr>
-                        <tr><td></td><td>75%</td><td>209</td><td>6,240</td><td>$366,669.60</td><td>$2,400</td><td>$180,000</td><td>$184,269.60</td></tr>
-                        <tr><td></td><td>50%</td><td>139</td><td>4,160</td><td>$243,861.60</td><td>$2,400</td><td>$180,000</td><td>$61,461.60</td></tr>
-                        <tr><td></td><td>25%</td><td>69</td><td>2,080</td><td>$121,053.60</td><td>$2,400</td><td>$180,000</td><td>($61,346.40)</td></tr>
-                        <tr><td></td><td>10%</td><td>27</td><td>832</td><td>$47,368.80</td><td>$2,400</td><td>$180,000</td><td>($135,031.20)</td></tr>
-                        <tr><td>6 (you + 5)</td><td>100%</td><td>418</td><td>12,480</td><td>$733,339.20</td><td>$2,400</td><td>$300,000</td><td>$430,939.20</td></tr>
-                        <tr><td></td><td>75%</td><td>313</td><td>9,360</td><td>$549,127.20</td><td>$2,400</td><td>$300,000</td><td>$246,727.20</td></tr>
-                        <tr><td></td><td>50%</td><td>209</td><td>6,240</td><td>$366,669.60</td><td>$2,400</td><td>$300,000</td><td>$64,269.60</td></tr>
-                        <tr><td></td><td>25%</td><td>104</td><td>3,120</td><td>$182,457.60</td><td>$2,400</td><td>$300,000</td><td>($119,942.40)</td></tr>
-                        <tr><td></td><td>10%</td><td>41</td><td>1,248</td><td>$71,930.40</td><td>$2,400</td><td>$300,000</td><td>($230,469.60)</td></tr>
-                        <tr><td>11 (you + 10)</td><td>100%</td><td>766</td><td>22,880</td><td>$1,343,870.40</td><td>$2,400</td><td>$600,000</td><td>$741,470.40</td></tr>
-                        <tr><td></td><td>75%</td><td>574</td><td>17,160</td><td>$1,007,145.60</td><td>$2,400</td><td>$600,000</td><td>$404,745.60</td></tr>
-                        <tr><td></td><td>50%</td><td>383</td><td>11,440</td><td>$671,935.20</td><td>$2,400</td><td>$600,000</td><td>$69,535.20</td></tr>
-                        <tr><td></td><td>25%</td><td>191</td><td>5,720</td><td>$335,090.40</td><td>$2,400</td><td>$600,000</td><td>($267,309.60)</td></tr>
-                        <tr><td></td><td>10%</td><td>76</td><td>2,288</td><td>$133,334.40</td><td>$2,400</td><td>$600,000</td><td>($469,065.60)</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <button class="toggle-btn" onclick="toggleFullTable()">Show Full Reference Table</button>
-        </div>
+  <div class="page">
+    <div class="file-warning hidden" id="fileWarning">
+      This app must be served over <span class="mono">http://localhost</span> (module scripts are blocked on <span class="mono">file://</span>). Start a server and open <span class="mono">http://localhost:8000/</span>.
     </div>
 
-    <script>
-        const gaugeNeedle = document.getElementById('gaugeNeedle');
-        const locked = {};
+    <header class="header">
+      <div>
+        <h1>ProfitPath</h1>
+        <div class="subtitle">A lightweight simulator for recurring-cadence service businesses (no backend, no build step).</div>
+      </div>
+      <div class="badge" title="This is a static file app">
+        <span class="dot"></span>
+        <span class="muted">Static simulator</span>
+      </div>
+    </header>
 
-        function adjustSlider(sliderId, amount) {
-            const slider = document.getElementById(sliderId);
-            const newValue = Math.max(parseFloat(slider.min), Math.min(parseFloat(slider.max), parseFloat(slider.value) + amount));
-            slider.value = newValue;
-            document.getElementById(sliderId.replace('Slider', 'Input')).value = newValue;
-            updateMetrics(sliderId);
-        }
+    <div class="grid">
+      <section class="card" id="controls">
+        <div class="card-h">
+          <h2>Inputs</h2>
+          <div class="footer-actions">
+            <button class="btn" id="resetBtn" type="button">Reset defaults</button>
+          </div>
+        </div>
+        <div class="card-b">
+          <div class="section-box inputs-fields">
+            <div class="row">
+            <div class="field" style="min-width: 210px;">
+              <label>Mode</label>
+              <select id="modeSelect">
+                <option value="forecast">Forecasting (capacity → customers)</option>
+                <option value="current">Current active service (customers → capacity)</option>
+              </select>
+              <div class="hint">Switches which columns you edit in the offerings table.</div>
+            </div>
 
-        function resetSlider(sliderId, defaultValue) {
-            const slider = document.getElementById(sliderId);
-            slider.value = defaultValue;
-            document.getElementById(sliderId.replace('Slider', 'Input')).value = defaultValue;
-            updateMetrics(sliderId);
-        }
+            <div class="field" id="lockMixField" style="min-width: 210px;">
+              <label>Mix lock (forecast)</label>
+              <label class="hint" style="display:flex; gap:8px; align-items:center; user-select:none;">
+                <input id="lockMix" type="checkbox" />
+                Auto-balance Mix % to 100%
+              </label>
+            </div>
 
-        function setPlan(plan, value) {
-            const sliderId = plan + 'Slider';
-            const inputId = plan + 'Input';
-            document.getElementById(sliderId).value = value;
-            document.getElementById(inputId).value = value;
-            updateMetrics(sliderId);
-        }
+            <div class="field">
+              <label>Employees</label>
+              <input id="employees" type="number" min="1" step="1" value="1" />
+              <div class="hint">Assumes 2080 paid hours/year per employee.</div>
+            </div>
 
-        function toggleFullTable() {
-            const fullTable = document.getElementById('fullReferenceTable');
-            fullTable.classList.toggle('hidden');
-        }
+            <div class="field">
+              <label>Annual pay per employee</label>
+              <input id="employeePay" type="number" min="0" step="1000" value="60000" />
+              <div class="hint">Payroll = (employees − 1) × pay ("you" excluded).</div>
+            </div>
 
-        function resetAllPlanMix() {
-            document.getElementById('weeklySlider').value = 33;
-            document.getElementById('weeklyInput').value = 33;
-            document.getElementById('biweeklySlider').value = 33;
-            document.getElementById('biweeklyInput').value = 33;
-            document.getElementById('monthlySlider').value = 34;
-            document.getElementById('monthlyInput').value = 34;
-            updateMetrics();
-        }
+            <div class="field">
+              <label>Overhead (monthly)</label>
+              <input id="monthlyCosts" type="number" min="0" step="10" value="250" />
+              <div class="hint">Converted to annual fixed costs.</div>
+            </div>
 
-        function updateMetrics(source = '') {
-            // Get mode
-            const forecastingMode = document.getElementById('forecastingMode').checked;
+            <div class="field">
+              <label>Productive utilization</label>
+              <input id="productiveUtilizationPct" type="number" min="0" max="100" step="1" value="80" />
+              <div class="hint">% of paid hours actually available for service delivery.</div>
+            </div>
 
-            // Reset capacity slider to 75% when switching to Forecasting mode
-            if (forecastingMode && source === '') {
-                document.getElementById('capacitySlider').value = 75;
-                document.getElementById('capacityInput').value = 75;
-            }
+            <div class="field">
+              <label>Target utilization (forecasting)</label>
+              <input id="targetUtilizationPct" type="number" min="0" max="150" step="1" value="75" />
+              <div class="hint">Used only in Forecasting mode.</div>
+            </div>
+            </div>
+          </div>
 
-            // Set disabled states based on mode
-            if (forecastingMode) {
-                document.getElementById('weeklySlider').disabled = false;
-                document.getElementById('weeklyInput').disabled = false;
-                document.getElementById('biweeklySlider').disabled = false;
-                document.getElementById('biweeklyInput').disabled = false;
-                document.getElementById('monthlySlider').disabled = false;
-                document.getElementById('monthlyInput').disabled = false;
-                document.getElementById('capacitySlider').disabled = false;
-                document.getElementById('capacityInput').disabled = false;
-                document.getElementById('actualWeekly').disabled = true;
-                document.getElementById('actualBiweekly').disabled = true;
-                document.getElementById('actualMonthly').disabled = true;
-            } else {
-                document.getElementById('weeklySlider').disabled = true;
-                document.getElementById('weeklyInput').disabled = true;
-                document.getElementById('biweeklySlider').disabled = true;
-                document.getElementById('biweeklyInput').disabled = true;
-                document.getElementById('monthlySlider').disabled = true;
-                document.getElementById('monthlyInput').disabled = true;
-                document.getElementById('capacitySlider').disabled = true;
-                document.getElementById('capacityInput').disabled = true;
-                document.getElementById('actualWeekly').disabled = false;
-                document.getElementById('actualBiweekly').disabled = false;
-                document.getElementById('actualMonthly').disabled = false;
-            }
+          <div class="section-box offerings-section">
+            <div class="section-h">
+              <h3>Service Offerings</h3>
+              <div class="section-actions">
+                <button class="btn primary" id="addOfferingBtn" type="button">Add offering</button>
+              </div>
+            </div>
 
-            // Get actual customer counts if not in forecasting mode
-            let actualWeekly = 0, actualBiweekly = 0, actualMonthly = 0;
-            if (!forecastingMode) {
-                actualWeekly = parseInt(document.getElementById('actualWeekly').value) || 0;
-                actualBiweekly = parseInt(document.getElementById('actualBiweekly').value) || 0;
-                actualMonthly = parseInt(document.getElementById('actualMonthly').value) || 0;
-            }
+            <div class="note" id="mixNote"></div>
 
-            // Calculate plan mix percentages
-            let weeklyPct, biweeklyPct, monthlyPct;
-            if (forecastingMode) {
-                weeklyPct = parseFloat(document.getElementById('weeklySlider').value) || 0;
-                biweeklyPct = parseFloat(document.getElementById('biweeklySlider').value) || 0;
-                monthlyPct = parseFloat(document.getElementById('monthlySlider').value) || 0;
-            } else {
-                const totalCustomers = actualWeekly + actualBiweekly + actualMonthly;
-                if (totalCustomers > 0) {
-                    weeklyPct = (actualWeekly / totalCustomers) * 100;
-                    biweeklyPct = (actualBiweekly / totalCustomers) * 100;
-                    monthlyPct = (actualMonthly / totalCustomers) * 100;
-                } else {
-                    weeklyPct = 0;
-                    biweeklyPct = 0;
-                    monthlyPct = 0;
-                }
-                // Update percentage sliders to reflect actual counts (disabled but visible)
-                document.getElementById('weeklySlider').value = weeklyPct;
-                document.getElementById('weeklyInput').value = weeklyPct.toFixed(1);
-                document.getElementById('biweeklySlider').value = biweeklyPct;
-                document.getElementById('biweeklyInput').value = biweeklyPct.toFixed(1);
-                document.getElementById('monthlySlider').value = monthlyPct;
-                document.getElementById('monthlyInput').value = monthlyPct.toFixed(1);
-            }
+            <div class="table-wrap">
+              <table class="table" id="offeringsTable" aria-label="Offerings">
+              <thead>
+                <tr>
+                  <th>Offering</th>
+                  <th>Price / mo</th>
+                  <th>Visits / yr</th>
+                  <th>Hours / visit</th>
+                  <th>Var $ / visit</th>
+                  <th>Mix % (forecast)</th>
+                  <th>Customers (current)</th>
+                  <th>Est. customers</th>
+                  <th>Est Service Count</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="offeringsBody"></tbody>
+            </table>
+            </div>
 
-            // Get other input values
-            const employees = parseInt(document.getElementById('employeeSlider').value) || 1;
-            const employeePay = parseInt(document.getElementById('paySlider').value) || 0;
-            const avgHoursPerVisit = parseFloat(document.getElementById('avgHoursSlider').value) || 1;
-            const monthlyCosts = parseFloat(document.getElementById('monthlyCosts').value) || 0;
-            const weeklyPrice = parseFloat(document.getElementById('weeklyPrice').value) || 0;
-            const biweeklyPrice = parseFloat(document.getElementById('biweeklyPrice').value) || 0;
-            const monthlyPrice = parseFloat(document.getElementById('monthlyPrice').value) || 0;
+            <div class="smallprint">
+              Notes: Mix % is interpreted as a % of customers (not revenue). In forecasting mode, totals are auto-normalized for the math.
+            </div>
+          </div>
+        </div>
+      </section>
 
-            // Calculate and display average price per visit
-            const weeklyPerVisit = weeklyPrice ? (weeklyPrice * 12 / 52).toFixed(2) : '0.00';
-            const biweeklyPerVisit = biweeklyPrice ? (biweeklyPrice * 12 / 26).toFixed(2) : '0.00';
-            const monthlyPerVisit = monthlyPrice ? (monthlyPrice * 12 / 12).toFixed(2) : '0.00';
-            document.getElementById('weeklyPerVisit').textContent = `$${weeklyPerVisit}`;
-            document.getElementById('biweeklyPerVisit').textContent = `$${biweeklyPerVisit}`;
-            document.getElementById('monthlyPerVisit').textContent = `$${monthlyPerVisit}`;
+      <aside class="card">
+        <div class="card-h">
+          <h2>Outputs</h2>
+          <div class="pill">
+            <span class="muted">Net income</span>
+            <strong id="kpiIncome" style="font-family: var(--mono)">$0</strong>
+          </div>
+        </div>
+        <div class="card-b">
+          <div class="capacity">
+            <div style="min-width: 190px;">
+              <div class="muted" style="font-size: 12px;">Capacity</div>
+              <div id="capacityLabel" style="font-weight: 650; margin-top: 4px;">Utilization: 0.0%</div>
+            </div>
+            <div class="meter" aria-hidden="true"><div id="capacityBar"></div></div>
+          </div>
 
-            // Get locked states
-            locked.weekly = document.getElementById('lockWeekly').checked;
-            locked.biweekly = document.getElementById('lockBiweekly').checked;
-            locked.monthly = document.getElementById('lockMonthly').checked;
-            locked.employee = document.getElementById('lockEmployee').checked;
-            locked.pay = document.getElementById('lockPay').checked;
-            locked.capacity = document.getElementById('lockCapacity').checked;
-            locked.avgHours = document.getElementById('lockAvgHours').checked;
+          <div style="height: 10px;"></div>
 
-            // Adjust plan percentages if one is changed (only in forecasting mode)
-            if (forecastingMode && source && source.includes('Slider') && source !== 'capacitySlider' && source !== 'employeeSlider' && source !== 'paySlider' && source !== 'avgHoursSlider') {
-                const changedPlan = source.replace('Slider', '');
-                const total = weeklyPct + biweeklyPct + monthlyPct;
-                const diff = total - 100;
-                const unlockedPlans = [];
-                if (!locked.weekly && changedPlan !== 'weekly') unlockedPlans.push('weekly');
-                if (!locked.biweekly && changedPlan !== 'biweekly') unlockedPlans.push('biweekly');
-                if (!locked.monthly && changedPlan !== 'monthly') unlockedPlans.push('monthly');
+          <div class="kpi-grid">
+            <div class="kpi">
+              <div class="k">Customers</div>
+              <div class="v" id="kpiCustomers">0</div>
+              <div class="sub">Across all offerings</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Annual visits</div>
+              <div class="v" id="kpiVisits">0</div>
+              <div class="sub">Total service visits</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Hours used</div>
+              <div class="v" id="kpiHours">0</div>
+              <div class="sub">Service delivery hours</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Utilization</div>
+              <div class="v" id="kpiCapacity">0.0%</div>
+              <div class="sub">Relative to productive hours</div>
+            </div>
 
-                if (unlockedPlans.length > 0 && diff !== 0) {
-                    const adjustment = diff / unlockedPlans.length;
-                    unlockedPlans.forEach(plan => {
-                        if (plan === 'weekly') {
-                            weeklyPct -= adjustment;
-                            weeklyPct = Math.max(0, Math.min(100, weeklyPct));
-                            document.getElementById('weeklySlider').value = weeklyPct;
-                            document.getElementById('weeklyInput').value = weeklyPct;
-                        } else if (plan === 'biweekly') {
-                            biweeklyPct -= adjustment;
-                            biweeklyPct = Math.max(0, Math.min(100, biweeklyPct));
-                            document.getElementById('biweeklySlider').value = biweeklyPct;
-                            document.getElementById('biweeklyInput').value = biweeklyPct;
-                        } else if (plan === 'monthly') {
-                            monthlyPct -= adjustment;
-                            monthlyPct = Math.max(0, Math.min(100, monthlyPct));
-                            document.getElementById('monthlySlider').value = monthlyPct;
-                            document.getElementById('monthlyInput').value = monthlyPct;
-                        }
-                    });
-                }
-            }
+            <div class="kpi">
+              <div class="k">Revenue</div>
+              <div class="v" id="kpiRevenue">$0</div>
+              <div class="sub">Annual (gross)</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Fixed costs</div>
+              <div class="v" id="kpiFixedCosts">$0</div>
+              <div class="sub">Annual overhead</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Payroll</div>
+              <div class="v" id="kpiPayroll">$0</div>
+              <div class="sub">Annual employee wages</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Variable costs</div>
+              <div class="v" id="kpiVariableCosts">$0</div>
+              <div class="sub">Per-visit costs</div>
+            </div>
+          </div>
 
-            // Calculate capacity and metrics based on mode
-            let capacityPct, customers, totalVisits, hoursUsed, revenue, payroll, businessCosts, yourIncome;
-            let weeklyCustomers, biweeklyCustomers, monthlyCustomers;
-            if (forecastingMode) {
-                capacityPct = parseFloat(document.getElementById('capacitySlider').value) || 0;
-                const visitsPerCustomer = (weeklyPct / 100 * 52) + (biweeklyPct / 100 * 26) + (monthlyPct / 100 * 12);
-                const revenuePerCustomer = (weeklyPct / 100 * weeklyPrice * 12) + (biweeklyPct / 100 * biweeklyPrice * 12) + (monthlyPct / 100 * monthlyPrice * 12);
-                const totalHoursAvailable = employees * 2080;
-                hoursUsed = Math.min(capacityPct / 100 * totalHoursAvailable, totalHoursAvailable * 1.5);
-                customers = Math.floor(hoursUsed / (visitsPerCustomer * avgHoursPerVisit));
-                totalVisits = customers * visitsPerCustomer;
-                revenue = customers * revenuePerCustomer;
-                payroll = (employees - 1) * employeePay;
-                businessCosts = monthlyCosts * 12;
-                yourIncome = revenue - businessCosts - payroll;
-                // Calculate per-plan customer counts in Forecasting mode
-                weeklyCustomers = Math.floor(customers * (weeklyPct / 100));
-                biweeklyCustomers = Math.floor(customers * (biweeklyPct / 100));
-                monthlyCustomers = Math.floor(customers * (monthlyPct / 100));
-                // Adjust for rounding to match total customers
-                const totalCalculated = weeklyCustomers + biweeklyCustomers + monthlyCustomers;
-                const remainder = customers - totalCalculated;
-                if (remainder > 0) {
-                    // Distribute remainder to the largest percentage plan
-                    if (weeklyPct >= biweeklyPct && weeklyPct >= monthlyPct) {
-                        weeklyCustomers += remainder;
-                    } else if (biweeklyPct >= weeklyPct && biweeklyPct >= monthlyPct) {
-                        biweeklyCustomers += remainder;
-                    } else {
-                        monthlyCustomers += remainder;
-                    }
-                }
-            } else {
-                weeklyCustomers = actualWeekly;
-                biweeklyCustomers = actualBiweekly;
-                monthlyCustomers = actualMonthly;
-                customers = weeklyCustomers + biweeklyCustomers + monthlyCustomers;
-                const visitsWeekly = weeklyCustomers * 52;
-                const visitsBiweekly = biweeklyCustomers * 26;
-                const visitsMonthly = monthlyCustomers * 12;
-                totalVisits = visitsWeekly + visitsBiweekly + visitsMonthly;
-                hoursUsed = totalVisits * avgHoursPerVisit;
-                revenue = (weeklyCustomers * weeklyPrice * 12) + (biweeklyCustomers * biweeklyPrice * 12) + (monthlyCustomers * monthlyPrice * 12);
-                payroll = (employees - 1) * employeePay;
-                businessCosts = monthlyCosts * 12;
-                yourIncome = revenue - businessCosts - payroll;
-                const totalHoursAvailable = employees * 2080;
-                capacityPct = totalHoursAvailable > 0 ? (hoursUsed / totalHoursAvailable) * 100 : 0;
-                // Update capacity slider to reflect calculated capacity (disabled but visible)
-                document.getElementById('capacitySlider').value = capacityPct;
-                document.getElementById('capacityInput').value = capacityPct.toFixed(1);
-            }
+          <div style="margin-top: 10px;" class="smallprint">
+            Assumptions: 2080 paid hours/year per employee; productive utilization converts paid hours into service hours.
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
 
-            // Update customer counts next to h4 headings
-            document.getElementById('weeklyCustomerCount').textContent = `(${weeklyCustomers})`;
-            document.getElementById('biweeklyCustomerCount').textContent = `(${biweeklyCustomers})`;
-            document.getElementById('monthlyCustomerCount').textContent = `(${monthlyCustomers})`;
+  <script>
+    // If opened via file://, module scripts are blocked by the browser.
+    (function () {
+      try {
+        var isFile = location.protocol === 'file:' || location.origin === 'null';
+        if (isFile) document.getElementById('fileWarning')?.classList.remove('hidden');
+      } catch (e) {}
+    })();
+  </script>
 
-            // Update gauge
-            const actualCapacityPct = forecastingMode ? capacityPct : capacityPct;
-            const gaugeAngle = Math.min(actualCapacityPct, 100) * 1.8 - 90;
-            gaugeNeedle.style.transform = `rotate(${gaugeAngle}deg)`;
-            if (actualCapacityPct > 100) {
-                gaugeNeedle.style.backgroundColor = '#f44336';
-                document.getElementById('capacityWarning').style.display = 'inline';
-            } else {
-                gaugeNeedle.style.backgroundColor = '#333';
-                document.getElementById('capacityWarning').style.display = 'none';
-            }
-            const capacityValueSpan = document.getElementById('capacityValue');
-            capacityValueSpan.textContent = `${actualCapacityPct.toFixed(1)}%`;
-            capacityValueSpan.style.color = actualCapacityPct > 100 ? '#f44336' : '#2196F3';
-
-            // Update reference table
-            const tbody = document.getElementById('referenceTable').querySelector('tbody');
-            tbody.innerHTML = '';
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${employees} ${employees === 1 ? '(solo)' : '(you + ' + (employees - 1) + ')'}</td>
-                <td>${actualCapacityPct.toFixed(1)}%</td>
-                <td>${customers}</td>
-                <td>${hoursUsed.toFixed(0)}</td>
-                <td>$${revenue.toFixed(2)}</td>
-                <td>$${businessCosts.toFixed(0)}</td>
-                <td>$${payroll.toFixed(0)}</td>
-                <td>$${yourIncome.toFixed(2)}</td>
-            `;
-            tbody.appendChild(row);
-
-            // Update summary
-            document.getElementById('summaryMode').textContent = `Mode: ${forecastingMode ? 'Forecasting' : 'Current Active Service'}`;
-            document.getElementById('summaryCustomers').textContent = `Customers: ${customers}`;
-            document.getElementById('summaryVisits').textContent = `Total Visits: ${totalVisits.toFixed(0)}`;
-            document.getElementById('summaryHours').textContent = `Hours Used: ${hoursUsed.toFixed(0)}`;
-            document.getElementById('summaryCapacity').textContent = `Capacity: ${actualCapacityPct.toFixed(1)}%`;
-            document.getElementById('summaryBusinessCosts').textContent = `Business Costs: $${businessCosts.toFixed(0)}`;
-            document.getElementById('summaryPayroll').textContent = `Payroll Cost: $${payroll.toFixed(0)}`;
-            document.getElementById('summaryRevenue').textContent = `Revenue: $${revenue.toFixed(2)}`;
-            const incomeValueSpan = document.getElementById('incomeValue');
-            incomeValueSpan.textContent = `$${yourIncome.toFixed(2)}`;
-            incomeValueSpan.style.color = yourIncome >= 60000 ? '#4CAF50' : yourIncome >= 0 ? '#FFC107' : '#f44336';
-            incomeValueSpan.style.fontWeight = 'bold';
-        }
-
-        // Initial update
-        updateMetrics();
-    </script>
+  <script type="module" src="assets/app.js"></script>
 </body>
 </html>
