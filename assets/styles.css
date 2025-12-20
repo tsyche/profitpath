@@ -14,7 +14,8 @@
   --radius: 14px;
   --radius-sm: 10px;
   --gap: 14px;
-  --side-max: 620px;
+  --side-max: 774px;
+  --input-max: 774px;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 }
@@ -33,9 +34,9 @@ body{
 }
 
 .page{
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 18px 14px 44px;
+  padding: 18px 28px 44px;
 }
 
 .header{
@@ -66,7 +67,7 @@ body{
 
 .grid{
   display:grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, var(--side-max));
+  grid-template-columns: minmax(0, var(--input-max)) minmax(0, var(--side-max));
   gap: var(--gap);
   align-items: start; /* prevent the Outputs card from stretching to match Inputs height */
 }
@@ -77,8 +78,12 @@ body{
   max-width: var(--side-max);
   justify-self: end;
 }
-@media (max-width: 980px){
+@media (max-width: 1100px){
   .grid{grid-template-columns:1fr;}
+  .grid > aside.card{
+    max-width: none;
+    justify-self: auto;
+  }
 }
 
 .card{
@@ -87,6 +92,9 @@ body{
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow:hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 .card .card-h{
   padding: var(--gap);
@@ -103,7 +111,14 @@ body{
   text-transform: uppercase;
   color: rgba(255,255,255,0.78);
 }
-.card .card-b{padding: var(--gap);}
+.card .card-b{
+  padding: var(--gap);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
 
 .row{
   /* Stack Inputs vertically so everything is left-justified and aligned. */
@@ -111,7 +126,7 @@ body{
   flex-direction: column;
   align-items: stretch;
   gap: var(--gap);
-  max-width: 360px; /* closer to the Mode selector width */
+  width: 100%;
 }
 .field{
   display:flex;
@@ -283,13 +298,14 @@ input[type="checkbox"]{
 }
 
 .inputs-fields{
-  max-width: var(--side-max);
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
 }
 
 .offerings-section{
-  max-width: var(--side-max);
-  margin: 0 auto;
+  /* Allow offerings to expand to fill the card width */
+  width: 100%;
+  margin: 0;
 }
 
 /* Remove the old table-wrap border/background so it doesn't look like an extra card behind offerings. */
@@ -325,7 +341,7 @@ input[type="checkbox"]{
   min-width: 0;
   width: 100%;
   display:block;
-  max-width: var(--side-max);
+  max-width: none;
   margin: 0 auto;
   padding: 0; /* padding handled by the section box */
 }
@@ -334,9 +350,16 @@ input[type="checkbox"]{
 #offeringsBody{
   display:grid;
   /* Automatically switches between 1-up and 2-up based on available width. */
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--gap);
-  justify-content: center;
+  width: 100%;
+}
+
+/* Limit max width of each offering card so 2 fit nicely on desktop */
+@media (min-width: 800px) {
+  #offeringsBody {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 340px));
+  }
 }
 
 .table tr{
@@ -370,11 +393,11 @@ input[type="checkbox"]{
   text-transform: uppercase;
   letter-spacing: 0.25px;
   font-size: 10px;
-  flex: 0 0 clamp(110px, 18vw, 150px);
+  flex: 0 0 clamp(85px, 15vw, 110px);
 }
 
 /* Keep the editable value region comfortable, but never overflow inside narrower cards. */
-.table td > *{flex: 1 1 240px; min-width: 0;}
+.table td > *{flex: 1 1 140px; min-width: 0;}
 .table td input,
 .table td select{
   width: 100%;
@@ -414,3 +437,166 @@ input[type="checkbox"]{
   flex: 0 0 clamp(110px, 18vw, 150px);
 }
 .table td.group-actions > *{flex: 0 1 auto;}
+
+/* Modal & Scenarios UI */
+.modal{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal.hidden{
+  display: none !important;
+}
+
+.modal-overlay{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(2px);
+}
+
+.modal-content{
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.modal-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gap);
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3{
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: 0.3px;
+}
+
+.btn-close{
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background-color .15s ease;
+}
+
+.btn-close:hover{
+  background: rgba(255,255,255,0.08);
+}
+
+.modal-body{
+  padding: var(--gap);
+}
+
+.scenarios-section{
+  margin-bottom: calc(var(--gap) * 1.5);
+}
+
+.scenarios-section h4{
+  margin: 0 0 var(--gap) 0;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.78);
+}
+
+.save-scenario-form{
+  display: flex;
+  gap: var(--gap);
+}
+
+.save-scenario-form input{
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.scenarios-list{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scenario-item{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  transition: background-color .15s ease, border-color .15s ease;
+}
+
+.scenario-item:hover{
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.scenario-item-name{
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.scenario-item-meta{
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.scenario-item-actions{
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: var(--gap);
+}
+
+.scenario-item-actions .btn{
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
+.empty-state{
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.header-actions{
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+

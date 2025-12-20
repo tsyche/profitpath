@@ -513,6 +513,135 @@ function resetDefaults() {
   render();
 }
 
+// Scenario Management
+function getAllScenarios() {
+  try {
+    const saved = localStorage.getItem('profitpath-scenarios');
+    return saved ? JSON.parse(saved) : [];
+  } catch (e) {
+    console.warn('Failed to load scenarios:', e);
+    return [];
+  }
+}
+
+function saveScenario(name) {
+  if (!name || !name.trim()) {
+    alert('Please enter a scenario name');
+    return;
+  }
+
+  try {
+    const scenarios = getAllScenarios();
+    const timestamp = new Date().toLocaleString();
+    const scenario = {
+      id: uuid(),
+      name: name.trim(),
+      timestamp,
+      state: JSON.parse(JSON.stringify(state)), // Deep copy
+    };
+
+    scenarios.push(scenario);
+    localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
+
+    // Clear input and re-render list
+    $('#scenarioNameInput').value = '';
+    renderScenariosList();
+  } catch (e) {
+    console.error('Failed to save scenario:', e);
+    alert('Error saving scenario');
+  }
+}
+
+function loadScenario(scenarioId) {
+  try {
+    const scenarios = getAllScenarios();
+    const scenario = scenarios.find((s) => s.id === scenarioId);
+    if (!scenario) return;
+
+    // Restore state from scenario
+    state.mode = scenario.state.mode ?? state.mode;
+    state.offerings = scenario.state.offerings ?? state.offerings;
+    state.employees = scenario.state.employees ?? state.employees;
+    state.employeePay = scenario.state.employeePay ?? state.employeePay;
+    state.monthlyCosts = scenario.state.monthlyCosts ?? state.monthlyCosts;
+    state.productiveUtilizationPct = scenario.state.productiveUtilizationPct ?? state.productiveUtilizationPct;
+    state.targetUtilizationPct = scenario.state.targetUtilizationPct ?? state.targetUtilizationPct;
+    state.lockMix = scenario.state.lockMix ?? state.lockMix;
+
+    render();
+    closeScenarioModal();
+  } catch (e) {
+    console.error('Failed to load scenario:', e);
+    alert('Error loading scenario');
+  }
+}
+
+function deleteScenario(scenarioId) {
+  if (!confirm('Delete this scenario?')) return;
+
+  try {
+    let scenarios = getAllScenarios();
+    scenarios = scenarios.filter((s) => s.id !== scenarioId);
+    localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
+    renderScenariosList();
+  } catch (e) {
+    console.error('Failed to delete scenario:', e);
+    alert('Error deleting scenario');
+  }
+}
+
+function renderScenariosList() {
+  const list = $('#scenariosList');
+  const scenarios = getAllScenarios();
+
+  if (scenarios.length === 0) {
+    list.innerHTML = '<div class="empty-state">No saved scenarios yet. Save one above!</div>';
+    return;
+  }
+
+  list.innerHTML = scenarios
+    .map(
+      (s) => `
+    <div class="scenario-item">
+      <div>
+        <div class="scenario-item-name">${escapeHtml(s.name)}</div>
+        <div class="scenario-item-meta">Saved ${s.timestamp}</div>
+      </div>
+      <div class="scenario-item-actions">
+        <button class="btn small" data-action="load-scenario" data-scenario-id="${escapeHtml(s.id)}">Load</button>
+        <button class="btn small danger" data-action="delete-scenario" data-scenario-id="${escapeHtml(s.id)}">Delete</button>
+      </div>
+    </div>
+  `
+    )
+    .join('');
+
+  // Wire up load/delete buttons
+  $$('[data-action="load-scenario"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.scenarioId;
+      loadScenario(id);
+    });
+  });
+
+  $$('[data-action="delete-scenario"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.scenarioId;
+      deleteScenario(id);
+    });
+  });
+}
+
+function openScenarioModal() {
+  $('#scenariosModal').classList.remove('hidden');
+  $('#scenarioNameInput').focus();
+  renderScenariosList();
+}
+
+function closeScenarioModal() {
+  $('#scenariosModal').classList.add('hidden');
+}
+
 function wire() {
   // Load persisted state from localStorage if available
   try {
@@ -578,6 +707,31 @@ function wire() {
   // Save state when table content changes
   $('#offeringsBody').addEventListener('input', saveState);
   $('#offeringsBody').addEventListener('click', () => setTimeout(saveState, 0));
+
+  // Scenario modal wiring
+  $('#scenariosBtn').addEventListener('click', openScenarioModal);
+  $('#scenariosCloseBtn').addEventListener('click', closeScenarioModal);
+  $('#scenariosOverlay').addEventListener('click', closeScenarioModal);
+
+  $('#saveScenarioBtn').addEventListener('click', () => {
+    const name = $('#scenarioNameInput').value;
+    saveScenario(name);
+  });
+
+  // Allow Enter key to save scenario
+  $('#scenarioNameInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      const name = $('#scenarioNameInput').value;
+      saveScenario(name);
+    }
+  });
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('#scenariosModal').classList.contains('hidden')) {
+      closeScenarioModal();
+    }
+  });
 }
 
 wire();
