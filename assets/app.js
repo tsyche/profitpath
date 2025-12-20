@@ -6,6 +6,11 @@ const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 // Constants for business model assumptions
 const HOURS_PER_YEAR = 2080; // Standard paid hours per employee per year
 const DEFAULT_CURRENCY = 'USD';
+// Chart tooltip options: toggle what extra info to display
+const CHART_TOOLTIP_OPTIONS = {
+  showPercent: true,
+  showHoursPerCustomer: true,
+};
 
 function uuid() {
   // crypto.randomUUID is ideal, but not available in every environment.
@@ -332,15 +337,329 @@ function restoreTableFocus(focus) {
   const sel = `#offeringsBody [data-k="${cssEscape(focus.k)}"][data-i="${cssEscape(focus.i)}"]`;
   const el = $(sel);
   if (!(el instanceof HTMLInputElement)) return;
-
+  el.selectionStart = focus.selectionStart;
+  el.selectionEnd = focus.selectionEnd;
   el.focus();
-  if (typeof focus.selectionStart === 'number' && typeof focus.selectionEnd === 'number') {
-    try {
-      el.setSelectionRange(focus.selectionStart, focus.selectionEnd);
-    } catch {
-      // ignore
+}
+
+function renderSimpleChart(metrics) {
+  const el = $('#simpleChart');
+  if (!el) return;
+
+  // Prefer top-level metrics, but fall back to summing per-offering metrics if needed
+  const totalRevenue = Number(metrics.revenue) || (Array.isArray(metrics.offeringMetrics) ? metrics.offeringMetrics.reduce((a, m) => a + (Number(m.revenue) || 0), 0) : 0);
+  const totalVariable = Number(metrics.variableCosts) || (Array.isArray(metrics.offeringMetrics) ? metrics.offeringMetrics.reduce((a, m) => a + (Number(m.variableCosts) || 0), 0) : 0);
+  const totalContribution = Math.max(0, totalRevenue - totalVariable);
+
+  if (totalRevenue <= 0) {
+    el.innerHTML = '<div class="chart-empty">No revenue to display</div>';
+    return;
+  }
+
+  // Build per-offering breakdown
+  const data = (metrics.offerings || []).map((o, idx) => {
+    const m = (metrics.offeringMetrics && metrics.offeringMetrics[idx]) || {};
+    const rev = Number(m.revenue) || 0;
+    const variable = Number(m.variableCosts) || 0;
+    const contrib = Math.max(0, rev - variable);
+    const hoursPerCustomer = Number(o.visitsPerYear || 0) * Number(o.hoursPerVisit || 0);
+    const pct = totalRevenue > 0 ? (rev / totalRevenue) : 0;
+    return { name: o.name || `Offering ${idx + 1}`, rev, variable, contrib, hoursPerCustomer, pct };
+  });
+
+  // SVG: draw each offering as variable (red) then contribution (green) adjacent; x coord in percentage of totalRevenue
+  let x = 0;
+  const rects = [];
+  data.forEach((d) => {
+    const revPct = (d.rev / totalRevenue) || 0;
+    const varPct = (d.variable / totalRevenue) || 0;
+    const contribPct = (d.contrib / totalRevenue) || 0;
+
+    // variable rect
+    if (varPct > 0) {
+      rects.push({ x: x, w: varPct, color: 'rgba(251,113,133,0.6)', offering: d.name, type: 'variable', varVal: d.variable, contribVal: d.contrib, pct: d.pct, hours: d.hoursPerCustomer });
+    }
+
+    // contribution rect (may be zero)
+    if (contribPct > 0) {
+      rects.push({ x: x + varPct, w: contribPct, color: 'rgba(52,211,153,0.6)', offering: d.name, type: 'contrib', varVal: d.variable, contribVal: d.contrib, pct: d.pct, hours: d.hoursPerCustomer });
+    }
+
+    // (no per-offering labels rendered here to avoid overlap/size issues)
+
+    x += revPct;
+  });
+
+  const svgParts = ['<svg viewBox="0 0 100 20" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">'];
+  rects.forEach((r) => {
+    const xPos = (r.x * 100).toFixed(3);
+    const w = (r.w * 100).toFixed(3);
+    // include data attributes for a custom tooltip (avoid native <title> which can be inconsistent)
+    const offeringAttr = escapeHtml(r.offering || '');
+    const typeAttr = escapeHtml(r.type || '');
+    const varAttr = escapeHtml(fmtMoney0(r.varVal || 0));
+    const contribAttr = escapeHtml(fmtMoney0(r.contribVal || 0));
+    const pctAttr = escapeHtml(((r.pct || 0) * 100).toFixed(0) + '%');
+    const hoursAttr = escapeHtml((r.hours || 0).toFixed(1));
+    svgParts.push(`<rect x="${xPos}" y="2" width="${w}" height="16" rx="3" fill="${r.color}" data-offering="${offeringAttr}" data-type="${typeAttr}" data-var="${varAttr}" data-contrib="${contribAttr}" data-pct="${pctAttr}" data-hours="${hoursAttr}"></rect>`);
+  });
+  // intentionally do not render per-offering inline labels (legend below provides totals)
+  svgParts.push('</svg>');
+
+  const legend = `
+    <div class="chart-labels">
+      <div class="left">
+        <div class="pill-legend"><span class="legend-swatch legend-variable"></span><span>Variable: ${fmtMoney0(totalVariable)}</span></div>
+        <div class="pill-legend"><span class="legend-swatch legend-margin"></span><span>Contribution: ${fmtMoney0(totalContribution)}</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="center" style="font-family:var(--mono);color:var(--muted);">${Math.round((totalVariable / totalRevenue) * 100)}% / ${Math.round((totalContribution / totalRevenue) * 100)}%</div>
+        <div class="right">Revenue: <strong>${fmtMoney0(totalRevenue)}</strong></div>
+      </div>
+    </div>
+  `;
+
+  // Build a compact offering list under the legend (name / pct / annual rev).
+  const offeringItems = data.map((d) => {
+    const pct = totalRevenue > 0 ? Math.round((d.rev / totalRevenue) * 100) : 0;
+    return `<div class="offering-item"><div class="off-left"><span class="o-name">${escapeHtml(d.name)}</span><span class="o-pct">${pct}%</span></div><div class="o-val">${fmtMoney0(d.rev)}</div></div>`;
+  }).join('');
+
+  const offeringListHTML = `<div class="offering-list">${offeringItems}</div>`;
+
+  // append a tooltip element used for hover
+  el.innerHTML = svgParts.join('') + legend + offeringListHTML + '<div class="chart-tooltip" aria-hidden="true"></div>';
+
+  // Wire up custom hover & pin tooltip for rects (uses data-* attributes). Adds clamping, flip, fade, and pin-on-click.
+  const tooltip = el.querySelector('.chart-tooltip');
+  let hideTimeout = null;
+  let pinned = false;
+  let pinnedRect = null;
+  // Smooth follow variables
+  let rafId = null;
+  const tooltipCurrent = { x: 0, y: 0 };
+  const tooltipTarget = { x: 0, y: 0 };
+  const SMOOTH_FACTOR = 0.22; // 0..1, lower is smoother/slower
+  const HOVER_OFFSET = 6; // px gap between bar and tooltip when hovering
+  let tooltipIsShown = false;
+
+  function startFollow() {
+    if (rafId) return;
+    function step() {
+      const dx = tooltipTarget.x - tooltipCurrent.x;
+      const dy = tooltipTarget.y - tooltipCurrent.y;
+      tooltipCurrent.x += dx * SMOOTH_FACTOR;
+      tooltipCurrent.y += dy * SMOOTH_FACTOR;
+      tooltip.style.left = `${tooltipCurrent.x}px`;
+      tooltip.style.top = `${tooltipCurrent.y}px`;
+      // stop when very close
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+        rafId = null;
+        return;
+      }
+      rafId = requestAnimationFrame(step);
+    }
+    rafId = requestAnimationFrame(step);
+  }
+
+  function stopFollow() {
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
     }
   }
+
+  // updatePinnedIndicator is intentionally a no-op for visuals - we do not highlight pinned segments.
+  // Keeping the function so other code can call it without needing edits.
+  function updatePinnedIndicator(/* rectEl */) {
+    // no-op: visual pinned indicators (outline/overlay) removed per UX preference
+    // ensure any leftover data attributes are cleared
+    el.querySelectorAll('rect[data-pinned]').forEach((r) => r.removeAttribute('data-pinned'));
+  }
+
+  function showTooltipForRect(rectEl, clientX = null, clientY = null, pinnedNow = false) {
+    if (!rectEl) return;
+    const offering = rectEl.getAttribute('data-offering') || '';
+    const varVal = rectEl.getAttribute('data-var') || '';
+    const contribVal = rectEl.getAttribute('data-contrib') || '';
+    const pct = rectEl.getAttribute('data-pct') || '';
+    const hours = rectEl.getAttribute('data-hours') || '';
+
+    let html = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style=\"font-weight:700\">${offering}</div><div style=\"display:flex;gap:6px;align-items:center\"><button class=\"tooltip-pin\" aria-label=\"Pin tooltip\">📌</button><button class=\"tooltip-close\" aria-label=\"Close tooltip\">×</button></div></div>`;
+    if (CHART_TOOLTIP_OPTIONS.showPercent) {
+      html += `<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px">${pct}</div>`;
+    }
+    html += `<div style="font-family:var(--mono);font-size:12px">Variable: ${varVal}</div>`;
+    html += `<div style="font-family:var(--mono);color:var(--accent);font-size:12px">Contribution: ${contribVal}</div>`;
+    if (CHART_TOOLTIP_OPTIONS.showHoursPerCustomer) {
+      html += `<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px">Hours/customer: ${hours}</div>`;
+    }
+
+    tooltip.innerHTML = html;
+    tooltip.classList.add('visible');
+    tooltip.style.display = 'block';
+    tooltip.style.visibility = 'visible';
+    // wire close and pin buttons
+    const closeBtn = tooltip.querySelector('.tooltip-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        pinned = false;
+        pinnedRect = null;
+        tooltip.classList.remove('pinned');
+        tooltip.classList.remove('visible');
+        updatePinnedIndicator(null);
+        setTimeout(() => (tooltip.style.display = 'none'), 180);
+      });
+    }
+    const pinBtn = tooltip.querySelector('.tooltip-pin');
+    if (pinBtn) {
+      pinBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        // toggle pinned state
+        pinned = !pinned;
+        if (pinned) {
+          pinnedRect = rectEl;
+          tooltip.classList.add('pinned');
+          pinBtn.textContent = '📍';
+          updatePinnedIndicator(rectEl);
+        } else {
+          pinnedRect = null;
+          tooltip.classList.remove('pinned');
+          pinBtn.textContent = '📌';
+          updatePinnedIndicator(null);
+        }
+      });
+    }
+
+    // Positioning: if pinned, anchor to rect center; otherwise follow mouse if provided
+    const containerBox = el.getBoundingClientRect();
+    const rectBox = rectEl.getBoundingClientRect();
+    const centerX = rectBox.left + rectBox.width / 2 - containerBox.left;
+    const centerY = rectBox.top + rectBox.height / 2 - containerBox.top;
+
+    // if hovering (not pinnedNow and not pinned), place tooltip at a static distance above the rect
+    // otherwise (pinned or pinnedNow), allow centering near rect/mouse
+    const tipRect = tooltip.getBoundingClientRect();
+    const halfW = tipRect.width / 2;
+    const leftMin = 8 + halfW;
+    const leftMax = containerBox.width - 8 - halfW;
+
+    // prefer anchoring to rect center horizontally
+    const xAnchor = centerX;
+    const leftClamped = Math.min(Math.max(xAnchor, leftMin), leftMax);
+
+    if (!pinnedNow && !pinned) {
+      // hovering behavior: always above at fixed offset (smooth follow)
+      const offset = HOVER_OFFSET; // px gap between bar and tooltip
+      const topPos = Math.max(8, rectBox.top - containerBox.top - tipRect.height - offset);
+      tooltip.classList.remove('below');
+      // set target and start smooth follow; if first show, snap immediately
+      tooltipTarget.x = leftClamped;
+      tooltipTarget.y = topPos;
+      if (!tooltipIsShown) {
+        // initial placement: snap without animation to avoid large jump
+        tooltipCurrent.x = tooltipTarget.x;
+        tooltipCurrent.y = tooltipTarget.y;
+        tooltip.style.left = `${tooltipCurrent.x}px`;
+        tooltip.style.top = `${tooltipCurrent.y}px`;
+        tooltipIsShown = true;
+      } else {
+        startFollow();
+      }
+    } else {
+      // pinned behavior: behave as before, allow below if needed
+      const y = clientY !== null ? clientY - containerBox.top : centerY;
+      const leftFromMouse = clientX !== null ? clientX - containerBox.left : xAnchor;
+      const leftClamped2 = Math.min(Math.max(leftFromMouse, leftMin), leftMax);
+
+      const tipRect2 = tooltip.getBoundingClientRect();
+      const spaceAbove = centerY;
+      const spaceBelow = containerBox.height - centerY;
+      const placeBelow = spaceBelow > tipRect2.height + 16 && spaceBelow > spaceAbove;
+
+      if (placeBelow) tooltip.classList.add('below'); else tooltip.classList.remove('below');
+
+      const topPos = placeBelow ? Math.min(containerBox.height - 8, y + 12) : Math.max(8, y - 12);
+      tooltip.style.left = `${leftClamped2}px`;
+      tooltip.style.top = `${topPos}px`;
+    }
+
+    if (pinnedNow) {
+      pinned = true;
+      pinnedRect = rectEl;
+      tooltip.classList.add('pinned');
+      updatePinnedIndicator(rectEl);
+      stopFollow();
+    }
+  }
+
+  function hideTooltip() {
+    if (pinned) return; // don't hide when pinned
+    tooltip.classList.remove('visible');
+    tooltip.classList.remove('below');
+    hideTimeout = setTimeout(() => {
+      tooltip.style.display = 'none';
+      tooltip.innerHTML = '';
+      tooltipIsShown = false;
+      stopFollow();
+    }, 180);
+  }
+
+  function unpinTooltip() {
+    pinned = false;
+    pinnedRect = null;
+    tooltip.classList.remove('pinned');
+    tooltip.classList.remove('visible');
+    updatePinnedIndicator(null);
+    setTimeout(() => {
+      tooltip.style.display = 'none';
+      tooltipIsShown = false;
+      stopFollow();
+    }, 180);
+  }
+
+  el.querySelectorAll('rect[data-offering]').forEach((rect) => {
+    rect.addEventListener('mouseenter', (ev) => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
+      // if pinned (any pinned tooltip), do not change tooltip on hover
+      if (pinned) return;
+      showTooltipForRect(rect, ev.clientX, ev.clientY, false);
+    });
+
+    rect.addEventListener('mousemove', (ev) => {
+      // when pinned, prevent tooltip from moving
+      if (pinned) return;
+      showTooltipForRect(rect, ev.clientX, ev.clientY, false);
+    });
+
+    rect.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      // pin to this rect and snap tooltip to rect center
+      showTooltipForRect(rect, null, null, true);
+    });
+
+    rect.addEventListener('mouseleave', () => {
+      if (pinned && pinnedRect) return; // remain visible when pinned
+      hideTooltip();
+    });
+  });
+
+  // click outside to unpin
+  document.addEventListener('click', (ev) => {
+    if (!pinned) return;
+    if (!el.contains(ev.target)) unpinTooltip();
+  });
+
+  // escape key to close
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && pinned) {
+      unpinTooltip();
+    }
+  });
 }
 
 function render() {
@@ -458,6 +777,14 @@ function render() {
   $('#capacityLabel').textContent = metrics.capacityPct > 100
     ? `Over capacity: ${fmtPct1(metrics.capacityPct)} (overtime likely)`
     : `Utilization: ${fmtPct1(metrics.capacityPct)}`;
+
+  // Render simple revenue composition chart
+  try {
+    renderSimpleChart(metrics);
+  } catch (e) {
+    // Non-fatal: don't break main render if chart errors
+    console.warn('Chart render failed:', e);
+  }
 }
 
 function escapeHtml(str) {

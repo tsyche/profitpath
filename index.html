@@ -15,8 +15,18 @@
 
     <header class="header">
       <div>
-        <h1>ProfitPath</h1>
-        <div class="subtitle">A lightweight simulator for recurring-cadence service businesses (no backend, no build step).</div>
+        <div class="logo" id="logo">
+          <svg class="logo-svg" viewBox="0 0 240 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="logoGrad" x1="0" x2="1">
+                <stop offset="0%" stop-color="#06b6d4"/>
+                <stop offset="100%" stop-color="#6366f1"/>
+              </linearGradient>
+            </defs>
+            <text x="0" y="24" class="logo-text" style="font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; font-weight:800; font-size:22px; fill: url(#logoGrad); stroke: rgba(255,255,255,0.06); stroke-width:0.6;">ProfitPath</text>
+          </svg>
+          <div class="subtitle">A lightweight simulator for recurring-cadence service businesses (no backend, no build step).</div>
+        </div>
       </div>
       <div class="header-actions">
         <button class="btn small" id="exportBtn" type="button" title="Export offerings and results as CSV">Export CSV</button>
@@ -218,6 +228,9 @@
           <div style="margin-top: 10px;" class="smallprint">
             Assumptions: 2080 paid hours/year per employee; productive utilization converts paid hours into service hours.
           </div>
+          
+          <!-- Simple chart: Revenue composition (variable costs vs contribution) -->
+          <div id="simpleChart" class="simple-chart" aria-hidden="true"></div>
         </div>
       </aside>
     </div>
