@@ -57,6 +57,9 @@
       </div>
     </div>
 
+    <!-- Validation Messages -->
+    <div class="validation-container" id="validationContainer" style="display: none;"></div>
+
     <div class="grid">
       <section class="card" id="controls">
         <div class="card-h">
@@ -215,6 +218,22 @@
               <div class="v" id="kpiVariableCosts">$0</div>
               <div class="sub">Per-session costs</div>
             </div>
+
+            <div class="kpi">
+              <div class="k">Break-even clients</div>
+              <div class="v" id="kpiBreakEvenClients">∞</div>
+              <div class="sub">Clients needed to break even</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Break-even revenue</div>
+              <div class="v" id="kpiBreakEvenRevenue">$∞</div>
+              <div class="sub">Annual revenue needed</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Contribution margin</div>
+              <div class="v" id="kpiContributionMargin">$0</div>
+              <div class="sub">Per client (revenue - variables)</div>
+            </div>
           </div>
 
           <div style="margin-top: 10px;" class="smallprint">
@@ -223,6 +242,9 @@
           
           <!-- Simple chart: Revenue composition (variable costs vs contribution) -->
           <div id="simpleChart" class="simple-chart" aria-hidden="true"></div>
+
+          <!-- Break-even analysis section -->
+          <div id="breakEvenAnalysis" class="break-even-section" style="display: none;"></div>
 
           <!-- Debug panel (collapsible) placed at the bottom of the Outputs card -->
           <div class="debug-wrapper">

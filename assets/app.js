@@ -42,6 +42,360 @@ function safeParseNumber(value, defaultValue = 0, minVal = null, maxVal = null) 
   return num;
 }
 
+// Enhanced validation system for business logic and data integrity
+function validateBusinessLogic() {
+  const issues = [];
+  const warnings = [];
+
+  // Validate global inputs
+  if (state.employees < 1) {
+    issues.push({
+      severity: 'error',
+      message: 'Employees must be at least 1',
+      field: 'employees',
+      suggestion: 'Set employees to 1 (you can exclude yourself from payroll costs)'
+    });
+  }
+
+  if (state.employeePay < 0) {
+    issues.push({
+      severity: 'error',
+      message: 'Employee pay cannot be negative',
+      field: 'employeePay',
+      suggestion: 'Enter a positive annual pay amount'
+    });
+  }
+
+  if (state.monthlyCosts < 0) {
+    issues.push({
+      severity: 'error',
+      message: 'Monthly overhead costs cannot be negative',
+      field: 'monthlyCosts',
+      suggestion: 'Enter a positive monthly cost amount'
+    });
+  }
+
+  if (state.productiveUtilizationPct <= 0 || state.productiveUtilizationPct > 100) {
+    issues.push({
+      severity: 'error',
+      message: 'Productive utilization must be between 1% and 100%',
+      field: 'productiveUtilizationPct',
+      suggestion: 'Typical range is 70-90% for most service businesses'
+    });
+  }
+
+  if (state.targetUtilizationPct <= 0 || state.targetUtilizationPct > 150) {
+    issues.push({
+      severity: 'error',
+      message: 'Target utilization must be between 1% and 150%',
+      field: 'targetUtilizationPct',
+      suggestion: 'Typical target is 75-85% for sustainable operations'
+    });
+  }
+
+  // Validate offerings
+  if (state.offerings.length === 0) {
+    issues.push({
+      severity: 'warning',
+      message: 'No service offerings defined',
+      field: 'offerings',
+      suggestion: 'Add at least one offering to see calculations'
+    });
+  }
+
+  state.offerings.forEach((offering, index) => {
+    if (!offering.name || offering.name.trim().length === 0) {
+      issues.push({
+        severity: 'error',
+        message: `Offering ${index + 1} has no name`,
+        field: `offering-${index}-name`,
+        suggestion: 'Enter a descriptive name for this offering'
+      });
+    }
+
+    if (offering.priceMonthly <= 0) {
+      issues.push({
+        severity: 'error',
+        message: `"${offering.name || 'Unnamed offering'}" has invalid price`,
+        field: `offering-${index}-priceMonthly`,
+        suggestion: 'Monthly price must be greater than $0'
+      });
+    }
+
+    if (offering.sessionsPerYear <= 0) {
+      issues.push({
+        severity: 'error',
+        message: `"${offering.name || 'Unnamed offering'}" has invalid sessions per year`,
+        field: `offering-${index}-sessionsPerYear`,
+        suggestion: 'Must have at least 1 session per year'
+      });
+    }
+
+    if (offering.hoursPerSession <= 0) {
+      issues.push({
+        severity: 'error',
+        message: `"${offering.name || 'Unnamed offering'}" has invalid hours per session`,
+        field: `offering-${index}-hoursPerSession`,
+        suggestion: 'Each session must take at least 0.1 hours'
+      });
+    }
+
+    if (offering.variableCostPerSession < 0) {
+      issues.push({
+        severity: 'error',
+        message: `"${offering.name || 'Unnamed offering'}" has negative variable costs`,
+        field: `offering-${index}-variableCostPerSession`,
+        suggestion: 'Variable costs cannot be negative'
+      });
+    }
+
+    if (offering.mixPct < 0 || offering.mixPct > 100) {
+      issues.push({
+        severity: 'error',
+        message: `"${offering.name || 'Unnamed offering'}" mix percentage is invalid`,
+        field: `offering-${index}-mixPct`,
+        suggestion: 'Mix percentage must be between 0% and 100%'
+      });
+    }
+
+    if (state.mode === 'current' && offering.currentClients < 0) {
+      issues.push({
+        severity: 'error',
+        message: `"${offering.name || 'Unnamed offering'}" has negative client count`,
+        field: `offering-${index}-currentClients`,
+        suggestion: 'Client count cannot be negative'
+      });
+    }
+  });
+
+  // Business logic validations (warnings)
+  if (state.mode === 'forecast') {
+    const mixSum = state.offerings.reduce((sum, o) => sum + (Number(o.mixPct) || 0), 0);
+    const delta = Math.abs(mixSum - 100);
+
+    if (!state.lockMix && delta >= 0.1) {
+      warnings.push({
+        severity: 'warning',
+        message: `Mix percentages sum to ${mixSum.toFixed(1)}% (should be 100%)`,
+        field: 'mix-total',
+        suggestion: 'Enable "Auto-balance Mix %" or manually adjust percentages to total 100%'
+      });
+    }
+
+    if (state.lockMix && delta >= 0.1) {
+      warnings.push({
+        severity: 'info',
+        message: 'Mix percentages will be auto-normalized for calculations',
+        field: 'mix-normalized',
+        suggestion: 'This is normal when mix lock is enabled'
+      });
+    }
+  }
+
+  // Calculate metrics for business logic validation
+  try {
+    const metrics = calc();
+
+    if (metrics.capacityPct > 120) {
+      warnings.push({
+        severity: 'warning',
+        message: `Utilization is ${fmtPct1(metrics.capacityPct)} - consider overtime pay or hiring`,
+        field: 'utilization-high',
+        suggestion: 'High utilization may indicate need for more staff or reduced workload'
+      });
+    } else if (metrics.capacityPct < 50 && metrics.clients > 0) {
+      warnings.push({
+        severity: 'info',
+        message: `Utilization is only ${fmtPct1(metrics.capacityPct)} - opportunity for more clients`,
+        field: 'utilization-low',
+        suggestion: 'Low utilization suggests capacity for additional business'
+      });
+    }
+
+    // Check for potential profitability issues
+    if (metrics.income < 0 && metrics.revenue > 0) {
+      warnings.push({
+        severity: 'warning',
+        message: `Currently operating at a loss: ${fmtMoney0(metrics.income)}`,
+        field: 'profitability',
+        suggestion: 'Consider increasing prices, reducing costs, or improving utilization'
+      });
+    }
+
+    // Check for unrealistic pricing (revenue per hour too low or too high)
+    if (metrics.serviceHours > 0) {
+      const revenuePerHour = metrics.revenue / metrics.serviceHours;
+      if (revenuePerHour < 25) {
+        warnings.push({
+          severity: 'info',
+          message: `Revenue per service hour (${fmtMoney0(revenuePerHour)}) seems low`,
+          field: 'pricing-efficiency',
+          suggestion: 'Consider if pricing adequately covers your time and expertise'
+        });
+      } else if (revenuePerHour > 500) {
+        warnings.push({
+          severity: 'info',
+          message: `Revenue per service hour (${fmtMoney0(revenuePerHour)}) is very high`,
+          field: 'pricing-validation',
+          suggestion: 'Verify this pricing is appropriate for your market and value delivered'
+        });
+      }
+    }
+
+  } catch (e) {
+    warnings.push({
+      severity: 'error',
+      message: 'Unable to calculate metrics due to data issues',
+      field: 'calculation-error',
+      suggestion: 'Fix the validation errors above to enable calculations'
+    });
+  }
+
+  return { issues, warnings };
+}
+
+// Validate and sanitize state loaded from localStorage
+function validateAndSanitizeLoadedState() {
+  let needsSave = false;
+
+  // Sanitize global inputs
+  if (state.employees < 1) {
+    state.employees = 1;
+    needsSave = true;
+  }
+  if (state.employeePay < 0) {
+    state.employeePay = 60000;
+    needsSave = true;
+  }
+  if (state.monthlyCosts < 0) {
+    state.monthlyCosts = 250;
+    needsSave = true;
+  }
+  if (state.productiveUtilizationPct <= 0 || state.productiveUtilizationPct > 100) {
+    state.productiveUtilizationPct = 80;
+    needsSave = true;
+  }
+  if (state.targetUtilizationPct <= 0 || state.targetUtilizationPct > 150) {
+    state.targetUtilizationPct = 75;
+    needsSave = true;
+  }
+
+  // Sanitize offerings
+  state.offerings = state.offerings.filter(o => o && typeof o === 'object').map(offering => {
+    const sanitized = { ...offering };
+    let offeringChanged = false;
+
+    if (!sanitized.name || typeof sanitized.name !== 'string') {
+      sanitized.name = 'Unnamed Offering';
+      offeringChanged = true;
+    }
+
+    if (typeof sanitized.priceMonthly !== 'number' || sanitized.priceMonthly <= 0) {
+      sanitized.priceMonthly = 200;
+      offeringChanged = true;
+    }
+
+    if (typeof sanitized.sessionsPerYear !== 'number' || sanitized.sessionsPerYear <= 0) {
+      sanitized.sessionsPerYear = 12;
+      offeringChanged = true;
+    }
+
+    if (typeof sanitized.hoursPerSession !== 'number' || sanitized.hoursPerSession <= 0) {
+      sanitized.hoursPerSession = 1.0;
+      offeringChanged = true;
+    }
+
+    if (typeof sanitized.variableCostPerSession !== 'number' || sanitized.variableCostPerSession < 0) {
+      sanitized.variableCostPerSession = 0;
+      offeringChanged = true;
+    }
+
+    if (typeof sanitized.mixPct !== 'number' || sanitized.mixPct < 0 || sanitized.mixPct > 100) {
+      sanitized.mixPct = 0;
+      offeringChanged = true;
+    }
+
+    if (typeof sanitized.currentClients !== 'number' || sanitized.currentClients < 0) {
+      sanitized.currentClients = 0;
+      offeringChanged = true;
+    }
+
+    if (offeringChanged) {
+      needsSave = true;
+    }
+
+    return sanitized;
+  });
+
+  // If no offerings, add a default one
+  if (state.offerings.length === 0) {
+    state.offerings = defaultOfferings();
+    needsSave = true;
+  }
+
+  // Save sanitized state if changes were made
+  if (needsSave) {
+    console.info('Sanitized invalid data loaded from localStorage');
+    persistState();
+  }
+}
+
+// Display validation messages in the UI
+function updateValidationDisplay() {
+  const validationContainer = $('#validationContainer');
+  if (!validationContainer) return;
+
+  const { issues, warnings } = validateBusinessLogic();
+
+  // Clear existing messages
+  validationContainer.innerHTML = '';
+
+  // Create error messages
+  if (issues.length > 0) {
+    const errorsEl = document.createElement('div');
+    errorsEl.className = 'validation-errors';
+
+    issues.forEach(issue => {
+      const errorEl = document.createElement('div');
+      errorEl.className = `validation-item validation-${issue.severity}`;
+      errorEl.innerHTML = `
+        <div class="validation-message">
+          <strong>${issue.severity === 'error' ? '⚠️' : 'ℹ️'}</strong>
+          ${issue.message}
+        </div>
+        <div class="validation-suggestion">${issue.suggestion}</div>
+      `;
+      errorsEl.appendChild(errorEl);
+    });
+
+    validationContainer.appendChild(errorsEl);
+  }
+
+  // Create warning messages
+  if (warnings.length > 0) {
+    const warningsEl = document.createElement('div');
+    warningsEl.className = 'validation-warnings';
+
+    warnings.forEach(warning => {
+      const warningEl = document.createElement('div');
+      warningEl.className = `validation-item validation-${warning.severity}`;
+      warningEl.innerHTML = `
+        <div class="validation-message">
+          <strong>${warning.severity === 'warning' ? '⚠️' : '💡'}</strong>
+          ${warning.message}
+        </div>
+        <div class="validation-suggestion">${warning.suggestion}</div>
+      `;
+      warningsEl.appendChild(warningEl);
+    });
+
+    validationContainer.appendChild(warningsEl);
+  }
+
+  // Hide container if no messages
+  validationContainer.style.display = (issues.length > 0 || warnings.length > 0) ? 'block' : 'none';
+}
+
 function defaultOfferings() {
   return [
     // Provide non-zero currentClients so switching modes immediately shows calculations.
@@ -194,6 +548,11 @@ function calc(stateInput) {
       income: -annualFixedCosts - annualPayroll,
       mixSum: 0,
       mixNormalized: false,
+      // Break-even analysis (no offerings = infinite break-even)
+      breakEvenClients: Infinity,
+      breakEvenRevenue: Infinity,
+      contributionMarginPerClient: 0,
+      contributionMarginRatio: 0,
     };
   }
 
@@ -250,6 +609,14 @@ function calc(stateInput) {
       };
     });
 
+    // Break-even analysis for forecast mode
+    const totalFixedCosts = annualFixedCosts + annualPayroll;
+    const contributionMarginPerClient = revenuePerClient - variableCostPerClient;
+    const contributionMarginRatio = revenuePerClient > 0 ? contributionMarginPerClient / revenuePerClient : 0;
+
+    const breakEvenClients = contributionMarginPerClient > 0 ? Math.ceil(totalFixedCosts / contributionMarginPerClient) : Infinity;
+    const breakEvenRevenue = contributionMarginRatio > 0 ? totalFixedCosts / contributionMarginRatio : Infinity;
+
     return {
       mode,
       offerings,
@@ -269,6 +636,11 @@ function calc(stateInput) {
       targetUtilizationPct,
       productiveUtilizationPct,
       offeringMetrics,
+      // Break-even analysis
+      breakEvenClients,
+      breakEvenRevenue,
+      contributionMarginPerClient,
+      contributionMarginRatio,
     };
   }
 
@@ -299,6 +671,21 @@ function calc(stateInput) {
     };
   });
 
+  // Break-even analysis for current mode
+  const totalFixedCosts = annualFixedCosts + annualPayroll;
+
+  // Calculate weighted average contribution margin per client
+  const totalContributionMargin = offerings.reduce((sum, o) => {
+    const clientContribution = (o.priceMonthly * 12) - (o.sessionsPerYear * o.variableCostPerSession);
+    return sum + (o.currentClients * clientContribution);
+  }, 0);
+
+  const contributionMarginPerClient = clients > 0 ? totalContributionMargin / clients : 0;
+  const contributionMarginRatio = revenue > 0 ? totalContributionMargin / revenue : 0;
+
+  const breakEvenClients = contributionMarginPerClient > 0 ? Math.ceil(totalFixedCosts / contributionMarginPerClient) : Infinity;
+  const breakEvenRevenue = contributionMarginRatio > 0 ? totalFixedCosts / contributionMarginRatio : Infinity;
+
   return {
     mode,
     offerings,
@@ -317,6 +704,11 @@ function calc(stateInput) {
     mixNormalized: false,
     productiveUtilizationPct,
     offeringMetrics,
+    // Break-even analysis
+    breakEvenClients,
+    breakEvenRevenue,
+    contributionMarginPerClient,
+    contributionMarginRatio,
   };
 }
 
@@ -412,6 +804,7 @@ function renderSimpleChart(metrics) {
     const hoursAttr = escapeHtml((r.hours || 0).toFixed(1));
     svgParts.push(`<rect x="${xPos}" y="2" width="${w}" height="16" rx="3" fill="${r.color}" data-offering="${offeringAttr}" data-type="${typeAttr}" data-var="${varAttr}" data-contrib="${contribAttr}" data-pct="${pctAttr}" data-hours="${hoursAttr}"></rect>`);
   });
+
   // intentionally do not render per-offering inline labels (legend below provides totals)
   svgParts.push('</svg>');
 
@@ -439,43 +832,20 @@ function renderSimpleChart(metrics) {
   // append a tooltip element used for hover
   el.innerHTML = svgParts.join('') + legend + offeringListHTML + '<div class="chart-tooltip" aria-hidden="true"></div>';
 
-  // Wire up custom hover & pin tooltip for rects (uses data-* attributes). Adds clamping, flip, fade, and pin-on-click.
-  const tooltip = el.querySelector('.chart-tooltip');
+  // Set up hover and click event listeners for chart interactivity
+  setupChartEventListeners(el);
+}
+
+function setupChartEventListeners(el) {
+  // Variables for tooltip management
   let hideTimeout = null;
   let pinned = false;
   let pinnedRect = null;
-  // Smooth follow variables
-  let rafId = null;
-  const tooltipCurrent = { x: 0, y: 0 };
-  const tooltipTarget = { x: 0, y: 0 };
-  const SMOOTH_FACTOR = 0.22; // 0..1, lower is smoother/slower
   const HOVER_OFFSET = 6; // px gap between bar and tooltip when hovering
   let tooltipIsShown = false;
 
-  function startFollow() {
-    if (rafId) return;
-    function step() {
-      const dx = tooltipTarget.x - tooltipCurrent.x;
-      const dy = tooltipTarget.y - tooltipCurrent.y;
-      tooltipCurrent.x += dx * SMOOTH_FACTOR;
-      tooltipCurrent.y += dy * SMOOTH_FACTOR;
-      tooltip.style.left = `${tooltipCurrent.x}px`;
-      tooltip.style.top = `${tooltipCurrent.y}px`;
-      // stop when very close
-      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
-        rafId = null;
-        return;
-      }
-      rafId = requestAnimationFrame(step);
-    }
-    rafId = requestAnimationFrame(step);
-  }
-
   function stopFollow() {
-    if (rafId) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
+    // No longer using smooth follow animation
   }
 
   // updatePinnedIndicator is intentionally a no-op for visuals - we do not highlight pinned segments.
@@ -504,42 +874,23 @@ function renderSimpleChart(metrics) {
       html += `<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px">Service hours/client: ${hours}</div>`;
     }
 
+    const tooltip = el.querySelector('.chart-tooltip');
+    if (!tooltip) return;
+
     tooltip.innerHTML = html;
+    tooltip._currentRect = rectEl; // Store reference to current rectangle
     tooltip.classList.add('visible');
     tooltip.style.display = 'block';
     tooltip.style.visibility = 'visible';
-    // wire close and pin buttons
-    const closeBtn = tooltip.querySelector('.tooltip-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        pinned = false;
-        pinnedRect = null;
-        tooltip.classList.remove('pinned');
-        tooltip.classList.remove('visible');
-        updatePinnedIndicator(null);
-        setTimeout(() => (tooltip.style.display = 'none'), 180);
-      });
-    }
+
+    // Update pin button state based on current pinned status
     const pinBtn = tooltip.querySelector('.tooltip-pin');
     if (pinBtn) {
-      pinBtn.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        // toggle pinned state
-        pinned = !pinned;
-        if (pinned) {
-          pinnedRect = rectEl;
-          tooltip.classList.add('pinned');
-          pinBtn.textContent = '📍';
-          updatePinnedIndicator(rectEl);
-        } else {
-          pinnedRect = null;
-          tooltip.classList.remove('pinned');
-          pinBtn.textContent = '📌';
-          updatePinnedIndicator(null);
-        }
-      });
+      pinBtn.textContent = pinnedNow || pinned ? '📍' : '📌';
     }
+
+    // Set up button event listeners
+    setupTooltipButtons();
 
     // Positioning: if pinned, anchor to rect center; otherwise follow mouse if provided
     const containerBox = el.getBoundingClientRect();
@@ -559,38 +910,21 @@ function renderSimpleChart(metrics) {
     const leftClamped = Math.min(Math.max(xAnchor, leftMin), leftMax);
 
     if (!pinnedNow && !pinned) {
-      // hovering behavior: always above at fixed offset (smooth follow)
+      // hovering behavior: always above at fixed offset
       const offset = HOVER_OFFSET; // px gap between bar and tooltip
       const topPos = Math.max(8, rectBox.top - containerBox.top - tipRect.height - offset);
       tooltip.classList.remove('below');
-      // set target and start smooth follow; if first show, snap immediately
-      tooltipTarget.x = leftClamped;
-      tooltipTarget.y = topPos;
-      if (!tooltipIsShown) {
-        // initial placement: snap without animation to avoid large jump
-        tooltipCurrent.x = tooltipTarget.x;
-        tooltipCurrent.y = tooltipTarget.y;
-        tooltip.style.left = `${tooltipCurrent.x}px`;
-        tooltip.style.top = `${tooltipCurrent.y}px`;
-        tooltipIsShown = true;
-      } else {
-        startFollow();
-      }
+
+      // Position above the bar
+      tooltip.style.left = `${leftClamped}px`;
+      tooltip.style.top = `${topPos}px`;
+      tooltipIsShown = true;
     } else {
-      // pinned behavior: behave as before, allow below if needed
-      const y = clientY !== null ? clientY - containerBox.top : centerY;
-      const leftFromMouse = clientX !== null ? clientX - containerBox.left : xAnchor;
-      const leftClamped2 = Math.min(Math.max(leftFromMouse, leftMin), leftMax);
-
+      // pinned behavior: same as hover - always position above the bar
       const tipRect2 = tooltip.getBoundingClientRect();
-      const spaceAbove = centerY;
-      const spaceBelow = containerBox.height - centerY;
-      const placeBelow = spaceBelow > tipRect2.height + 16 && spaceBelow > spaceAbove;
+      const topPos = Math.max(8, rectBox.top - containerBox.top - tipRect2.height - HOVER_OFFSET);
 
-      if (placeBelow) tooltip.classList.add('below'); else tooltip.classList.remove('below');
-
-      const topPos = placeBelow ? Math.min(containerBox.height - 8, y + 12) : Math.max(8, y - 12);
-      tooltip.style.left = `${leftClamped2}px`;
+      tooltip.style.left = `${leftClamped}px`;
       tooltip.style.top = `${topPos}px`;
     }
 
@@ -599,35 +933,89 @@ function renderSimpleChart(metrics) {
       pinnedRect = rectEl;
       tooltip.classList.add('pinned');
       updatePinnedIndicator(rectEl);
-      stopFollow();
     }
   }
 
   function hideTooltip() {
     if (pinned) return; // don't hide when pinned
+    const tooltip = el.querySelector('.chart-tooltip');
+    if (!tooltip) return;
+
     tooltip.classList.remove('visible');
-    tooltip.classList.remove('below');
     hideTimeout = setTimeout(() => {
       tooltip.style.display = 'none';
       tooltip.innerHTML = '';
       tooltipIsShown = false;
-      stopFollow();
-    }, 180);
+    }, 150); // Short delay for normal hide
   }
 
   function unpinTooltip() {
     pinned = false;
     pinnedRect = null;
-    tooltip.classList.remove('pinned');
-    tooltip.classList.remove('visible');
-    updatePinnedIndicator(null);
-    setTimeout(() => {
+    const tooltip = el.querySelector('.chart-tooltip');
+    if (tooltip) {
+      tooltip.classList.remove('pinned');
+      tooltip.classList.remove('visible');
+      updatePinnedIndicator(null);
+      // Hide immediately
       tooltip.style.display = 'none';
       tooltipIsShown = false;
-      stopFollow();
-    }, 180);
+    }
   }
 
+  function setupTooltipButtons() {
+    const tooltip = el.querySelector('.chart-tooltip');
+    if (!tooltip) return;
+
+    // Remove existing event listeners to prevent duplicates
+    const existingCloseBtn = tooltip.querySelector('.tooltip-close');
+    const existingPinBtn = tooltip.querySelector('.tooltip-pin');
+
+    if (existingCloseBtn) {
+      existingCloseBtn.replaceWith(existingCloseBtn.cloneNode(true));
+    }
+    if (existingPinBtn) {
+      existingPinBtn.replaceWith(existingPinBtn.cloneNode(true));
+    }
+
+    // Re-attach event listeners to fresh buttons
+    const closeBtn = tooltip.querySelector('.tooltip-close');
+    const pinBtn = tooltip.querySelector('.tooltip-pin');
+
+    if (closeBtn) {
+      closeBtn.onclick = (ev) => {
+        ev.stopPropagation();
+        pinned = false;
+        pinnedRect = null;
+        tooltip.classList.remove('pinned');
+        tooltip.classList.remove('visible');
+        updatePinnedIndicator(null);
+        tooltip.style.display = 'none';
+        tooltip.innerHTML = '';
+        tooltipIsShown = false;
+      };
+    }
+
+    if (pinBtn) {
+      pinBtn.onclick = (ev) => {
+        ev.stopPropagation();
+        pinned = !pinned;
+        if (pinned) {
+          pinnedRect = tooltip._currentRect;
+          tooltip.classList.add('pinned');
+          pinBtn.textContent = '📍';
+          updatePinnedIndicator(tooltip._currentRect);
+        } else {
+          pinnedRect = null;
+          tooltip.classList.remove('pinned');
+          pinBtn.textContent = '📌';
+          updatePinnedIndicator(null);
+        }
+      };
+    }
+  }
+
+  // Attach event listeners to all chart rectangles
   el.querySelectorAll('rect[data-offering]').forEach((rect) => {
     rect.addEventListener('mouseenter', (ev) => {
       if (hideTimeout) {
@@ -657,18 +1045,90 @@ function renderSimpleChart(metrics) {
     });
   });
 
-  // click outside to unpin
-  document.addEventListener('click', (ev) => {
-    if (!pinned) return;
-    if (!el.contains(ev.target)) unpinTooltip();
-  });
+  // click outside to unpin (only add once)
+  if (!document._chartClickHandler) {
+    document._chartClickHandler = (ev) => {
+      if (!pinned) return;
+      if (!el.contains(ev.target)) unpinTooltip();
+    };
+    document.addEventListener('click', document._chartClickHandler);
+  }
 
-  // escape key to close
-  document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape' && pinned) {
-      unpinTooltip();
-    }
-  });
+  // escape key to close (only add once)
+  if (!document._chartKeyHandler) {
+    document._chartKeyHandler = (ev) => {
+      if (ev.key === 'Escape' && pinned) {
+        unpinTooltip();
+      }
+    };
+    document.addEventListener('keydown', document._chartKeyHandler);
+  }
+}
+
+function updateBreakEvenAnalysis(metrics) {
+  const analysisEl = $('#breakEvenAnalysis');
+  if (!analysisEl) return;
+
+  if (!Number.isFinite(metrics.breakEvenRevenue) || metrics.breakEvenRevenue <= 0) {
+    analysisEl.style.display = 'none';
+    return;
+  }
+
+  const totalFixedCosts = metrics.annualFixedCosts + metrics.annualPayroll;
+  const surplus = metrics.revenue - metrics.breakEvenRevenue;
+  const surplusPct = metrics.breakEvenRevenue > 0 ? (surplus / metrics.breakEvenRevenue) * 100 : 0;
+
+  let status = '';
+  let statusColor = '';
+  if (surplus > 0) {
+    status = `Above break-even by ${fmtMoney0(surplus)} (${surplusPct.toFixed(1)}%)`;
+    statusColor = 'var(--good)';
+  } else if (surplus < 0) {
+    status = `Below break-even by ${fmtMoney0(Math.abs(surplus))} (${Math.abs(surplusPct).toFixed(1)}%)`;
+    statusColor = 'var(--bad)';
+  } else {
+    status = 'At break-even point';
+    statusColor = 'var(--warn)';
+  }
+
+  const clientGap = metrics.breakEvenClients - metrics.clients;
+  let clientStatus = '';
+  if (clientGap > 0) {
+    clientStatus = `Need ${fmtInt(clientGap)} more clients to break even`;
+  } else if (clientGap < 0) {
+    clientStatus = `${fmtInt(Math.abs(clientGap))} clients above break-even`;
+  } else {
+    clientStatus = 'At break-even client count';
+  }
+
+  analysisEl.innerHTML = `
+    <div class="break-even-header">
+      <h4 style="margin: 0 0 8px 0; font-size: 14px; color: var(--text);">Break-Even Analysis</h4>
+    </div>
+    <div class="break-even-content">
+      <div class="break-even-item">
+        <span class="break-even-label">Status:</span>
+        <span class="break-even-value" style="color: ${statusColor};">${status}</span>
+      </div>
+      <div class="break-even-item">
+        <span class="break-even-label">Client status:</span>
+        <span class="break-even-value">${clientStatus}</span>
+      </div>
+      <div class="break-even-item">
+        <span class="break-even-label">Fixed costs covered:</span>
+        <span class="break-even-value">${fmtPct1(Math.min(100, (metrics.revenue / metrics.breakEvenRevenue) * 100))}</span>
+      </div>
+      ${metrics.contributionMarginRatio > 0 ? `
+      <div class="break-even-item">
+        <span class="break-even-label">Contribution ratio:</span>
+        <span class="break-even-value">${fmtPct1(metrics.contributionMarginRatio * 100)}</span>
+      </div>
+      ` : ''}
+    </div>
+  `;
+
+  analysisEl.style.display = 'block';
+
 }
 
 function render() {
@@ -767,6 +1227,9 @@ function render() {
 
   // KPIs
   updateOutputs(metrics);
+
+  // Update validation messages
+  updateValidationDisplay();
 }
 
 // Update only outputs (KPIs, capacity meter, chart, debug) without re-rendering the offerings table.
@@ -781,6 +1244,25 @@ function updateOutputs(metrics) {
     $('#kpiFixedCosts').textContent = fmtMoney0(metrics.annualFixedCosts);
     $('#kpiPayroll').textContent = fmtMoney0(metrics.annualPayroll);
     $('#kpiVariableCosts').textContent = fmtMoney0(metrics.variableCosts);
+
+    // Break-even analysis
+    const breakEvenClientsEl = $('#kpiBreakEvenClients');
+    const breakEvenRevenueEl = $('#kpiBreakEvenRevenue');
+    const contributionMarginEl = $('#kpiContributionMargin');
+
+    if (breakEvenClientsEl) {
+      breakEvenClientsEl.textContent = Number.isFinite(metrics.breakEvenClients) ? fmtInt(metrics.breakEvenClients) : '∞';
+      breakEvenClientsEl.style.color = metrics.clients >= metrics.breakEvenClients ? 'var(--good)' : 'var(--bad)';
+    }
+
+    if (breakEvenRevenueEl) {
+      breakEvenRevenueEl.textContent = Number.isFinite(metrics.breakEvenRevenue) ? fmtMoney0(metrics.breakEvenRevenue) : '$∞';
+    }
+
+    if (contributionMarginEl) {
+      contributionMarginEl.textContent = fmtMoney0(metrics.contributionMarginPerClient);
+      contributionMarginEl.style.color = metrics.contributionMarginPerClient > 0 ? 'var(--good)' : 'var(--bad)';
+    }
 
     const incomeEl = $('#kpiIncome');
     if (incomeEl) {
@@ -803,6 +1285,9 @@ function updateOutputs(metrics) {
     } catch (e) {
       console.warn('Chart render failed:', e);
     }
+
+    // Update break-even analysis
+    updateBreakEvenAnalysis(metrics);
 
     // Update debug panel if present
     const dbg = $('#debugPanel');
@@ -846,14 +1331,68 @@ function onTableInput(e) {
 
   // Validate and sanitize input based on field type
   let value = el.value;
-  if (k === 'priceMonthly' || k === 'variableCostPerSession') {
-    value = Math.max(0, safeParseNumber(value, 0));
-  } else if (k === 'sessionsPerYear' || k === 'currentClients') {
-    value = Math.max(0, Math.floor(safeParseNumber(value, 0)));
+  let validationError = null;
+
+  if (k === 'priceMonthly') {
+    const parsed = safeParseNumber(value, 0);
+    if (parsed <= 0) {
+      validationError = 'Price must be greater than $0';
+      value = 0;
+    } else {
+      value = parsed;
+    }
+  } else if (k === 'variableCostPerSession') {
+    const parsed = safeParseNumber(value, 0);
+    if (parsed < 0) {
+      validationError = 'Variable costs cannot be negative';
+      value = 0;
+    } else {
+      value = parsed;
+    }
+  } else if (k === 'sessionsPerYear') {
+    const parsed = Math.floor(safeParseNumber(value, 0));
+    if (parsed <= 0) {
+      validationError = 'Must have at least 1 session per year';
+      value = 1;
+    } else {
+      value = parsed;
+    }
   } else if (k === 'hoursPerSession') {
-    value = Math.max(0, safeParseNumber(value, 0));
+    const parsed = safeParseNumber(value, 0);
+    if (parsed <= 0) {
+      validationError = 'Session must take at least 0.1 hours';
+      value = 0.1;
+    } else {
+      value = parsed;
+    }
+  } else if (k === 'currentClients') {
+    const parsed = Math.floor(safeParseNumber(value, 0));
+    if (parsed < 0) {
+      validationError = 'Client count cannot be negative';
+      value = 0;
+    } else {
+      value = parsed;
+    }
   } else if (k === 'mixPct') {
-    value = safeParseNumber(value, 0, 0, 100);
+    const parsed = safeParseNumber(value, 0, 0, 100);
+    value = parsed;
+  }
+
+  // Show validation error if any and provide auto-fix for some cases
+  if (validationError) {
+    console.warn(`Validation error for ${k}: ${validationError}`);
+
+    // Auto-fix common issues
+    if (k === 'priceMonthly' && value === 0 && o.priceMonthly === 0) {
+      // Suggest a reasonable default price
+      const suggestedPrice = o.name?.toLowerCase().includes('premium') ? 300 :
+                            o.name?.toLowerCase().includes('basic') ? 100 : 200;
+      console.info(`Suggestion: Try setting price to $${suggestedPrice}/month for "${o.name}"`);
+    }
+
+    if (k === 'hoursPerSession' && value === 0.1 && o.hoursPerSession === 0.1) {
+      console.info(`Suggestion: Typical session lengths are 1-2 hours for service work`);
+    }
   }
 
   if (k === 'name') {
@@ -873,6 +1412,7 @@ function onTableInput(e) {
   try {
     const metrics = calc();
     updateOutputs(metrics);
+    updateValidationDisplay(); // Update validation messages after calculations
   } catch (e) {
     console.warn('Failed to refresh outputs on input:', e);
   }
@@ -1032,6 +1572,7 @@ function loadScenario(scenarioId) {
     state.targetUtilizationPct = scenario.state.targetUtilizationPct ?? state.targetUtilizationPct;
     state.lockMix = scenario.state.lockMix ?? state.lockMix;
 
+    persistState(); // Save loaded scenario as current state
     render();
     closeScenarioModal();
   } catch (e) {
@@ -1121,6 +1662,9 @@ function wire() {
       state.productiveUtilizationPct = parsed.productiveUtilizationPct ?? state.productiveUtilizationPct;
       state.targetUtilizationPct = parsed.targetUtilizationPct ?? state.targetUtilizationPct;
       state.lockMix = parsed.lockMix ?? state.lockMix;
+
+      // Validate loaded data and sanitize if needed
+      validateAndSanitizeLoadedState();
     }
   } catch (e) {
     console.warn('Failed to load saved state:', e);

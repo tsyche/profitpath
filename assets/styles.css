@@ -39,6 +39,18 @@ body{
   padding: 18px 28px 44px;
 }
 
+@media (max-width: 768px){
+  .page{
+    padding: 12px 16px 24px;
+  }
+}
+
+@media (max-width: 480px){
+  .page{
+    padding: 8px 12px 16px;
+  }
+}
+
 .header{
   display:flex;
   align-items:flex-start;
@@ -87,10 +99,15 @@ body{
   justify-self: end;
 }
 @media (max-width: 1100px){
-  .grid{grid-template-columns:1fr;}
-  .grid > aside.card{
-    max-width: none;
-    justify-self: auto;
+  .grid{
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  .grid > aside.card,
+  .grid > section.card,
+  .card{
+    max-width: none !important;
+    width: 100% !important;
   }
 }
 
@@ -305,6 +322,44 @@ button:focus {
   color:var(--accent);
   margin-left:12px;
 }
+
+/* Break-even analysis section */
+.break-even-section{
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(251,191,36,0.3);
+  background: rgba(251,191,36,0.08);
+  box-shadow: 0 2px 8px rgba(251,191,36,0.1);
+}
+
+.break-even-header h4{
+  color: var(--text);
+}
+
+.break-even-content{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.break-even-item{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.break-even-label{
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.break-even-value{
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text);
+}
 @media (max-width: 520px){
   .simple-chart .offering-item{padding:6px 8px}
   .simple-chart .offering-item .o-val{display:none;} /* hide annual value on very small screens to reduce clutter */
@@ -322,10 +377,14 @@ button:focus {
   transform: translate(-50%, -120%);
   white-space:nowrap;
   z-index:30;
-  opacity: 0;
-  transition: opacity 0.16s ease, transform 0.16s ease;
+  opacity: 1;
+  transition: opacity 0.1s ease, transform 0.1s ease;
   display:block; /* keep present for measurement; visibility controlled via .visible */
   visibility: hidden;
+}
+
+.simple-chart .chart-tooltip.pinned{
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease, background 0.2s ease;
 }
 .simple-chart .chart-tooltip.visible{
   opacity: 1;
@@ -358,9 +417,24 @@ button:focus {
 }
 
 /* Pinned tooltip styling */
+.simple-chart .chart-tooltip{
+  transition: all 0.2s ease;
+}
+
 .simple-chart .chart-tooltip.pinned{
-  box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.2), 0 0 0 2px rgba(94,234,212,0.3);
+  border: 1px solid rgba(94,234,212,0.6);
+  background: rgba(0,0,0,0.95);
+  transform: translate(-50%, -140%) scale(1.02);
+}
+
+/* Pin button visual feedback */
+.simple-chart .tooltip-pin{
+  transition: transform 0.1s ease;
+}
+
+.simple-chart .tooltip-pin:hover{
+  transform: scale(1.1);
 }
 
 .simple-chart .tooltip-close{
@@ -372,6 +446,11 @@ button:focus {
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 6px;
+  transition: background-color 0.1s ease;
+}
+
+.simple-chart .tooltip-close:hover{
+  background: rgba(255,255,255,0.1);
 }
 .simple-chart .tooltip-close:hover{background: rgba(255,255,255,0.03)}
 
@@ -384,6 +463,11 @@ button:focus {
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 6px;
+  transition: background-color 0.1s ease;
+}
+
+.simple-chart .tooltip-pin:hover{
+  background: rgba(255,255,255,0.1);
 }
 .simple-chart .tooltip-pin:hover{background: rgba(255,255,255,0.03)}
 
@@ -498,6 +582,59 @@ input[type="checkbox"]{
   padding: 10px 12px;
   margin-bottom: 12px;
   font-size: 12px;
+}
+
+/* Validation Messages */
+.validation-container{
+  max-width: 100%;
+  margin: 0 auto 14px;
+  padding: 0 28px;
+}
+
+.validation-errors, .validation-warnings{
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.validation-errors{
+  border: 1px solid rgba(251,113,133,0.4);
+  background: rgba(251,113,133,0.08);
+}
+
+.validation-warnings{
+  border: 1px solid rgba(251,191,36,0.4);
+  background: rgba(251,191,36,0.08);
+}
+
+.validation-item{
+  margin-bottom: 10px;
+}
+
+.validation-item:last-child{
+  margin-bottom: 0;
+}
+
+.validation-message{
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: rgba(255,255,255,0.95);
+  margin-bottom: 4px;
+}
+
+.validation-message strong{
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.validation-suggestion{
+  color: rgba(255,255,255,0.75);
+  font-size: 12px;
+  margin-left: 22px;
+  font-style: italic;
 }
 
 /* Offerings table: always stack cells with labels so there's never horizontal scrolling.

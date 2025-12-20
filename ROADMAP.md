@@ -23,10 +23,18 @@ Open http://localhost:8000 to preview the app.
   - Simple revenue composition chart with per-offering breakdown and hover tooltips (pin/close behavior implemented).
   - Collapsible Debug panel added at the bottom of the Outputs card (shows `calc()` JSON); state persists in `localStorage`.
   - Finalized single SVG header logo and cleaned up legacy logo variants.
+  - **Responsive mobile layout** with proper width utilization on small screens.
+  - **Enhanced tooltip positioning** with smooth hover tracking and reliable pinning/unpinning.
 
 - Persistence & export
   - localStorage auto-save/load of app state and scenario management (save/load/delete).
   - CSV export for scenario summary and per-offering rows.
+
+- Data Validation & Business Intelligence
+  - **Comprehensive input validation** with contextual error messages and auto-fix suggestions.
+  - **Business logic validation** including utilization warnings and profitability checks.
+  - **Break-even analysis** with visual indicators, contribution margin calculations, and client/revenue break-even points.
+  - **Graceful error handling** with data sanitization and recovery.
 
 ---
 
@@ -52,27 +60,15 @@ Medium priority
 6. Scenario comparison (diff view).
 7. Add CI with linting and tests.
 
-Medium priority
-
-5. Simple visualizations: utilization gauge and optional richer charts.
-6. Scenario comparison (diff view).
-7. Add CI with linting and tests.
-
 Technical Foundation & Quality (Foundation Layer)
 
-8. Enhanced Data Validation & Error Handling
-   - Input validation with contextual error messages (e.g., "Mix % must sum to 100%" with auto-fix suggestions)
-   - Business logic validation (e.g., warn when utilization exceeds 100%)
-   - Graceful degradation for edge cases
-   - Effort: ~2-3 hours
-
-9. Calculation Engine Refactoring
+8. Calculation Engine Refactoring
    - Extract `calc()` into separate module with better separation of concerns
    - Add calculation pipeline with intermediate results for debugging
    - Implement calculation caching for performance
    - Effort: ~3-4 hours
 
-10. Advanced Formatting & Localization
+9. Advanced Formatting & Localization
     - Multiple currency support beyond USD
     - Localized number formatting
     - Configurable decimal precision per metric
@@ -80,26 +76,20 @@ Technical Foundation & Quality (Foundation Layer)
 
 Business Intelligence & Analytics (Core Enhancement)
 
-11. Break-Even Analysis
-    - Calculate break-even points (clients needed, revenue required)
-    - Show break-even lines on charts
-    - Break-even sensitivity analysis
-    - Effort: ~3-4 hours
-
-12. Sensitivity Analysis & What-If Scenarios
+10. Sensitivity Analysis & What-If Scenarios
     - "What if" sliders for key variables (pricing, costs, utilization)
     - Tornado charts showing impact of variable changes
     - Monte Carlo simulation for risk assessment
     - Effort: ~6-8 hours
 
-13. Tax & Financial Calculations
+11. Tax & Financial Calculations
     - Self-employment tax calculations
     - Quarterly tax estimates
     - Depreciation tracking
     - Profit sharing calculations
     - Effort: ~4-5 hours
 
-14. Customer Acquisition & Growth Modeling
+12. Customer Acquisition & Growth Modeling
     - Customer acquisition cost (CAC) tracking
     - Customer lifetime value (LTV) calculations
     - Churn rate modeling
@@ -108,27 +98,27 @@ Business Intelligence & Analytics (Core Enhancement)
 
 Enhanced User Experience (UX Layer)
 
-15. Shareable URLs & Collaboration
+13. Shareable URLs & Collaboration
     - Encode scenarios in URL fragments for sharing
     - Social media sharing with preview cards
     - Embeddable calculator widgets
     - Effort: ~3-4 hours
 
-16. Advanced Export & Reporting
+14. Advanced Export & Reporting
     - PDF report generation with charts
     - Excel export with formulas
     - Email sharing functionality
     - Automated report scheduling
     - Effort: ~5-7 hours
 
-17. Guided Experience & Onboarding
+15. Guided Experience & Onboarding
     - Interactive walkthrough for new users
     - Industry-specific setup wizards
     - Progressive disclosure of advanced features
     - Contextual help tooltips
     - Effort: ~4-5 hours
 
-18. Accessibility & Mobile Experience
+16. Accessibility & Mobile Experience
     - Full keyboard navigation
     - Screen reader optimization
     - Mobile-responsive design improvements
@@ -137,21 +127,21 @@ Enhanced User Experience (UX Layer)
 
 Advanced Visualizations (Presentation Layer)
 
-19. Rich Dashboard Visualizations
+17. Rich Dashboard Visualizations
     - Cash flow timeline charts
     - Profit/loss waterfall diagrams
     - Utilization gauge with historical trends
     - KPI trend lines with forecasting
     - Effort: ~6-8 hours
 
-20. Interactive Scenario Comparison
+18. Interactive Scenario Comparison
     - Side-by-side scenario comparison
     - Diff highlighting for changes
     - Scenario blending (weighted averages)
     - Correlation analysis between variables
     - Effort: ~5-6 hours
 
-21. Advanced Chart Types
+19. Advanced Chart Types
     - Heat maps for multi-variable sensitivity
     - Radar charts for balanced scorecard
     - Funnel charts for customer journey
@@ -160,14 +150,14 @@ Advanced Visualizations (Presentation Layer)
 
 Industry Intelligence & Templates (Domain Layer)
 
-22. Industry Presets & Benchmarks
+20. Industry Presets & Benchmarks
     - Curated templates for common service businesses
     - Industry benchmark comparisons
     - Regional pricing data
     - Success metric tracking
     - Effort: ~6-8 hours
 
-23. Seasonal & Market Adjustments
+21. Seasonal & Market Adjustments
     - Seasonal demand modeling
     - Geographic pricing variations
     - Market rate comparisons
@@ -176,28 +166,28 @@ Industry Intelligence & Templates (Domain Layer)
 
 Enterprise Features (Scale Layer)
 
-24. Advanced Scenario Management
+22. Advanced Scenario Management
     - Scenario versioning and history
     - Bulk import/export operations
     - Scenario templates and inheritance
     - Team sharing and permissions
     - Effort: ~8-10 hours
 
-25. Integration & Automation
+23. Integration & Automation
     - API for third-party integrations
     - Webhook notifications for key metrics
     - Automated data syncing
     - CRM/ERP system connections
     - Effort: ~10-12 hours
 
-26. Multi-Year Strategic Planning
+24. Multi-Year Strategic Planning
     - 3-5 year financial projections
     - Hiring and scaling recommendations
     - Investment payback analysis
     - Strategic milestone tracking
     - Effort: ~8-10 hours
 
-27. Optimizer Mode & AI Insights
+25. Optimizer Mode & AI Insights
     - Automated optimization suggestions
     - Machine learning price optimization
     - Predictive analytics
@@ -213,26 +203,25 @@ Tech debt & DX
 
 ## Top 3 Next Priorities
 
-Based on codebase analysis and logical dependencies:
+Based on user impact and business value:
 
-1. **Enhanced Data Validation & Error Handling** (#8)
-   - Prevents user frustration, improves data quality, enables more robust calculations
-   - 2-3 hours effort, can start immediately
+1. **Shareable URLs & Collaboration** (#14)
+   - Critical for user adoption - enables sharing scenarios with stakeholders
+   - 3-4 hours effort, high user impact, can be implemented independently
 
-2. **Break-Even Analysis** (#11)
-   - Fundamental business intelligence users expect from a profitability simulator
-   - Makes the tool much more actionable for business planning
-   - 3-4 hours effort, builds on validation
+2. **Advanced Export & Reporting** (#13)
+   - Users need better ways to export and present their analysis results
+   - 5-7 hours effort, improves usability and professional presentation
 
-3. **Shareable URLs & Collaboration** (#15)
-   - Enables collaboration and broader adoption
-   - 3-4 hours effort, can be implemented independently
+3. **Rich Dashboard Visualizations** (#16)
+   - Enhanced visual insights make the tool more compelling and easier to understand
+   - 6-8 hours effort, improves user engagement and decision-making
 
 ---
 
 Notes
 
-- The repo now contains a stable, single-page experience with the core calculation and UX pieces in place.
-- The roadmap has been expanded from 8 items to 27 items across 6 logical categories.
-- Focus on foundation layer items (8-10) for reliability, then core enhancements (11-14) for business value, then UX improvements (15-18) for usability.
-- Enterprise features (24-27) represent significant scope expansion and may require backend infrastructure.
+- The repo now contains a stable, production-ready profitability simulator with comprehensive data validation, break-even analysis, and polished UX.
+- **Recently completed**: Enhanced data validation (#8) and break-even analysis (#11) - core business intelligence features now available.
+- **Next priorities**: Calculation engine refactoring (#8), shareable URLs (#14), and localization (#9) for improved maintainability and user experience.
+- Enterprise features (22-25) represent significant scope expansion and may require backend infrastructure.

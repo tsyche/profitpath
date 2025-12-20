@@ -7,12 +7,13 @@ This repository contains ProfitPath — a small client-side profitability and ca
 
 What this repo contains
 - `index.html`, `assets/app.js`, `assets/styles.css` — main app code (vanilla JS, no build step required).
-- `FUTURE_IMPROVEMENTS.md` — consolidated backlog for planned features (single source of truth).
-- `IMPROVEMENTS.md` — summary of completed implementation and verification notes.
+- `ROADMAP.md` — consolidated roadmap with completed features and planned improvements (single source of truth).
 
 Quick status
-- Core accessibility, persistence (localStorage), and UI improvements are implemented.
-- The small revenue composition chart, hover tooltips (with pin), offering breakdown list, collapsible debug panel, and finalized header logo are implemented.
+- **Core Features**: Forecast/current mode simulation, revenue composition charts with interactive hover tooltips, scenario management with localStorage persistence.
+- **Business Intelligence**: Break-even analysis with visual indicators, contribution margin calculations, profitability insights.
+- **Data Validation**: Comprehensive input validation with contextual error messages and business logic checks.
+- **UI/UX**: Responsive design, mobile-optimized layout, collapsible debug panel, polished visual design.
 
 Run locally
 1. Start a static server in the project root:
@@ -23,9 +24,8 @@ python3 -m http.server 8000
 
 2. Open http://localhost:8000 in your browser.
 
-Documentation & backlog
-- For the consolidated backlog and future work, see `FUTURE_IMPROVEMENTS.md`.
-- For the list of completed changes and verification notes, see `IMPROVEMENTS.md`.
+Documentation & roadmap
+- For the complete roadmap with completed features and future plans, see `ROADMAP.md`.
 
 Contributing
 - Create a branch: `git checkout -b feature/my-feature`
