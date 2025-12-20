@@ -513,6 +513,58 @@ function resetDefaults() {
   render();
 }
 
+function exportAsCSV() {
+  const results = calc();
+
+  // CSV header with summary metrics
+  const lines = [
+    'ProfitPath Export',
+    new Date().toLocaleString(),
+    '',
+    'SUMMARY',
+    `Mode,${state.mode}`,
+    `Employees,${state.employees}`,
+    `Employee Pay,${fmtMoney0(state.employeePay)}`,
+    `Monthly Overhead,${fmtMoney0(state.monthlyCosts)}`,
+    `Productive Utilization,${fmtPct1(state.productiveUtilizationPct)}`,
+    `Target Utilization,${fmtPct1(state.targetUtilizationPct)}`,
+    '',
+    'RESULTS',
+    `Total Revenue,${fmtMoney0(results.totalRevenue)}`,
+    `Total Variable Costs,${fmtMoney0(results.totalVariableCosts)}`,
+    `Contribution Margin,${fmtMoney0(results.contributionMargin)}`,
+    `Fixed Overhead,${fmtMoney0(results.fixedOverhead)}`,
+    `Net Profit,${fmtMoney0(results.netProfit)}`,
+    `Profit Margin,${fmtPct1(results.profitMarginPct)}`,
+    `Billable Hours,${fmtInt(results.billableHours)}`,
+    `Utilization,${fmtPct1(results.utilization)}`,
+    '',
+    'OFFERINGS',
+    'Name,Price/Month,Visits/Year,Hours/Visit,Variable Cost/Visit,Mix %,Current Customers,Annual Revenue,Customers Needed',
+  ];
+
+  state.offerings.forEach((o) => {
+    const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentCustomers);
+    const customersNeeded = state.mode === 'forecast' ? Math.ceil((o.visitsPerYear * state.employees * state.productiveUtilizationPct / 100) / o.visitsPerYear) : o.currentCustomers;
+    lines.push(
+      `"${o.name}",${o.priceMonthly},${o.visitsPerYear},${o.hoursPerVisit},${o.variableCostPerVisit},${o.mixPct},${o.currentCustomers},${fmtMoney0(annualRevenue)},${customersNeeded}`
+    );
+  });
+
+  const csv = lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', `profitpath-export-${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 // Scenario Management
 function getAllScenarios() {
   try {
@@ -700,6 +752,7 @@ function wire() {
 
   $('#addOfferingBtn').addEventListener('click', addOffering);
   $('#resetBtn').addEventListener('click', resetDefaults);
+  $('#exportBtn').addEventListener('click', exportAsCSV);
 
   $('#offeringsBody').addEventListener('input', onTableInput);
   $('#offeringsBody').addEventListener('click', onTableClick);

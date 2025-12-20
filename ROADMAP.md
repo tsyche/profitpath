@@ -11,6 +11,10 @@ All 7 high-priority improvements are **complete and deployed**:
 - Better property naming
 - SEO meta tags
 
+**Recent additions:**
+- Responsive layout optimization (inputs & outputs both 774px width)
+- CSV Export feature (45 min)
+
 **Status:** Production-ready. Zero breaking changes. Fully backward-compatible.
 
 ---
@@ -29,12 +33,9 @@ Choose from 11 planned features in prioritized order. Detailed specs are in `IMP
 - **Impact:** Makes persistence feature discoverable
 - **Start here if:** You want visible scenario management
 
-#### 2. Add CSV Export (45 min)
+#### ~~2. Add CSV Export (45 min)~~ ✅ DONE
 - **What:** "Export as CSV" button downloads offerings + results
-- **Why:** Users want to analyze in Excel/Sheets or share external reports
-- **Value:** ⭐⭐⭐⭐ (high demand feature)
-- **Impact:** Major workflow improvement
-- **Start here if:** You want data portability
+- **Status:** Complete! Export button in header exports summary metrics and offerings table.
 
 #### 3. Add Per-Offering Metrics (1 hr)
 - **What:** Show revenue, margin %, hours-per-customer in each offering card
@@ -176,7 +177,7 @@ Is this a commercial product?
 | Feature | Files | Complexity |
 |---------|-------|------------|
 | #1: localStorage UI | `app.js`, `index.html`, `styles.css` | Medium |
-| #2: CSV Export | `app.js` | Low |
+| ~~#2: CSV Export~~ ✅ | ✅ Done | ✅ Done |
 | #3: Per-offering metrics | `app.js`, `styles.css` | Low |
 | #4: Extract module | Create `lib/calc.js`, update `app.js` | Medium |
 | #5: Unit tests | Create `__tests__/`, `vitest.config.js` | High |
