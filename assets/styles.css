@@ -56,7 +56,9 @@ body{
 
 /* Logo styling (inline SVG) */
 .logo{display:flex;flex-direction:column;align-items:flex-start}
-.logo-svg{height:40px;width:auto;display:block}
+.logo-final{height:56px;width:auto;display:block;margin-bottom:14px}
+.logo .subtitle{margin-top:0}
+.logo{display:flex;flex-direction:column;align-items:flex-start}
 .logo-text{font-weight:800;letter-spacing:0}
 .logo-sub{display:none}
 
@@ -257,6 +259,14 @@ button:focus {
 }
 .simple-chart .segment-label{font-size:10px; color:rgba(255,255,255,0.92)}
 .simple-chart .right strong{font-family:var(--mono);}
+
+/* Debug panel (collapsible) */
+.debug-wrapper{margin-top:12px; margin-bottom:8px}
+.debug-toggle{appearance:none;background:transparent;border:none;color:var(--muted);font-family:var(--sans);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.debug-toggle:focus{outline:2px solid rgba(94,234,212,0.18);outline-offset:2px}
+.debug-body{margin-top:8px}
+.debug-body.collapsed{display:none}
+.debug-pre{background: rgba(0,0,0,0.12); padding:8px; border-radius:8px; color:var(--muted); font-size:12px; max-height:160px; overflow:auto; white-space:pre-wrap}
 
 /* Below-bar per-offering compact list */
 .simple-chart{position:relative}

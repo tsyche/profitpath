@@ -12,7 +12,7 @@ What this repo contains
 
 Quick status
 - Core accessibility, persistence (localStorage), and UI improvements are implemented.
-- The small revenue composition chart, hover tooltips (with pin), and an offering breakdown list are implemented.
+- The small revenue composition chart, hover tooltips (with pin), offering breakdown list, collapsible debug panel, and finalized header logo are implemented.
 
 Run locally
 1. Start a static server in the project root:
@@ -35,4 +35,3 @@ License
 - (Add license details here if desired)
 
 ``` 
-**Start here if:** You want to get up to speed quickly

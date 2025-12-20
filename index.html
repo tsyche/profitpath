@@ -16,15 +16,7 @@
     <header class="header">
       <div>
         <div class="logo" id="logo">
-          <svg class="logo-svg" viewBox="0 0 240 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-            <defs>
-              <linearGradient id="logoGrad" x1="0" x2="1">
-                <stop offset="0%" stop-color="#06b6d4"/>
-                <stop offset="100%" stop-color="#6366f1"/>
-              </linearGradient>
-            </defs>
-            <text x="0" y="24" class="logo-text" style="font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; font-weight:800; font-size:22px; fill: url(#logoGrad); stroke: rgba(255,255,255,0.06); stroke-width:0.6;">ProfitPath</text>
-          </svg>
+          <img src="assets/logo-final.svg" class="logo-final" alt="ProfitPath logo" />
           <div class="subtitle">A lightweight simulator for recurring-cadence service businesses (no backend, no build step).</div>
         </div>
       </div>
@@ -114,7 +106,7 @@
             <div class="field">
               <label>Productive utilization</label>
               <input id="productiveUtilizationPct" type="number" min="0" max="100" step="1" value="80" />
-              <div class="hint">% of paid hours actually available for service delivery.</div>
+              <div class="hint">% of paid hours actually available for delivering sessions.</div>
             </div>
 
             <div class="field">
@@ -141,13 +133,13 @@
                 <tr>
                   <th>Offering</th>
                   <th>Price / mo</th>
-                  <th>Visits / yr</th>
-                  <th>Hours / visit</th>
-                  <th>Var $ / visit</th>
+                  <th>Sessions / yr</th>
+                  <th>Hours / session</th>
+                  <th>Var $ / session</th>
                   <th>Mix % (forecast)</th>
-                  <th>Customers (current)</th>
-                  <th>Est. customers</th>
-                  <th>Est Service Count</th>
+                  <th>Clients (current)</th>
+                  <th>Est. clients</th>
+                  <th>Est. sessions</th>
                   <th></th>
                 </tr>
               </thead>
@@ -183,19 +175,19 @@
 
           <div class="kpi-grid">
             <div class="kpi">
-              <div class="k">Customers</div>
-              <div class="v" id="kpiCustomers">0</div>
+              <div class="k">Clients</div>
+              <div class="v" id="kpiClients">0</div>
               <div class="sub">Across all offerings</div>
             </div>
             <div class="kpi">
-              <div class="k">Annual visits</div>
-              <div class="v" id="kpiVisits">0</div>
-              <div class="sub">Total service visits</div>
+              <div class="k">Annual sessions</div>
+              <div class="v" id="kpiSessions">0</div>
+              <div class="sub">Total sessions across offerings</div>
             </div>
             <div class="kpi">
-              <div class="k">Hours used</div>
-              <div class="v" id="kpiHours">0</div>
-              <div class="sub">Service delivery hours</div>
+              <div class="k">Service hours</div>
+              <div class="v" id="kpiServiceHours">0</div>
+              <div class="sub">Hours required to deliver sessions</div>
             </div>
             <div class="kpi">
               <div class="k">Utilization</div>
@@ -221,7 +213,7 @@
             <div class="kpi">
               <div class="k">Variable costs</div>
               <div class="v" id="kpiVariableCosts">$0</div>
-              <div class="sub">Per-visit costs</div>
+              <div class="sub">Per-session costs</div>
             </div>
           </div>
 
@@ -231,6 +223,14 @@
           
           <!-- Simple chart: Revenue composition (variable costs vs contribution) -->
           <div id="simpleChart" class="simple-chart" aria-hidden="true"></div>
+
+          <!-- Debug panel (collapsible) placed at the bottom of the Outputs card -->
+          <div class="debug-wrapper">
+            <button id="debugToggle" class="debug-toggle" aria-expanded="false" aria-controls="debugBody">▶ Debug</button>
+            <div id="debugBody" class="debug-body collapsed" aria-hidden="true">
+              <pre id="debugPanel" class="debug-pre">Debug: no data yet</pre>
+            </div>
+          </div>
         </div>
       </aside>
     </div>
@@ -244,6 +244,7 @@
         if (isFile) document.getElementById('fileWarning')?.classList.remove('hidden');
       } catch (e) {}
     })();
+    // No-op here; logo is finalized as a single image.
   </script>
 
   <script type="module" src="assets/app.js"></script>

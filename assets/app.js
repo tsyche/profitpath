@@ -9,7 +9,7 @@ const DEFAULT_CURRENCY = 'USD';
 // Chart tooltip options: toggle what extra info to display
 const CHART_TOOLTIP_OPTIONS = {
   showPercent: true,
-  showHoursPerCustomer: true,
+  showServiceHoursPerClient: true,
 };
 
 function uuid() {
@@ -44,10 +44,10 @@ function safeParseNumber(value, defaultValue = 0, minVal = null, maxVal = null) 
 
 function defaultOfferings() {
   return [
-    // Provide non-zero currentCustomers so switching modes immediately shows calculations.
-    { id: uuid(), name: 'Weekly', priceMonthly: 200, visitsPerYear: 52, hoursPerVisit: 1.0, variableCostPerVisit: 0, mixPct: 33.0, currentCustomers: 6 },
-    { id: uuid(), name: 'Biweekly', priceMonthly: 140, visitsPerYear: 26, hoursPerVisit: 1.0, variableCostPerVisit: 0, mixPct: 33.0, currentCustomers: 8 },
-    { id: uuid(), name: 'Monthly', priceMonthly: 100, visitsPerYear: 12, hoursPerVisit: 1.0, variableCostPerVisit: 0, mixPct: 34.0, currentCustomers: 10 },
+    // Provide non-zero currentClients so switching modes immediately shows calculations.
+    { id: uuid(), name: 'Weekly', priceMonthly: 200, sessionsPerYear: 52, hoursPerSession: 1.0, variableCostPerSession: 0, mixPct: 33.0, currentClients: 6 },
+    { id: uuid(), name: 'Biweekly', priceMonthly: 140, sessionsPerYear: 26, hoursPerSession: 1.0, variableCostPerSession: 0, mixPct: 33.0, currentClients: 8 },
+    { id: uuid(), name: 'Monthly', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 1.0, variableCostPerSession: 0, mixPct: 34.0, currentClients: 10 },
   ];
 }
 
@@ -61,6 +61,15 @@ const state = {
   targetUtilizationPct: 75, // forecasting target
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings
 };
+
+// Persist state to localStorage (global helper so other modules can call it)
+function persistState() {
+  try {
+    localStorage.setItem('profitpath-state', JSON.stringify(state));
+  } catch (e) {
+    console.warn('Failed to persist state:', e);
+  }
+}
 
 function normalizeMix(offerings) {
   const sum = offerings.reduce((a, o) => a + (Number(o.mixPct) || 0), 0);
@@ -158,11 +167,11 @@ function calc(stateInput) {
       ...o,
       name: (o.name || '').trim() || 'Offering',
       priceMonthly: Math.max(0, Number(o.priceMonthly) || 0),
-      visitsPerYear: Math.max(0, Number(o.visitsPerYear) || 0),
-      hoursPerVisit: Math.max(0, Number(o.hoursPerVisit) || 0),
-      variableCostPerVisit: Math.max(0, Number(o.variableCostPerVisit) || 0),
+      sessionsPerYear: Math.max(0, Number(o.sessionsPerYear) || 0),
+      hoursPerSession: Math.max(0, Number(o.hoursPerSession) || 0),
+      variableCostPerSession: Math.max(0, Number(o.variableCostPerSession) || 0),
       mixPct: Math.max(0, Number(o.mixPct) || 0),
-      currentCustomers: Math.max(0, Math.floor(Number(o.currentCustomers) || 0)),
+      currentClients: Math.max(0, Math.floor(Number(o.currentClients) || 0)),
     }))
     .filter((o) => o.name.length > 0);
 
@@ -176,9 +185,9 @@ function calc(stateInput) {
       annualServiceHours,
       annualFixedCosts,
       annualPayroll,
-      customers: 0,
-      totalVisits: 0,
-      hoursUsed: 0,
+      clients: 0,
+      totalSessions: 0,
+      serviceHours: 0,
       capacityPct: 0,
       revenue: 0,
       variableCosts: 0,
@@ -188,9 +197,9 @@ function calc(stateInput) {
     };
   }
 
-  let customers = 0;
-  let totalVisits = 0;
-  let hoursUsed = 0;
+  let clients = 0;
+  let totalSessions = 0;
+  let serviceHours = 0;
   let capacityPct = 0;
   let revenue = 0;
   let variableCosts = 0;
@@ -199,45 +208,45 @@ function calc(stateInput) {
     const { sum: mixSum, needsNormalization: mixNormalized, shares } = normalizeMix(offerings);
 
     const targetUtilizationPct = clamp(Number(s.targetUtilizationPct) || 0, 0, 150);
-    hoursUsed = annualServiceHours * (targetUtilizationPct / 100);
+    serviceHours = annualServiceHours * (targetUtilizationPct / 100);
 
     // Per-customer expectations (weighted by mix shares).
     // shares[] always sums to 1, even if the user-entered mix doesn't sum to 100.
-    const hoursPerCustomer = offerings.reduce((acc, o, idx) => {
+    const serviceHoursPerClient = offerings.reduce((acc, o, idx) => {
       const share = shares[idx] || 0;
-      return acc + share * o.visitsPerYear * o.hoursPerVisit;
+      return acc + share * o.sessionsPerYear * o.hoursPerSession;
     }, 0);
 
-    const visitsPerCustomer = offerings.reduce((acc, o, idx) => acc + (shares[idx] || 0) * o.visitsPerYear, 0);
+    const sessionsPerClient = offerings.reduce((acc, o, idx) => acc + (shares[idx] || 0) * o.sessionsPerYear, 0);
 
-    const revenuePerCustomer = offerings.reduce((acc, o, idx) => acc + (shares[idx] || 0) * (o.priceMonthly * 12), 0);
+    const revenuePerClient = offerings.reduce((acc, o, idx) => acc + (shares[idx] || 0) * (o.priceMonthly * 12), 0);
 
-    const variableCostPerCustomer = offerings.reduce((acc, o, idx) => acc + (shares[idx] || 0) * (o.visitsPerYear * o.variableCostPerVisit), 0);
+    const variableCostPerClient = offerings.reduce((acc, o, idx) => acc + (shares[idx] || 0) * (o.sessionsPerYear * o.variableCostPerSession), 0);
 
-    customers = hoursPerCustomer > 0 ? Math.floor(hoursUsed / hoursPerCustomer) : 0;
-    totalVisits = customers * visitsPerCustomer;
-    revenue = customers * revenuePerCustomer;
-    variableCosts = customers * variableCostPerCustomer;
+    clients = serviceHoursPerClient > 0 ? Math.floor(serviceHours / serviceHoursPerClient) : 0;
+    totalSessions = clients * sessionsPerClient;
+    revenue = clients * revenuePerClient;
+    variableCosts = clients * variableCostPerClient;
 
-    capacityPct = annualServiceHours > 0 ? (hoursUsed / annualServiceHours) * 100 : 0;
+    capacityPct = annualServiceHours > 0 ? (serviceHours / annualServiceHours) * 100 : 0;
 
     // Per-offering metrics for forecast mode
     const offeringMetrics = offerings.map((o, idx) => {
       const share = shares[idx] || 0;
-      const offeringCustomers = Math.floor(customers * share);
-      const offeringVisits = offeringCustomers * o.visitsPerYear;
-      const offeringRevenue = offeringCustomers * (o.priceMonthly * 12);
-      const offeringVariableCosts = offeringVisits * o.variableCostPerVisit;
+      const offeringClients = Math.floor(clients * share);
+      const offeringSessions = offeringClients * o.sessionsPerYear;
+      const offeringRevenue = offeringClients * (o.priceMonthly * 12);
+      const offeringVariableCosts = offeringSessions * o.variableCostPerSession;
       const offeringMargin = offeringRevenue - offeringVariableCosts;
       const offeringMarginPct = offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0;
-      const hoursPerCustomerOffering = o.visitsPerYear * o.hoursPerVisit;
+      const serviceHoursPerClientOffering = o.sessionsPerYear * o.hoursPerSession;
 
       return {
         revenue: offeringRevenue,
         variableCosts: offeringVariableCosts,
         margin: offeringMargin,
         marginPct: offeringMarginPct,
-        hoursPerCustomer: hoursPerCustomerOffering,
+        serviceHoursPerClient: serviceHoursPerClientOffering,
       };
     });
 
@@ -248,9 +257,9 @@ function calc(stateInput) {
       annualServiceHours,
       annualFixedCosts,
       annualPayroll,
-      customers,
-      totalVisits,
-      hoursUsed,
+      clients,
+      totalSessions,
+      serviceHours,
       capacityPct,
       revenue,
       variableCosts,
@@ -264,29 +273,29 @@ function calc(stateInput) {
   }
 
   // current mode
-  customers = offerings.reduce((a, o) => a + o.currentCustomers, 0);
-  totalVisits = offerings.reduce((a, o) => a + o.currentCustomers * o.visitsPerYear, 0);
-  hoursUsed = offerings.reduce((a, o) => a + o.currentCustomers * o.visitsPerYear * o.hoursPerVisit, 0);
-  revenue = offerings.reduce((a, o) => a + o.currentCustomers * o.priceMonthly * 12, 0);
-  variableCosts = offerings.reduce((a, o) => a + o.currentCustomers * o.visitsPerYear * o.variableCostPerVisit, 0);
+  clients = offerings.reduce((a, o) => a + o.currentClients, 0);
+  totalSessions = offerings.reduce((a, o) => a + o.currentClients * o.sessionsPerYear, 0);
+  serviceHours = offerings.reduce((a, o) => a + o.currentClients * o.sessionsPerYear * o.hoursPerSession, 0);
+  revenue = offerings.reduce((a, o) => a + o.currentClients * o.priceMonthly * 12, 0);
+  variableCosts = offerings.reduce((a, o) => a + o.currentClients * o.sessionsPerYear * o.variableCostPerSession, 0);
 
-  capacityPct = annualServiceHours > 0 ? (hoursUsed / annualServiceHours) * 100 : 0;
+  capacityPct = annualServiceHours > 0 ? (serviceHours / annualServiceHours) * 100 : 0;
 
   // Per-offering metrics for current mode
   const offeringMetrics = offerings.map((o) => {
-    const offeringRevenue = o.currentCustomers * (o.priceMonthly * 12);
-    const offeringVisits = o.currentCustomers * o.visitsPerYear;
-    const offeringVariableCosts = offeringVisits * o.variableCostPerVisit;
+    const offeringRevenue = o.currentClients * (o.priceMonthly * 12);
+    const offeringSessions = o.currentClients * o.sessionsPerYear;
+    const offeringVariableCosts = offeringSessions * o.variableCostPerSession;
     const offeringMargin = offeringRevenue - offeringVariableCosts;
     const offeringMarginPct = offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0;
-    const hoursPerCustomerOffering = o.visitsPerYear * o.hoursPerVisit;
+    const serviceHoursPerClientOffering = o.sessionsPerYear * o.hoursPerSession;
 
     return {
       revenue: offeringRevenue,
       variableCosts: offeringVariableCosts,
       margin: offeringMargin,
       marginPct: offeringMarginPct,
-      hoursPerCustomer: hoursPerCustomerOffering,
+      serviceHoursPerClient: serviceHoursPerClientOffering,
     };
   });
 
@@ -297,9 +306,9 @@ function calc(stateInput) {
     annualServiceHours,
     annualFixedCosts,
     annualPayroll,
-    customers,
-    totalVisits,
-    hoursUsed,
+    clients,
+    totalSessions,
+    serviceHours,
     capacityPct,
     revenue,
     variableCosts,
@@ -362,9 +371,9 @@ function renderSimpleChart(metrics) {
     const rev = Number(m.revenue) || 0;
     const variable = Number(m.variableCosts) || 0;
     const contrib = Math.max(0, rev - variable);
-    const hoursPerCustomer = Number(o.visitsPerYear || 0) * Number(o.hoursPerVisit || 0);
+    const serviceHoursPerClient = Number(o.sessionsPerYear || 0) * Number(o.hoursPerSession || 0);
     const pct = totalRevenue > 0 ? (rev / totalRevenue) : 0;
-    return { name: o.name || `Offering ${idx + 1}`, rev, variable, contrib, hoursPerCustomer, pct };
+    return { name: o.name || `Offering ${idx + 1}`, rev, variable, contrib, serviceHoursPerClient, pct };
   });
 
   // SVG: draw each offering as variable (red) then contribution (green) adjacent; x coord in percentage of totalRevenue
@@ -377,12 +386,12 @@ function renderSimpleChart(metrics) {
 
     // variable rect
     if (varPct > 0) {
-      rects.push({ x: x, w: varPct, color: 'rgba(251,113,133,0.6)', offering: d.name, type: 'variable', varVal: d.variable, contribVal: d.contrib, pct: d.pct, hours: d.hoursPerCustomer });
+      rects.push({ x: x, w: varPct, color: 'rgba(251,113,133,0.6)', offering: d.name, type: 'variable', varVal: d.variable, contribVal: d.contrib, pct: d.pct, hours: d.serviceHoursPerClient });
     }
 
     // contribution rect (may be zero)
     if (contribPct > 0) {
-      rects.push({ x: x + varPct, w: contribPct, color: 'rgba(52,211,153,0.6)', offering: d.name, type: 'contrib', varVal: d.variable, contribVal: d.contrib, pct: d.pct, hours: d.hoursPerCustomer });
+      rects.push({ x: x + varPct, w: contribPct, color: 'rgba(52,211,153,0.6)', offering: d.name, type: 'contrib', varVal: d.variable, contribVal: d.contrib, pct: d.pct, hours: d.serviceHoursPerClient });
     }
 
     // (no per-offering labels rendered here to avoid overlap/size issues)
@@ -491,8 +500,8 @@ function renderSimpleChart(metrics) {
     }
     html += `<div style="font-family:var(--mono);font-size:12px">Variable: ${varVal}</div>`;
     html += `<div style="font-family:var(--mono);color:var(--accent);font-size:12px">Contribution: ${contribVal}</div>`;
-    if (CHART_TOOLTIP_OPTIONS.showHoursPerCustomer) {
-      html += `<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px">Hours/customer: ${hours}</div>`;
+    if (CHART_TOOLTIP_OPTIONS.showServiceHoursPerClient) {
+      html += `<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px">Service hours/client: ${hours}</div>`;
     }
 
     tooltip.innerHTML = html;
@@ -696,31 +705,31 @@ function render() {
       ? `<input aria-label="Mix % for ${escapeHtml(o.name)}" class="mode-edit" type="number" min="0" max="100" step="1" value="${(o.mixPct ?? 0).toFixed(1)}" data-k="mixPct" data-i="${idx}" />`
       : `<span class="muted">—</span>`;
 
-    const customersCell = isForecast
+    const clientsCell = isForecast
       ? `<span class="muted">—</span>`
-      : `<input aria-label="Customers for ${escapeHtml(o.name)}" class="mode-edit" type="number" min="0" step="1" value="${o.currentCustomers ?? 0}" data-k="currentCustomers" data-i="${idx}" />`;
+      : `<input aria-label="Clients for ${escapeHtml(o.name)}" class="mode-edit" type="number" min="0" step="1" value="${o.currentClients ?? 0}" data-k="currentClients" data-i="${idx}" />`;
 
-    const estCustomers = isForecast
-      ? Math.floor(metrics.customers * ((o.mixPct || 0) / 100))
-      : o.currentCustomers;
+    const estClients = isForecast
+      ? Math.floor(metrics.clients * ((o.mixPct || 0) / 100))
+      : o.currentClients;
 
-    const estVisits = isForecast
-      ? Math.round(estCustomers * o.visitsPerYear)
-      : Math.round((o.currentCustomers || 0) * o.visitsPerYear);
+    const estSessions = isForecast
+      ? Math.round(estClients * o.sessionsPerYear)
+      : Math.round((o.currentClients || 0) * o.sessionsPerYear);
 
     tr.innerHTML = `
       <td class="cell-edit group-start group-inputs" data-label="Offering"><input aria-label="Offering name" type="text" value="${escapeHtml(o.name)}" data-k="name" data-i="${idx}" /></td>
       <td class="cell-edit group-inputs" data-label="Price / mo"><input aria-label="Price per month for ${escapeHtml(o.name)}" type="number" min="0" step="10" value="${o.priceMonthly}" data-k="priceMonthly" data-i="${idx}" /></td>
-      <td class="cell-edit group-inputs" data-label="Visits / yr"><input aria-label="Visits per year for ${escapeHtml(o.name)}" type="number" min="0" step="1" value="${o.visitsPerYear}" data-k="visitsPerYear" data-i="${idx}" /></td>
-      <td class="cell-edit group-inputs" data-label="Hours / visit"><input aria-label="Hours per visit for ${escapeHtml(o.name)}" type="number" min="0" step="0.1" value="${o.hoursPerVisit}" data-k="hoursPerVisit" data-i="${idx}" /></td>
-      <td class="cell-edit group-inputs group-end" data-label="Var $ / visit"><input aria-label="Variable cost per visit for ${escapeHtml(o.name)}" type="number" min="0" step="1" value="${o.variableCostPerVisit}" data-k="variableCostPerVisit" data-i="${idx}" /></td>
-      <td class="cell-edit group-start group-mode" data-label="Mix % (forecast)">${mixCell}</td>
-      <td class="cell-edit group-mode group-end" data-label="Customers (current)">${customersCell}</td>
-      <td class="cell-readonly group-start group-est" data-label="Est. customers"><span class="mono">${fmtInt(estCustomers)}</span></td>
-      <td class="cell-readonly group-est" data-label="Est. Service Count"><span class="mono">${fmtInt(estVisits)}</span></td>
+  <td class="cell-edit group-inputs" data-label="Sessions / yr"><input aria-label="Sessions per year for ${escapeHtml(o.name)}" type="number" min="0" step="1" value="${o.sessionsPerYear}" data-k="sessionsPerYear" data-i="${idx}" /></td>
+  <td class="cell-edit group-inputs" data-label="Hours / session"><input aria-label="Hours per session for ${escapeHtml(o.name)}" type="number" min="0" step="0.1" value="${o.hoursPerSession}" data-k="hoursPerSession" data-i="${idx}" /></td>
+  <td class="cell-edit group-inputs group-end" data-label="Var $ / session"><input aria-label="Variable cost per session for ${escapeHtml(o.name)}" type="number" min="0" step="1" value="${o.variableCostPerSession}" data-k="variableCostPerSession" data-i="${idx}" /></td>
+    <td class="cell-edit group-start group-mode" data-label="Mix % (forecast)">${mixCell}</td>
+    <td class="cell-edit group-mode group-end" data-label="Clients (current)">${clientsCell}</td>
+    <td class="cell-readonly group-start group-est" data-label="Est. clients"><span class="mono">${fmtInt(estClients)}</span></td>
+  <td class="cell-readonly group-est" data-label="Est. sessions"><span class="mono">${fmtInt(estSessions)}</span></td>
       <td class="cell-readonly group-metrics" data-label="Annual Revenue"><span class="mono">${fmtMoney0(metrics.offeringMetrics[idx]?.revenue || 0)}</span></td>
       <td class="cell-readonly group-metrics" data-label="Margin %"><span class="mono" style="color: ${(metrics.offeringMetrics[idx]?.marginPct || 0) >= 50 ? 'var(--good)' : (metrics.offeringMetrics[idx]?.marginPct || 0) >= 30 ? 'var(--warn)' : 'var(--bad)'}">${fmtPct1(metrics.offeringMetrics[idx]?.marginPct || 0)}</span></td>
-      <td class="cell-readonly group-metrics group-end" data-label="Hours / Customer"><span class="mono">${(metrics.offeringMetrics[idx]?.hoursPerCustomer || 0).toFixed(1)}</span></td>
+  <td class="cell-readonly group-metrics group-end" data-label="Service hours / client"><span class="mono">${(metrics.offeringMetrics[idx]?.serviceHoursPerClient || 0).toFixed(1)}</span></td>
       <td class="cell-edit group-actions" data-label="Actions">
         <button class="btn small danger" data-action="removeOffering" data-i="${idx}" aria-label="Remove ${escapeHtml(o.name)}">Remove</button>
       </td>
@@ -749,41 +758,59 @@ function render() {
         ? `Forecast mode: editing Mix % (current total ${sum.toFixed(1)}%)`
         : `Forecast mode: editing Mix % (current total ${sum.toFixed(1)}% — auto-normalized for calculations)`);
   } else {
-    const total = metrics.offerings.reduce((a, o) => a + (Number(o.currentCustomers) || 0), 0);
+    const total = metrics.offerings.reduce((a, o) => a + (Number(o.currentClients) || 0), 0);
     mixNote.classList.add('note-current');
     mixNote.textContent = total > 0
-      ? 'Current mode: editing Customers (utilization computed from workload)'
-      : 'Current mode: start by entering Customers';
+      ? 'Current mode: editing Clients (utilization computed from workload)'
+      : 'Current mode: start by entering Clients';
   }
 
   // KPIs
-  $('#kpiCustomers').textContent = fmtInt(metrics.customers);
-  $('#kpiVisits').textContent = fmtInt(metrics.totalVisits);
-  $('#kpiHours').textContent = fmtInt(metrics.hoursUsed);
-  $('#kpiCapacity').textContent = fmtPct1(metrics.capacityPct);
+  updateOutputs(metrics);
+}
 
-  $('#kpiRevenue').textContent = fmtMoney0(metrics.revenue);
-  $('#kpiFixedCosts').textContent = fmtMoney0(metrics.annualFixedCosts);
-  $('#kpiPayroll').textContent = fmtMoney0(metrics.annualPayroll);
-  $('#kpiVariableCosts').textContent = fmtMoney0(metrics.variableCosts);
-
-  const incomeEl = $('#kpiIncome');
-  incomeEl.textContent = fmtMoney0(metrics.income);
-  incomeEl.style.color = metrics.income >= 60000 ? 'var(--good)' : metrics.income >= 0 ? 'var(--warn)' : 'var(--bad)';
-
-  // Capacity meter
-  const cap = clamp(metrics.capacityPct, 0, 150);
-  $('#capacityBar').style.width = `${(cap / 150) * 100}%`;
-  $('#capacityLabel').textContent = metrics.capacityPct > 100
-    ? `Over capacity: ${fmtPct1(metrics.capacityPct)} (overtime likely)`
-    : `Utilization: ${fmtPct1(metrics.capacityPct)}`;
-
-  // Render simple revenue composition chart
+// Update only outputs (KPIs, capacity meter, chart, debug) without re-rendering the offerings table.
+function updateOutputs(metrics) {
   try {
-    renderSimpleChart(metrics);
+    $('#kpiClients').textContent = fmtInt(metrics.clients);
+    $('#kpiSessions').textContent = fmtInt(metrics.totalSessions);
+    $('#kpiServiceHours').textContent = fmtInt(metrics.serviceHours);
+    $('#kpiCapacity').textContent = fmtPct1(metrics.capacityPct);
+
+    $('#kpiRevenue').textContent = fmtMoney0(metrics.revenue);
+    $('#kpiFixedCosts').textContent = fmtMoney0(metrics.annualFixedCosts);
+    $('#kpiPayroll').textContent = fmtMoney0(metrics.annualPayroll);
+    $('#kpiVariableCosts').textContent = fmtMoney0(metrics.variableCosts);
+
+    const incomeEl = $('#kpiIncome');
+    if (incomeEl) {
+      incomeEl.textContent = fmtMoney0(metrics.income);
+      incomeEl.style.color = metrics.income >= 60000 ? 'var(--good)' : metrics.income >= 0 ? 'var(--warn)' : 'var(--bad)';
+    }
+
+    // Capacity meter
+    const cap = clamp(metrics.capacityPct, 0, 150);
+    const capBar = $('#capacityBar');
+    if (capBar) capBar.style.width = `${(cap / 150) * 100}%`;
+    const capLabel = $('#capacityLabel');
+    if (capLabel) capLabel.textContent = metrics.capacityPct > 100
+      ? `Over capacity: ${fmtPct1(metrics.capacityPct)} (overtime likely)`
+      : `Utilization: ${fmtPct1(metrics.capacityPct)}`;
+
+    // Render simple revenue composition chart
+    try {
+      renderSimpleChart(metrics);
+    } catch (e) {
+      console.warn('Chart render failed:', e);
+    }
+
+    // Update debug panel if present
+    const dbg = $('#debugPanel');
+    if (dbg && $('#debugBody') && !$('#debugBody').classList.contains('collapsed')) {
+      dbg.textContent = JSON.stringify(metrics, null, 2);
+    }
   } catch (e) {
-    // Non-fatal: don't break main render if chart errors
-    console.warn('Chart render failed:', e);
+    console.warn('updateOutputs error:', e);
   }
 }
 
@@ -819,11 +846,11 @@ function onTableInput(e) {
 
   // Validate and sanitize input based on field type
   let value = el.value;
-  if (k === 'priceMonthly' || k === 'variableCostPerVisit') {
+  if (k === 'priceMonthly' || k === 'variableCostPerSession') {
     value = Math.max(0, safeParseNumber(value, 0));
-  } else if (k === 'visitsPerYear' || k === 'currentCustomers') {
+  } else if (k === 'sessionsPerYear' || k === 'currentClients') {
     value = Math.max(0, Math.floor(safeParseNumber(value, 0)));
-  } else if (k === 'hoursPerVisit') {
+  } else if (k === 'hoursPerSession') {
     value = Math.max(0, safeParseNumber(value, 0));
   } else if (k === 'mixPct') {
     value = safeParseNumber(value, 0, 0, 100);
@@ -837,7 +864,22 @@ function onTableInput(e) {
     o[k] = value;
   }
 
-  render();
+  // Update state and outputs in-place without re-rendering the entire table to preserve focus.
+  try {
+    persistState();
+  } catch (e) {
+    console.warn('Failed to persist state on input:', e);
+  }
+  try {
+    const metrics = calc();
+    updateOutputs(metrics);
+  } catch (e) {
+    console.warn('Failed to refresh outputs on input:', e);
+  }
+  // If changing mix in locked forecast mode, re-render to update other mix inputs
+  if (k === 'mixPct' && state.mode === 'forecast' && state.lockMix) {
+    render();
+  }
 }
 
 function onTableClick(e) {
@@ -862,11 +904,11 @@ function addOffering() {
     id: uuid(),
     name: `Offering ${state.offerings.length + 1}`,
     priceMonthly: 100,
-    visitsPerYear: 12,
-    hoursPerVisit: 1.0,
-    variableCostPerVisit: 0,
+    sessionsPerYear: 12,
+    hoursPerSession: 1.0,
+    variableCostPerSession: 0,
     mixPct: 0,
-    currentCustomers: 0,
+    currentClients: 0,
   });
   render();
 }
@@ -900,24 +942,24 @@ function exportAsCSV() {
     `Target Utilization,${fmtPct1(state.targetUtilizationPct)}`,
     '',
     'RESULTS',
-    `Total Revenue,${fmtMoney0(results.totalRevenue)}`,
-    `Total Variable Costs,${fmtMoney0(results.totalVariableCosts)}`,
-    `Contribution Margin,${fmtMoney0(results.contributionMargin)}`,
-    `Fixed Overhead,${fmtMoney0(results.fixedOverhead)}`,
-    `Net Profit,${fmtMoney0(results.netProfit)}`,
-    `Profit Margin,${fmtPct1(results.profitMarginPct)}`,
-    `Billable Hours,${fmtInt(results.billableHours)}`,
-    `Utilization,${fmtPct1(results.utilization)}`,
+    `Total Revenue,${fmtMoney0(results.revenue)}`,
+    `Total Variable Costs,${fmtMoney0(results.variableCosts)}`,
+    `Contribution Margin,${fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))}`,
+    `Fixed Overhead,${fmtMoney0(results.annualFixedCosts)}`,
+    `Net Profit,${fmtMoney0(results.income)}`,
+    `Profit Margin,${fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)}`,
+    `Billable Hours,${fmtInt(results.serviceHours || 0)}`,
+    `Utilization,${fmtPct1(results.capacityPct || 0)}`,
     '',
     'OFFERINGS',
-    'Name,Price/Month,Visits/Year,Hours/Visit,Variable Cost/Visit,Mix %,Current Customers,Annual Revenue,Customers Needed',
+    'Name,Price/Month,Sessions/Year,Hours/Session,Variable Cost/Session,Mix %,Current Clients,Annual Revenue,Clients Needed',
   ];
 
   state.offerings.forEach((o) => {
-    const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentCustomers);
-    const customersNeeded = state.mode === 'forecast' ? Math.ceil((o.visitsPerYear * state.employees * state.productiveUtilizationPct / 100) / o.visitsPerYear) : o.currentCustomers;
+    const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
+    const clientsNeeded = state.mode === 'forecast' ? Math.ceil((o.sessionsPerYear * state.employees * state.productiveUtilizationPct / 100) / o.sessionsPerYear) : o.currentClients;
     lines.push(
-      `"${o.name}",${o.priceMonthly},${o.visitsPerYear},${o.hoursPerVisit},${o.variableCostPerVisit},${o.mixPct},${o.currentCustomers},${fmtMoney0(annualRevenue)},${customersNeeded}`
+      `"${o.name}",${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${fmtMoney0(annualRevenue)},${clientsNeeded}`
     );
   });
 
@@ -1084,16 +1126,10 @@ function wire() {
     console.warn('Failed to load saved state:', e);
   }
 
-  function saveState() {
-    try {
-      localStorage.setItem('profitpath-state', JSON.stringify(state));
-    } catch (e) {
-      console.warn('Failed to save state:', e);
-    }
-  }
+  // migrate existing save calls to global persistState
   $('#modeSelect').addEventListener('change', () => {
     setStateFromInputs();
-    saveState();
+    persistState();
     render();
   });
 
@@ -1108,14 +1144,14 @@ function wire() {
       }
     }
 
-    saveState();
+    persistState();
     render();
   });
 
   $$('#controls input').forEach((el) => {
     el.addEventListener('input', () => {
       setStateFromInputs();
-      saveState();
+      persistState();
       render();
     });
   });
@@ -1128,8 +1164,8 @@ function wire() {
   $('#offeringsBody').addEventListener('click', onTableClick);
 
   // Save state when table content changes
-  $('#offeringsBody').addEventListener('input', saveState);
-  $('#offeringsBody').addEventListener('click', () => setTimeout(saveState, 0));
+  $('#offeringsBody').addEventListener('input', persistState);
+  $('#offeringsBody').addEventListener('click', () => setTimeout(persistState, 0));
 
   // Scenario modal wiring
   $('#scenariosBtn').addEventListener('click', openScenarioModal);
@@ -1158,4 +1194,95 @@ function wire() {
 }
 
 wire();
-render();
+
+// Run initial render in a safe guard so any runtime errors are reported to the debug panel
+try {
+  render();
+} catch (e) {
+  console.error('Render failed:', e);
+  const dbg = $('#debugPanel');
+  if (dbg) dbg.textContent = `Render error: ${e && e.stack ? e.stack : String(e)}`;
+}
+
+// Smoke test: expose a quick debug rendering of calc() into the debug panel (useful when loading the page locally)
+try {
+  const dbg = $('#debugPanel');
+  if (dbg) {
+    const res = calc();
+    dbg.textContent = JSON.stringify(res, null, 2);
+    console.info('ProfitPath calc() smoke result:', res);
+  }
+} catch (e) {
+  console.warn('Smoke test failed:', e);
+  const dbg = $('#debugPanel');
+  if (dbg) dbg.textContent = `Smoke test error: ${e && e.stack ? e.stack : String(e)}`;
+}
+
+// Global error handler to surface errors into the debug panel for easier debugging
+window.addEventListener('error', (ev) => {
+  const dbg = $('#debugPanel');
+  const msg = ev?.error?.stack || ev?.message || String(ev);
+  console.error('Uncaught error:', ev.error || ev.message || ev);
+  if (dbg) dbg.textContent = `Uncaught error: ${msg}`;
+});
+
+// Debug panel toggle wiring: collapsible panel above the simple chart
+function initDebugPanel() {
+  const toggle = $('#debugToggle');
+  const body = $('#debugBody');
+  const pre = $('#debugPanel');
+  if (!toggle || !body || !pre) return;
+
+  // Update pre with calc() output and set a concise summary on the toggle
+  function refreshDebug() {
+    try {
+      const res = calc();
+      pre.textContent = JSON.stringify(res, null, 2);
+      toggle.textContent = `▶ Debug — clients: ${res.clients || 0}, revenue: ${fmtMoney0(res.revenue || 0)}`;
+    } catch (e) {
+      pre.textContent = `Error generating debug: ${e && e.stack ? e.stack : String(e)}`;
+      toggle.textContent = `▶ Debug — error`;
+    }
+  }
+
+  // restore expanded state from localStorage
+  const stored = localStorage.getItem('profitpath-debug-expanded');
+  const expanded = stored === '1';
+  if (expanded) {
+    body.classList.remove('collapsed');
+    body.setAttribute('aria-hidden', 'false');
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.textContent = toggle.textContent.replace(/^▶/, '▼');
+  }
+
+  toggle.addEventListener('click', () => {
+    const isCollapsed = body.classList.toggle('collapsed');
+    body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+    const expandedNow = !isCollapsed;
+    toggle.setAttribute('aria-expanded', expandedNow ? 'true' : 'false');
+    toggle.textContent = (expandedNow ? '▼' : '▶') + toggle.textContent.slice(1);
+    localStorage.setItem('profitpath-debug-expanded', expandedNow ? '1' : '0');
+    // refresh content when expanding
+    if (expandedNow) refreshDebug();
+  });
+
+  // refresh periodically (keeps the debug info up to date while editing)
+  setInterval(refreshDebug, 1500);
+  // initial refresh
+  refreshDebug();
+}
+
+// Initialize debug panel after DOM is ready
+try {
+  initDebugPanel();
+} catch (e) {
+  console.warn('Failed to init debug panel:', e);
+}
+
+// Persist chosen logo so future loads remember the finalized variant
+try {
+  localStorage.setItem('profitpath-logo', 'final');
+  document.documentElement.setAttribute('data-logo', 'final');
+} catch (e) {
+  // non-fatal
+}

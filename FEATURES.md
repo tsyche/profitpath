@@ -2,8 +2,6 @@
 
 All feature planning and the prioritized backlog have been consolidated into `ROADMAP.md`. For the single canonical list of ideas, priorities, and recommended next steps, open `ROADMAP.md` in the repo root.
 
-**Week 2-3 Total: 12 hours. Combine with #1-3 for solid MVP.**
-
 ---
 
 ## 🔴 LONG-TERM FEATURES (Week 4+)
@@ -105,102 +103,25 @@ All feature planning and the prioritized backlog have been consolidated into `RO
 
 ---
 
-## 🎯 Weekly Breakdown
+# Features overview
 
-```
-WEEK 1: Quick Wins (2.5 hours)
-┌───────────────────────────────────┐
-│ #1: localStorage UI      (30 min)  │ DEPLOY
-│ #2: CSV Export          (45 min)  │ TOGETHER
-│ #3: Per-offering metrics (1 hr)   │
-└───────────────────────────────────┘
-  ↓
-  User feedback & validation
+This file provides a short, current summary of notable features and pointers to the canonical backlog in `ROADMAP.md`.
 
-WEEK 2: Foundation (5 hours)
-┌───────────────────────────────────┐
-│ #4: Extract math module (2 hrs)   │
-│ #5: Unit tests          (3 hrs)   │
-└───────────────────────────────────┘
-  ↓
-  Code quality improved, confidence up
+Implemented / delivered (high-level)
+- Core calculation engine (`calc()`): forecast and current modes, accepts an optional state argument for easier testing.
+- KPIs and outputs: Clients, Annual sessions, Service hours, Utilization, Revenue, Fixed/Payroll/Variable costs, Net income.
+- Visuals: revenue composition chart with per-offering breakdown and interactive tooltips (pin/close).
+- Persistence: auto-save/load of app state to `localStorage` and saved debug panel state.
+- CSV export and scenario save/load/delete UI.
+- Collapsible Debug panel (bottom of Outputs) to inspect `calc()` output; collapsible/expandable with persisted state.
+- Finalized header logo (single SVG) and removed legacy logo variants.
 
-WEEK 3: Enhancement (4 hours)
-┌───────────────────────────────────┐
-│ #6: Simple chart        (3 hrs)   │
-│ #7: Comparison UI       (4 hrs)   │
-└───────────────────────────────────┘
-  ↓
-  Professional feature set
+Where to find more detail
+- The prioritized backlog and next actions live in `ROADMAP.md` (single source of truth).
 
-WEEK 4+: Advanced (12+ hours)
-┌───────────────────────────────────┐
-│ #8: Shareable URLs      (2 hrs)   │
-│ #9: Industry presets    (6 hrs)   │
-│ #10: Multi-year forecast (8 hrs)  │
-│ #11: Optimizer mode     (8+ hrs)  │
-└───────────────────────────────────┘
-  ↓
-  Market differentiation
-```
+Selected long-term ideas (examples)
+- Shareable URLs (encode scenario in query string) — useful for sharing scenarios without accounts.
+- Industry presets — curated templates to speed onboarding.
+- Multi-year forecasting & hiring recommendations — for strategic planning.
 
----
-
-## 💾 File Changes by Feature
-
-| Feature | New Files | Modified Files | Complexity |
-|---------|-----------|----------------|------------|
-| #1 | — | app.js, index.html, styles.css | Medium |
-| #2 | — | app.js | Low |
-| #3 | — | app.js, styles.css | Low |
-| #4 | lib/calc.js, lib/format.js | app.js | Medium |
-| #5 | __tests__/calc.test.js, vitest.config.js | — | Medium |
-| #6 | — | index.html, app.js, styles.css | Medium |
-| #7 | — | app.js, index.html, styles.css | High |
-| #8 | — | app.js | Low |
-| #9 | lib/presets.js | app.js, index.html | Medium |
-| #10 | — | app.js, index.html, styles.css | High |
-| #11 | lib/optimizer.js | app.js | Very High |
-
----
-
-## 🚀 Which Should You Pick?
-
-**If you have 30 minutes:** #2 (CSV Export)
-**If you have 1 hour:** #1 + #2 (localStorage UI + CSV)
-**If you have 2.5 hours:** #1 + #2 + #3 (all quick wins)
-**If you have a day:** Add #4 + #5 (foundation)
-**If you have a week:** Add #6 + #7 (enhancement)
-
----
-
-## 📖 Documentation Map
-
-```
-Start here ──→ ROADMAP.md (5 min read)
-                   ↓
-         Choose feature ──→ IMPROVEMENTS.md (details)
-                   ↓
-         Implement ──→ Follow step-by-step guide I provide
-                   ↓
-         Verify ──→ VERIFICATION.md (test cases)
-                   ↓
-         Deploy ──→ Push to production ✅
-```
-
----
-
-## Next Step
-
-**Tell me which feature you want to build:**
-
-- 🟢 #1: localStorage UI
-- 🟢 #2: CSV Export  
-- 🟢 #3: Per-offering metrics
-- 🟡 #4: Extract math module
-- 🟡 #5: Unit tests
-- 🟡 #6: Simple chart
-- 🟡 #7: Comparison UI
-- 🔴 #8-11: Long-term features
-
-I'll provide the exact implementation steps! 🚀
+If you want a fully detailed backlog view, open `ROADMAP.md`.
