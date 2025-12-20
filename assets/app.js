@@ -216,6 +216,26 @@ function calc(stateInput) {
 
     capacityPct = annualServiceHours > 0 ? (hoursUsed / annualServiceHours) * 100 : 0;
 
+    // Per-offering metrics for forecast mode
+    const offeringMetrics = offerings.map((o, idx) => {
+      const share = shares[idx] || 0;
+      const offeringCustomers = Math.floor(customers * share);
+      const offeringVisits = offeringCustomers * o.visitsPerYear;
+      const offeringRevenue = offeringCustomers * (o.priceMonthly * 12);
+      const offeringVariableCosts = offeringVisits * o.variableCostPerVisit;
+      const offeringMargin = offeringRevenue - offeringVariableCosts;
+      const offeringMarginPct = offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0;
+      const hoursPerCustomerOffering = o.visitsPerYear * o.hoursPerVisit;
+
+      return {
+        revenue: offeringRevenue,
+        variableCosts: offeringVariableCosts,
+        margin: offeringMargin,
+        marginPct: offeringMarginPct,
+        hoursPerCustomer: hoursPerCustomerOffering,
+      };
+    });
+
     return {
       mode,
       offerings,
@@ -234,6 +254,7 @@ function calc(stateInput) {
       mixNormalized,
       targetUtilizationPct,
       productiveUtilizationPct,
+      offeringMetrics,
     };
   }
 
@@ -245,6 +266,24 @@ function calc(stateInput) {
   variableCosts = offerings.reduce((a, o) => a + o.currentCustomers * o.visitsPerYear * o.variableCostPerVisit, 0);
 
   capacityPct = annualServiceHours > 0 ? (hoursUsed / annualServiceHours) * 100 : 0;
+
+  // Per-offering metrics for current mode
+  const offeringMetrics = offerings.map((o) => {
+    const offeringRevenue = o.currentCustomers * (o.priceMonthly * 12);
+    const offeringVisits = o.currentCustomers * o.visitsPerYear;
+    const offeringVariableCosts = offeringVisits * o.variableCostPerVisit;
+    const offeringMargin = offeringRevenue - offeringVariableCosts;
+    const offeringMarginPct = offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0;
+    const hoursPerCustomerOffering = o.visitsPerYear * o.hoursPerVisit;
+
+    return {
+      revenue: offeringRevenue,
+      variableCosts: offeringVariableCosts,
+      margin: offeringMargin,
+      marginPct: offeringMarginPct,
+      hoursPerCustomer: hoursPerCustomerOffering,
+    };
+  });
 
   return {
     mode,
@@ -263,6 +302,7 @@ function calc(stateInput) {
     mixSum: offerings.reduce((a, o) => a + (o.mixPct || 0), 0),
     mixNormalized: false,
     productiveUtilizationPct,
+    offeringMetrics,
   };
 }
 
@@ -358,7 +398,10 @@ function render() {
       <td class="cell-edit group-start group-mode" data-label="Mix % (forecast)">${mixCell}</td>
       <td class="cell-edit group-mode group-end" data-label="Customers (current)">${customersCell}</td>
       <td class="cell-readonly group-start group-est" data-label="Est. customers"><span class="mono">${fmtInt(estCustomers)}</span></td>
-      <td class="cell-readonly group-est group-end" data-label="Est Service Count"><span class="mono">${fmtInt(estVisits)}</span></td>
+      <td class="cell-readonly group-est" data-label="Est. Service Count"><span class="mono">${fmtInt(estVisits)}</span></td>
+      <td class="cell-readonly group-metrics" data-label="Annual Revenue"><span class="mono">${fmtMoney0(metrics.offeringMetrics[idx]?.revenue || 0)}</span></td>
+      <td class="cell-readonly group-metrics" data-label="Margin %"><span class="mono" style="color: ${(metrics.offeringMetrics[idx]?.marginPct || 0) >= 50 ? 'var(--good)' : (metrics.offeringMetrics[idx]?.marginPct || 0) >= 30 ? 'var(--warn)' : 'var(--bad)'}">${fmtPct1(metrics.offeringMetrics[idx]?.marginPct || 0)}</span></td>
+      <td class="cell-readonly group-metrics group-end" data-label="Hours / Customer"><span class="mono">${(metrics.offeringMetrics[idx]?.hoursPerCustomer || 0).toFixed(1)}</span></td>
       <td class="cell-edit group-actions" data-label="Actions">
         <button class="btn small danger" data-action="removeOffering" data-i="${idx}" aria-label="Remove ${escapeHtml(o.name)}">Remove</button>
       </td>

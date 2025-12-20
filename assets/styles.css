@@ -146,6 +146,13 @@ input[type="number"], input[type="text"], select{
   color: var(--text);
   outline: none;
 }
+select{
+  padding-right: 30px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.7)' d='M1 4l5 4 5-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
 input[type="number"]:focus, input[type="text"]:focus, select:focus{
   border-color: rgba(94,234,212,0.5);
   box-shadow: 0 0 0 3px rgba(94,234,212,0.14);
@@ -233,9 +240,9 @@ button:focus {
   color: rgba(255,255,255,0.95);
 }
 .note.note-current{
-  border: 1px solid rgba(94,234,212,0.24);
-  background: rgba(94,234,212,0.08);
-  color: rgba(255,255,255,0.90);
+  border: 1px solid rgba(251,191,36,0.40);
+  background: rgba(251,191,36,0.14);
+  color: rgba(255,255,255,0.95);
 }
 .note.note-warn{
   border-color: rgba(251,191,36,0.40);
@@ -412,6 +419,7 @@ input[type="checkbox"]{
 .table td.group-inputs{border-left: 3px solid rgba(96,165,250,0.65);} /* accent-2 */
 .table td.group-mode{border-left: 3px solid rgba(94,234,212,0.65);}   /* accent */
 .table td.group-est{border-left: 3px solid rgba(255,255,255,0.22);}    /* neutral */
+.table td.group-metrics{border-left: 3px solid rgba(52,211,153,0.65);} /* good */
 
 /* Make edit vs read-only visually distinct. */
 .table td.cell-edit{
@@ -425,7 +433,7 @@ input[type="checkbox"]{
 .table td.cell-readonly .mono{color: rgba(255,255,255,0.86);}
 
 .table td.group-actions{
-  justify-content: flex-start;
+  justify-content: space-between;
 }
 .table td.group-actions::before{
   content: attr(data-label);
@@ -436,7 +444,14 @@ input[type="checkbox"]{
   font-size: 10px;
   flex: 0 0 clamp(110px, 18vw, 150px);
 }
-.table td.group-actions > *{flex: 0 1 auto;}
+.table td.group-actions > *{
+  flex: 0 0 auto;
+  min-width: 85px;
+  padding: 9px 10px;
+  font-size: 13px;
+  border-radius: 10px;
+  text-align: center;
+}
 
 /* Modal & Scenarios UI */
 .modal{
