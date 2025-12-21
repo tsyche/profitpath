@@ -918,8 +918,8 @@ function setupChartEventListeners(el) {
       // Position above the bar
       tooltip.style.left = `${leftClamped}px`;
       tooltip.style.top = `${topPos}px`;
-      tooltipIsShown = true;
-    } else {
+        tooltipIsShown = true;
+      } else {
       // pinned behavior: same as hover - always position above the bar
       const tipRect2 = tooltip.getBoundingClientRect();
       const topPos = Math.max(8, rectBox.top - containerBox.top - tipRect2.height - HOVER_OFFSET);
@@ -954,9 +954,9 @@ function setupChartEventListeners(el) {
     pinnedRect = null;
     const tooltip = el.querySelector('.chart-tooltip');
     if (tooltip) {
-      tooltip.classList.remove('pinned');
-      tooltip.classList.remove('visible');
-      updatePinnedIndicator(null);
+    tooltip.classList.remove('pinned');
+    tooltip.classList.remove('visible');
+    updatePinnedIndicator(null);
       // Hide immediately
       tooltip.style.display = 'none';
       tooltipIsShown = false;
@@ -1048,8 +1048,8 @@ function setupChartEventListeners(el) {
   // click outside to unpin (only add once)
   if (!document._chartClickHandler) {
     document._chartClickHandler = (ev) => {
-      if (!pinned) return;
-      if (!el.contains(ev.target)) unpinTooltip();
+    if (!pinned) return;
+    if (!el.contains(ev.target)) unpinTooltip();
     };
     document.addEventListener('click', document._chartClickHandler);
   }
@@ -1057,9 +1057,9 @@ function setupChartEventListeners(el) {
   // escape key to close (only add once)
   if (!document._chartKeyHandler) {
     document._chartKeyHandler = (ev) => {
-      if (ev.key === 'Escape' && pinned) {
-        unpinTooltip();
-      }
+    if (ev.key === 'Escape' && pinned) {
+      unpinTooltip();
+    }
     };
     document.addEventListener('keydown', document._chartKeyHandler);
   }
@@ -1129,6 +1129,114 @@ function updateBreakEvenAnalysis(metrics) {
 
   analysisEl.style.display = 'block';
 
+}
+
+function updateRichVisualizations(metrics) {
+  const vizEl = $('#richVisualizations');
+  if (!vizEl) return;
+
+  // Only show if we have meaningful data
+  if (!metrics || metrics.clients <= 0) {
+    vizEl.style.display = 'none';
+    return;
+  }
+
+  // Create utilization gauge
+  const utilizationGauge = createUtilizationGauge(metrics);
+
+  // Create profit/loss waterfall (simplified version)
+  const profitWaterfall = createProfitWaterfall(metrics);
+
+  vizEl.innerHTML = `
+    <div class="viz-header">
+      <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--text);">Rich Visualizations</h4>
+    </div>
+    <div class="viz-content">
+      <div class="viz-item">
+        <h5 style="margin: 0 0 8px 0; font-size: 12px; color: var(--muted); font-weight: 600;">Utilization Gauge</h5>
+        ${utilizationGauge}
+      </div>
+      <div class="viz-item">
+        <h5 style="margin: 0 0 8px 0; font-size: 12px; color: var(--muted); font-weight: 600;">Profit Waterfall</h5>
+        ${profitWaterfall}
+      </div>
+    </div>
+  `;
+
+  vizEl.style.display = 'block';
+}
+
+function createUtilizationGauge(metrics) {
+  const utilization = Math.min(150, Math.max(0, metrics.capacityPct || 0));
+  const angle = (utilization / 150) * 180; // Semi-circle gauge
+
+  return `
+    <div class="utilization-gauge">
+      <svg viewBox="0 0 120 80" class="gauge-svg">
+        <!-- Background arc -->
+        <path d="M 10 70 A 50 50 0 0 1 110 70" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
+        <!-- Utilization arc -->
+        <path d="M 10 70 A 50 50 0 0 1 ${10 + Math.cos((angle - 90) * Math.PI / 180) * 50 + 50} ${70 - Math.sin((angle - 90) * Math.PI / 180) * 50}"
+              fill="none" stroke="${utilization > 100 ? 'var(--bad)' : utilization > 75 ? 'var(--warn)' : 'var(--good)'}" stroke-width="8"/>
+        <!-- Needle -->
+        <line x1="60" y1="70" x2="${60 + Math.cos((angle - 90) * Math.PI / 180) * 40}"
+              y2="${70 - Math.sin((angle - 90) * Math.PI / 180) * 40}"
+              stroke="var(--accent)" stroke-width="3"/>
+        <!-- Center dot -->
+        <circle cx="60" cy="70" r="4" fill="var(--accent)"/>
+      </svg>
+      <div class="gauge-labels">
+        <div class="gauge-value">${fmtPct1(utilization)}</div>
+        <div class="gauge-text">Utilization</div>
+      </div>
+    </div>
+  `;
+}
+
+function createProfitWaterfall(metrics) {
+  const items = [
+    { label: 'Revenue', value: metrics.revenue, color: 'var(--good)' },
+    { label: 'Variable Costs', value: -metrics.variableCosts, color: 'var(--bad)' },
+    { label: 'Fixed Costs', value: -metrics.annualFixedCosts - metrics.annualPayroll, color: 'var(--bad)' },
+    { label: 'Net Profit', value: metrics.income, color: metrics.income >= 0 ? 'var(--good)' : 'var(--bad)' }
+  ];
+
+  let runningTotal = 0;
+  const bars = items.map((item, index) => {
+    const startY = runningTotal;
+    const endY = runningTotal + item.value;
+    runningTotal = endY;
+
+    const height = Math.abs(item.value);
+    const y = Math.min(startY, endY);
+    const barHeight = Math.max(1, height * 0.5); // Scale for visibility
+
+    return `
+      <rect x="${index * 25 + 5}" y="${60 - y * 0.5 - barHeight}" width="15" height="${barHeight}"
+            fill="${item.color}" opacity="0.7"/>
+      <text x="${index * 25 + 12.5}" y="75" text-anchor="middle" font-size="8" fill="var(--muted)">
+        ${item.label.split(' ')[0]}
+      </text>
+    `;
+  }).join('');
+
+  return `
+    <div class="profit-waterfall">
+      <svg viewBox="0 0 100 80" class="waterfall-svg">
+        ${bars}
+        <!-- Zero line -->
+        <line x1="0" y1="60" x2="100" y2="60" stroke="var(--border)" stroke-width="1"/>
+      </svg>
+      <div class="waterfall-summary">
+        <div class="summary-item">
+          <span class="summary-label">Net:</span>
+          <span class="summary-value" style="color: ${metrics.income >= 0 ? 'var(--good)' : 'var(--bad)'}">
+            ${fmtMoney0(metrics.income)}
+          </span>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function render() {
@@ -1288,6 +1396,9 @@ function updateOutputs(metrics) {
 
     // Update break-even analysis
     updateBreakEvenAnalysis(metrics);
+
+    // Update rich visualizations
+    updateRichVisualizations(metrics);
 
     // Update debug panel if present
     const dbg = $('#debugPanel');

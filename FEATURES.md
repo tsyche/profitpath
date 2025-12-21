@@ -110,10 +110,12 @@ This file provides a short, current summary of notable features and pointers to 
 Implemented / delivered (high-level)
 - Core calculation engine (`calc()`): forecast and current modes, accepts an optional state argument for easier testing.
 - KPIs and outputs: Clients, Annual sessions, Service hours, Utilization, Revenue, Fixed/Payroll/Variable costs, Net income.
-- Visuals: revenue composition chart with per-offering breakdown and interactive tooltips (pin/close).
-- Persistence: auto-save/load of app state to `localStorage` and saved debug panel state.
+- Business Intelligence: Break-even analysis with visual indicators and contribution margin calculations.
+- Data Validation: Comprehensive input validation with contextual error messages and business logic checks.
+- Visuals: Revenue composition chart with interactive tooltips (pin/close), utilization gauge, and profit/loss waterfall charts.
+- Persistence: Auto-save/load of app state to `localStorage` and saved debug panel state.
 - CSV export and scenario save/load/delete UI.
-- Collapsible Debug panel (bottom of Outputs) to inspect `calc()` output; collapsible/expandable with persisted state.
+- UI/UX: Responsive mobile layout, collapsible debug panel, enhanced tooltip positioning.
 - Finalized header logo (single SVG) and removed legacy logo variants.
 
 Where to find more detail

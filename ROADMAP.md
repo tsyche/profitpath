@@ -34,6 +34,7 @@ Open http://localhost:8000 to preview the app.
   - **Comprehensive input validation** with contextual error messages and auto-fix suggestions.
   - **Business logic validation** including utilization warnings and profitability checks.
   - **Break-even analysis** with visual indicators, contribution margin calculations, and client/revenue break-even points.
+  - **Rich dashboard visualizations** including utilization gauge and profit/loss waterfall charts.
   - **Graceful error handling** with data sanitization and recovery.
 
 ---
@@ -127,13 +128,6 @@ Enhanced User Experience (UX Layer)
 
 Advanced Visualizations (Presentation Layer)
 
-17. Rich Dashboard Visualizations
-    - Cash flow timeline charts
-    - Profit/loss waterfall diagrams
-    - Utilization gauge with historical trends
-    - KPI trend lines with forecasting
-    - Effort: ~6-8 hours
-
 18. Interactive Scenario Comparison
     - Side-by-side scenario comparison
     - Diff highlighting for changes
@@ -203,7 +197,7 @@ Tech debt & DX
 
 ## Top 3 Next Priorities
 
-Based on user impact and business value:
+Based on user impact and technical foundation:
 
 1. **Shareable URLs & Collaboration** (#14)
    - Critical for user adoption - enables sharing scenarios with stakeholders
@@ -213,15 +207,15 @@ Based on user impact and business value:
    - Users need better ways to export and present their analysis results
    - 5-7 hours effort, improves usability and professional presentation
 
-3. **Rich Dashboard Visualizations** (#16)
-   - Enhanced visual insights make the tool more compelling and easier to understand
-   - 6-8 hours effort, improves user engagement and decision-making
+3. **Calculation Engine Refactoring** (#8)
+   - Technical foundation improvement for better maintainability and future testing
+   - 3-4 hours effort, enables more robust development and easier feature additions
 
 ---
 
 Notes
 
-- The repo now contains a stable, production-ready profitability simulator with comprehensive data validation, break-even analysis, and polished UX.
-- **Recently completed**: Enhanced data validation (#8) and break-even analysis (#11) - core business intelligence features now available.
-- **Next priorities**: Calculation engine refactoring (#8), shareable URLs (#14), and localization (#9) for improved maintainability and user experience.
+- The repo now contains a stable, production-ready profitability simulator with comprehensive data validation, break-even analysis, and rich visualizations.
+- **Recently completed**: Enhanced data validation (#8), break-even analysis (#11), and rich dashboard visualizations (#16) - comprehensive business intelligence suite now available.
+- **Next priorities**: Shareable URLs (#14), advanced export/reporting (#13), and calculation engine refactoring (#8) for improved adoption and maintainability.
 - Enterprise features (22-25) represent significant scope expansion and may require backend infrastructure.

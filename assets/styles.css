@@ -360,6 +360,104 @@ button:focus {
   font-weight: 600;
   color: var(--text);
 }
+
+/* Rich Visualizations */
+.rich-visualizations{
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(251,191,36,0.3);
+  background: rgba(251,191,36,0.08);
+  box-shadow: 0 2px 8px rgba(251,191,36,0.1);
+}
+
+.viz-header h4{
+  color: var(--text);
+}
+
+.viz-content{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.viz-item{
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+@media (max-width: 768px){
+  .viz-content{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Utilization Gauge */
+.utilization-gauge{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.gauge-svg{
+  width: 120px;
+  height: 80px;
+}
+
+.gauge-labels{
+  text-align: center;
+}
+
+.gauge-value{
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.gauge-text{
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Profit Waterfall */
+.profit-waterfall{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.waterfall-svg{
+  width: 100%;
+  height: 80px;
+  max-width: 200px;
+}
+
+.waterfall-summary{
+  display: flex;
+  gap: 12px;
+}
+
+.summary-item{
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.summary-label{
+  color: var(--muted);
+}
+
+.summary-value{
+  font-family: var(--mono);
+  font-weight: 600;
+}
 @media (max-width: 520px){
   .simple-chart .offering-item{padding:6px 8px}
   .simple-chart .offering-item .o-val{display:none;} /* hide annual value on very small screens to reduce clutter */
