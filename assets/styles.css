@@ -1,0 +1,1015 @@
+:root{
+  --bg: #0b1220;
+  --panel: rgba(255,255,255,0.06);
+  --panel-2: rgba(255,255,255,0.08);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.70);
+  --border: rgba(255,255,255,0.10);
+  --accent: #5eead4;
+  --accent-2:#60a5fa;
+  --warn:#fbbf24;
+  --bad:#fb7185;
+  --good:#34d399;
+  --shadow: 0 14px 40px rgba(0,0,0,0.35);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --gap: 14px;
+  --side-max: 774px;
+  --input-max: 774px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family: var(--sans);
+  /* Keep the modern glow, but reduce intensity to avoid large color blotches behind panels. */
+  background: radial-gradient(1200px 700px at 20% 0%, rgba(96,165,250,0.14), transparent 60%),
+              radial-gradient(900px 600px at 85% 20%, rgba(94,234,212,0.10), transparent 60%),
+              var(--bg);
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-attachment: fixed;
+  color: var(--text);
+}
+
+.page{
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 18px 28px 44px;
+}
+
+@media (max-width: 768px){
+  .page{
+    padding: 12px 16px 24px;
+  }
+}
+
+@media (max-width: 480px){
+  .page{
+    padding: 8px 12px 16px;
+  }
+}
+
+.header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom: 14px;
+}
+.header h1{
+  font-size: 18px;
+  margin: 0;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+}
+.header .subtitle{color: var(--muted); font-size: 13px; margin-top: 2px;}
+
+/* Logo styling (inline SVG) */
+.logo{display:flex;flex-direction:column;align-items:flex-start}
+.logo-final{height:56px;width:auto;display:block;margin-bottom:14px}
+.logo .subtitle{margin-top:0}
+.logo{display:flex;flex-direction:column;align-items:flex-start}
+.logo-text{font-weight:800;letter-spacing:0}
+.logo-sub{display:none}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+}
+.badge .dot{width:9px;height:9px;border-radius:999px;background: var(--accent); box-shadow: 0 0 0 3px rgba(94,234,212,0.14)}
+
+.grid{
+  display:grid;
+  grid-template-columns: minmax(0, var(--input-max)) minmax(0, var(--side-max));
+  gap: var(--gap);
+  align-items: start; /* prevent the Outputs card from stretching to match Inputs height */
+}
+
+/* Keep Outputs from getting too wide on large displays. */
+.grid > aside.card{
+  width: 100%;
+  max-width: var(--side-max);
+  justify-self: end;
+}
+@media (max-width: 1100px){
+  .grid{
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+  .grid > aside.card,
+  .grid > section.card,
+  .card{
+    max-width: none !important;
+    width: 100% !important;
+  }
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.045));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.card .card-h{
+  padding: var(--gap);
+  border-bottom: 1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: var(--gap);
+}
+.card .card-h h2{
+  margin:0;
+  font-size: 13px;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.78);
+}
+.card .card-b{
+  padding: var(--gap);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.row{
+  /* Stack Inputs vertically so everything is left-justified and aligned. */
+  display:flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gap);
+  width: 100%;
+}
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width: 0;
+}
+.field label{font-size: 12px; color: var(--muted);}
+.field .hint{font-size: 11px; color: rgba(255,255,255,0.55)}
+
+input[type="number"], input[type="text"], select{
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(10,16,28,0.7);
+  color: var(--text);
+  outline: none;
+}
+select{
+  padding-right: 30px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.7)' d='M1 4l5 4 5-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+input[type="number"]:focus, input[type="text"]:focus, select:focus{
+  border-color: rgba(94,234,212,0.5);
+  box-shadow: 0 0 0 3px rgba(94,234,212,0.14);
+}
+
+button:focus {
+  outline: 2px solid rgba(94,234,212,0.6);
+  outline-offset: 2px;
+}
+
+/* Visual cue: inputs that are editable in the current mode (forecast mix OR current customers). */
+.mode-edit{
+  border-color: rgba(94,234,212,0.55) !important;
+  background: rgba(94,234,212,0.10) !important;
+}
+.mode-edit:focus{
+  box-shadow: 0 0 0 3px rgba(94,234,212,0.18) !important;
+}
+
+.btn{
+  appearance:none;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor:pointer;
+  transition: transform .06s ease, background-color .15s ease, border-color .15s ease;
+  font-size: 13px;
+}
+.btn:hover{background: rgba(255,255,255,0.085);}
+.btn:active{transform: translateY(1px);}
+.btn.primary{border-color: rgba(94,234,212,0.45); background: rgba(94,234,212,0.12);}
+.btn.danger{border-color: rgba(251,113,133,0.5); background: rgba(251,113,133,0.12);}
+.btn.small{padding: 7px 8px; font-size: 12px; border-radius: 9px;}
+
+.table-wrap{overflow:auto; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.18)}
+.table{
+  width:100%;
+  border-collapse: collapse;
+  min-width: 860px;
+  font-size: 12px;
+}
+.table th, .table td{padding: 10px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); vertical-align: middle;}
+.table th{color: rgba(255,255,255,0.72); font-weight: 600; text-transform: uppercase; letter-spacing: .28px; font-size: 11px;}
+.table td .mono{font-family: var(--mono); color: rgba(255,255,255,0.82)}
+.table td input{min-width: 110px;}
+.table tr:last-child td{border-bottom: none;}
+
+.kpi-grid{display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap);}
+@media (max-width: 980px){
+  .kpi-grid{grid-template-columns:1fr;}
+}
+
+.kpi{
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.045);
+}
+.kpi .k{color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .3px;}
+.kpi .v{margin-top:6px; font-size: 18px; font-weight: 700;}
+.kpi .sub{margin-top:4px; font-size: 12px; color: rgba(255,255,255,0.62)}
+
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+}
+
+/* Simple chart in Outputs: small stacked bar and labels */
+.simple-chart{margin-top:14px; display:flex; flex-direction:column; gap:8px}
+.simple-chart svg{width:100%; height:48px; display:block}
+.simple-chart .chart-labels{display:flex; justify-content:space-between; font-size:12px; color:var(--muted)}
+.simple-chart .chart-labels .left{display:flex; gap:12px; align-items:center}
+.simple-chart .pill-legend{display:inline-flex; align-items:center; gap:8px}
+.legend-swatch{width:12px; height:12px; border-radius:3px}
+.legend-variable{background: rgba(251,113,133,0.6)}
+.legend-margin{background: rgba(52,211,153,0.6)}
+.chart-empty{color:var(--muted); font-size:13px}
+.simple-chart svg text{
+  /* Force a small, consistent pixel font size for SVG labels to avoid scaling issues.
+     Use a light stroke for readability against colored segments. */
+  font-size: 10px !important;
+  fill: #fff !important;
+  font-family: var(--sans) !important;
+  pointer-events: none;
+  dominant-baseline: middle;
+  paint-order: stroke;
+  stroke: rgba(0,0,0,0.55);
+  stroke-width: 0.8px;
+}
+.simple-chart .segment-label{font-size:10px; color:rgba(255,255,255,0.92)}
+.simple-chart .right strong{font-family:var(--mono);}
+
+/* Debug panel (collapsible) */
+.debug-wrapper{margin-top:12px; margin-bottom:8px}
+.debug-toggle{appearance:none;background:transparent;border:none;color:var(--muted);font-family:var(--sans);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.debug-toggle:focus{outline:2px solid rgba(94,234,212,0.18);outline-offset:2px}
+.debug-body{margin-top:8px}
+.debug-body.collapsed{display:none}
+.debug-pre{background: rgba(0,0,0,0.12); padding:8px; border-radius:8px; color:var(--muted); font-size:12px; max-height:160px; overflow:auto; white-space:pre-wrap}
+
+/* Below-bar per-offering compact list */
+.simple-chart{position:relative}
+.simple-chart .offering-list{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap:8px;
+  margin-top:10px;
+  align-items:start;
+}
+.simple-chart .offering-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:8px 10px;
+  border-radius:8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.03);
+  font-size:13px;
+}
+.simple-chart .off-left{display:flex;gap:8px;align-items:center;min-width:0}
+.simple-chart .offering-item .o-name{
+  font-weight:600;
+  max-width:140px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.simple-chart .offering-item .o-pct{
+  font-family:var(--mono);
+  color:var(--muted);
+}
+.simple-chart .offering-item .o-val{
+  font-family:var(--mono);
+  color:var(--accent);
+  margin-left:12px;
+}
+
+/* Break-even analysis section */
+.break-even-section{
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(251,191,36,0.3);
+  background: rgba(251,191,36,0.08);
+  box-shadow: 0 2px 8px rgba(251,191,36,0.1);
+}
+
+.break-even-header h4{
+  color: var(--text);
+}
+
+.break-even-content{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.break-even-item{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.break-even-label{
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.break-even-value{
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Rich Visualizations */
+.rich-visualizations{
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(251,191,36,0.3);
+  background: rgba(251,191,36,0.08);
+  box-shadow: 0 2px 8px rgba(251,191,36,0.1);
+}
+
+.viz-header h4{
+  color: var(--text);
+}
+
+.viz-content{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.viz-item{
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+@media (max-width: 768px){
+  .viz-content{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Utilization Gauge */
+.utilization-gauge{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.gauge-svg{
+  width: 120px;
+  height: 80px;
+}
+
+.gauge-labels{
+  text-align: center;
+}
+
+.gauge-value{
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.gauge-text{
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Profit Waterfall */
+.profit-waterfall{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.waterfall-svg{
+  width: 100%;
+  height: 80px;
+  max-width: 200px;
+}
+
+.waterfall-summary{
+  display: flex;
+  gap: 12px;
+}
+
+.summary-item{
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.summary-label{
+  color: var(--muted);
+}
+
+.summary-value{
+  font-family: var(--mono);
+  font-weight: 600;
+}
+@media (max-width: 520px){
+  .simple-chart .offering-item{padding:6px 8px}
+  .simple-chart .offering-item .o-val{display:none;} /* hide annual value on very small screens to reduce clutter */
+}
+
+/* Tooltip for SVG segments */
+.simple-chart .chart-tooltip{
+  position:absolute;
+  pointer-events:none;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding:6px 8px;
+  border-radius:6px;
+  font-size:12px;
+  transform: translate(-50%, -120%);
+  white-space:nowrap;
+  z-index:30;
+  opacity: 1;
+  transition: opacity 0.1s ease, transform 0.1s ease;
+  display:block; /* keep present for measurement; visibility controlled via .visible */
+  visibility: hidden;
+}
+
+.simple-chart .chart-tooltip.pinned{
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease, background 0.2s ease;
+}
+.simple-chart .chart-tooltip.visible{
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -140%);
+}
+
+/* Caret arrow pointing at hovered segment */
+.simple-chart .chart-tooltip::after{
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(0,0,0,0.85);
+  bottom: -6px;
+}
+.simple-chart .chart-tooltip.below::after{
+  /* Flip caret when tooltip is below the pointer */
+  border-top: none;
+  border-bottom: 6px solid rgba(0,0,0,0.85);
+  top: -6px;
+  bottom: auto;
+}
+.simple-chart .chart-tooltip.below{
+  transform: translate(-50%, 0%);
+}
+
+/* Pinned tooltip styling */
+.simple-chart .chart-tooltip{
+  transition: all 0.2s ease;
+}
+
+.simple-chart .chart-tooltip.pinned{
+  box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.2), 0 0 0 2px rgba(94,234,212,0.3);
+  border: 1px solid rgba(94,234,212,0.6);
+  background: rgba(0,0,0,0.95);
+  transform: translate(-50%, -140%) scale(1.02);
+}
+
+/* Pin button visual feedback */
+.simple-chart .tooltip-pin{
+  transition: transform 0.1s ease;
+}
+
+.simple-chart .tooltip-pin:hover{
+  transform: scale(1.1);
+}
+
+.simple-chart .tooltip-close{
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.9);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background-color 0.1s ease;
+}
+
+.simple-chart .tooltip-close:hover{
+  background: rgba(255,255,255,0.1);
+}
+.simple-chart .tooltip-close:hover{background: rgba(255,255,255,0.03)}
+
+.simple-chart .tooltip-pin{
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.95);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background-color 0.1s ease;
+}
+
+.simple-chart .tooltip-pin:hover{
+  background: rgba(255,255,255,0.1);
+}
+.simple-chart .tooltip-pin:hover{background: rgba(255,255,255,0.03)}
+
+/* Highlight a pinned SVG rect with an outline and glow */
+/* Note: visual pinned indicators (outline + pin overlay) removed per UX preference */
+
+.muted{color: var(--muted)}
+.hidden{display:none !important;}
+.note{font-size: 12px; color: rgba(255,255,255,0.70)}
+.note strong{color: rgba(255,255,255,0.92)}
+
+/* Mode banner styling (so the current editing mode is obvious even when Mode selector is off-screen). */
+.note.note-forecast{
+  /* Make forecast mode stand out more than current mode. */
+  border: 1px solid rgba(251,191,36,0.40);
+  background: rgba(251,191,36,0.14);
+  color: rgba(255,255,255,0.95);
+}
+.note.note-current{
+  border: 1px solid rgba(251,191,36,0.40);
+  background: rgba(251,191,36,0.14);
+  color: rgba(255,255,255,0.95);
+}
+.note.note-warn{
+  border-color: rgba(251,191,36,0.40);
+}
+.note.note-lock{
+  border-color: rgba(94,234,212,0.40);
+}
+
+/* Make default checkboxes visible on dark background */
+input[type="checkbox"]{
+  accent-color: var(--accent);
+}
+
+.capacity{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: var(--gap);
+  padding: var(--gap);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.045);
+}
+.meter{
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  overflow:hidden;
+  width: 100%;
+}
+.meter > div{height:100%; width:0%; background: linear-gradient(90deg, var(--good), var(--warn), var(--bad)); transition: width .2s ease}
+
+.footer-actions{display:flex; gap: var(--gap); flex-wrap:wrap; justify-content:flex-end}
+
+.smallprint{font-size: 11px; color: rgba(255,255,255,0.55); line-height: 1.35; margin-top: var(--gap);}
+
+.section-box{
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.14);
+  padding: var(--gap);
+}
+
+.section-box + .section-box{margin-top: calc(var(--gap) * 2);}
+
+.section-h{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: var(--gap);
+  margin-bottom: var(--gap);
+}
+
+.section-h h3{
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.78);
+}
+
+.inputs-fields{
+  width: 100%;
+  margin: 0;
+}
+
+.offerings-section{
+  /* Allow offerings to expand to fill the card width */
+  width: 100%;
+  margin: 0;
+}
+
+/* Remove the old table-wrap border/background so it doesn't look like an extra card behind offerings. */
+.offerings-section .table-wrap{
+  border: none;
+  background: transparent;
+}
+
+.offerings-section .note{
+  margin-bottom: var(--gap);
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.file-warning{
+  border: 1px solid rgba(251,191,36,0.35);
+  background: rgba(251,191,36,0.08);
+  color: rgba(255,255,255,0.90);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+/* Validation Messages */
+.validation-container{
+  max-width: 100%;
+  margin: 0 auto 14px;
+  padding: 0 28px;
+}
+
+.validation-errors, .validation-warnings{
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.validation-errors{
+  border: 1px solid rgba(251,113,133,0.4);
+  background: rgba(251,113,133,0.08);
+}
+
+.validation-warnings{
+  border: 1px solid rgba(251,191,36,0.4);
+  background: rgba(251,191,36,0.08);
+}
+
+.validation-item{
+  margin-bottom: 10px;
+}
+
+.validation-item:last-child{
+  margin-bottom: 0;
+}
+
+.validation-message{
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: rgba(255,255,255,0.95);
+  margin-bottom: 4px;
+}
+
+.validation-message strong{
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.validation-suggestion{
+  color: rgba(255,255,255,0.75);
+  font-size: 12px;
+  margin-left: 22px;
+  font-style: italic;
+}
+
+/* Offerings table: always stack cells with labels so there's never horizontal scrolling.
+   Layout goal:
+   - Offerings cards are centered within the Inputs card.
+   - On wide screens, show 2 offering cards per row.
+   - On narrow screens, fall back to 1 per row.
+*/
+.table-wrap{overflow: visible;}
+.table{
+  min-width: 0;
+  width: 100%;
+  display:block;
+  max-width: none;
+  margin: 0 auto;
+  padding: 0; /* padding handled by the section box */
+}
+.table thead{display:none;}
+
+#offeringsBody{
+  display:grid;
+  /* Automatically switches between 1-up and 2-up based on available width. */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--gap);
+  width: 100%;
+}
+
+/* Limit max width of each offering card so 2 fit nicely on desktop */
+@media (min-width: 800px) {
+  #offeringsBody {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 340px));
+  }
+}
+
+.table tr{
+  display:block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0; /* spacing handled by tbody grid gap */
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+}
+
+.table td{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  margin: 7px 0;
+  background: rgba(0,0,0,0.18);
+}
+
+.table td::before{
+  content: attr(data-label);
+  color: rgba(255,255,255,0.62);
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.25px;
+  font-size: 10px;
+  flex: 0 0 clamp(85px, 15vw, 110px);
+}
+
+/* Keep the editable value region comfortable, but never overflow inside narrower cards. */
+.table td > *{flex: 1 1 140px; min-width: 0;}
+.table td input,
+.table td select{
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Make the 3 conceptual groups obvious with a left accent bar + spacing. */
+.table td.group-start{margin-top: 12px;}
+.table td.group-start:first-child{margin-top: 6px;}
+.table td.group-end{margin-bottom: 12px;}
+
+.table td.group-inputs{border-left: 3px solid rgba(96,165,250,0.65);} /* accent-2 */
+.table td.group-mode{border-left: 3px solid rgba(94,234,212,0.65);}   /* accent */
+.table td.group-est{border-left: 3px solid rgba(255,255,255,0.22);}    /* neutral */
+.table td.group-metrics{border-left: 3px solid rgba(52,211,153,0.65);} /* good */
+
+/* Make edit vs read-only visually distinct. */
+.table td.cell-edit{
+  background: rgba(255,255,255,0.075);
+  border-color: rgba(255,255,255,0.12);
+}
+.table td.cell-readonly{
+  background: rgba(0,0,0,0.16);
+  border-color: rgba(255,255,255,0.08);
+}
+.table td.cell-readonly .mono{color: rgba(255,255,255,0.86);}
+
+.table td.group-actions{
+  justify-content: space-between;
+}
+.table td.group-actions::before{
+  content: attr(data-label);
+  color: rgba(255,255,255,0.62);
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.25px;
+  font-size: 10px;
+  flex: 0 0 clamp(110px, 18vw, 150px);
+}
+.table td.group-actions > *{
+  flex: 0 0 auto;
+  min-width: 85px;
+  padding: 9px 10px;
+  font-size: 13px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+/* Modal & Scenarios UI */
+.modal{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal.hidden{
+  display: none !important;
+}
+
+.modal-overlay{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(2px);
+}
+
+.modal-content{
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.modal-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gap);
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3{
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: 0.3px;
+}
+
+.btn-close{
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background-color .15s ease;
+}
+
+.btn-close:hover{
+  background: rgba(255,255,255,0.08);
+}
+
+.modal-body{
+  padding: var(--gap);
+}
+
+.scenarios-section{
+  margin-bottom: calc(var(--gap) * 1.5);
+}
+
+.scenarios-section h4{
+  margin: 0 0 var(--gap) 0;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.78);
+}
+
+.save-scenario-form{
+  display: flex;
+  gap: var(--gap);
+}
+
+.save-scenario-form input{
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.scenarios-list{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scenario-item{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  transition: background-color .15s ease, border-color .15s ease;
+}
+
+.scenario-item:hover{
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.scenario-item-name{
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.scenario-item-meta{
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.scenario-item-actions{
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: var(--gap);
+}
+
+.scenario-item-actions .btn{
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
+.empty-state{
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.header-actions{
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+

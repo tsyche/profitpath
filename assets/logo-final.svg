@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 72" width="300" height="72" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="gradA" x1="0" x2="1">
+            <stop offset="0%" stop-color="#06b6d4"/>
+            <stop offset="100%" stop-color="#6366f1"/>
+        </linearGradient>
+    </defs>
+    <!-- Arch/path icon (moved slightly up to avoid touching the wordmark) -->
+    <g transform="translate(0,0)">
+        <path d="M12 36 C36 6, 84 6, 108 36" fill="none" stroke="url(#gradA)" stroke-width="6" stroke-linecap="round"/>
+    </g>
+    <!-- Colorful wordmark below the arch (moved up slightly to be closer to the arch) -->
+    <text x="0" y="68" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" font-weight="800" font-size="28" fill="url(#gradA)">ProfitPath</text>
+</svg>
