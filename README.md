@@ -13,6 +13,7 @@ Quick status
 - **Core Features**: Forecast/current mode simulation, revenue composition charts with interactive hover tooltips, scenario management with localStorage persistence.
 - **Business Intelligence**: Break-even analysis with visual indicators, contribution margin calculations, profitability insights, rich dashboard visualizations.
 - **Data Validation**: Comprehensive input validation with contextual error messages and business logic checks.
+- **Collaboration**: Shareable URLs for sharing scenarios with stakeholders, automatic URL loading on page load.
 - **UI/UX**: Responsive design, mobile-optimized layout, collapsible debug panel, utilization gauge, profit waterfall charts, polished visual design.
 
 Run locally

@@ -2,6 +2,8 @@
 
 All feature planning and the prioritized backlog have been consolidated into `ROADMAP.md`. For the single canonical list of ideas, priorities, and recommended next steps, open `ROADMAP.md` in the repo root.
 
+**✅ Shareable URLs & Collaboration implemented** - Users can now share scenarios via URL and collaborate with stakeholders.
+
 ---
 
 ## 🔴 LONG-TERM FEATURES (Week 4+)

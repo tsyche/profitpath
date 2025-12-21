@@ -15,19 +15,50 @@
 
     <header class="header">
       <div>
-        <div class="logo" id="logo">
-          <img src="assets/logo-final.svg" class="logo-final" alt="ProfitPath logo" />
-          <div class="subtitle">A lightweight simulator for recurring-cadence service businesses (no backend, no build step).</div>
-        </div>
+        <a href="/" class="logo-link">
+          <div class="logo" id="logo">
+            <img src="assets/logo-final.svg" class="logo-final" alt="ProfitPath logo" />
+            <div class="subtitle">A lightweight simulator for recurring-cadence service businesses (no backend, no build step).</div>
+          </div>
+        </a>
       </div>
       <div class="header-actions">
         <button class="btn small" id="exportBtn" type="button" title="Export offerings and results as CSV">Export CSV</button>
+        <button class="btn small" id="shareBtn" type="button" title="Share current scenario">Share</button>
         <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">Scenarios</button>
         <div class="badge" title="This is a static file app">
           <span class="dot"></span>
           <span class="muted">Static simulator</span>
         </div>
       </div>
+
+      <!-- Mobile Menu -->
+      <div class="mobile-menu-overlay" id="mobileMenuOverlay">
+        <div class="mobile-menu" id="mobileMenu">
+          <div class="mobile-menu-header">
+            <span class="mobile-menu-title">Menu</span>
+            <div class="mobile-menu-center">
+              <div class="mobile-menu-badge">
+                <span class="dot"></span>
+                <span class="muted">Static simulator</span>
+              </div>
+            </div>
+            <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
+          </div>
+          <div class="mobile-menu-content">
+            <button class="btn mobile-menu-btn" id="mobileExportBtn">📊 Export CSV</button>
+            <button class="btn mobile-menu-btn" id="mobileShareBtn">🔗 Share Scenario</button>
+            <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hamburger Menu Button -->
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </header>
 
     <!-- Scenarios Modal -->

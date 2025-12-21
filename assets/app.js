@@ -1758,8 +1758,168 @@ function closeScenarioModal() {
   $('#scenariosModal').classList.add('hidden');
 }
 
-function wire() {
-  // Load persisted state from localStorage if available
+// Shareable URLs & Collaboration
+function encodeScenarioToURL(state) {
+  try {
+    // Create a clean copy of the state for sharing (exclude internal properties)
+    const shareableState = {
+      mode: state.mode,
+      offerings: state.offerings.map(o => ({
+        name: o.name,
+        priceMonthly: o.priceMonthly,
+        sessionsPerYear: o.sessionsPerYear,
+        hoursPerSession: o.hoursPerSession,
+        variableCostPerSession: o.variableCostPerSession,
+        mixPct: o.mixPct,
+        currentClients: o.currentClients
+      })),
+      employees: state.employees,
+      employeePay: state.employeePay,
+      monthlyCosts: state.monthlyCosts,
+      productiveUtilizationPct: state.productiveUtilizationPct,
+      targetUtilizationPct: state.targetUtilizationPct,
+      lockMix: state.lockMix
+    };
+
+    // Encode to base64 (URL-safe)
+    const jsonString = JSON.stringify(shareableState);
+    const encoded = btoa(encodeURIComponent(jsonString));
+
+    // Create shareable URL
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}#scenario=${encoded}`;
+  } catch (e) {
+    console.error('Failed to encode scenario:', e);
+    return null;
+  }
+}
+
+function decodeScenarioFromURL() {
+  try {
+    const hash = window.location.hash;
+    if (!hash.startsWith('#scenario=')) return null;
+
+    const encoded = hash.slice(10); // Remove '#scenario='
+    const jsonString = decodeURIComponent(atob(encoded));
+    const state = JSON.parse(jsonString);
+
+    return state;
+  } catch (e) {
+    console.error('Failed to decode scenario from URL:', e);
+    return null;
+  }
+}
+
+function loadScenarioFromURL() {
+  const urlState = decodeScenarioFromURL();
+  if (!urlState) return false;
+
+  try {
+    // Validate and merge URL state with defaults
+    state.mode = urlState.mode || state.mode;
+    state.employees = urlState.employees || state.employees;
+    state.employeePay = urlState.employeePay || state.employeePay;
+    state.monthlyCosts = urlState.monthlyCosts || state.monthlyCosts;
+    state.productiveUtilizationPct = urlState.productiveUtilizationPct || state.productiveUtilizationPct;
+    state.targetUtilizationPct = urlState.targetUtilizationPct || state.targetUtilizationPct;
+    state.lockMix = urlState.lockMix !== undefined ? urlState.lockMix : state.lockMix;
+
+    // Handle offerings
+    if (Array.isArray(urlState.offerings)) {
+      state.offerings = urlState.offerings.map(o => ({
+        id: uuid(),
+        name: o.name || 'Offering',
+        priceMonthly: o.priceMonthly || 0,
+        sessionsPerYear: o.sessionsPerYear || 0,
+        hoursPerSession: o.hoursPerSession || 0,
+        variableCostPerSession: o.variableCostPerSession || 0,
+        mixPct: o.mixPct || 0,
+        currentClients: o.currentClients || 0
+      }));
+
+      // Ensure at least one offering
+      if (state.offerings.length === 0) {
+        state.offerings = [{
+          id: uuid(),
+          name: 'Sample Offering',
+          priceMonthly: 1000,
+          sessionsPerYear: 12,
+          hoursPerSession: 2,
+          variableCostPerSession: 0,
+          mixPct: 100,
+          currentClients: 0,
+        }];
+      }
+    }
+
+    console.log('Loaded scenario from URL');
+    persistState(); // Save URL scenario to localStorage
+    return true;
+  } catch (e) {
+    console.error('Failed to load scenario from URL:', e);
+    return false;
+  }
+}
+
+function shareScenario() {
+  const shareUrl = encodeScenarioToURL(state);
+  if (!shareUrl) {
+    alert('Failed to create shareable URL. Please try again.');
+    return;
+  }
+
+  // Copy to clipboard if available
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      alert('Shareable URL copied to clipboard!\n\nYou can now share this link with stakeholders.');
+    }).catch(() => {
+      // Fallback: show the URL
+      prompt('Copy this shareable URL:', shareUrl);
+    });
+  } else {
+    // Fallback for older browsers
+    prompt('Copy this shareable URL:', shareUrl);
+  }
+}
+
+// Mobile menu functions
+function toggleMobileMenu() {
+  const overlay = $('#mobileMenuOverlay');
+  const hamburger = $('#hamburgerBtn');
+
+  if (overlay && hamburger) {
+    const isActive = overlay.classList.contains('active');
+    if (isActive) {
+      closeMobileMenu();
+    } else {
+      openMobileMenu();
+    }
+  }
+}
+
+function openMobileMenu() {
+  const overlay = $('#mobileMenuOverlay');
+  const hamburger = $('#hamburgerBtn');
+
+  if (overlay && hamburger) {
+    overlay.classList.add('active');
+    hamburger.classList.add('active');
+  }
+}
+
+function closeMobileMenu() {
+  const overlay = $('#mobileMenuOverlay');
+  const hamburger = $('#hamburgerBtn');
+
+  if (overlay && hamburger) {
+    overlay.classList.remove('active');
+    hamburger.classList.remove('active');
+  }
+}
+
+function wire(skipLocalStorageLoading = false) {
+  // Load persisted state from localStorage if available (unless we loaded from URL)
+  if (!skipLocalStorageLoading) {
   try {
     const saved = localStorage.getItem('profitpath-state');
     if (saved) {
@@ -1774,11 +1934,12 @@ function wire() {
       state.targetUtilizationPct = parsed.targetUtilizationPct ?? state.targetUtilizationPct;
       state.lockMix = parsed.lockMix ?? state.lockMix;
 
-      // Validate loaded data and sanitize if needed
-      validateAndSanitizeLoadedState();
+        // Validate loaded data and sanitize if needed
+        validateAndSanitizeLoadedState();
     }
   } catch (e) {
     console.warn('Failed to load saved state:', e);
+  }
   }
 
   // migrate existing save calls to global persistState
@@ -1814,6 +1975,52 @@ function wire() {
   $('#addOfferingBtn').addEventListener('click', addOffering);
   $('#resetBtn').addEventListener('click', resetDefaults);
   $('#exportBtn').addEventListener('click', exportAsCSV);
+  $('#shareBtn').addEventListener('click', shareScenario);
+
+  // Hamburger menu
+  const hamburgerBtn = $('#hamburgerBtn');
+  const mobileMenuOverlay = $('#mobileMenuOverlay');
+  const mobileMenuClose = $('#mobileMenuClose');
+  const mobileExportBtn = $('#mobileExportBtn');
+  const mobileShareBtn = $('#mobileShareBtn');
+  const mobileScenariosBtn = $('#mobileScenariosBtn');
+
+  if (hamburgerBtn) {
+    hamburgerBtn.addEventListener('click', toggleMobileMenu);
+  }
+
+  if (mobileMenuOverlay) {
+    mobileMenuOverlay.addEventListener('click', (e) => {
+      if (e.target === mobileMenuOverlay) {
+        closeMobileMenu();
+      }
+    });
+  }
+
+  if (mobileMenuClose) {
+    mobileMenuClose.addEventListener('click', closeMobileMenu);
+  }
+
+  if (mobileExportBtn) {
+    mobileExportBtn.addEventListener('click', () => {
+      exportAsCSV();
+      closeMobileMenu();
+    });
+  }
+
+  if (mobileShareBtn) {
+    mobileShareBtn.addEventListener('click', () => {
+      shareScenario();
+      closeMobileMenu();
+    });
+  }
+
+  if (mobileScenariosBtn) {
+    mobileScenariosBtn.addEventListener('click', () => {
+      openScenarioModal();
+      closeMobileMenu();
+    });
+  }
 
   $('#offeringsBody').addEventListener('input', onTableInput);
   $('#offeringsBody').addEventListener('click', onTableClick);
@@ -1848,7 +2055,10 @@ function wire() {
   });
 }
 
-wire();
+// Load scenario from URL first (if present), then localStorage
+const loadedFromURL = loadScenarioFromURL();
+
+wire(loadedFromURL);
 
 // Run initial render in a safe guard so any runtime errors are reported to the debug panel
 try {
