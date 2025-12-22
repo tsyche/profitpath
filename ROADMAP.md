@@ -1,12 +1,33 @@
 # ProfitPath — Consolidated Roadmap (single source of truth)
 
-This ROADMAP is the single source of truth for ideas, priorities, and next actions. It includes completed items (so you can see recent progress) and a prioritized backlog.
+This ROADMAP is the single source of truth for ideas, priorities, and next actions. It includes a prioritized backlog of future improvements.
 
 See README.md for setup and development instructions.
 
 ---
 
-## Prioritized Backlog (high → low)
+## Top 3 Suggested Tasks
+
+Based on user impact and market expansion:
+
+1. **Scenario Comparison Tool**
+
+   - Side-by-side comparison of different business scenarios
+   - 6-8 hours effort, enables better decision making
+
+2. **Advanced Data Visualization**
+
+   - Enhanced charts, graphs, and interactive reporting features
+   - 5-7 hours effort, improves data understanding and presentation
+
+3. **Multi-Currency Support**
+
+   - Enable international users with proper currency handling and formatting
+   - 8-10 hours effort, critical for global adoption and professional use
+
+---
+
+## Fully Prioritized Backlog (high → low)
 
 High priority
 
@@ -162,37 +183,11 @@ Enterprise Features (Scale Layer)
     - Competitive analysis tools
     - Effort: ~12-15 hours
 
-Tech debt & DX
-
-- ✅ **Build System**: Added minimal esbuild configuration for development ergonomics (completed)
-- 🚧 **TypeScript Migration** (In Progress): Set up TypeScript configuration and converted constants file as example (20-30 hours total)
-
----
-
-## Top 3 Next Priorities
-
-Based on user impact and market expansion:
-
-1. **Multi-Currency Support**
-
-   - Enable international users with proper currency handling and formatting
-   - 8-10 hours effort, critical for global adoption and professional use
-
-2. **Industry Templates & Presets**
-
-   - Pre-built scenarios for common business types to improve onboarding
-   - 4-6 hours effort, reduces time-to-value for new users
-
-3. **Advanced Mobile Experience**
-
-   - Touch gestures, mobile-specific optimizations, and PWA enhancements
-   - 4-6 hours effort, improves mobile user retention and experience
-
 ---
 
 Notes
 
 - The repo contains a stable, production-ready profitability simulator with comprehensive error handling, performance optimizations, PWA capabilities, and extensive export functionality.
 - **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, and advanced testing infrastructure.
-- **Next priorities**: Multi-currency support for international users, industry-specific templates, and enhanced mobile experience for broader adoption.
+- **Next priorities**: Scenario comparison tools, advanced data visualization, and multi-currency support for enhanced decision making and global adoption.
 - Enterprise features represent significant scope expansion and may require backend infrastructure changes.

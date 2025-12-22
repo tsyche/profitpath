@@ -1318,6 +1318,55 @@ input[type="checkbox"]{
   margin-right: 0.25rem;
 }
 
+/* Templates dropdown */
+.templates-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.templates-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 160px;
+  padding: 0.5rem 0;
+  margin-top: 0.25rem;
+}
+
+.templates-dropdown:hover .templates-menu,
+.templates-dropdown:focus-within .templates-menu {
+  display: block;
+}
+
+.template-option {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #374151;
+  transition: background-color 0.15s ease;
+}
+
+.template-option:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+}
+
+.template-icon {
+  margin-right: 0.25rem;
+}
+
 /* Mobile export options */
 .mobile-export-section {
   position: relative;

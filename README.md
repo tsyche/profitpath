@@ -15,6 +15,7 @@ Quick status
 - **Advanced Export**: Multi-format reporting (PDF with charts, Excel with formulas, HTML pages, automated scheduling), email sharing functionality.
 - **Data Validation**: Comprehensive input validation with contextual error messages and business logic checks.
 - **Collaboration**: Shareable URLs for sharing scenarios with stakeholders, automatic URL loading on page load.
+- **Templates**: Industry-specific templates for consulting, cleaning, landscaping, handyman, fitness, and photography services.
 - **UI/UX**: Responsive design, mobile-optimized layout, collapsible debug panel, utilization gauge, profit waterfall charts, polished visual design.
 
 Run locally

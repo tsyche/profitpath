@@ -2720,6 +2720,242 @@ function closeMobileMenu() {
 }
 
 // ============================================================================
+// INDUSTRY TEMPLATES SYSTEM
+// ============================================================================
+
+// Industry-specific templates for common business types
+const INDUSTRY_TEMPLATES = {
+  consulting: {
+    name: 'Management Consulting',
+    description: 'Professional consulting services template',
+    config: {
+      mode: 'forecast',
+      employees: 2,
+      employeePay: 85000,
+      monthlyCosts: 3000,
+      productiveUtilizationPct: 75,
+      targetUtilizationPct: 80,
+      offerings: [{
+        id: 'strategy-consulting',
+        name: 'Strategy Consulting',
+        priceMonthly: 5000,
+        sessionsPerYear: 12,
+        hoursPerSession: 8,
+        variableCostPerSession: 200,
+        mixPct: 60,
+        currentClients: 0
+      }, {
+        id: 'operational-consulting',
+        name: 'Operational Consulting',
+        priceMonthly: 3500,
+        sessionsPerYear: 12,
+        hoursPerSession: 6,
+        variableCostPerSession: 150,
+        mixPct: 40,
+        currentClients: 0
+      }]
+    }
+  },
+
+  cleaning: {
+    name: 'Cleaning Services',
+    description: 'House and office cleaning services template',
+    config: {
+      mode: 'forecast',
+      employees: 3,
+      employeePay: 35000,
+      monthlyCosts: 1500,
+      productiveUtilizationPct: 85,
+      targetUtilizationPct: 90,
+      offerings: [{
+        id: 'residential-cleaning',
+        name: 'Residential Cleaning',
+        priceMonthly: 180,
+        sessionsPerYear: 52,
+        hoursPerSession: 2,
+        variableCostPerSession: 15,
+        mixPct: 70,
+        currentClients: 0
+      }, {
+        id: 'office-cleaning',
+        name: 'Office Cleaning',
+        priceMonthly: 800,
+        sessionsPerYear: 52,
+        hoursPerSession: 4,
+        variableCostPerSession: 60,
+        mixPct: 30,
+        currentClients: 0
+      }]
+    }
+  },
+
+  landscaping: {
+    name: 'Landscaping Services',
+    description: 'Lawn care and landscaping services template',
+    config: {
+      mode: 'forecast',
+      employees: 4,
+      employeePay: 45000,
+      monthlyCosts: 2500,
+      productiveUtilizationPct: 80,
+      targetUtilizationPct: 85,
+      offerings: [{
+        id: 'lawn-maintenance',
+        name: 'Lawn Maintenance',
+        priceMonthly: 120,
+        sessionsPerYear: 26,
+        hoursPerSession: 1.5,
+        variableCostPerSession: 20,
+        mixPct: 60,
+        currentClients: 0
+      }, {
+        id: 'full-landscaping',
+        name: 'Full Landscaping',
+        priceMonthly: 800,
+        sessionsPerYear: 12,
+        hoursPerSession: 8,
+        variableCostPerSession: 120,
+        mixPct: 40,
+        currentClients: 0
+      }]
+    }
+  },
+
+  handyman: {
+    name: 'Handyman Services',
+    description: 'Home repair and maintenance services template',
+    config: {
+      mode: 'forecast',
+      employees: 2,
+      employeePay: 55000,
+      monthlyCosts: 1800,
+      productiveUtilizationPct: 78,
+      targetUtilizationPct: 82,
+      offerings: [{
+        id: 'minor-repairs',
+        name: 'Minor Repairs',
+        priceMonthly: 150,
+        sessionsPerYear: 24,
+        hoursPerSession: 2,
+        variableCostPerSession: 30,
+        mixPct: 50,
+        currentClients: 0
+      }, {
+        id: 'major-projects',
+        name: 'Major Projects',
+        priceMonthly: 1200,
+        sessionsPerYear: 12,
+        hoursPerSession: 6,
+        variableCostPerSession: 200,
+        mixPct: 50,
+        currentClients: 0
+      }]
+    }
+  },
+
+  fitness: {
+    name: 'Fitness Training',
+    description: 'Personal training and fitness services template',
+    config: {
+      mode: 'forecast',
+      employees: 1,
+      employeePay: 40000,
+      monthlyCosts: 800,
+      productiveUtilizationPct: 85,
+      targetUtilizationPct: 90,
+      offerings: [{
+        id: 'personal-training',
+        name: 'Personal Training',
+        priceMonthly: 80,
+        sessionsPerYear: 48,
+        hoursPerSession: 1,
+        variableCostPerSession: 5,
+        mixPct: 70,
+        currentClients: 0
+      }, {
+        id: 'group-classes',
+        name: 'Group Classes',
+        priceMonthly: 40,
+        sessionsPerYear: 48,
+        hoursPerSession: 1,
+        variableCostPerSession: 3,
+        mixPct: 30,
+        currentClients: 0
+      }]
+    }
+  },
+
+  photography: {
+    name: 'Photography Services',
+    description: 'Photography and media services template',
+    config: {
+      mode: 'forecast',
+      employees: 1,
+      employeePay: 45000,
+      monthlyCosts: 1200,
+      productiveUtilizationPct: 70,
+      targetUtilizationPct: 75,
+      offerings: [{
+        id: 'wedding-photography',
+        name: 'Wedding Photography',
+        priceMonthly: 2500,
+        sessionsPerYear: 8,
+        hoursPerSession: 12,
+        variableCostPerSession: 150,
+        mixPct: 50,
+        currentClients: 0
+      }, {
+        id: 'portrait-sessions',
+        name: 'Portrait Sessions',
+        priceMonthly: 300,
+        sessionsPerYear: 24,
+        hoursPerSession: 2,
+        variableCostPerSession: 25,
+        mixPct: 30,
+        currentClients: 0
+      }, {
+        id: 'commercial-work',
+        name: 'Commercial Work',
+        priceMonthly: 800,
+        sessionsPerYear: 12,
+        hoursPerSession: 4,
+        variableCostPerSession: 50,
+        mixPct: 20,
+        currentClients: 0
+      }]
+    }
+  }
+};
+
+// Load an industry template
+function loadIndustryTemplate(templateKey) {
+  const template = INDUSTRY_TEMPLATES[templateKey];
+  if (!template) {
+    alert('Template not found');
+    return;
+  }
+
+  if (!confirm(`Load ${template.name} template? This will replace your current configuration.`)) {
+    return;
+  }
+
+  try {
+    // Load the template configuration
+    Object.assign(state, template.config);
+    validateAndSanitizeLoadedState();
+
+    // Update the UI
+    render();
+
+    // Show success message
+    alert(`✅ Loaded ${template.name} template!\n\nThis provides typical pricing and configuration for ${template.description.toLowerCase()}. Adjust the values as needed for your specific business.`);
+  } catch (e) {
+    console.error('Error loading template:', e);
+    alert('Error loading template. Please try again.');
+  }
+}
+
+// ============================================================================
 // TEST SCENARIOS SYSTEM
 // ============================================================================
 
@@ -3100,6 +3336,30 @@ function wire(skipLocalStorageLoading = false) {
 
   $('#addOfferingBtn').addEventListener('click', addOffering);
   $('#resetBtn').addEventListener('click', resetDefaults);
+
+  // Templates dropdown functionality
+  const templatesBtn = $('#templatesBtn');
+  if (templatesBtn) {
+    templatesBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const menu = $('#templatesMenu');
+      if (menu) {
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      }
+    });
+  }
+
+  // Template selection handlers
+  document.querySelectorAll('.template-option').forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.preventDefault();
+      const template = e.target.dataset.template;
+      const menu = $('#templatesMenu');
+      if (menu) menu.style.display = 'none';
+      loadIndustryTemplate(template);
+    });
+  });
+
   // Export dropdown functionality
   const exportBtn = $('#exportBtn');
   if (exportBtn) {
@@ -3113,13 +3373,18 @@ function wire(skipLocalStorageLoading = false) {
   }
 
   // Close export menu when clicking an export option or outside
+  // Close menus when clicking outside
   document.addEventListener('click', (e) => {
-    const menu = $('#exportMenu');
-    if (menu && menu.style.display === 'block') {
-      // Close if clicking outside the export dropdown or on an export option
-      if (!e.target.closest('.export-dropdown') || e.target.closest('.export-option')) {
-        menu.style.display = 'none';
-      }
+    // Close templates menu
+    if (!e.target.closest('.templates-dropdown')) {
+      const templatesMenu = $('#templatesMenu');
+      if (templatesMenu) templatesMenu.style.display = 'none';
+    }
+
+    // Close export menu
+    if (!e.target.closest('.export-dropdown')) {
+      const exportMenu = $('#exportMenu');
+      if (exportMenu) exportMenu.style.display = 'none';
     }
   });
 
