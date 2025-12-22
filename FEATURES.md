@@ -113,6 +113,7 @@ Implemented / delivered (high-level)
 - Core calculation engine (`calc()`): forecast and current modes, accepts an optional state argument for easier testing.
 - KPIs and outputs: Clients, Annual sessions, Service hours, Utilization, Revenue, Fixed/Payroll/Variable costs, Net income.
 - Business Intelligence: Break-even analysis with visual indicators and contribution margin calculations.
+- Advanced Export & Reporting: Multi-format export (CSV, Excel with formulas, PDF with charts, HTML pages), email sharing, automated report scheduling.
 - Data Validation: Comprehensive input validation with contextual error messages and business logic checks.
 - Visuals: Revenue composition chart with interactive tooltips (pin/close), utilization gauge, and profit/loss waterfall charts.
 - Persistence: Auto-save/load of app state to `localStorage` and saved debug panel state.

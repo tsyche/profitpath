@@ -6,6 +6,11 @@
   <meta name="description" content="ProfitPath — a lightweight client-side simulator for recurring-cadence service businesses. Plan pricing, forecast capacity, and optimize profitability." />
   <title>ProfitPath — Service Simulator</title>
   <link rel="stylesheet" href="assets/styles.css" />
+
+  <!-- Export libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
   <div class="page">
@@ -23,7 +28,19 @@
         </a>
       </div>
       <div class="header-actions">
-        <button class="btn small" id="exportBtn" type="button" title="Export offerings and results as CSV">Export CSV</button>
+        <div class="export-dropdown">
+          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">
+            <span class="export-icon">📄</span> Export
+          </button>
+          <div class="export-menu" id="exportMenu">
+            <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV Spreadsheet</button>
+            <button class="export-option" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
+            <button class="export-option" data-format="pdf" title="Export as PDF report">📋 PDF Report</button>
+            <button class="export-option" data-format="html" title="Export as HTML page">🌐 HTML Page</button>
+            <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
+            <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
+          </div>
+        </div>
         <button class="btn small" id="shareBtn" type="button" title="Share current scenario">Share</button>
         <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">Scenarios</button>
         <div class="badge" title="This is a static file app">

@@ -31,6 +31,7 @@ Open http://localhost:8000 to preview the app.
 - Persistence & export
 
   - localStorage auto-save/load of app state and scenario management (save/load/delete).
+  - **Advanced Export & Reporting** - Multi-format export (CSV, Excel with formulas, PDF with charts, HTML pages), email sharing, automated report scheduling.
   - CSV export for scenario summary and per-offering rows.
   - **Shareable URLs & Collaboration** - Encode scenarios in URL fragments for sharing with stakeholders, automatic URL loading on page load, clipboard integration for easy sharing.
 
@@ -123,13 +124,6 @@ Enhanced User Experience (UX Layer)
     - Embeddable calculator widgets
     - Effort: ~3-4 hours
 
-14. Advanced Export & Reporting
-
-    - PDF report generation with charts
-    - Excel export with formulas
-    - Email sharing functionality
-    - Automated report scheduling
-    - Effort: ~5-7 hours
 
 15. Guided Experience & Onboarding
 
@@ -224,25 +218,26 @@ Tech debt & DX
 
 Based on user impact and technical foundation:
 
-1. **Advanced Export & Reporting** (#13)
+1. **Guided Experience & Onboarding** (#14)
 
-   - Users need better ways to export and present their analysis results
-   - 5-7 hours effort, improves usability and professional presentation
+   - New users need guidance to understand and effectively use the tool
+   - 4-5 hours effort, improves user adoption and reduces support burden
 
-2. **Calculation Engine Refactoring** (#8)
+2. **Industry Templates & Presets** (#9)
 
-   - Technical foundation improvement for better maintainability and future testing
-   - 3-4 hours effort, enables more robust development and easier feature additions
-
-3. **Industry Templates & Presets** (#9)
    - Pre-built scenarios for common business types to improve onboarding
    - 4-6 hours effort, reduces time-to-value for new users
+
+3. **Accessibility & Mobile Experience** (#15)
+
+   - Full keyboard navigation, screen reader support, and mobile optimizations
+   - 3-4 hours effort, makes the tool accessible to all users
 
 ---
 
 Notes
 
 - The repo contains a stable, production-ready profitability simulator with comprehensive data validation, break-even analysis, rich visualizations, and shareable URLs.
-- **Recently completed**: Enhanced data validation (#8), break-even analysis (#11), rich dashboard visualizations (#16), and shareable URLs & collaboration (#14) - comprehensive business intelligence suite with collaboration features now available.
-- **Next priorities**: Advanced export/reporting (#13), calculation engine refactoring (#8), and industry templates (#9) for improved adoption and maintainability.
+- **Recently completed**: Advanced export & reporting (#13), enhanced data validation (#8), break-even analysis (#11), rich dashboard visualizations (#16), and shareable URLs & collaboration (#14) - comprehensive business intelligence suite with professional reporting capabilities now available.
+- **Next priorities**: Guided experience & onboarding (#14), industry templates (#9), and accessibility improvements (#15) for improved adoption and inclusivity.
 - Enterprise features (22-25) represent significant scope expansion and may require backend infrastructure.

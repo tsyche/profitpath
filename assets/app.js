@@ -1628,6 +1628,592 @@ function exportAsCSV() {
   document.body.removeChild(link);
 }
 
+function shareViaEmail() {
+  const results = calc();
+
+  const subject = encodeURIComponent(`ProfitPath Report - ${new Date().toLocaleDateString()}`);
+  const body = encodeURIComponent(`ProfitPath Business Analysis Report
+
+Generated: ${new Date().toLocaleString()}
+
+BUSINESS SUMMARY:
+- Mode: ${state.mode}
+- Employees: ${state.employees}
+- Employee Pay: ${fmtMoney0(state.employeePay)}
+- Monthly Overhead: ${fmtMoney0(state.monthlyCosts)}
+- Productive Utilization: ${fmtPct1(state.productiveUtilizationPct)}
+
+FINANCIAL RESULTS:
+- Total Revenue: ${fmtMoney0(results.revenue || 0)}
+- Total Variable Costs: ${fmtMoney0(results.variableCosts || 0)}
+- Net Profit: ${fmtMoney0(results.income || 0)}
+- Profit Margin: ${fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)}
+- Utilization: ${fmtPct1(results.capacityPct || 0)}
+
+SERVICE OFFERINGS:
+${state.offerings.map(o => `- ${o.name}: ${fmtMoney0(o.priceMonthly)}/month`).join('\n')}
+
+---
+This report was generated using ProfitPath - a service business simulator.
+For the full report with charts and detailed analysis, please see the attached export file.
+
+View the interactive simulator: ${window.location.origin}${window.location.pathname}
+`);
+
+  const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+  window.open(mailtoLink);
+}
+
+function showScheduleDialog() {
+  // Create modal dialog
+  const modal = document.createElement('div');
+  modal.innerHTML = `
+    <div id="scheduleModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+      <div class="modal-content" style="background: white; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0; color: #1f2937;">Automated Report Scheduling</h3>
+        <p style="color: #6b7280; margin-bottom: 20px;">Schedule automatic report generation and downloads.</p>
+
+        <form id="scheduleForm">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500;">Frequency:</label>
+            <select id="scheduleFrequency" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500;">Format:</label>
+            <select id="scheduleFormat" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+              <option value="pdf">PDF Report</option>
+              <option value="excel">Excel Workbook</option>
+              <option value="csv">CSV Spreadsheet</option>
+              <option value="html">HTML Page</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500;">Next Run:</label>
+            <div id="nextRunTime" style="color: #6b7280; font-size: 0.9em;">Next run: calculating...</div>
+          </div>
+
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" id="cancelSchedule" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+            <button type="submit" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Start Scheduling</button>
+          </div>
+        </form>
+
+        <div id="scheduleStatus" style="margin-top: 15px; padding: 10px; border-radius: 4px; display: none;"></div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Update next run time
+  updateNextRunTime();
+
+  // Event listeners
+  document.getElementById('cancelSchedule').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+
+  document.getElementById('scheduleForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    startScheduling();
+    document.body.removeChild(modal);
+  });
+
+  document.getElementById('scheduleFrequency').addEventListener('change', updateNextRunTime);
+}
+
+function updateNextRunTime() {
+  const frequency = document.getElementById('scheduleFrequency')?.value || 'daily';
+  const now = new Date();
+  let nextRun;
+
+  switch (frequency) {
+    case 'daily':
+      nextRun = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      break;
+    case 'weekly':
+      nextRun = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      break;
+    case 'monthly':
+      nextRun = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+      break;
+  }
+
+  const nextRunElement = document.getElementById('nextRunTime');
+  if (nextRunElement) {
+    nextRunElement.textContent = `Next run: ${nextRun.toLocaleString()}`;
+  }
+}
+
+function startScheduling() {
+  const frequency = document.getElementById('scheduleFrequency').value;
+  const format = document.getElementById('scheduleFormat').value;
+
+  // Clear any existing schedule
+  if (window.scheduleInterval) {
+    clearInterval(window.scheduleInterval);
+  }
+
+  let intervalMs;
+  switch (frequency) {
+    case 'daily':
+      intervalMs = 24 * 60 * 60 * 1000; // 24 hours
+      break;
+    case 'weekly':
+      intervalMs = 7 * 24 * 60 * 60 * 1000; // 7 days
+      break;
+    case 'monthly':
+      intervalMs = 30 * 24 * 60 * 60 * 1000; // ~30 days
+      break;
+  }
+
+  // Show status
+  const statusElement = document.getElementById('scheduleStatus');
+  if (statusElement) {
+    statusElement.style.display = 'block';
+    statusElement.style.background = '#d1fae5';
+    statusElement.style.color = '#065f46';
+    statusElement.textContent = `✅ Scheduling started: ${format.toUpperCase()} reports every ${frequency}`;
+  }
+
+  // Start scheduling
+  window.scheduleInterval = setInterval(() => {
+    try {
+      switch (format) {
+        case 'pdf':
+          exportAsPDF();
+          break;
+        case 'excel':
+          exportAsExcel();
+          break;
+        case 'csv':
+          exportAsCSV();
+          break;
+        case 'html':
+          exportAsHTML();
+          break;
+      }
+
+      // Show download notification
+      showNotification(`Scheduled ${format.toUpperCase()} report downloaded`, 'success');
+    } catch (error) {
+      console.error('Scheduled export failed:', error);
+      showNotification('Scheduled export failed', 'error');
+    }
+  }, intervalMs);
+
+  // Store schedule info for persistence
+  localStorage.setItem('profitpath-schedule', JSON.stringify({
+    frequency,
+    format,
+    started: Date.now(),
+    intervalMs
+  }));
+
+  showNotification(`Report scheduling started (${frequency} ${format.toUpperCase()})`, 'success');
+}
+
+function showNotification(message, type = 'info') {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    z-index: 3000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    max-width: 300px;
+  `;
+
+  if (type === 'success') {
+    notification.style.background = '#059669';
+  } else if (type === 'error') {
+    notification.style.background = '#dc2626';
+  } else {
+    notification.style.background = '#3b82f6';
+  }
+
+  notification.textContent = message;
+  document.body.appendChild(notification);
+
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    if (notification.parentNode) {
+      document.body.removeChild(notification);
+    }
+  }, 5000);
+}
+
+// Restore scheduling on page load
+function restoreScheduling() {
+  const scheduleData = localStorage.getItem('profitpath-schedule');
+  if (scheduleData) {
+    try {
+      const { frequency, format, started, intervalMs } = JSON.parse(scheduleData);
+      const elapsed = Date.now() - started;
+
+      if (elapsed < intervalMs) {
+        // Schedule hasn't triggered yet, restore it
+        const remaining = intervalMs - elapsed;
+        setTimeout(() => {
+          startScheduling();
+        }, remaining);
+      } else {
+        // Schedule should have triggered, clear it
+        localStorage.removeItem('profitpath-schedule');
+      }
+    } catch (error) {
+      console.warn('Could not restore scheduling:', error);
+      localStorage.removeItem('profitpath-schedule');
+    }
+  }
+}
+
+function exportAsExcel() {
+  const results = calc();
+  const workbook = XLSX.utils.book_new();
+
+  // Summary sheet
+  const summaryData = [
+    ['ProfitPath Export'],
+    [new Date().toLocaleString()],
+    [''],
+    ['SUMMARY'],
+    ['Mode', state.mode],
+    ['Employees', state.employees],
+    ['Employee Pay', state.employeePay],
+    ['Monthly Overhead', state.monthlyCosts],
+    ['Productive Utilization', state.productiveUtilizationPct / 100],
+    ['Target Utilization', state.targetUtilizationPct / 100],
+    [''],
+    ['RESULTS'],
+    ['Total Revenue', results.revenue || 0],
+    ['Total Variable Costs', results.variableCosts || 0],
+    ['Contribution Margin', '=B13-B14'],
+    ['Fixed Overhead', results.annualFixedCosts || 0],
+    ['Net Profit', '=B15-B16'],
+    ['Profit Margin', '=B17/B13'],
+    ['Billable Hours', results.serviceHours || 0],
+    ['Utilization', (results.capacityPct || 0) / 100],
+  ];
+
+  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+  summarySheet['!cols'] = [{wch: 25}, {wch: 15}];
+
+  // Format as percentages where appropriate
+  summarySheet['E6'] = {t: 'n', v: state.productiveUtilizationPct / 100, z: '0.00%'};
+  summarySheet['E7'] = {t: 'n', v: state.targetUtilizationPct / 100, z: '0.00%'};
+  summarySheet['E18'] = {t: 'n', v: (results.capacityPct || 0) / 100, z: '0.00%'};
+  summarySheet['E19'] = {t: 'n', v: ((results.income || 0) / (results.revenue || 1)), z: '0.00%'};
+
+  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+
+  // Offerings sheet
+  const offeringsData = [
+    ['Name', 'Price/Month', 'Sessions/Year', 'Hours/Session', 'Variable Cost/Session', 'Mix %', 'Current Clients', 'Annual Revenue', 'Clients Needed'],
+  ];
+
+  state.offerings.forEach((o) => {
+    const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
+    const clientsNeeded = state.mode === 'forecast' ? Math.ceil((o.sessionsPerYear * state.employees * state.productiveUtilizationPct / 100) / o.sessionsPerYear) : o.currentClients;
+    offeringsData.push([
+      o.name,
+      o.priceMonthly,
+      o.sessionsPerYear,
+      o.hoursPerSession,
+      o.variableCostPerSession,
+      o.mixPct / 100,
+      o.currentClients,
+      annualRevenue,
+      clientsNeeded
+    ]);
+  });
+
+  const offeringsSheet = XLSX.utils.aoa_to_sheet(offeringsData);
+  offeringsSheet['!cols'] = [
+    {wch: 20}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 18}, {wch: 8}, {wch: 14}, {wch: 14}, {wch: 14}
+  ];
+
+  // Format mix percentage column
+  for (let i = 1; i < offeringsData.length; i++) {
+    offeringsSheet[XLSX.utils.encode_cell({r: i, c: 5})].z = '0.00%';
+  }
+
+  XLSX.utils.book_append_sheet(workbook, offeringsSheet, 'Offerings');
+
+  // Write file
+  XLSX.writeFile(workbook, `profitpath-export-${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+async function exportAsPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const results = calc();
+
+  // Title
+  doc.setFontSize(20);
+  doc.text('ProfitPath Report', 20, 30);
+
+  // Date
+  doc.setFontSize(12);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 45);
+
+  // Summary section
+  doc.setFontSize(16);
+  doc.text('Summary', 20, 65);
+
+  doc.setFontSize(11);
+  let yPos = 80;
+  const lineHeight = 7;
+
+  doc.text(`Mode: ${state.mode}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Employees: ${state.employees}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Employee Pay: ${fmtMoney0(state.employeePay)}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Monthly Overhead: ${fmtMoney0(state.monthlyCosts)}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Productive Utilization: ${fmtPct1(state.productiveUtilizationPct)}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Target Utilization: ${fmtPct1(state.targetUtilizationPct)}`, 20, yPos);
+
+  // Results section
+  yPos += lineHeight * 2;
+  doc.setFontSize(16);
+  doc.text('Results', 20, yPos);
+  yPos += lineHeight * 2;
+
+  doc.setFontSize(11);
+  doc.text(`Total Revenue: ${fmtMoney0(results.revenue || 0)}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Total Variable Costs: ${fmtMoney0(results.variableCosts || 0)}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Contribution Margin: ${fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Fixed Overhead: ${fmtMoney0(results.annualFixedCosts || 0)}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Net Profit: ${fmtMoney0(results.income || 0)}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Profit Margin: ${fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Billable Hours: ${fmtInt(results.serviceHours || 0)}`, 20, yPos);
+  yPos += lineHeight;
+  doc.text(`Utilization: ${fmtPct1(results.capacityPct || 0)}`, 20, yPos);
+
+  // Try to capture charts if they exist
+  try {
+    const chartElements = document.querySelectorAll('.chart-container svg, #utilizationGauge svg, #profitWaterfall svg');
+    if (chartElements.length > 0) {
+      // Add new page for charts
+      doc.addPage();
+
+      doc.setFontSize(16);
+      doc.text('Visualizations', 20, 30);
+
+      let chartYPos = 50;
+      for (let i = 0; i < Math.min(chartElements.length, 2); i++) {
+        try {
+          const canvas = await html2canvas(chartElements[i], {
+            backgroundColor: '#ffffff',
+            scale: 2
+          });
+          const imgData = canvas.toDataURL('image/png');
+
+          // Calculate dimensions to fit on page
+          const imgWidth = 170;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          if (chartYPos + imgHeight > 270) {
+            doc.addPage();
+            chartYPos = 30;
+          }
+
+          doc.addImage(imgData, 'PNG', 20, chartYPos, imgWidth, imgHeight);
+          chartYPos += imgHeight + 20;
+        } catch (chartError) {
+          console.warn('Could not capture chart:', chartError);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Could not add charts to PDF:', error);
+  }
+
+  // Add offerings table on new page if needed
+  if (state.offerings.length > 0) {
+    doc.addPage();
+    doc.setFontSize(16);
+    doc.text('Service Offerings', 20, 30);
+
+    doc.setFontSize(10);
+    let tableY = 45;
+
+    // Table headers
+    doc.text('Name', 20, tableY);
+    doc.text('Price/Month', 80, tableY);
+    doc.text('Sessions/Year', 110, tableY);
+    doc.text('Hours/Session', 140, tableY);
+    doc.text('Annual Revenue', 170, tableY);
+
+    tableY += 8;
+    doc.line(20, tableY, 190, tableY);
+
+    // Table data
+    state.offerings.forEach((o) => {
+      tableY += 6;
+      if (tableY > 270) {
+        doc.addPage();
+        tableY = 30;
+      }
+
+      const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
+      doc.text(o.name.substring(0, 20), 20, tableY);
+      doc.text(fmtMoney0(o.priceMonthly), 80, tableY);
+      doc.text(o.sessionsPerYear.toString(), 110, tableY);
+      doc.text(o.hoursPerSession.toString(), 140, tableY);
+      doc.text(fmtMoney0(annualRevenue), 170, tableY);
+    });
+  }
+
+  doc.save(`profitpath-report-${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+function exportAsHTML() {
+  const results = calc();
+
+  // Create HTML content
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProfitPath Report - ${new Date().toLocaleDateString()}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f8fafc; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
+        .section { margin-bottom: 40px; }
+        .section h2 { color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #f9fafb; padding: 20px; border-radius: 6px; border: 1px solid #e5e7eb; }
+        .metric { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .metric-label { font-weight: 500; color: #6b7280; }
+        .metric-value { font-weight: 600; color: #1f2937; }
+        .positive { color: #059669; }
+        .negative { color: #dc2626; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f9fafb; font-weight: 600; }
+        .charts { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+        .chart-placeholder { width: 400px; height: 300px; background: #f3f4f6; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; color: #6b7280; border-radius: 6px; }
+        @media print { body { background: white; } .container { box-shadow: none; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ProfitPath Report</h1>
+            <p>Generated on ${new Date().toLocaleString()}</p>
+        </div>
+
+        <div class="section">
+            <h2>Business Summary</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Configuration</h3>
+                    <div class="metric"><span class="metric-label">Mode:</span> <span class="metric-value">${state.mode}</span></div>
+                    <div class="metric"><span class="metric-label">Employees:</span> <span class="metric-value">${state.employees}</span></div>
+                    <div class="metric"><span class="metric-label">Employee Pay:</span> <span class="metric-value">${fmtMoney0(state.employeePay)}</span></div>
+                    <div class="metric"><span class="metric-label">Monthly Overhead:</span> <span class="metric-value">${fmtMoney0(state.monthlyCosts)}</span></div>
+                    <div class="metric"><span class="metric-label">Productive Utilization:</span> <span class="metric-value">${fmtPct1(state.productiveUtilizationPct)}</span></div>
+                    <div class="metric"><span class="metric-label">Target Utilization:</span> <span class="metric-value">${fmtPct1(state.targetUtilizationPct)}</span></div>
+                </div>
+                <div class="card">
+                    <h3>Financial Results</h3>
+                    <div class="metric"><span class="metric-label">Total Revenue:</span> <span class="metric-value">${fmtMoney0(results.revenue || 0)}</span></div>
+                    <div class="metric"><span class="metric-label">Variable Costs:</span> <span class="metric-value">${fmtMoney0(results.variableCosts || 0)}</span></div>
+                    <div class="metric"><span class="metric-label">Contribution Margin:</span> <span class="metric-value">${fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))}</span></div>
+                    <div class="metric"><span class="metric-label">Fixed Overhead:</span> <span class="metric-value">${fmtMoney0(results.annualFixedCosts || 0)}</span></div>
+                    <div class="metric ${results.income >= 0 ? 'positive' : 'negative'}"><span class="metric-label">Net Profit:</span> <span class="metric-value">${fmtMoney0(results.income || 0)}</span></div>
+                    <div class="metric"><span class="metric-label">Profit Margin:</span> <span class="metric-value">${fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)}</span></div>
+                    <div class="metric"><span class="metric-label">Utilization:</span> <span class="metric-value">${fmtPct1(results.capacityPct || 0)}</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Service Offerings</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Price/Month</th>
+                        <th>Sessions/Year</th>
+                        <th>Hours/Session</th>
+                        <th>Variable Cost/Session</th>
+                        <th>Mix %</th>
+                        <th>Current Clients</th>
+                        <th>Annual Revenue</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${state.offerings.map(o => {
+                      const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
+                      return `
+                        <tr>
+                            <td>${escapeHtml(o.name)}</td>
+                            <td>${fmtMoney0(o.priceMonthly)}</td>
+                            <td>${o.sessionsPerYear}</td>
+                            <td>${o.hoursPerSession}</td>
+                            <td>${fmtMoney0(o.variableCostPerSession)}</td>
+                            <td>${fmtPct1(o.mixPct)}</td>
+                            <td>${o.currentClients}</td>
+                            <td>${fmtMoney0(annualRevenue)}</td>
+                        </tr>
+                      `;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>Visualizations</h2>
+            <div class="charts">
+                <div class="chart-placeholder">
+                    <div>Charts would appear here in the interactive version</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+  // Download the HTML file
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', `profitpath-report-${new Date().toISOString().split('T')[0]}.html`);
+  link.style.visibility = 'hidden';
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 // Scenario Management
 function getAllScenarios() {
   try {
@@ -1974,7 +2560,49 @@ function wire(skipLocalStorageLoading = false) {
 
   $('#addOfferingBtn').addEventListener('click', addOffering);
   $('#resetBtn').addEventListener('click', resetDefaults);
-  $('#exportBtn').addEventListener('click', exportAsCSV);
+  // Export dropdown functionality
+  $('#exportBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    const menu = $('#exportMenu');
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  });
+
+  // Close export menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.export-dropdown')) {
+      $('#exportMenu').style.display = 'none';
+    }
+  });
+
+  // Export format handlers
+  document.querySelectorAll('.export-option').forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.preventDefault();
+      const format = e.target.dataset.format;
+      $('#exportMenu').style.display = 'none';
+
+      switch (format) {
+        case 'csv':
+          exportAsCSV();
+          break;
+        case 'excel':
+          exportAsExcel();
+          break;
+        case 'pdf':
+          exportAsPDF();
+          break;
+        case 'html':
+          exportAsHTML();
+          break;
+        case 'email':
+          shareViaEmail();
+          break;
+        case 'schedule':
+          showScheduleDialog();
+          break;
+      }
+    });
+  });
   $('#shareBtn').addEventListener('click', shareScenario);
 
   // Hamburger menu
@@ -2059,6 +2687,9 @@ function wire(skipLocalStorageLoading = false) {
 const loadedFromURL = loadScenarioFromURL();
 
 wire(loadedFromURL);
+
+// Restore any scheduled report generation
+restoreScheduling();
 
 // Run initial render in a safe guard so any runtime errors are reported to the debug panel
 try {
