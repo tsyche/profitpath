@@ -32,6 +32,7 @@ Testing & development
 
 Documentation & roadmap
 - For the complete roadmap with completed features and future plans, see `ROADMAP.md`.
+- For developer documentation, API reference, and contribution guidelines, see `DEVELOPER.md`.
 
 Contributing
 - Create a branch: `git checkout -b feature/my-feature`

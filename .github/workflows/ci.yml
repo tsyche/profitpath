@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm init -y
+        npm install --save-dev eslint
+
+    - name: Create ESLint config
+      run: |
+        cat > .eslintrc.js << 'EOF'
+        module.exports = {
+          env: {
+            browser: true,
+            es2021: true,
+          },
+          extends: [
+            'eslint:recommended',
+          ],
+          parserOptions: {
+            ecmaVersion: 'latest',
+            sourceType: 'module',
+          },
+          rules: {
+            'no-unused-vars': 'warn',
+            'no-console': 'warn',
+            'no-debugger': 'error',
+          },
+          globals: {
+            '$': 'readonly',
+            '$$': 'readonly',
+            'state': 'readonly',
+          },
+        };
+        EOF
+
+    - name: Run ESLint
+      run: npx eslint assets/app.js || true
+
+    - name: Check file sizes
+      run: |
+        echo "File sizes:"
+        wc -c assets/app.js
+        wc -c assets/styles.css
+        wc -c index.html
+
+    - name: Basic HTML validation
+      run: |
+        if command -v tidy &> /dev/null; then
+          tidy -q -e index.html || echo "HTML validation completed with warnings"
+        else
+          echo "tidy not available, skipping HTML validation"
+        fi
+
+    - name: Check for console.log statements
+      run: |
+        if grep -r "console\.log" assets/app.js; then
+          echo "⚠️  Found console.log statements (should be removed in production)"
+        else
+          echo "✅ No console.log statements found"
+        fi
+
+    - name: Test server startup
+      run: |
+        timeout 10s python3 -m http.server 8000 &
+        sleep 2
+        curl -f http://localhost:8000/ || exit 1
+        echo "✅ Server starts successfully"

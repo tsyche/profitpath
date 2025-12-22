@@ -4,13 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="ProfitPath — a lightweight client-side simulator for recurring-cadence service businesses. Plan pricing, forecast capacity, and optimize profitability." />
+  <meta name="theme-color" content="#1f2937" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="ProfitPath" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/assets/logo-final.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/logo-final.svg" />
   <title>ProfitPath — Service Simulator</title>
   <link rel="stylesheet" href="assets/styles.css" />
 
-  <!-- Export libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Export libraries loaded lazily on demand -->
 </head>
 <body>
   <div class="page">

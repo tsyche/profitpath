@@ -120,6 +120,7 @@ Implemented / delivered (high-level)
 - CSV export and scenario save/load/delete UI.
 - UI/UX: Responsive mobile layout, collapsible debug panel, enhanced tooltip positioning.
 - Finalized header logo (single SVG) and removed legacy logo variants.
+- Performance & PWA: Lazy loading of export libraries, optimized DOM operations, service worker for offline functionality, web app manifest for installability.
 
 Where to find more detail
 - The prioritized backlog and next actions live in `ROADMAP.md` (single source of truth).

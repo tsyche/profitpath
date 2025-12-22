@@ -33,6 +33,22 @@ const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', curre
 const fmtMoney2 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 const fmtPct1 = (n) => `${(Number.isFinite(n) ? n : 0).toFixed(1)}%`;
 
+// Lazy loading utility for scripts
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve(); // Already loaded
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
 // Safe numeric parsing with optional range clamping
 function safeParseNumber(value, defaultValue = 0, minVal = null, maxVal = null) {
   const num = Number(value) || defaultValue;
@@ -742,6 +758,50 @@ function restoreTableFocus(focus) {
   el.focus();
 }
 
+// Lazy chart loading with Intersection Observer
+function lazyLoadChart(metrics) {
+  const chartEl = $('#simpleChart');
+  if (!chartEl) return;
+
+  // If chart is already rendered, just update it
+  if (chartEl.querySelector('svg')) {
+    try {
+      renderSimpleChart(metrics);
+    } catch (e) {
+      console.warn('Chart render failed:', e);
+    }
+    return;
+  }
+
+  // Set up intersection observer for lazy loading
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        try {
+          renderSimpleChart(metrics);
+        } catch (e) {
+          console.warn('Chart render failed:', e);
+        }
+        observer.disconnect(); // Only load once
+      }
+    });
+  }, { threshold: 0.1 }); // Load when 10% visible
+
+  observer.observe(chartEl);
+
+  // Fallback: load after a short delay if intersection observer doesn't trigger
+  setTimeout(() => {
+    if (!chartEl.querySelector('svg')) {
+      try {
+        renderSimpleChart(metrics);
+      } catch (e) {
+        console.warn('Chart render failed:', e);
+      }
+      observer.disconnect();
+    }
+  }, 1000);
+}
+
 function renderSimpleChart(metrics) {
   const el = $('#simpleChart');
   if (!el) return;
@@ -1413,12 +1473,8 @@ function updateOutputs(metrics) {
       ? `Over capacity: ${fmtPct1(metrics.capacityPct)} (overtime likely)`
       : `Utilization: ${fmtPct1(metrics.capacityPct)}`;
 
-    // Render simple revenue composition chart
-    try {
-      renderSimpleChart(metrics);
-    } catch (e) {
-      console.warn('Chart render failed:', e);
-    }
+    // Lazy load simple revenue composition chart when visible
+    lazyLoadChart(metrics);
 
     // Update break-even analysis
     updateBreakEvenAnalysis(metrics);
@@ -1919,7 +1975,18 @@ function restoreScheduling() {
   }
 }
 
-function exportAsExcel() {
+async function exportAsExcel() {
+  // Lazy load XLSX library
+  if (!window.XLSX) {
+    try {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+    } catch (e) {
+      console.error('Failed to load XLSX library:', e);
+      alert('Error: Could not load Excel export library. Please try again.');
+      return;
+    }
+  }
+
   let results;
   try {
     results = calc();
@@ -2003,6 +2070,27 @@ function exportAsExcel() {
 }
 
 async function exportAsPDF() {
+  // Lazy load PDF and canvas libraries
+  if (!window.jspdf) {
+    try {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    } catch (e) {
+      console.error('Failed to load jsPDF library:', e);
+      alert('Error: Could not load PDF export library. Please try again.');
+      return;
+    }
+  }
+
+  if (!window.html2canvas) {
+    try {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    } catch (e) {
+      console.error('Failed to load html2canvas library:', e);
+      alert('Error: Could not load chart capture library. Please try again.');
+      return;
+    }
+  }
+
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
@@ -2347,25 +2435,61 @@ function loadScenario(scenarioId) {
   }
 }
 
+// Prevent multiple simultaneous deletions
+let isDeletingScenario = false;
+
 function deleteScenario(scenarioId) {
-  if (!confirm('Delete this scenario?')) return;
+  // Prevent re-entrant calls
+  if (isDeletingScenario) return;
+  isDeletingScenario = true;
 
-  try {
-    // Get scenarios once and filter
-    let scenarios = getAllScenarios();
-    const initialLength = scenarios.length;
-    scenarios = scenarios.filter((s) => s.id !== scenarioId);
+  // Create custom confirmation dialog to avoid native confirm issues
+  const modal = document.createElement('div');
+  modal.innerHTML = `
+    <div id="confirmModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+      <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center;">
+        <p style="margin: 0 0 20px 0; color: #374151;">Delete this scenario?</p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button id="confirmYes" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
+          <button id="confirmNo" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
 
-    // Only update if we actually removed something
-    if (scenarios.length < initialLength) {
-    localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
-      // Defer rendering to next tick to avoid blocking
-      setTimeout(() => renderScenariosList(), 0);
+  document.body.appendChild(modal);
+
+  function cleanup() {
+    if (modal.parentNode) {
+      document.body.removeChild(modal);
     }
-  } catch (e) {
-    console.error('Failed to delete scenario:', e);
-    alert('Error deleting scenario');
+    isDeletingScenario = false;
   }
+
+  document.getElementById('confirmYes').onclick = () => {
+    cleanup();
+
+    try {
+      // Get scenarios once and filter
+      let scenarios = getAllScenarios();
+      const initialLength = scenarios.length;
+      scenarios = scenarios.filter((s) => s.id !== scenarioId);
+
+      // Only update if we actually removed something
+      if (scenarios.length < initialLength) {
+        localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
+        // Defer rendering to next tick to avoid blocking
+        setTimeout(() => renderScenariosList(), 0);
+      }
+    } catch (e) {
+      console.error('Failed to delete scenario:', e);
+      alert('Error deleting scenario');
+    }
+  };
+
+  document.getElementById('confirmNo').onclick = () => {
+    cleanup();
+  };
 }
 
 function renderScenariosList() {
@@ -2390,8 +2514,8 @@ function renderScenariosList() {
         <div class="scenario-item-meta">Saved ${s.timestamp}</div>
       </div>
       <div class="scenario-item-actions">
-        <button class="btn small" data-action="load-scenario" data-scenario-id="${escapeHtml(s.id)}">Load</button>
-        <button class="btn small danger" data-action="delete-scenario" data-scenario-id="${escapeHtml(s.id)}">Delete</button>
+        <button class="btn small load-btn" data-scenario-id="${escapeHtml(s.id)}">Load</button>
+        <button class="btn small danger delete-btn" data-scenario-id="${escapeHtml(s.id)}">Delete</button>
       </div>
     `;
 
@@ -2401,24 +2525,34 @@ function renderScenariosList() {
   list.innerHTML = '';
   list.appendChild(fragment);
 
-  // Wire up load/delete buttons with event delegation to avoid duplicate listeners
-  list.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-action]');
-    if (!btn) return;
-
-    const action = btn.dataset.action;
-      const id = btn.dataset.scenarioId;
-
-    if (action === 'load-scenario') {
-      loadScenario(id);
-    } else if (action === 'delete-scenario') {
-      deleteScenario(id);
-    }
-  });
+  // Event listeners are attached via delegation in openScenarioModal
 }
 
 function openScenarioModal() {
-  $('#scenariosModal').classList.remove('hidden');
+  const modal = $('#scenariosModal');
+  modal.classList.remove('hidden');
+
+  // Set up event delegation for scenario buttons if not already done
+  if (!modal._scenarioDelegationSet) {
+    modal.addEventListener('click', (e) => {
+      const btn = e.target.closest('.load-btn, .delete-btn');
+      if (!btn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const scenarioId = btn.dataset.scenarioId;
+      if (!scenarioId) return;
+
+      if (btn.classList.contains('load-btn')) {
+        loadScenario(scenarioId);
+      } else if (btn.classList.contains('delete-btn')) {
+        deleteScenario(scenarioId);
+      }
+    });
+    modal._scenarioDelegationSet = true;
+  }
+
   $('#scenarioNameInput').focus();
   renderScenariosList();
 }
@@ -2967,18 +3101,25 @@ function wire(skipLocalStorageLoading = false) {
   $('#addOfferingBtn').addEventListener('click', addOffering);
   $('#resetBtn').addEventListener('click', resetDefaults);
   // Export dropdown functionality
-  $('#exportBtn').addEventListener('click', (e) => {
-    e.preventDefault();
-    const menu = $('#exportMenu');
-    if (menu) {
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
-  });
+  const exportBtn = $('#exportBtn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const menu = $('#exportMenu');
+      if (menu) {
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      }
+    });
+  }
 
-  // Close export menu when clicking outside
+  // Close export menu when clicking an export option or outside
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.export-dropdown')) {
-      $('#exportMenu').style.display = 'none';
+    const menu = $('#exportMenu');
+    if (menu && menu.style.display === 'block') {
+      // Close if clicking outside the export dropdown or on an export option
+      if (!e.target.closest('.export-dropdown') || e.target.closest('.export-option')) {
+        menu.style.display = 'none';
+      }
     }
   });
 
@@ -2987,7 +3128,8 @@ function wire(skipLocalStorageLoading = false) {
     option.addEventListener('click', (e) => {
       e.preventDefault();
       const format = e.target.dataset.format;
-      $('#exportMenu').style.display = 'none';
+      const menu = $('#exportMenu');
+      if (menu) menu.style.display = 'none';
 
       switch (format) {
         case 'csv':
@@ -3174,6 +3316,9 @@ function initDebugPanel() {
 
   // Update pre with calc() output and set a concise summary on the toggle
   function refreshDebug() {
+    // Only refresh if debug panel is initialized and visible
+    if (!pre || pre.style.display === 'none') return;
+
     try {
       const res = calc();
       pre.textContent = JSON.stringify(res, null, 2);
@@ -3224,4 +3369,33 @@ try {
   document.documentElement.setAttribute('data-logo', 'final');
 } catch (e) {
   // non-fatal
+}
+
+// Register service worker for PWA functionality
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('Service Worker registered successfully:', registration.scope);
+
+        // Handle service worker updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New version available
+                if (confirm('A new version of ProfitPath is available. Reload to update?')) {
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  window.location.reload();
+                }
+              }
+            });
+          }
+        });
+      })
+      .catch((error) => {
+        console.log('Service Worker registration failed:', error);
+      });
+  });
 }

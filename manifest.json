@@ -1,0 +1,34 @@
+{
+  "name": "ProfitPath - Service Business Simulator",
+  "short_name": "ProfitPath",
+  "description": "A lightweight client-side simulator for recurring-cadence service businesses. Plan pricing, forecast capacity, and optimize profitability.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2937",
+  "orientation": "portrait-primary",
+  "categories": ["business", "finance", "productivity"],
+  "lang": "en-US",
+  "icons": [
+    {
+      "src": "/assets/logo-final.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}
