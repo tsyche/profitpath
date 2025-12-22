@@ -132,11 +132,7 @@ Format numbers as percentages.
 ## Development Workflow
 
 ### Local Development
-```bash
-# Start local server
-python3 -m http.server 8000
-# Open http://localhost:8000
-```
+See README.md for setup instructions.
 
 ### Testing Scenarios
 ```javascript

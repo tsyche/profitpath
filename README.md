@@ -21,7 +21,7 @@ Run locally
 1. Start a static server in the project root:
 
 ```bash
-python3 -m http.server 8000
+python3 -m http.server -b 0.0.0.0 8000
 ```
 
 2. Open http://localhost:8000 in your browser.

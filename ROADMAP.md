@@ -2,13 +2,7 @@
 
 This ROADMAP is the single source of truth for ideas, priorities, and next actions. It includes completed items (so you can see recent progress) and a prioritized backlog.
 
-Run locally
-
-```bash
-python3 -m http.server 8000
-```
-
-Open http://localhost:8000 to preview the app.
+See README.md for setup and development instructions.
 
 ---
 
@@ -209,35 +203,35 @@ Enterprise Features (Scale Layer)
 
 Tech debt & DX
 
-- Add ESLint / Prettier and a small CI pipeline.
+- **TypeScript Migration** (Optional): Gradual migration to TypeScript for enhanced type safety and better IDE support (20-30 hours)
 - Consider extracting a minimal build step (esbuild) only for developer ergonomics.
 
 ---
 
 ## Top 3 Next Priorities
 
-Based on user impact and technical foundation:
+Based on user impact and market expansion:
 
-1. **Guided Experience & Onboarding** (#14)
+1. **Multi-Currency Support**
 
-   - New users need guidance to understand and effectively use the tool
-   - 4-5 hours effort, improves user adoption and reduces support burden
+   - Enable international users with proper currency handling and formatting
+   - 8-10 hours effort, critical for global adoption and professional use
 
-2. **Industry Templates & Presets** (#9)
+2. **Industry Templates & Presets**
 
    - Pre-built scenarios for common business types to improve onboarding
    - 4-6 hours effort, reduces time-to-value for new users
 
-3. **Accessibility & Mobile Experience** (#15)
+3. **Advanced Mobile Experience**
 
-   - Full keyboard navigation, screen reader support, and mobile optimizations
-   - 3-4 hours effort, makes the tool accessible to all users
+   - Touch gestures, mobile-specific optimizations, and PWA enhancements
+   - 4-6 hours effort, improves mobile user retention and experience
 
 ---
 
 Notes
 
-- The repo contains a stable, production-ready profitability simulator with comprehensive data validation, break-even analysis, rich visualizations, and shareable URLs.
-- **Recently completed**: Advanced export & reporting (#13), enhanced data validation (#8), break-even analysis (#11), rich dashboard visualizations (#16), and shareable URLs & collaboration (#14) - comprehensive business intelligence suite with professional reporting capabilities now available.
-- **Next priorities**: Guided experience & onboarding (#14), industry templates (#9), and accessibility improvements (#15) for improved adoption and inclusivity.
-- Enterprise features (22-25) represent significant scope expansion and may require backend infrastructure.
+- The repo contains a stable, production-ready profitability simulator with comprehensive error handling, performance optimizations, PWA capabilities, and extensive export functionality.
+- **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, and advanced testing infrastructure.
+- **Next priorities**: Multi-currency support for international users, industry-specific templates, and enhanced mobile experience for broader adoption.
+- Enterprise features represent significant scope expansion and may require backend infrastructure changes.

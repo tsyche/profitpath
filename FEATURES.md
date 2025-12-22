@@ -1,133 +1,64 @@
-# Features overview
+# Current Features
 
-All feature planning and the prioritized backlog have been consolidated into `ROADMAP.md`. For the single canonical list of ideas, priorities, and recommended next steps, open `ROADMAP.md` in the repo root.
+ProfitPath is a comprehensive profitability and capacity simulator for recurring service businesses.
 
-**✅ Shareable URLs & Collaboration implemented** - Users can now share scenarios via URL and collaborate with stakeholders.
+## Core Functionality
 
----
+### Calculation Engine
+- **Forecast & Current Modes**: Switch between planning future growth and analyzing current operations
+- **Real-time Calculations**: Instant updates as you modify inputs
+- **Comprehensive Metrics**: Revenue, costs, profit, utilization, capacity, break-even analysis
 
-## 🔴 LONG-TERM FEATURES (Week 4+)
-**Build if market demand justifies the effort.**
+### Business Intelligence
+- **Break-even Analysis**: Visual indicators showing contribution margins and break-even points
+- **Utilization Tracking**: Monitor capacity usage with gauge and percentage indicators
+- **Profit/Loss Waterfall**: Interactive chart showing revenue flow and cost breakdown
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ #8: Shareable URLs                                      │
-├─────────────────────────────────────────────────────────┤
-│ Time:    2 hours                                        │
-│ Value:   ⭐⭐⭐ (sharing)                               │
-│ Effort:  Low (compression + encoding)                   │
-│                                                         │
-│ What:    Encode state in URL query string               │
-│ Why:     Share scenarios without needing accounts       │
-│ Impact:  Enable collaboration & feedback               │
-│                                                         │
-│ Example: ?scenario=Abc123XyZ...                         │
-│ Library: lz-string (2KB gzip)                           │
-└─────────────────────────────────────────────────────────┘
+### Data Management
+- **Scenario Saving**: Save unlimited scenarios with descriptive names
+- **Auto-save**: Automatic persistence of current work to localStorage
+- **Shareable URLs**: Encode scenarios in URLs for easy sharing with stakeholders
+- **Import/Export**: Load scenarios from URLs or share via email
 
-┌─────────────────────────────────────────────────────────┐
-│ #9: Industry Presets                                    │
-├─────────────────────────────────────────────────────────┤
-│ Time:    6 hours                                        │
-│ Value:   ⭐⭐⭐ (onboarding)                            │
-│ Effort:  Medium (data entry + UI)                       │
-│                                                         │
-│ What:    Pre-built scenarios for common businesses      │
-│ Why:     New users need examples to get started         │
-│ Impact:  Reduce time to first insight                   │
-│                                                         │
-│ Presets:                                                │
-│ • Landscaping maintenance                              │
-│ • House cleaning                                        │
-│ • Consulting/coaching                                  │
-│ • Personal training                                    │
-│ • Handyman services                                    │
-│ • Virtual assistant                                    │
-└─────────────────────────────────────────────────────────┘
+## Advanced Features
 
-┌─────────────────────────────────────────────────────────┐
-│ #10: Multi-Year Forecasting                             │
-├─────────────────────────────────────────────────────────┤
-│ Time:    8 hours                                        │
-│ Value:   ⭐⭐ (niche, advanced)                         │
-│ Effort:  High (financial modeling)                      │
-│                                                         │
-│ What:    Project 5 years forward with hiring recs       │
-│ Why:     Businesses plan long-term                      │
-│ Impact:  Strategic planning tool                        │
-│                                                         │
-│ Shows:   Year-by-year revenue/costs/income              │
-│          "When to hire" suggestions                     │
-│          Growth curves (customer growth %)              │
-│          Break-even analysis                           │
-└─────────────────────────────────────────────────────────┘
+### Export & Reporting
+- **Multiple Formats**: CSV, Excel (with formulas), PDF (with charts), HTML pages
+- **Email Sharing**: Send reports directly from the application
+- **Automated Scheduling**: Set up recurring report generation
 
-┌─────────────────────────────────────────────────────────┐
-│ #11: Optimizer Mode                                     │
-├─────────────────────────────────────────────────────────┤
-│ Time:    8+ hours                                       │
-│ Value:   ⭐⭐ (nice-to-have)                            │
-│ Effort:  Very High (algorithm design)                   │
-│                                                         │
-│ What:    "Tell me what to do" mode                      │
-│ Why:     Users want optimization suggestions            │
-│ Impact:  Reduces guesswork                              │
-│                                                         │
-│ Shows:   Top 5 price/mix suggestions                    │
-│          Projected impact on profit                     │
-│          Implementation difficulty                     │
-│                                                         │
-│ Example: "Increase Weekly price +10% → +$12k income"   │
-└─────────────────────────────────────────────────────────┘
-```
+### Testing Infrastructure
+- **Test Scenarios**: 9 pre-built scenarios covering various business situations
+- **URL Parameters**: Load test scenarios via `?loadTestScenarios` or `?testScenario=name`
+- **Edge Case Coverage**: Scenarios for profit/loss, capacity limits, multi-service businesses
 
----
+### Performance & Reliability
+- **Lazy Loading**: Export libraries and charts load on-demand
+- **Offline Support**: Service worker caches assets for offline use
+- **Error Handling**: Comprehensive validation and user-friendly error messages
+- **PWA Ready**: Installable web app with native app-like experience
 
-## 📊 Priority Matrix Visualization
+### User Experience
+- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- **Interactive Charts**: Hover tooltips, pinnable legends, detailed breakdowns
+- **Mobile Hamburger Menu**: Full feature access on mobile devices
+- **Accessibility**: Keyboard navigation, screen reader support, high contrast options
 
-```
-                    HIGH VALUE
-                        ↑
-        #7              │              #1, #2
-     Comparison         │           Quick Wins
-        ★★★★            │            ★★★★
-                        │
-     #10, #11          │   #4, #5, #6
-    Long-term          │  Foundation
-     ★★                │    ★★★★
-                        │
-    ────────────────────┼──────────────────→ EFFORT
-        LOW EFFORT                  HIGH EFFORT
-    (Quick to build)            (Takes weeks)
-```
+### Developer Features
+- **Debug Panel**: Built-in developer tools for testing and debugging
+- **CI/CD Pipeline**: Automated testing and quality checks
+- **Comprehensive Documentation**: API reference, architecture guide, contribution guidelines
 
-**Strategy:** Build bottom-right (#4-7) for solid foundation, then top-left (#1-3) for quick wins.
+## How to Use
 
----
+1. **Set Business Parameters**: Configure employees, pay rates, overhead costs, and utilization targets
+2. **Define Services**: Add service offerings with pricing, frequency, and variable costs
+3. **Analyze Results**: Review KPIs, charts, and break-even analysis
+4. **Save Scenarios**: Save different business configurations for comparison
+5. **Export Reports**: Generate professional reports in multiple formats
 
-# Features overview
+## Browser Support
 
-This file provides a short, current summary of notable features and pointers to the canonical backlog in `ROADMAP.md`.
-
-Implemented / delivered (high-level)
-- Core calculation engine (`calc()`): forecast and current modes, accepts an optional state argument for easier testing.
-- KPIs and outputs: Clients, Annual sessions, Service hours, Utilization, Revenue, Fixed/Payroll/Variable costs, Net income.
-- Business Intelligence: Break-even analysis with visual indicators and contribution margin calculations.
-- Advanced Export & Reporting: Multi-format export (CSV, Excel with formulas, PDF with charts, HTML pages), email sharing, automated report scheduling.
-- Data Validation: Comprehensive input validation with contextual error messages and business logic checks.
-- Visuals: Revenue composition chart with interactive tooltips (pin/close), utilization gauge, and profit/loss waterfall charts.
-- Persistence: Auto-save/load of app state to `localStorage` and saved debug panel state.
-- CSV export and scenario save/load/delete UI.
-- UI/UX: Responsive mobile layout, collapsible debug panel, enhanced tooltip positioning.
-- Finalized header logo (single SVG) and removed legacy logo variants.
-- Performance & PWA: Lazy loading of export libraries, optimized DOM operations, service worker for offline functionality, web app manifest for installability.
-
-Where to find more detail
-- The prioritized backlog and next actions live in `ROADMAP.md` (single source of truth).
-
-Selected long-term ideas (examples)
-- Shareable URLs (encode scenario in query string) — useful for sharing scenarios without accounts.
-- Industry presets — curated templates to speed onboarding.
-- Multi-year forecasting & hiring recommendations — for strategic planning.
-
-If you want a fully detailed backlog view, open `ROADMAP.md`.
+- Modern browsers: Chrome, Firefox, Safari, Edge
+- Mobile browsers: iOS Safari, Chrome Mobile
+- Progressive Web App: Installable on supporting devices
