@@ -335,7 +335,6 @@ function validateAndSanitizeLoadedState() {
 
   // Save sanitized state if changes were made
   if (needsSave) {
-    console.info('Sanitized invalid data loaded from localStorage');
     persistState();
   }
 }
@@ -747,6 +746,24 @@ function renderSimpleChart(metrics) {
   const el = $('#simpleChart');
   if (!el) return;
 
+  // Hide any existing tooltips before rendering new chart
+  const existingTooltip = el.querySelector('.chart-tooltip');
+  if (existingTooltip) {
+    existingTooltip.classList.remove('visible', 'pinned');
+    existingTooltip.style.display = 'none';
+    existingTooltip.innerHTML = '';
+  }
+
+  // Clean up any existing document event handlers to prevent stale closures
+  if (document._chartClickHandler) {
+    document.removeEventListener('click', document._chartClickHandler);
+    document._chartClickHandler = null;
+  }
+  if (document._chartKeyHandler) {
+    document.removeEventListener('keydown', document._chartKeyHandler);
+    document._chartKeyHandler = null;
+  }
+
   // Prefer top-level metrics, but fall back to summing per-offering metrics if needed
   const totalRevenue = Number(metrics.revenue) || (Array.isArray(metrics.offeringMetrics) ? metrics.offeringMetrics.reduce((a, m) => a + (Number(m.revenue) || 0), 0) : 0);
   const totalVariable = Number(metrics.variableCosts) || (Array.isArray(metrics.offeringMetrics) ? metrics.offeringMetrics.reduce((a, m) => a + (Number(m.variableCosts) || 0), 0) : 0);
@@ -1045,24 +1062,20 @@ function setupChartEventListeners(el) {
     });
   });
 
-  // click outside to unpin (only add once)
-  if (!document._chartClickHandler) {
-    document._chartClickHandler = (ev) => {
+  // click outside to unpin
+  document._chartClickHandler = (ev) => {
     if (!pinned) return;
     if (!el.contains(ev.target)) unpinTooltip();
-    };
-    document.addEventListener('click', document._chartClickHandler);
-  }
+  };
+  document.addEventListener('click', document._chartClickHandler);
 
-  // escape key to close (only add once)
-  if (!document._chartKeyHandler) {
-    document._chartKeyHandler = (ev) => {
+  // escape key to close
+  document._chartKeyHandler = (ev) => {
     if (ev.key === 'Escape' && pinned) {
       unpinTooltip();
     }
-    };
-    document.addEventListener('keydown', document._chartKeyHandler);
-  }
+  };
+  document.addEventListener('keydown', document._chartKeyHandler);
 }
 
 function updateBreakEvenAnalysis(metrics) {
@@ -1241,7 +1254,20 @@ function createProfitWaterfall(metrics) {
 
 function render() {
   const focus = captureTableFocus();
-  const metrics = calc();
+
+  let metrics;
+  try {
+    metrics = calc();
+  } catch (e) {
+    console.error('Calculation failed in render:', e);
+    // Return early with error state
+    const dbg = $('#debugPanel');
+    if (dbg) {
+      dbg.textContent = `Calculation error: ${e && e.stack ? e.stack : String(e)}`;
+      dbg.style.display = 'block';
+    }
+    return;
+  }
 
   // Top-level inputs
   $('#modeSelect').value = state.mode;
@@ -1421,11 +1447,13 @@ function escapeHtml(str) {
 
 function setStateFromInputs() {
   state.mode = $('#modeSelect').value;
-  state.employees = Number($('#employees').value) || 1;
-  state.employeePay = Number($('#employeePay').value) || 0;
-  state.monthlyCosts = Number($('#monthlyCosts').value) || 0;
-  state.productiveUtilizationPct = Number($('#productiveUtilizationPct').value) || 0;
-  state.targetUtilizationPct = Number($('#targetUtilizationPct').value) || 0;
+
+  // Validate and sanitize inputs
+  state.employees = Math.max(1, Math.floor(safeParseNumber($('#employees').value, 1)));
+  state.employeePay = Math.max(0, safeParseNumber($('#employeePay').value, 0));
+  state.monthlyCosts = Math.max(0, safeParseNumber($('#monthlyCosts').value, 0));
+  state.productiveUtilizationPct = clamp(safeParseNumber($('#productiveUtilizationPct').value, 80), 0, 100);
+  state.targetUtilizationPct = clamp(safeParseNumber($('#targetUtilizationPct').value, 75), 0, 150);
   state.lockMix = Boolean($('#lockMix')?.checked);
 }
 
@@ -1491,18 +1519,16 @@ function onTableInput(e) {
 
   // Show validation error if any and provide auto-fix for some cases
   if (validationError) {
-    console.warn(`Validation error for ${k}: ${validationError}`);
+    // Validation error handled - value has been sanitized
 
     // Auto-fix common issues
     if (k === 'priceMonthly' && value === 0 && o.priceMonthly === 0) {
       // Suggest a reasonable default price
       const suggestedPrice = o.name?.toLowerCase().includes('premium') ? 300 :
                             o.name?.toLowerCase().includes('basic') ? 100 : 200;
-      console.info(`Suggestion: Try setting price to $${suggestedPrice}/month for "${o.name}"`);
     }
 
     if (k === 'hoursPerSession' && value === 0.1 && o.hoursPerSession === 0.1) {
-      console.info(`Suggestion: Typical session lengths are 1-2 hours for service work`);
     }
   }
 
@@ -1577,7 +1603,14 @@ function resetDefaults() {
 }
 
 function exportAsCSV() {
-  const results = calc();
+  let results;
+  try {
+    results = calc();
+  } catch (e) {
+    console.error('Calculation failed in exportAsCSV:', e);
+    alert('Error: Could not generate CSV export due to calculation error. Please check your inputs.');
+    return;
+  }
 
   // CSV header with summary metrics
   const lines = [
@@ -1629,7 +1662,14 @@ function exportAsCSV() {
 }
 
 function shareViaEmail() {
-  const results = calc();
+  let results;
+  try {
+    results = calc();
+  } catch (e) {
+    console.error('Calculation failed in shareViaEmail:', e);
+    alert('Error: Could not generate email report due to calculation error. Please check your inputs.');
+    return;
+  }
 
   const subject = encodeURIComponent(`ProfitPath Report - ${new Date().toLocaleDateString()}`);
   const body = encodeURIComponent(`ProfitPath Business Analysis Report
@@ -1880,7 +1920,14 @@ function restoreScheduling() {
 }
 
 function exportAsExcel() {
-  const results = calc();
+  let results;
+  try {
+    results = calc();
+  } catch (e) {
+    console.error('Calculation failed in exportAsExcel:', e);
+    alert('Error: Could not generate Excel export due to calculation error. Please check your inputs.');
+    return;
+  }
   const workbook = XLSX.utils.book_new();
 
   // Summary sheet
@@ -1958,7 +2005,15 @@ function exportAsExcel() {
 async function exportAsPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  const results = calc();
+
+  let results;
+  try {
+    results = calc();
+  } catch (e) {
+    console.error('Calculation failed in exportAsPDF:', e);
+    alert('Error: Could not generate PDF export due to calculation error. Please check your inputs.');
+    return;
+  }
 
   // Title
   doc.setFontSize(20);
@@ -2090,7 +2145,14 @@ async function exportAsPDF() {
 }
 
 function exportAsHTML() {
-  const results = calc();
+  let results;
+  try {
+    results = calc();
+  } catch (e) {
+    console.error('Calculation failed in exportAsHTML:', e);
+    alert('Error: Could not generate HTML export due to calculation error. Please check your inputs.');
+    return;
+  }
 
   // Create HTML content
   const htmlContent = `
@@ -2259,15 +2321,22 @@ function loadScenario(scenarioId) {
     const scenario = scenarios.find((s) => s.id === scenarioId);
     if (!scenario) return;
 
+    // Handle both old format (scenario.state) and new format (scenario.data)
+    const scenarioData = scenario.state || scenario.data;
+    if (!scenarioData) {
+      console.error('Scenario data not found in expected format');
+      return;
+    }
+
     // Restore state from scenario
-    state.mode = scenario.state.mode ?? state.mode;
-    state.offerings = scenario.state.offerings ?? state.offerings;
-    state.employees = scenario.state.employees ?? state.employees;
-    state.employeePay = scenario.state.employeePay ?? state.employeePay;
-    state.monthlyCosts = scenario.state.monthlyCosts ?? state.monthlyCosts;
-    state.productiveUtilizationPct = scenario.state.productiveUtilizationPct ?? state.productiveUtilizationPct;
-    state.targetUtilizationPct = scenario.state.targetUtilizationPct ?? state.targetUtilizationPct;
-    state.lockMix = scenario.state.lockMix ?? state.lockMix;
+    state.mode = scenarioData.mode ?? state.mode;
+    state.offerings = scenarioData.offerings ?? state.offerings;
+    state.employees = scenarioData.employees ?? state.employees;
+    state.employeePay = scenarioData.employeePay ?? state.employeePay;
+    state.monthlyCosts = scenarioData.monthlyCosts ?? state.monthlyCosts;
+    state.productiveUtilizationPct = scenarioData.productiveUtilizationPct ?? state.productiveUtilizationPct;
+    state.targetUtilizationPct = scenarioData.targetUtilizationPct ?? state.targetUtilizationPct;
+    state.lockMix = scenarioData.lockMix ?? state.lockMix;
 
     persistState(); // Save loaded scenario as current state
     render();
@@ -2282,10 +2351,17 @@ function deleteScenario(scenarioId) {
   if (!confirm('Delete this scenario?')) return;
 
   try {
+    // Get scenarios once and filter
     let scenarios = getAllScenarios();
+    const initialLength = scenarios.length;
     scenarios = scenarios.filter((s) => s.id !== scenarioId);
+
+    // Only update if we actually removed something
+    if (scenarios.length < initialLength) {
     localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
-    renderScenariosList();
+      // Defer rendering to next tick to avoid blocking
+      setTimeout(() => renderScenariosList(), 0);
+    }
   } catch (e) {
     console.error('Failed to delete scenario:', e);
     alert('Error deleting scenario');
@@ -2301,10 +2377,14 @@ function renderScenariosList() {
     return;
   }
 
-  list.innerHTML = scenarios
-    .map(
-      (s) => `
-    <div class="scenario-item">
+  // Use document fragment for better performance with many scenarios
+  const fragment = document.createDocumentFragment();
+
+  scenarios.forEach((s) => {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'scenario-item';
+
+    itemDiv.innerHTML = `
       <div>
         <div class="scenario-item-name">${escapeHtml(s.name)}</div>
         <div class="scenario-item-meta">Saved ${s.timestamp}</div>
@@ -2313,24 +2393,27 @@ function renderScenariosList() {
         <button class="btn small" data-action="load-scenario" data-scenario-id="${escapeHtml(s.id)}">Load</button>
         <button class="btn small danger" data-action="delete-scenario" data-scenario-id="${escapeHtml(s.id)}">Delete</button>
       </div>
-    </div>
-  `
-    )
-    .join('');
+    `;
 
-  // Wire up load/delete buttons
-  $$('[data-action="load-scenario"]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.scenarioId;
-      loadScenario(id);
-    });
+    fragment.appendChild(itemDiv);
   });
 
-  $$('[data-action="delete-scenario"]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+  list.innerHTML = '';
+  list.appendChild(fragment);
+
+  // Wire up load/delete buttons with event delegation to avoid duplicate listeners
+  list.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+
+    const action = btn.dataset.action;
       const id = btn.dataset.scenarioId;
+
+    if (action === 'load-scenario') {
+      loadScenario(id);
+    } else if (action === 'delete-scenario') {
       deleteScenario(id);
-    });
+    }
   });
 }
 
@@ -2438,7 +2521,6 @@ function loadScenarioFromURL() {
       }
     }
 
-    console.log('Loaded scenario from URL');
     persistState(); // Save URL scenario to localStorage
     return true;
   } catch (e) {
@@ -2503,6 +2585,330 @@ function closeMobileMenu() {
   }
 }
 
+// ============================================================================
+// TEST SCENARIOS SYSTEM
+// ============================================================================
+
+// Comprehensive test scenarios covering various UI states and edge cases
+const TEST_SCENARIOS = {
+  'default': {
+    name: 'Default Consulting Setup',
+    description: 'Standard consulting setup for testing',
+    data: {
+      mode: 'forecast',
+      employees: 1,
+      employeePay: 60000,
+      monthlyCosts: 2000,
+      productiveUtilizationPct: 80,
+      targetUtilizationPct: 85,
+      offerings: [{
+        id: 'test-consulting',
+        name: 'Consulting Service',
+        priceMonthly: 2500,
+        sessionsPerYear: 12,
+        hoursPerSession: 4,
+        variableCostPerSession: 100,
+        mixPct: 100,
+        currentClients: 0
+      }]
+    }
+  },
+
+  'high-profit': {
+    name: 'High Profit Scenario',
+    description: 'Very profitable setup with high margins',
+    data: {
+      mode: 'forecast',
+      employees: 2,
+      employeePay: 80000,
+      monthlyCosts: 5000,
+      productiveUtilizationPct: 90,
+      targetUtilizationPct: 95,
+      offerings: [{
+        id: 'premium-service',
+        name: 'Premium Consulting',
+        priceMonthly: 15000,
+        sessionsPerYear: 12,
+        hoursPerSession: 8,
+        variableCostPerSession: 500,
+        mixPct: 100,
+        currentClients: 0
+      }]
+    }
+  },
+
+  'loss-making': {
+    name: 'Loss Making Scenario',
+    description: 'Operating at a loss - needs price adjustment',
+    data: {
+      mode: 'forecast',
+      employees: 4,
+      employeePay: 90000,
+      monthlyCosts: 15000,
+      productiveUtilizationPct: 70,
+      targetUtilizationPct: 75,
+      offerings: [{
+        id: 'unprofitable-service',
+        name: 'Underpriced Service',
+        priceMonthly: 800,
+        sessionsPerYear: 12,
+        hoursPerSession: 3,
+        variableCostPerSession: 400,
+        mixPct: 100,
+        currentClients: 0
+      }]
+    }
+  },
+
+  'multi-service': {
+    name: 'Multi-Service Business',
+    description: 'Business with multiple service offerings',
+    data: {
+      mode: 'forecast',
+      employees: 3,
+      employeePay: 70000,
+      monthlyCosts: 8000,
+      productiveUtilizationPct: 85,
+      targetUtilizationPct: 90,
+      offerings: [{
+        id: 'basic-service',
+        name: 'Basic Service',
+        priceMonthly: 1200,
+        sessionsPerYear: 12,
+        hoursPerSession: 2,
+        variableCostPerSession: 50,
+        mixPct: 40,
+        currentClients: 0
+      }, {
+        id: 'premium-service',
+        name: 'Premium Service',
+        priceMonthly: 5000,
+        sessionsPerYear: 12,
+        hoursPerSession: 8,
+        variableCostPerSession: 200,
+        mixPct: 35,
+        currentClients: 0
+      }, {
+        id: 'enterprise-service',
+        name: 'Enterprise Service',
+        priceMonthly: 15000,
+        sessionsPerYear: 6,
+        hoursPerSession: 20,
+        variableCostPerSession: 1000,
+        mixPct: 25,
+        currentClients: 0
+      }]
+    }
+  },
+
+  'over-capacity': {
+    name: 'Over Capacity Scenario',
+    description: 'Business operating above target utilization',
+    data: {
+      mode: 'forecast',
+      employees: 2,
+      employeePay: 75000,
+      monthlyCosts: 6000,
+      productiveUtilizationPct: 95,
+      targetUtilizationPct: 85,
+      offerings: [{
+        id: 'popular-service',
+        name: 'Popular Service',
+        priceMonthly: 3000,
+        sessionsPerYear: 24,
+        hoursPerSession: 3,
+        variableCostPerSession: 150,
+        mixPct: 100,
+        currentClients: 0
+      }]
+    }
+  },
+
+  'under-capacity': {
+    name: 'Under Capacity Scenario',
+    description: 'Business with low utilization - opportunity for growth',
+    data: {
+      mode: 'forecast',
+      employees: 4,
+      employeePay: 65000,
+      monthlyCosts: 10000,
+      productiveUtilizationPct: 45,
+      targetUtilizationPct: 80,
+      offerings: [{
+        id: 'niche-service',
+        name: 'Niche Service',
+        priceMonthly: 8000,
+        sessionsPerYear: 8,
+        hoursPerSession: 6,
+        variableCostPerSession: 300,
+        mixPct: 100,
+        currentClients: 0
+      }]
+    }
+  },
+
+  'current-mode': {
+    name: 'Current Mode Business',
+    description: 'Business with existing clients (current mode)',
+    data: {
+      mode: 'current',
+      employees: 2,
+      employeePay: 70000,
+      monthlyCosts: 4000,
+      productiveUtilizationPct: 78,
+      targetUtilizationPct: 85,
+      offerings: [{
+        id: 'managed-service',
+        name: 'Managed Service',
+        priceMonthly: 2500,
+        sessionsPerYear: 12,
+        hoursPerSession: 4,
+        variableCostPerSession: 100,
+        mixPct: 0, // Not used in current mode
+        currentClients: 8
+      }]
+    }
+  },
+
+  'zero-values': {
+    name: 'Zero Values Edge Case',
+    description: 'Edge case with zero values to test boundary conditions',
+    data: {
+      mode: 'forecast',
+      employees: 1,
+      employeePay: 0,
+      monthlyCosts: 0,
+      productiveUtilizationPct: 0,
+      targetUtilizationPct: 100,
+      offerings: [{
+        id: 'free-service',
+        name: 'Free Service',
+        priceMonthly: 0,
+        sessionsPerYear: 1,
+        hoursPerSession: 0.1,
+        variableCostPerSession: 0,
+        mixPct: 100,
+        currentClients: 0
+      }]
+    }
+  },
+
+  'break-even-test': {
+    name: 'Break-Even Analysis Test',
+    description: 'Scenario designed to test break-even calculations',
+    data: {
+      mode: 'forecast',
+      employees: 1,
+      employeePay: 50000,
+      monthlyCosts: 2000,
+      productiveUtilizationPct: 80,
+      targetUtilizationPct: 85,
+      offerings: [{
+        id: 'break-even-service',
+        name: 'Break-Even Service',
+        priceMonthly: 2500,
+        sessionsPerYear: 12,
+        hoursPerYear: 4,
+        variableCostPerSession: 200,
+        mixPct: 100,
+        currentClients: 0
+      }]
+    }
+  }
+};
+
+// Load test scenarios into localStorage (only if test flag is present), or clear them if not present
+function loadTestScenarios() {
+  const urlParams = new URLSearchParams(window.location.search);
+
+  if (!urlParams.has('loadTestScenarios')) {
+    // Clear test scenarios if the flag is not present
+    try {
+      const existingScenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+      const nonTestScenarios = existingScenarios.filter(s => !s.name?.startsWith('[TEST]'));
+      localStorage.setItem('profitpath-scenarios', JSON.stringify(nonTestScenarios));
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+    return false; // Flag not present, scenarios cleared
+  }
+
+  try {
+    const scenarios = Object.entries(TEST_SCENARIOS).map(([key, scenario]) => ({
+      id: `test-${key}-${Date.now()}`,
+      name: `[TEST] ${scenario.name}`,
+      timestamp: Date.now() + Object.keys(TEST_SCENARIOS).indexOf(key) * 1000,
+      data: scenario.data
+    }));
+
+    // Get existing scenarios
+    let existingScenarios = [];
+    try {
+      const saved = localStorage.getItem('profitpath-scenarios');
+      if (saved) {
+        existingScenarios = JSON.parse(saved);
+      }
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+
+    // Add test scenarios (avoid duplicates)
+    const allScenarios = [...existingScenarios];
+    scenarios.forEach(testScenario => {
+      const exists = allScenarios.some(s => s.name === testScenario.name);
+      if (!exists) {
+        allScenarios.push(testScenario);
+      }
+    });
+
+    // Save back to localStorage
+    localStorage.setItem('profitpath-scenarios', JSON.stringify(allScenarios));
+
+    // Remove the flag from URL and show success
+    const newUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, document.title, newUrl);
+
+    // Show notification
+    setTimeout(() => {
+      alert(`Loaded ${scenarios.length} test scenarios!\n\nCheck the Scenarios menu for [TEST] scenarios.`);
+    }, 100);
+
+    return scenarios.length;
+  } catch (error) {
+    console.error('Error loading test scenarios:', error);
+    return 0;
+  }
+}
+
+// Load specific test scenario by key
+function loadSpecificTestScenario(key) {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (!urlParams.has('testScenario') || urlParams.get('testScenario') !== key) {
+    return false;
+  }
+
+  const scenario = TEST_SCENARIOS[key];
+  if (!scenario) {
+    console.error('Test scenario not found:', key);
+    return false;
+  }
+
+  try {
+    // Load the scenario data
+    Object.assign(state, scenario.data);
+    validateAndSanitizeLoadedState();
+
+    // Remove the flag from URL
+    const newUrl = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, document.title, newUrl);
+
+    return true;
+  } catch (error) {
+    console.error('Error loading test scenario:', error);
+    return false;
+  }
+}
+
 function wire(skipLocalStorageLoading = false) {
   // Load persisted state from localStorage if available (unless we loaded from URL)
   if (!skipLocalStorageLoading) {
@@ -2564,7 +2970,9 @@ function wire(skipLocalStorageLoading = false) {
   $('#exportBtn').addEventListener('click', (e) => {
     e.preventDefault();
     const menu = $('#exportMenu');
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    if (menu) {
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
   });
 
   // Close export menu when clicking outside
@@ -2631,7 +3039,51 @@ function wire(skipLocalStorageLoading = false) {
 
   if (mobileExportBtn) {
     mobileExportBtn.addEventListener('click', () => {
+      const options = $('#mobileExportOptions');
+      if (options) {
+        options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
+      }
+    });
+  }
+
+  // Mobile export option handlers
+  const mobileExportCsv = $('#mobileExportCsv');
+  const mobileExportExcel = $('#mobileExportExcel');
+  const mobileExportPdf = $('#mobileExportPdf');
+  const mobileExportHtml = $('#mobileExportHtml');
+  const mobileExportEmail = $('#mobileExportEmail');
+
+  if (mobileExportCsv) {
+    mobileExportCsv.addEventListener('click', () => {
       exportAsCSV();
+      closeMobileMenu();
+    });
+  }
+
+  if (mobileExportExcel) {
+    mobileExportExcel.addEventListener('click', () => {
+      exportAsExcel();
+      closeMobileMenu();
+    });
+  }
+
+  if (mobileExportPdf) {
+    mobileExportPdf.addEventListener('click', () => {
+      exportAsPDF();
+      closeMobileMenu();
+    });
+  }
+
+  if (mobileExportHtml) {
+    mobileExportHtml.addEventListener('click', () => {
+      exportAsHTML();
+      closeMobileMenu();
+    });
+  }
+
+  if (mobileExportEmail) {
+    mobileExportEmail.addEventListener('click', () => {
+      shareViaEmail();
       closeMobileMenu();
     });
   }
@@ -2686,6 +3138,10 @@ function wire(skipLocalStorageLoading = false) {
 // Load scenario from URL first (if present), then localStorage
 const loadedFromURL = loadScenarioFromURL();
 
+// Check for test scenario loading
+loadTestScenarios();
+loadSpecificTestScenario(Object.keys(TEST_SCENARIOS).find(key => new URLSearchParams(window.location.search).get('testScenario') === key));
+
 wire(loadedFromURL);
 
 // Restore any scheduled report generation
@@ -2700,19 +3156,6 @@ try {
   if (dbg) dbg.textContent = `Render error: ${e && e.stack ? e.stack : String(e)}`;
 }
 
-// Smoke test: expose a quick debug rendering of calc() into the debug panel (useful when loading the page locally)
-try {
-  const dbg = $('#debugPanel');
-  if (dbg) {
-    const res = calc();
-    dbg.textContent = JSON.stringify(res, null, 2);
-    console.info('ProfitPath calc() smoke result:', res);
-  }
-} catch (e) {
-  console.warn('Smoke test failed:', e);
-  const dbg = $('#debugPanel');
-  if (dbg) dbg.textContent = `Smoke test error: ${e && e.stack ? e.stack : String(e)}`;
-}
 
 // Global error handler to surface errors into the debug panel for easier debugging
 window.addEventListener('error', (ev) => {

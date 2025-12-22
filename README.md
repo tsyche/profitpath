@@ -26,6 +26,10 @@ python3 -m http.server 8000
 
 2. Open http://localhost:8000 in your browser.
 
+Testing & development
+- Load test scenarios: `?loadTestScenarios` - adds 9 test scenarios to localStorage
+- Load specific scenario: `?testScenario=default` (or high-profit, loss-making, multi-service, etc.)
+
 Documentation & roadmap
 - For the complete roadmap with completed features and future plans, see `ROADMAP.md`.
 

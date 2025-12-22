@@ -63,7 +63,16 @@
             <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
           </div>
           <div class="mobile-menu-content">
-            <button class="btn mobile-menu-btn" id="mobileExportBtn">📊 Export CSV</button>
+            <div class="mobile-export-section">
+              <button class="btn mobile-menu-btn" id="mobileExportBtn">📄 Export</button>
+              <div class="mobile-export-options" id="mobileExportOptions" style="display: none;">
+                <button class="btn mobile-submenu-btn" id="mobileExportCsv">📊 CSV Spreadsheet</button>
+                <button class="btn mobile-submenu-btn" id="mobileExportExcel">📈 Excel Workbook</button>
+                <button class="btn mobile-submenu-btn" id="mobileExportPdf">📋 PDF Report</button>
+                <button class="btn mobile-submenu-btn" id="mobileExportHtml">🌐 HTML Page</button>
+                <button class="btn mobile-submenu-btn" id="mobileExportEmail">📧 Email Report</button>
+              </div>
+            </div>
             <button class="btn mobile-menu-btn" id="mobileShareBtn">🔗 Share Scenario</button>
             <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
           </div>

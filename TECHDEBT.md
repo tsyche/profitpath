@@ -10,22 +10,29 @@ This document outlines the technical debt and code quality improvements needed f
 - **Issue**: Multiple `console.log` statements throughout codebase
 - **Impact**: Pollutes production console, performance overhead
 - **Effort**: 1-2 hours
-- **Status**: ✅ **COMPLETED** (v1.0.0)
-- **Action**: Removed all debug console statements, kept only critical error logging
+- **Status**: ✅ **COMPLETED** (v1.3.0)
+- **Action**: Removed all debug console statements and smoke test code, kept only critical error logging
 
 ### 2. Error Handling & Boundaries
 - **Issue**: Limited error handling, potential crashes on edge cases
 - **Impact**: Poor user experience on errors, debugging difficulty
 - **Effort**: 2-3 hours
-- **Status**: ✅ **COMPLETED** (v1.0.0)
-- **Action**: Added comprehensive try-catch blocks, user-friendly error messages, graceful degradation
+- **Status**: ✅ **COMPLETED** (v1.3.0)
+- **Action**: Added comprehensive error boundaries to calc(), render(), and all export functions with user-friendly error messages
 
 ### 3. Input Validation Audit
 - **Issue**: Input validation could be more robust
 - **Impact**: Potential data corruption, calculation errors
 - **Effort**: 2-3 hours
-- **Status**: ✅ **COMPLETED** (v1.0.0)
-- **Action**: Enhanced input sanitization, added business rules validation, improved error boundaries
+- **Status**: ✅ **COMPLETED** (v1.3.0)
+- **Action**: Enhanced setStateFromInputs() with proper sanitization, improved safeParseNumber usage, added boundary validation
+
+### 4. Test Scenarios System
+- **Issue**: No easy way to test various UI states and edge cases
+- **Impact**: Difficult to verify fixes and test new features
+- **Effort**: 2-3 hours
+- **Status**: ✅ **COMPLETED** (v1.3.0)
+- **Action**: Created comprehensive test scenarios system with 9 scenarios covering profit/loss, capacity, multi-service, and edge cases; accessible via URL parameters (?loadTestScenarios or ?testScenario=key)
 
 ## 📈 MEDIUM PRIORITY - Quality of Life
 
@@ -66,12 +73,12 @@ This document outlines the technical debt and code quality improvements needed f
 - **Status**: ✅ **COMPLETED** (v1.2.0)
 - **Action**: Converted to ES6 modules: constants.js, utils.js, validation.js, calculations.js, ui.js, storage.js, main.js with proper imports/exports
 
-### 9. Unit Testing Foundation
-- **Issue**: No automated testing
-- **Impact**: Regression bugs, confidence in changes
-- **Effort**: 6-8 hours
-- **Status**: ✅ **COMPLETED** (v1.2.0)
-- **Action**: Created comprehensive test suite (tests.js) with unit tests for utilities, calculations, validation, and integration tests
+### 9. Test Scenarios System
+- **Issue**: No easy way to test various UI states and edge cases
+- **Impact**: Difficult to verify fixes and test new features
+- **Effort**: 2-3 hours
+- **Status**: ✅ **COMPLETED** (v1.3.0)
+- **Action**: Created comprehensive test scenarios system with 9 scenarios covering profit/loss, capacity, multi-service, and edge cases; accessible via URL parameters (?loadTestScenarios or ?testScenario=key)
 
 ## ⚡ MEDIUM PRIORITY - Performance
 
@@ -127,9 +134,11 @@ This document outlines the technical debt and code quality improvements needed f
 - ✅ Code Style (2-3h)
 - ✅ Function Refactoring (4-6h)
 
-### Week 7-8: Architecture (12-16 hours) ✅ COMPLETED
-- ✅ Modular Architecture (6-8h)
-- ✅ Unit Testing (6-8h)
+### Week 9-10: Tech Debt Cleanup (6-8 hours) ✅ COMPLETED
+- ✅ Console Cleanup (1-2h)
+- ✅ Error Handling (2-3h)
+- ✅ Input Validation (2-3h)
+- ✅ Test Scenarios System (2-3h)
 
 ### Ongoing: Performance & Polish (8-12 hours)
 - [ ] Performance Audit (4-6h)
@@ -145,6 +154,13 @@ This document outlines the technical debt and code quality improvements needed f
 - [ ] **Zero critical security issues**
 
 ## 📝 Recent Changes
+
+### v1.3.0 - Tech Debt Cleanup & Testing Infrastructure
+- ✅ **Console Cleanup**: Removed all debug console statements and smoke test code from production
+- ✅ **Error Boundaries**: Added comprehensive error handling to calc(), render(), and export functions with user-friendly messages
+- ✅ **Input Validation**: Enhanced setStateFromInputs() with proper sanitization and boundary checking
+- ✅ **Test Scenarios System**: Created 9 comprehensive test scenarios covering profit/loss, capacity, multi-service, and edge cases
+- ✅ **URL Parameter Testing**: Added ?loadTestScenarios and ?testScenario=key for easy manual testing
 
 ### v1.2.0 - Architecture & Testing Improvements
 - ✅ **Function Refactoring**: Broke down large functions (validateBusinessLogic: 235→3 functions, onTableInput: 108→6 functions) for better maintainability

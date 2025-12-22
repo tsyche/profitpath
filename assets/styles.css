@@ -1300,3 +1300,24 @@ input[type="checkbox"]{
   margin-right: 0.25rem;
 }
 
+/* Mobile export options */
+.mobile-export-section {
+  position: relative;
+}
+
+.mobile-export-options {
+  margin-top: 0.5rem;
+  margin-left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mobile-submenu-btn {
+  font-size: 0.875rem !important;
+  padding: 0.5rem 1rem !important;
+  text-align: left;
+  width: 100%;
+  justify-content: flex-start;
+}
+
