@@ -599,6 +599,24 @@ button:focus {
   color: var(--text);
 }
 
+/* Mobile adjustments for break-even section */
+@media (max-width: 600px) {
+  .break-even-item{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .break-even-label{
+    font-size: 12px;
+  }
+
+  .break-even-value{
+    font-size: 12px;
+    word-break: break-word;
+  }
+}
+
 /* Rich Visualizations */
 .rich-visualizations{
   margin-top: 16px;

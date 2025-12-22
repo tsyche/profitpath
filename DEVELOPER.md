@@ -134,6 +134,35 @@ Format numbers as percentages.
 ### Local Development
 See README.md for setup instructions.
 
+### Building
+The application works without any build step, but esbuild configuration is available for development ergonomics:
+
+```bash
+# Install dependencies
+npm install
+
+# Development build with watch mode
+npm run build:dev
+
+# Production build with minification
+npm run build
+```
+
+The build creates bundled JavaScript in the `dist/` directory.
+
+### TypeScript Support
+TypeScript configuration is set up for gradual migration:
+
+```bash
+# Type check TypeScript files
+npx tsc --noEmit
+
+# Build with TypeScript support
+npm run build  # Handles both .js and .ts files
+```
+
+Example: `assets/constants.ts` demonstrates TypeScript usage.
+
 ### Testing Scenarios
 ```javascript
 // Load test scenarios via URL

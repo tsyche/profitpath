@@ -30,6 +30,21 @@ Testing & development
 - Load test scenarios: `?loadTestScenarios` - adds 9 test scenarios to localStorage
 - Load specific scenario: `?testScenario=default` (or high-profit, loss-making, multi-service, etc.)
 
+Building (optional)
+```bash
+# Install dependencies
+npm install
+
+# Development build with watch
+npm run build:dev
+
+# Production build
+npm run build
+
+# Run development server
+npm run serve
+```
+
 Documentation & roadmap
 - For the complete roadmap with completed features and future plans, see `ROADMAP.md`.
 - For developer documentation, API reference, and contribution guidelines, see `DEVELOPER.md`.

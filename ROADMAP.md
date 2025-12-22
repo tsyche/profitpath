@@ -6,45 +6,6 @@ See README.md for setup and development instructions.
 
 ---
 
-## Completed (already implemented)
-
-- Calculation & testability
-
-  - `calc(state?)` accepts an optional state argument (easier to test programmatically).
-  - Core constants: `HOURS_PER_YEAR`, `DEFAULT_CURRENCY` are centralized.
-
-- UX / UI
-
-  - KPIs and Outputs fixed (clients, total sessions, service hours, utilization, revenue, costs, income).
-  - Simple revenue composition chart with per-offering breakdown and hover tooltips (pin/close behavior implemented).
-  - Collapsible Debug panel added at the bottom of the Outputs card (shows `calc()` JSON); state persists in `localStorage`.
-  - Finalized single SVG header logo and cleaned up legacy logo variants.
-  - **Responsive mobile layout** with proper width utilization on small screens.
-  - **Enhanced tooltip positioning** with smooth hover tracking and reliable pinning/unpinning.
-
-- Persistence & export
-
-  - localStorage auto-save/load of app state and scenario management (save/load/delete).
-  - **Advanced Export & Reporting** - Multi-format export (CSV, Excel with formulas, PDF with charts, HTML pages), email sharing, automated report scheduling.
-  - CSV export for scenario summary and per-offering rows.
-  - **Shareable URLs & Collaboration** - Encode scenarios in URL fragments for sharing with stakeholders, automatic URL loading on page load, clipboard integration for easy sharing.
-
-- UI/UX Polish
-
-  - **Clickable logo** - Logo links to root page for easy navigation.
-  - **Sun-themed logo** - Arch icon redesigned with sun rays and subtle glow for brand enhancement.
-  - **Mobile optimization** - Reduced padding, compact spacing, and responsive elements for better mobile experience.
-  - **Mobile hamburger menu** - Standard three-line hamburger icon with collapsible menu containing all actions and status badge for mobile devices.
-
-- Data Validation & Business Intelligence
-  - **Comprehensive input validation** with contextual error messages and auto-fix suggestions.
-  - **Business logic validation** including utilization warnings and profitability checks.
-  - **Break-even analysis** with visual indicators, contribution margin calculations, and client/revenue break-even points.
-  - **Rich dashboard visualizations** including utilization gauge and profit/loss waterfall charts.
-  - **Graceful error handling** with data sanitization and recovery.
-
----
-
 ## Prioritized Backlog (high → low)
 
 High priority
@@ -203,8 +164,8 @@ Enterprise Features (Scale Layer)
 
 Tech debt & DX
 
-- **TypeScript Migration** (Optional): Gradual migration to TypeScript for enhanced type safety and better IDE support (20-30 hours)
-- Consider extracting a minimal build step (esbuild) only for developer ergonomics.
+- ✅ **Build System**: Added minimal esbuild configuration for development ergonomics (completed)
+- 🚧 **TypeScript Migration** (In Progress): Set up TypeScript configuration and converted constants file as example (20-30 hours total)
 
 ---
 
