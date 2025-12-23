@@ -4556,9 +4556,10 @@ function completeTour() {
 }
 
 function createTooltip(step, target, onNext, stepIndex, steps) {
+  const isMobile = window.innerWidth < 768;
+
   // Get fresh bounding rect after scrolling completes
   const rect = target.getBoundingClientRect();
-  const isMobile = window.innerWidth < 768;
 
   const tooltip = document.createElement('div');
   tooltip.className = 'onboarding-tooltip';
@@ -4574,7 +4575,8 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
     pointer-events: auto;
     font-size: ${isMobile ? '14px' : '16px'};
     opacity: 0;
-    transition: opacity 0.2s ease-out;
+    visibility: hidden;
+    transition: opacity 0.2s ease-out, visibility 0s 0.2s;
   `;
 
   // Position tooltip based on device and step.position
@@ -4633,13 +4635,23 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
     if (!isMobile) transform = transform.replace('0', '-100%');
   }
 
-  tooltip.style.left = `${left}px`;
-  tooltip.style.top = `${top}px`;
-  tooltip.style.transform = transform;
+  // Append to DOM first while invisible
+  document.body.appendChild(tooltip);
 
-  // Fade in the tooltip after positioning
+  // Force reflow to ensure DOM is ready
+  tooltip.offsetHeight;
+
+  // Now position and show
   requestAnimationFrame(() => {
-    tooltip.style.opacity = '1';
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+    tooltip.style.transform = transform;
+    tooltip.style.visibility = 'visible';
+
+    // Fade in after positioning
+    setTimeout(() => {
+      tooltip.style.opacity = '1';
+    }, 10);
   });
 
   // Create progress dots
@@ -4744,9 +4756,11 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   const originalBoxShadow = target.style.boxShadow;
   const originalPosition = target.style.position;
   const originalZIndex = target.style.zIndex;
+  const originalOutline = target.style.outline;
 
-  // Apply highlighting styles directly to target element
-  target.style.border = '3px solid #007bff';
+  // Apply highlighting styles directly to target element (avoid changing layout)
+  target.style.outline = '3px solid #007bff';
+  target.style.outlineOffset = '-3px';
   target.style.borderRadius = '6px';
   target.style.boxShadow = '0 0 0 0 rgba(0, 123, 255, 0.7)';
   target.style.animation = 'pulse 2s infinite';
@@ -4761,6 +4775,8 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
     boxShadow: originalBoxShadow,
     position: originalPosition,
     zIndex: originalZIndex,
+    outline: originalOutline,
+    outlineOffset: '',
     animation: ''
   };
 
@@ -5002,6 +5018,14 @@ function initializeProgressiveDisclosure() {
     expertElements.forEach(el => el.style.display = 'none');
   } else if (userLevel === 'intermediate') {
     expertElements.forEach(el => el.style.display = 'none');
+  }
+
+  // Special handling for debug panel - show if user has enabled it regardless of level
+  const showDebugPanel = localStorage.getItem('showDebugPanel') === 'true';
+  if (showDebugPanel) {
+    document.querySelectorAll('.debug-wrapper.expert-feature').forEach(el => {
+      el.style.display = 'block';
+    });
   }
   // Advanced users see everything
 }

@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="ProfitPath" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
@@ -49,7 +52,31 @@
       <div class="header-actions">
         <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">💾 Scenarios</button>
         <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
-        <div class="settings-dropdown">
+        <div class="templates-dropdown">
+          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢 Templates</button>
+          <div class="templates-menu" id="templatesMenu">
+            <button class="template-option" data-template="consulting" title="Management consulting services">💼 Consulting</button>
+            <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹 Cleaning</button>
+            <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳 Landscaping</button>
+            <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧 Handyman</button>
+            <button class="template-option" data-template="fitness" title="Personal training and fitness">💪 Fitness</button>
+            <button class="template-option" data-template="photography" title="Photography and media services">📸 Photography</button>
+          </div>
+        </div>
+        <div class="export-dropdown">
+          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄 Export</button>
+          <div class="export-menu" id="exportMenu">
+            <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV Spreadsheet</button>
+            <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
+            <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF Report</button>
+            <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML Page</button>
+            <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
+            <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗 Embed Widget</button>
+            <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
+          </div>
+        </div>
+      </div>
+      <div class="settings-dropdown">
           <div class="settings-menu" id="settingsMenu">
             <div class="settings-section">
               <h4>Experience Level</h4>
@@ -76,29 +103,6 @@
                 <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
               </div>
             </div>
-          </div>
-        </div>
-        <div class="templates-dropdown">
-          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢 Templates</button>
-          <div class="templates-menu" id="templatesMenu">
-            <button class="template-option" data-template="consulting" title="Management consulting services">💼 Consulting</button>
-            <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹 Cleaning</button>
-            <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳 Landscaping</button>
-            <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧 Handyman</button>
-            <button class="template-option" data-template="fitness" title="Personal training and fitness">💪 Fitness</button>
-            <button class="template-option" data-template="photography" title="Photography and media services">📸 Photography</button>
-          </div>
-        </div>
-        <div class="export-dropdown">
-          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄 Export</button>
-          <div class="export-menu" id="exportMenu">
-            <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV Spreadsheet</button>
-            <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
-            <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF Report</button>
-            <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML Page</button>
-            <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
-            <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗 Embed Widget</button>
-            <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
           </div>
         </div>
         <button class="settings-cog-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings">⚙️</button>
@@ -380,7 +384,7 @@
           </div>
 
           <!-- Dedicated Break-even Section -->
-          <div class="break-even-section-wrapper">
+          <div class="break-even-section-wrapper" style="margin-top: 20px;">
             <div class="break-even-kpis">
               <div class="kpi">
                 <div class="k">Break-even clients</div>
