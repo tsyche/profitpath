@@ -2487,8 +2487,17 @@ function closeMobileMenu() {
     // Auto-collapse all submenus when closing menu
     const exportOptions = $('#mobileExportOptions');
     const templatesOptions = $('#mobileTemplatesOptions');
+    const settingsSection = document.querySelector('.mobile-menu .settings-section');
     if (exportOptions) exportOptions.style.display = 'none';
     if (templatesOptions) templatesOptions.style.display = 'none';
+    if (settingsSection) {
+      settingsSection.style.display = 'none';
+      // Clean up event listeners
+      if (settingsSection._cleanupSettingsListener) {
+        settingsSection._cleanupSettingsListener();
+        delete settingsSection._cleanupSettingsListener;
+      }
+    }
   }
 }
 
@@ -3121,6 +3130,36 @@ function wire(skipLocalStorageLoading = false) {
     });
   }
 
+  // Function to refresh desktop settings dropdown with current values
+  function refreshDesktopSettings() {
+    try {
+      const settings = loadSettings ? loadSettings() : {};
+
+      // Update experience level radios
+      const experienceRadios = document.querySelectorAll('input[name="experienceLevel"]');
+      experienceRadios.forEach(radio => {
+        radio.checked = radio.value === settings.experienceLevel;
+      });
+
+      // Update feature checkboxes
+      const checkboxes = document.querySelectorAll('#settingsMenu input[type="checkbox"]');
+      checkboxes.forEach(checkbox => {
+        const settingKey = checkbox.id;
+        checkbox.checked = settings[settingKey];
+      });
+    } catch (error) {
+      console.warn('Error refreshing desktop settings:', error);
+    }
+  }
+
+  // Global settings change listener - refresh desktop settings when any setting changes
+  window.addEventListener('settingsChanged', () => {
+    setTimeout(refreshDesktopSettings, 10); // Small delay to ensure settings are saved
+  });
+
+  // Initialize desktop settings on page load
+  setTimeout(refreshDesktopSettings, 100);
+
   // Desktop Settings Cog Button
   const settingsCogBtn = $('#settingsCogBtn');
   if (settingsCogBtn) {
@@ -3137,6 +3176,20 @@ function wire(skipLocalStorageLoading = false) {
       } else {
         // Close other dropdowns and open this one
         closeAllDropdowns();
+        // Refresh settings values before showing
+        refreshDesktopSettings();
+
+        // Position the menu directly under the cog button
+        const menu = dropdown.querySelector('.settings-menu');
+        if (menu) {
+          const buttonRect = settingsCogBtn.getBoundingClientRect();
+          menu.style.position = 'fixed';
+          menu.style.left = `${buttonRect.left + buttonRect.width / 2}px`;
+          menu.style.top = `${buttonRect.bottom + 4}px`;
+          menu.style.transform = 'translateX(-50%)';
+          menu.style.right = 'auto';
+        }
+
         dropdown.classList.add('active');
       }
     });
@@ -3371,6 +3424,30 @@ function wire(skipLocalStorageLoading = false) {
 
                   mobileSettingsBtn.parentNode.insertBefore(settingsSection, mobileSettingsBtn.nextSibling);
 
+                  // Function to refresh mobile checkboxes after settings change
+                  const refreshMobileCheckboxes = () => {
+                    const currentSettings = loadSettings ? loadSettings() : {};
+                    const mobileCheckboxes = settingsSection.querySelectorAll('input[type="checkbox"]');
+                    mobileCheckboxes.forEach(checkbox => {
+                      const settingKey = checkbox.id.replace('mobile', '').replace(/^\w/, c => c.toLowerCase());
+                      checkbox.checked = currentSettings[settingKey];
+                    });
+                    // Also refresh experience level radios
+                    const mobileRadios = settingsSection.querySelectorAll('input[name="mobileExperienceLevel"]');
+                    mobileRadios.forEach(radio => {
+                      radio.checked = radio.value === currentSettings.experienceLevel;
+                    });
+                  };
+
+                  // Listen for global settings changes to keep mobile UI in sync
+                  const handleSettingsChange = () => refreshMobileCheckboxes();
+                  window.addEventListener('settingsChanged', handleSettingsChange);
+
+                  // Store cleanup function for when menu closes
+                  settingsSection._cleanupSettingsListener = () => {
+                    window.removeEventListener('settingsChanged', handleSettingsChange);
+                  };
+
                   // Initialize with current settings
                   const settings = loadSettings ? loadSettings() : {};
                   const experienceRadios = settingsSection.querySelectorAll('input[name="mobileExperienceLevel"]');
@@ -3379,6 +3456,9 @@ function wire(skipLocalStorageLoading = false) {
                     radio.addEventListener('change', (e) => {
                       if (setExperienceLevel) setExperienceLevel(e.target.value);
                       if (updateUIForSettings) updateUIForSettings();
+                      // Refresh mobile checkboxes to reflect new feature gates
+                      setTimeout(refreshMobileCheckboxes, 10);
+                      // Desktop settings will be refreshed automatically via settingsChanged event
                     });
                   });
 
@@ -3389,6 +3469,7 @@ function wire(skipLocalStorageLoading = false) {
                     checkbox.addEventListener('change', (e) => {
                       if (updateSetting) updateSetting(settingKey, e.target.checked);
                       if (updateUIForSettings) updateUIForSettings();
+                      // Desktop settings will be refreshed automatically via settingsChanged event
                     });
                   });
                 }

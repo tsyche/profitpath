@@ -86,6 +86,10 @@ export function loadSettings() {
 export function saveSettings(settings) {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    // Dispatch custom event to notify UI of settings changes
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('settingsChanged', { detail: settings }));
+    }
   } catch (error) {
     console.warn('Failed to save settings:', error);
   }

@@ -1356,9 +1356,6 @@ input[type="checkbox"]{
 
 .settings-menu {
   display: none;
-  position: absolute;
-  right: -8px;
-  top: 100%;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -1368,7 +1365,6 @@ input[type="checkbox"]{
   min-width: 280px;
   max-width: 320px;
   padding: var(--gap);
-  margin-top: 0.25rem;
 }
 
 .settings-dropdown.active .settings-menu {
