@@ -1699,3 +1699,196 @@ input[type="checkbox"]{
   }
 }
 
+/* Onboarding System Styles */
+.onboarding-dialog-overlay {
+  backdrop-filter: blur(4px);
+}
+
+/* FORCE all text in onboarding elements to be visible - highest priority */
+.onboarding-dialog-overlay,
+.onboarding-dialog-overlay *,
+.onboarding-tooltip,
+.onboarding-tooltip * {
+  color: #333 !important;
+}
+
+.onboarding-dialog-overlay h1,
+.onboarding-dialog-overlay h2,
+.onboarding-dialog-overlay h3,
+.onboarding-dialog-overlay h4,
+.onboarding-tooltip h1,
+.onboarding-tooltip h2,
+.onboarding-tooltip h3,
+.onboarding-tooltip h4 {
+  color: #222 !important;
+  font-weight: bold !important;
+}
+
+.onboarding-dialog-overlay p,
+.onboarding-dialog-overlay span,
+.onboarding-dialog-overlay div:not(.industry-option):not(.settings-section),
+.onboarding-tooltip p,
+.onboarding-tooltip span,
+.onboarding-tooltip div {
+  color: #555 !important;
+}
+
+.onboarding-dialog-overlay button,
+.onboarding-tooltip button {
+  color: #333 !important;
+}
+
+/* Industry options get special styling */
+.onboarding-dialog-overlay .industry-option * {
+  color: #333 !important;
+}
+
+.onboarding-dialog-overlay .industry-name {
+  color: #222 !important;
+  font-weight: bold !important;
+}
+
+.onboarding-dialog-overlay .industry-desc {
+  color: #666 !important;
+}
+
+.onboarding-dialog-overlay .welcome-content,
+.onboarding-dialog-overlay .welcome-content *,
+.onboarding-dialog-overlay .success-content,
+.onboarding-dialog-overlay .success-content * {
+  color: #555 !important;
+}
+
+.industry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.industry-option {
+  padding: 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  background: white;
+}
+
+.industry-option:hover {
+  border-color: #007bff;
+  background: #f8f9ff;
+  transform: translateY(-2px);
+}
+
+.industry-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.industry-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
+.industry-desc {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.onboarding-tooltip {
+  font-family: inherit;
+  animation: tooltipFadeIn 0.3s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -100%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+  }
+}
+
+/* Tour highlighting styles */
+[style*="animation: pulse"] {
+  animation-fill-mode: both;
+}
+
+.enhanced-tooltip {
+  animation: tooltipFadeIn 0.2s ease-out;
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.help-button {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text);
+  margin-left: 8px;
+  transition: all 0.2s ease;
+}
+
+.help-button:hover {
+  transform: scale(1.05);
+  background: var(--accent, #007bff);
+  color: white;
+}
+
+.help-button-inline {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+  margin-left: 8px;
+  transition: all 0.2s ease;
+}
+
+.help-button-inline:hover {
+  background: var(--accent, #007bff);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Progressive disclosure classes */
+.advanced-feature {
+  display: block; /* Will be hidden by JavaScript based on user level */
+}
+
+.expert-feature {
+  display: block; /* Will be hidden by JavaScript based on user level */
+}
+

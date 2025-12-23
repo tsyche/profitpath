@@ -38,7 +38,8 @@ export const FEATURE_GATES = {
     showComparisonTools: false,
     showExportOptions: false,
     showDebugPanel: false,
-    showPerformanceMetrics: false
+    showPerformanceMetrics: false,
+    showTooltips: true
   },
 
   // Intermediate: Some advanced features
@@ -48,7 +49,8 @@ export const FEATURE_GATES = {
     showComparisonTools: true,
     showExportOptions: false,
     showDebugPanel: false,
-    showPerformanceMetrics: false
+    showPerformanceMetrics: false,
+    showTooltips: true
   },
 
   // Advanced: All features
@@ -58,7 +60,8 @@ export const FEATURE_GATES = {
     showComparisonTools: true,
     showExportOptions: true,
     showDebugPanel: true,
-    showPerformanceMetrics: true
+    showPerformanceMetrics: true,
+    showTooltips: true
   }
 };
 

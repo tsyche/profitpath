@@ -66,7 +66,7 @@
                 <label><input type="checkbox" id="showDetailedBreakdown"> Detailed breakdowns</label>
                 <label><input type="checkbox" id="showComparisonTools"> Scenario comparison</label>
                 <label><input type="checkbox" id="showExportOptions"> Export options</label>
-                <label><input type="checkbox" id="showDebugPanel"> Debug panel</label>
+                <label><input type="checkbox" id="showDebugPanel" class="expert-feature"> Debug panel</label>
               </div>
             </div>
             <div class="settings-section">
@@ -93,11 +93,11 @@
           <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄 Export</button>
           <div class="export-menu" id="exportMenu">
             <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV Spreadsheet</button>
-            <button class="export-option" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
-            <button class="export-option" data-format="pdf" title="Export as PDF report">📋 PDF Report</button>
-            <button class="export-option" data-format="html" title="Export as HTML page">🌐 HTML Page</button>
+            <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
+            <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF Report</button>
+            <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML Page</button>
             <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
-            <button class="export-option" data-format="embed" title="Get embeddable widget code">🔗 Embed Widget</button>
+            <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗 Embed Widget</button>
             <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
           </div>
         </div>
@@ -140,9 +140,10 @@
                 <button class="btn mobile-submenu-btn" id="mobileExportPdf">📋 PDF Report</button>
                 <button class="btn mobile-submenu-btn" id="mobileExportHtml">🌐 HTML Page</button>
                 <button class="btn mobile-submenu-btn" id="mobileExportEmail">📧 Email Report</button>
-                <button class="btn mobile-submenu-btn" id="mobileExportEmbed">🔗 Embed Widget</button>
+                <button class="btn mobile-submenu-btn expert-feature" id="mobileExportEmbed">🔗 Embed Widget</button>
               </div>
             </div>
+            <button class="btn mobile-menu-btn" id="mobileTourBtn">🎯 Take Tour</button>
             <button class="btn mobile-menu-btn" id="mobileSettingsBtn">⚙️ Settings</button>
           </div>
         </div>
@@ -234,16 +235,18 @@
               </label>
             </div>
 
-            <div class="field">
-              <label>Employees</label>
-              <input id="employees" type="number" min="1" step="1" value="1" />
-              <div class="hint">Assumes 2080 paid hours/year per employee.</div>
-            </div>
+            <div class="team-config-group">
+              <div class="field">
+                <label>Employees</label>
+                <input id="employees" type="number" min="1" step="1" value="1" />
+                <div class="hint">Assumes 2080 paid hours/year per employee.</div>
+              </div>
 
-            <div class="field">
-              <label>Annual pay per employee</label>
-              <input id="employeePay" type="number" min="0" step="1000" value="60000" />
-              <div class="hint">Payroll = (employees − 1) × pay ("you" excluded).</div>
+              <div class="field">
+                <label>Annual pay per employee</label>
+                <input id="employeePay" type="number" min="0" step="1000" value="60000" />
+                <div class="hint">Payroll = (employees − 1) × pay ("you" excluded).</div>
+              </div>
             </div>
 
             <div class="field">
@@ -366,16 +369,6 @@
             </div>
 
             <div class="kpi">
-              <div class="k">Break-even clients</div>
-              <div class="v" id="kpiBreakEvenClients">∞</div>
-              <div class="sub">Clients needed to break even</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Break-even revenue</div>
-              <div class="v" id="kpiBreakEvenRevenue">$∞</div>
-              <div class="sub">Annual revenue needed</div>
-            </div>
-            <div class="kpi">
               <div class="k">Contribution margin</div>
               <div class="v" id="kpiContributionMargin">$0</div>
               <div class="sub">Per client (revenue - variables)</div>
@@ -385,18 +378,36 @@
           <div style="margin-top: 10px;" class="smallprint">
             Assumptions: 2080 paid hours/year per employee; productive utilization converts paid hours into service hours.
           </div>
-          
-          <!-- Simple chart: Revenue composition (variable costs vs contribution) -->
-          <div id="simpleChart" class="simple-chart" aria-hidden="true"></div>
 
-          <!-- Break-even analysis section -->
-          <div id="breakEvenAnalysis" class="break-even-section" style="display: none;"></div>
+          <!-- Dedicated Break-even Section -->
+          <div class="break-even-section-wrapper">
+            <div class="break-even-kpis">
+              <div class="kpi">
+                <div class="k">Break-even clients</div>
+                <div class="v" id="kpiBreakEvenClients">∞</div>
+                <div class="sub">Clients needed to break even</div>
+              </div>
+              <div class="kpi">
+                <div class="k">Break-even revenue</div>
+                <div class="v" id="kpiBreakEvenRevenue">$∞</div>
+                <div class="sub">Annual revenue needed</div>
+              </div>
+            </div>
+            <!-- Break-even analysis section -->
+            <div id="breakEvenAnalysis" class="break-even-section" style="display: none;"></div>
+          </div>
 
-          <!-- Rich visualizations section -->
-          <div id="richVisualizations" class="rich-visualizations" style="display: none;"></div>
+          <!-- Charts and Visualizations Container -->
+          <div class="charts-visualizations-container">
+            <!-- Simple chart: Revenue composition (variable costs vs contribution) -->
+            <div id="simpleChart" class="simple-chart" aria-hidden="true"></div>
+
+            <!-- Rich visualizations section -->
+            <div id="richVisualizations" class="rich-visualizations" style="display: none;"></div>
+          </div>
 
           <!-- Debug panel (collapsible) placed at the bottom of the Outputs card -->
-          <div class="debug-wrapper">
+          <div class="debug-wrapper expert-feature">
             <button id="debugToggle" class="debug-toggle" aria-expanded="false" aria-controls="debugBody">▶ Debug</button>
             <div id="debugBody" class="debug-body collapsed" aria-hidden="true">
               <pre id="debugPanel" class="debug-pre">Debug: no data yet</pre>

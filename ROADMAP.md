@@ -60,15 +60,7 @@ Business Intelligence & Analytics (Core Enhancement)
 
 Enhanced User Experience (UX Layer)
 
-7. Guided Experience & Onboarding
-
-    - Interactive walkthrough for new users
-    - Industry-specific setup wizards
-    - Progressive disclosure of advanced features
-    - Contextual help tooltips
-    - Effort: ~4-5 hours
-
-8. Accessibility & Mobile Experience
+7. Accessibility & Mobile Experience
     - Full keyboard navigation
     - Screen reader optimization
     - Mobile-responsive design improvements
@@ -147,6 +139,6 @@ Enterprise Features (Scale Layer)
 Notes
 
 - The repo contains a stable, production-ready profitability simulator with comprehensive error handling, performance optimizations, PWA capabilities, and extensive export functionality.
-- **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, advanced testing infrastructure (Vite, Vitest, ESLint), scenario comparison tools, enhanced CSV export with professional headers and shareable URL encoding, improved mobile hamburger menu with better UX, icon consistency, and navigation, modular calculation engine refactoring with caching and debug capabilities, and shareable URLs & collaboration with social media sharing and embeddable calculator widgets.
+- **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, advanced testing infrastructure (Vite, Vitest, ESLint), scenario comparison tools, enhanced CSV export with professional headers and shareable URL encoding, improved mobile hamburger menu with better UX, icon consistency, and navigation, modular calculation engine refactoring with caching and debug capabilities, shareable URLs & collaboration with social media sharing and embeddable calculator widgets, and comprehensive guided experience & onboarding system with interactive walkthroughs, industry-specific setup wizards, progressive feature disclosure, and contextual help tooltips.
 - **Next priorities**: Advanced data visualization and multi-currency support for enhanced decision making and global adoption.
 - Enterprise features represent significant scope expansion and may require backend infrastructure changes.

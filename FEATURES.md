@@ -49,6 +49,10 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Progressive Disclosure**: Beginner-friendly interface with optional advanced features
 - **Experience Levels**: Beginner, Intermediate, and Advanced user modes with appropriate feature sets
 - **Feature Gating**: Advanced features unlocked via settings panel for power users
+- **Guided Onboarding**: Interactive walkthrough for new users with step-by-step guidance
+- **Industry Setup Wizards**: Tailored configuration wizards for different business types (consulting, cleaning, landscaping, fitness, photography)
+- **Contextual Help Tooltips**: Smart tooltips that appear on hover to explain features
+- **Help Center**: Comprehensive help system accessible via ❓ button in header
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices
 - **Interactive Charts**: Hover tooltips, pinnable legends, detailed breakdowns
 - **Mobile Hamburger Menu**: Full feature access on mobile devices with intuitive navigation, consistent icons, and auto-collapsing submenus

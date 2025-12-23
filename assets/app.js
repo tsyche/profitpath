@@ -2556,12 +2556,20 @@ function showEmbedDialog(embedCode) {
       <p>Copy this code to embed the calculator on your website:</p>
       <textarea style="width: 100%; height: 150px; font-family: monospace; font-size: 12px;" readonly>${embedCode}</textarea>
       <div style="margin-top: 15px; text-align: right;">
-        <button onclick="this.closest('div').parentElement.remove()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+        <button class="embed-close-btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
       </div>
     </div>
   `;
 
   document.body.appendChild(dialog);
+
+  // Add event listener for close button
+  setTimeout(() => {
+    const closeBtn = dialog.querySelector('.embed-close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => dialog.remove());
+    }
+  }, 10);
 }
 
 function shareScenario() {
@@ -3318,7 +3326,7 @@ function wire(skipLocalStorageLoading = false) {
 
         // Position the menu directly under the cog button
         const menu = dropdown.querySelector('.settings-menu');
-        if (menu) {
+      if (menu) {
           const buttonRect = settingsCogBtn.getBoundingClientRect();
           menu.style.position = 'fixed';
           menu.style.left = `${buttonRect.left + buttonRect.width / 2}px`;
@@ -3500,6 +3508,26 @@ function wire(skipLocalStorageLoading = false) {
         if (mobileMenuOverlay.classList.contains('active')) {
           // Menu opened, attach settings handler
           setTimeout(() => {
+            // Mobile Tour Button
+            const mobileTourBtn = $('#mobileTourBtn');
+            if (mobileTourBtn && !mobileTourBtn._handlerAttached) {
+              mobileTourBtn._handlerAttached = true;
+              mobileTourBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                startGuidedTour();
+                // Close mobile menu after starting tour
+                setTimeout(() => {
+                  const overlay = $('#mobileMenuOverlay');
+                  const hamburger = $('#hamburgerBtn');
+                  if (overlay && hamburger) {
+                    overlay.classList.remove('active');
+                    hamburger.classList.remove('active');
+                  }
+                }, 100);
+              });
+            }
+
             const mobileSettingsBtn = $('#mobileSettingsBtn');
             if (mobileSettingsBtn && !mobileSettingsBtn._settingsHandlerAttached) {
               mobileSettingsBtn._settingsHandlerAttached = true;
@@ -4081,3 +4109,902 @@ if ('serviceWorker' in navigator) {
 
 // Initialize embeddable widget if in embed mode
 initializeEmbeddableWidget();
+
+// Onboarding system for guided experience
+function initializeOnboarding() {
+  // Check if user has completed onboarding
+  const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
+
+  // Always show help button (users can access help anytime)
+  addOnboardingHelpButton();
+
+  // Show welcome message for new users who haven't completed onboarding
+  if (!onboardingCompleted) {
+    setTimeout(() => {
+      showWelcomeDialog();
+    }, 1000);
+  }
+
+  // Initialize contextual tooltips
+  initializeContextualTooltips();
+
+  // Initialize progressive disclosure
+  initializeProgressiveDisclosure();
+}
+
+function addOnboardingHelpButton() {
+  // Position the help button below the "Static simulator" badge
+  const badge = document.querySelector('.badge');
+  if (!badge) return;
+
+  const helpButton = document.createElement('button');
+  helpButton.className = 'help-button-inline';
+  helpButton.innerHTML = '❓';
+  helpButton.title = 'Help & Guided Tour';
+  helpButton.style.cssText = `
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+    margin-left: 8px;
+    transition: all 0.2s ease;
+  `;
+
+  helpButton.addEventListener('click', showHelpMenu);
+  helpButton.addEventListener('mouseenter', (e) => {
+    e.target.style.background = 'var(--accent, #007bff)';
+    e.target.style.color = 'white';
+    e.target.style.transform = 'scale(1.1)';
+  });
+  helpButton.addEventListener('mouseleave', (e) => {
+    e.target.style.background = 'var(--panel)';
+    e.target.style.color = 'var(--text)';
+    e.target.style.transform = 'scale(1)';
+  });
+
+  // Insert after the badge
+  badge.parentNode.insertBefore(helpButton, badge.nextSibling);
+}
+
+function showWelcomeDialog() {
+  const dialog = createOnboardingDialog({
+    title: 'Welcome to ProfitPath! 🎉',
+    content: `
+      <div class="welcome-content">
+        <p>Get started with your profitability analysis in just a few minutes.</p>
+        <p>Would you like a quick guided tour of the key features?</p>
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button class="welcome-btn" data-action="tour" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+          Take Tour
+        </button>
+        <button class="welcome-btn" data-action="industry" style="background: #f8f9fa; color: #333; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+          Choose Industry
+        </button>
+        <button class="welcome-btn" data-action="skip" style="background: transparent; color: #666; border: none; padding: 10px 20px; cursor: pointer;">
+          Skip for Now
+        </button>
+      </div>
+    `,
+    buttons: [] // We'll handle buttons manually
+  });
+
+  // Add event listeners after dialog is created
+  setTimeout(() => {
+    document.querySelectorAll('.welcome-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const action = e.currentTarget.dataset.action;
+        dialog.remove(); // Close the dialog
+
+        if (action === 'tour') {
+          startGuidedTour();
+        } else if (action === 'industry') {
+          showIndustrySelector();
+        }
+        // Skip action just closes the dialog
+      });
+    });
+  }, 100);
+
+  document.body.appendChild(dialog);
+}
+
+function showIndustrySelector() {
+  const industries = [
+    { id: 'consulting', name: 'Consulting', icon: '💼', description: 'Professional services, advisory, strategy' },
+    { id: 'cleaning', name: 'Cleaning Services', icon: '🧽', description: 'Residential and commercial cleaning' },
+    { id: 'landscaping', name: 'Landscaping', icon: '🌿', description: 'Garden maintenance, lawn care' },
+    { id: 'fitness', name: 'Fitness & Wellness', icon: '🏋️', description: 'Personal training, gym services' },
+    { id: 'photography', name: 'Photography', icon: '📷', description: 'Event, portrait, commercial photography' },
+    { id: 'other', name: 'Other Service Business', icon: '🏭', description: 'Custom service business setup' }
+  ];
+
+  const industryGrid = industries.map(industry => `
+    <div class="industry-option" data-industry="${industry.id}">
+      <div class="industry-icon" style="font-size: 32px; margin-bottom: 8px;">${industry.icon}</div>
+      <div class="industry-name">${industry.name}</div>
+      <div class="industry-desc">${industry.description}</div>
+    </div>
+  `).join('');
+
+  const dialog = createOnboardingDialog({
+    title: 'What type of service business do you run?',
+    content: `
+      <div class="industry-grid">${industryGrid}</div>
+      <p style="margin-top: 16px; color: var(--muted);">This helps us provide tailored guidance and templates.</p>
+    `,
+    buttons: [
+      { text: 'Continue', action: () => {}, primary: true },
+      { text: 'Skip', action: () => {} }
+    ]
+  });
+
+  // Add click handlers for industry options
+  setTimeout(() => {
+    document.querySelectorAll('.industry-option').forEach(option => {
+      option.addEventListener('click', () => {
+        const industryId = option.dataset.industry;
+        selectIndustry(industryId, dialog);
+      });
+    });
+  }, 100);
+
+  document.body.appendChild(dialog);
+}
+
+function selectIndustry(industryId, dialog) {
+  // Save selected industry
+  localStorage.setItem('selectedIndustry', industryId);
+
+  // Load industry-specific template
+  loadOnboardingIndustryTemplate(industryId);
+
+  // Close dialog and show success message
+  dialog.remove();
+
+  const successDialog = createOnboardingDialog({
+    title: 'Great choice! 🎯',
+    content: `
+      <div class="success-content">
+        <p>We've loaded a template configuration for your industry.</p>
+        <p>Would you like to take a quick tour to learn how to customize it?</p>
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button class="success-btn" data-action="tour" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+          Show Me How
+        </button>
+        <button class="success-btn" data-action="explore" style="background: #f8f9fa; color: #333; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+          Explore on My Own
+        </button>
+      </div>
+    `,
+    buttons: [] // We'll handle buttons manually
+  });
+
+  // Add event listeners after dialog is created
+  setTimeout(() => {
+    document.querySelectorAll('.success-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const action = e.currentTarget.dataset.action;
+        successDialog.remove(); // Close the dialog
+
+        if (action === 'tour') {
+          startGuidedTour();
+        }
+        // Explore action just closes the dialog
+      });
+    });
+  }, 100);
+
+  document.body.appendChild(successDialog);
+}
+
+function loadOnboardingIndustryTemplate(industryId) {
+  const templates = {
+    consulting: {
+      offerings: [{
+        name: 'Strategy Consulting',
+        priceMonthly: 5000,
+        sessionsPerYear: 12,
+        hoursPerSession: 8,
+        variableCostPerSession: 200
+      }]
+    },
+    cleaning: {
+      offerings: [{
+        name: 'Standard Cleaning',
+        priceMonthly: 150,
+        sessionsPerYear: 4,
+        hoursPerSession: 2,
+        variableCostPerSession: 15
+      }]
+    },
+    landscaping: {
+      offerings: [{
+        name: 'Weekly Lawn Care',
+        priceMonthly: 200,
+        sessionsPerYear: 52,
+        hoursPerSession: 1,
+        variableCostPerSession: 25
+      }]
+    },
+    fitness: {
+      offerings: [{
+        name: 'Personal Training',
+        priceMonthly: 300,
+        sessionsPerYear: 48,
+        hoursPerSession: 1,
+        variableCostPerSession: 0
+      }]
+    },
+    photography: {
+      offerings: [{
+        name: 'Wedding Photography',
+        priceMonthly: 2500,
+        sessionsPerYear: 6,
+        hoursPerSession: 8,
+        variableCostPerSession: 100
+      }]
+    }
+  };
+
+  const template = templates[industryId];
+  if (template) {
+    // Apply template to current scenario
+    if (template.offerings) {
+      state.offerings = template.offerings.map(o => ({
+        ...o,
+        id: uuid(),
+        mixPct: 100 / template.offerings.length,
+        currentClients: 0
+      }));
+    }
+
+    // Refresh the UI
+    render();
+    persistState();
+  }
+}
+
+function startGuidedTour() {
+  const tour = createGuidedTour();
+  tour.start();
+}
+
+// Global tour state
+let tourSteps = [];
+let tourActive = false;
+
+function createGuidedTour() {
+  const isMobile = window.innerWidth < 768;
+  tourSteps = [
+    {
+      target: '.logo',
+      title: 'Welcome to ProfitPath',
+      content: 'This is your profitability dashboard. Let\'s take a quick tour of the key areas.',
+      position: 'bottom'
+    },
+    {
+      target: '.inputs-fields .field:first-child',
+      title: 'Choose Your Mode',
+      content: 'Select \'Forecast\' mode to plan capacity for a target client count. Use \'Current\' mode to analyze your active existing client base.',
+      position: 'right'
+    },
+    {
+      target: '.team-config-group',
+      title: 'Team Configuration',
+      content: 'Enter your team size and compensation details. The calculator assumes 2080 paid hours per year per employee.',
+      position: 'right'
+    },
+    {
+      target: '.offerings-section .section-h',
+      title: 'Define Your Services',
+      content: 'Add your service offerings with pricing, frequency, and costs. Each offering can have different terms.',
+      position: 'right'
+    },
+    {
+      target: 'aside.card .card-h',
+      title: 'Key Profitability Metric',
+      content: 'This shows your net income after all expenses. Green indicates profitability, red indicates losses.',
+      position: 'top'
+    },
+    {
+      target: 'aside.card .capacity',
+      title: 'Capacity Utilization',
+      content: 'Monitor how busy your team is. Aim for 80-90% utilization to balance profitability and client service.',
+      position: 'left'
+    },
+    {
+      target: '.break-even-section-wrapper',
+      title: 'Break-even Analysis',
+      content: 'See how many clients you need to break even and detailed break-even analysis.',
+      position: 'left'
+    },
+    {
+      target: '.charts-visualizations-container',
+      title: 'Charts & Visualizations',
+      content: 'Explore interactive charts and graphs that help visualize your business metrics and financial analysis.',
+      position: 'top'
+    },
+    {
+      target: isMobile ? '#hamburgerBtn' : '.header-actions',
+      title: 'Save, Export & Share',
+      content: isMobile ? 'Access all saving, exporting, and sharing tools from the menu.' : 'Save scenarios for comparison, generate professional reports, or share your analysis with stakeholders.',
+      position: 'bottom'
+    }
+  ];
+
+  tourActive = true;
+
+  return {
+    start: () => showTourStep(0)
+  };
+}
+
+function showTourStep(stepIndex) {
+  if (!tourActive || stepIndex >= tourSteps.length) {
+    completeTour();
+    return;
+  }
+
+  const step = tourSteps[stepIndex];
+  let target = document.querySelector(step.target);
+
+  // Try fallback selectors if primary target not found
+  if (!target) {
+    const fallbacks = {
+      '.header': '.container',
+      '.offering-item': '.card',
+      '.metrics-section': '.card',
+      '#scenariosBtn': '.btn',
+      '#shareBtn': '.btn'
+    };
+    target = document.querySelector(fallbacks[step.target] || step.target);
+  }
+
+  if (!target) {
+    console.warn(`Tour step ${stepIndex} target not found: ${step.target}, skipping...`);
+    showTourStep(stepIndex + 1);
+    return;
+  }
+
+  // Scroll the target element into view
+  target.scrollIntoView({
+    behavior: 'smooth',
+    block: 'center',
+    inline: 'center'
+  });
+
+  // Simple, reliable scroll completion detection
+  let scrollCompleteTimeout;
+  const positionTooltipAfterScroll = () => {
+    clearTimeout(scrollCompleteTimeout);
+    scrollCompleteTimeout = setTimeout(() => {
+      // Scrolling has completed, now position the tooltip
+      const tooltip = createTooltip(step, target, null, stepIndex, tourSteps);
+      document.body.appendChild(tooltip);
+
+      // Add keyboard support
+      const handleKeydown = (e) => {
+        if (e.key === 'Escape' && tourActive) {
+          document.removeEventListener('keydown', handleKeydown);
+          exitTour();
+        }
+      };
+      document.addEventListener('keydown', handleKeydown);
+
+      // Store cleanup function
+      tooltip._cleanupKeyboard = () => {
+        document.removeEventListener('keydown', handleKeydown);
+      };
+    }, 600); // Wait 600ms for smooth scroll to complete
+  };
+
+  // Position tooltip immediately for non-scrolling cases, and after scroll for scrolling cases
+  setTimeout(positionTooltipAfterScroll, 100); // Short delay for initial positioning
+  window.addEventListener('scroll', positionTooltipAfterScroll);
+
+  // Clean up scroll listener after tooltip is positioned
+  setTimeout(() => {
+    window.removeEventListener('scroll', positionTooltipAfterScroll);
+  }, 1200);
+}
+
+function exitTour() {
+  tourActive = false;
+  // Remove all tooltips and overlays
+  document.querySelectorAll('.onboarding-tooltip, .onboarding-overlay').forEach(el => el.remove());
+
+  // Show exit confirmation
+  const exitDialog = createOnboardingDialog({
+    title: 'Tour Exited',
+    content: `
+      <p>You can resume the guided tour anytime by clicking the ❓ help button in the top-right corner.</p>
+      <p>Feel free to explore the features at your own pace!</p>
+    `,
+    buttons: [
+      { text: 'Got it!', action: () => {} }
+    ]
+  });
+
+  document.body.appendChild(exitDialog);
+}
+
+function completeTour() {
+  tourActive = false;
+  localStorage.setItem('onboardingCompleted', 'true');
+
+  const completionDialog = createOnboardingDialog({
+    title: 'Tour Complete! 🎉',
+    content: `
+      <p>You now know the basics of ProfitPath!</p>
+      <p>Explore the features at your own pace. Use the ❓ help button anytime for guidance.</p>
+    `,
+    buttons: [
+      { text: 'Got it!', action: () => {}, primary: true }
+    ]
+  });
+
+  document.body.appendChild(completionDialog);
+}
+
+function createTooltip(step, target, onNext, stepIndex, steps) {
+  // Get fresh bounding rect after scrolling completes
+  const rect = target.getBoundingClientRect();
+  const isMobile = window.innerWidth < 768;
+
+  const tooltip = document.createElement('div');
+  tooltip.className = 'onboarding-tooltip';
+  tooltip.style.cssText = `
+    position: fixed;
+    z-index: 10000;
+    background: white;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-width: ${isMobile ? '280px' : '300px'};
+    pointer-events: auto;
+    font-size: ${isMobile ? '14px' : '16px'};
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+  `;
+
+  // Position tooltip based on device and step.position
+  let left, top, transform;
+
+  if (isMobile) {
+    // On mobile, always position below the element for better visibility
+    left = Math.max(10, Math.min(window.innerWidth - 290, rect.left + rect.width / 2 - 140));
+    top = rect.bottom + 10;
+    transform = 'translate(0, 0)';
+  } else {
+    switch (step.position) {
+      case 'top':
+        left = rect.left + rect.width / 2;
+        top = rect.top - 10;
+        transform = 'translate(-50%, -100%)';
+        break;
+      case 'bottom':
+        left = rect.left + rect.width / 2;
+        top = rect.bottom + 10;
+        transform = 'translate(-50%, 0)';
+        break;
+      case 'left':
+        left = rect.left - 10;
+        top = rect.top + rect.height / 2;
+        transform = 'translate(-100%, -50%)';
+        break;
+      case 'right':
+        left = rect.right + 10;
+        top = rect.top + rect.height / 2;
+        transform = 'translate(0, -50%)';
+        break;
+      default:
+        left = rect.left + rect.width / 2;
+        top = rect.bottom + 10;
+        transform = 'translate(-50%, 0)';
+    }
+  }
+
+  // Ensure tooltip stays within viewport bounds
+  const tooltipWidth = isMobile ? 280 : 300;
+  const tooltipHeight = 200; // Approximate height with navigation
+
+  if (left < 10) {
+    left = 10;
+  }
+  if (left + tooltipWidth > window.innerWidth - 10) {
+    left = window.innerWidth - tooltipWidth - 10;
+  }
+  if (top - tooltipHeight < 10) {
+    top = tooltipHeight + 10;
+    if (!isMobile) transform = transform.replace('-100%', '0');
+  }
+  if (top + tooltipHeight > window.innerHeight - 10) {
+    top = window.innerHeight - tooltipHeight - 10;
+    if (!isMobile) transform = transform.replace('0', '-100%');
+  }
+
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
+  tooltip.style.transform = transform;
+
+  // Fade in the tooltip after positioning
+  requestAnimationFrame(() => {
+    tooltip.style.opacity = '1';
+  });
+
+  // Create progress dots
+  const progressDots = steps.map((_, index) => `
+    <span class="tour-dot ${index === stepIndex ? 'active' : ''} ${index < stepIndex ? 'completed' : ''}"
+          data-step="${index}"
+          style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 2px; cursor: pointer; background: ${index === stepIndex ? '#007bff' : index < stepIndex ? '#28a745' : '#ddd'}; transition: all 0.2s;">
+    </span>
+  `).join('');
+
+  tooltip.innerHTML = `
+    <div style="position: relative; padding-right: 24px;">
+      <button class="tour-exit-btn" style="position: absolute; top: 0; right: 0; background: transparent; border: none; font-size: 16px; cursor: pointer; color: var(--text, #666); padding: 4px; line-height: 1;">✕</button>
+      <div style="font-weight: bold; margin-bottom: 8px; color: var(--text, #007bff);">${step.title}</div>
+      <div style="margin-bottom: 16px; color: var(--text, #333); line-height: 1.4;">${step.content}</div>
+
+      <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px; position: relative;">
+        <div class="tour-navigation" style="display: flex; align-items: center;">
+          ${stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: 8px; font-size: 18px; line-height: 1;">‹</button>' : '<div style="width: 32px;"></div>'}
+          <div class="tour-dots" style="display: flex; align-items: center;">${progressDots}</div>
+          ${stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background: #007bff; color: white; border: none; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; font-size: 18px; line-height: 1;">›</button>' : '<button class="tour-finish-btn" style="background: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; font-size: 16px; line-height: 1;">✓</button>'}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add event listeners for navigation
+  setTimeout(() => {
+    // Exit button
+    const exitBtn = tooltip.querySelector('.tour-exit-btn');
+    if (exitBtn) {
+      exitBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        exitTour();
+      });
+    }
+
+    // Navigation buttons
+    const prevBtn = tooltip.querySelector('.tour-arrow-prev');
+    const nextBtn = tooltip.querySelector('.tour-arrow-next');
+    const finishBtn = tooltip.querySelector('.tour-finish-btn');
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        tooltip.remove();
+        if (stepIndex > 0) {
+          showTourStep(stepIndex - 1);
+        }
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        tooltip.remove();
+        if (stepIndex < steps.length - 1) {
+          showTourStep(stepIndex + 1);
+        }
+      });
+    }
+
+    if (finishBtn) {
+      finishBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        tooltip.remove();
+        completeTour();
+      });
+    }
+
+    // Progress dots
+    const dots = tooltip.querySelectorAll('.tour-dot');
+    dots.forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const targetStep = parseInt(e.currentTarget.dataset.step);
+        tooltip.remove();
+        showTourStep(targetStep);
+      });
+    });
+  }, 50);
+
+  // Add event listener for the button
+  setTimeout(() => {
+    const nextBtn = tooltip.querySelector('.tooltip-next-btn');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        tooltip.remove();
+        if (onNext) onNext();
+      });
+    }
+  }, 10);
+
+  // Simple, reliable highlighting - add border and animation directly to target
+  const originalBorder = target.style.border;
+  const originalBorderRadius = target.style.borderRadius;
+  const originalBoxShadow = target.style.boxShadow;
+  const originalPosition = target.style.position;
+  const originalZIndex = target.style.zIndex;
+
+  // Apply highlighting styles directly to target element
+  target.style.border = '3px solid #007bff';
+  target.style.borderRadius = '6px';
+  target.style.boxShadow = '0 0 0 0 rgba(0, 123, 255, 0.7)';
+  target.style.animation = 'pulse 2s infinite';
+  target.style.position = originalPosition || 'relative';
+  target.style.zIndex = '9998';
+
+  // Store original styles for cleanup
+  tooltip._targetElement = target;
+  tooltip._originalStyles = {
+    border: originalBorder,
+    borderRadius: originalBorderRadius,
+    boxShadow: originalBoxShadow,
+    position: originalPosition,
+    zIndex: originalZIndex,
+    animation: ''
+  };
+
+  // Restore original styles when tooltip is removed
+  const originalRemove = tooltip.remove;
+  tooltip.remove = function() {
+    if (tooltip._targetElement && tooltip._originalStyles) {
+      Object.assign(tooltip._targetElement.style, tooltip._originalStyles);
+    }
+    if (tooltip._cleanupKeyboard) {
+      tooltip._cleanupKeyboard();
+    }
+    originalRemove.call(this);
+  };
+
+  return tooltip;
+}
+
+function createOnboardingDialog({ title, content, buttons }) {
+  const dialog = document.createElement('div');
+  dialog.className = 'onboarding-dialog-overlay';
+  dialog.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+  `;
+
+  const dialogContent = document.createElement('div');
+  dialogContent.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  `;
+
+  dialogContent.innerHTML = `
+    <h2 style="margin: 0 0 16px 0; color: var(--text, #333); font-size: 24px;">${title}</h2>
+    <div style="color: var(--text, #666); line-height: 1.5;">${content}</div>
+    <div style="margin-top: 24px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+      ${buttons.map((btn, index) => `
+        <button class="dialog-btn" data-action="${index}" data-primary="${btn.primary ? 'true' : 'false'}"
+                style="
+                  padding: 8px 16px;
+                  border: ${btn.primary ? 'none' : '1px solid #ddd'};
+                  border-radius: 6px;
+                  background: ${btn.primary ? '#007bff' : 'white'};
+                  color: ${btn.primary ? 'white' : '#333'};
+                  cursor: pointer;
+                  font-weight: ${btn.primary ? 'bold' : 'normal'};
+                ">
+          ${btn.text}
+        </button>
+      `).join('')}
+    </div>
+  `;
+
+  // Add event listeners for dialog buttons
+  setTimeout(() => {
+    const dialogBtns = dialogContent.querySelectorAll('.dialog-btn');
+    dialogBtns.forEach((btn, index) => {
+      btn.addEventListener('click', () => {
+        const action = buttons[index]?.action;
+        dialog.remove();
+        if (action && typeof action === 'function') {
+          action();
+        }
+      });
+    });
+  }, 10);
+
+  dialog.appendChild(dialogContent);
+  return dialog;
+}
+
+function showHelpMenu() {
+  const helpDialog = createOnboardingDialog({
+    title: 'Help & Learning Center',
+    content: `
+      <div style="display: grid; gap: 12px;">
+        <button class="help-menu-btn" data-action="tour"
+                style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
+          🎯 <strong>Take Guided Tour</strong><br>
+          <small>Step-by-step walkthrough of key features</small>
+        </button>
+
+        <button class="help-menu-btn" data-action="industry"
+                style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
+          🏢 <strong>Change Industry</strong><br>
+          <small>Switch to a different business template</small>
+        </button>
+
+        <button class="help-menu-btn" data-action="tooltips"
+                style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
+          💡 <strong>Show Tooltips</strong><br>
+          <small>Enable contextual help throughout the app</small>
+        </button>
+      </div>
+    `,
+    buttons: [
+      { text: 'Close', action: () => {} }
+    ]
+  });
+
+  // Add event listeners after dialog is created
+  setTimeout(() => {
+    document.querySelectorAll('.help-menu-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const action = e.currentTarget.dataset.action;
+        helpDialog.remove(); // Close the dialog
+
+        setTimeout(() => {
+          if (action === 'tour') {
+            startGuidedTour();
+          } else if (action === 'industry') {
+            showIndustrySelector();
+          } else if (action === 'tooltips') {
+            showContextualHelp();
+          }
+        }, 100);
+      });
+    });
+  }, 100);
+
+  document.body.appendChild(helpDialog);
+}
+
+function initializeContextualTooltips() {
+  // Add tooltips to key elements
+  const tooltipElements = [
+    { selector: '#employees', content: 'Set the number of full-time employees in your business' },
+    { selector: '#employeePay', content: 'Average annual salary per employee including benefits' },
+    { selector: '.offering-card .btn.danger', content: 'Remove this service offering from your business model' },
+    { selector: '#scenariosBtn', content: 'Save current configuration or load previous scenarios' },
+    { selector: '#shareBtn', content: 'Generate shareable link for stakeholders' },
+    { selector: '.settings-cog-btn', content: 'Customize experience level and advanced features' }
+  ];
+
+  tooltipElements.forEach(({ selector, content }) => {
+    const element = document.querySelector(selector);
+    if (element) {
+      element.title = content; // Basic tooltip
+    }
+  });
+}
+
+function showContextualHelp() {
+  // Enable enhanced tooltips
+  const tooltipElements = document.querySelectorAll('[title]');
+  tooltipElements.forEach(el => {
+    if (!el.dataset.tooltipEnabled) {
+      el.dataset.originalTitle = el.title;
+      el.dataset.tooltipEnabled = 'true';
+      el.title = ''; // Remove basic tooltip
+
+      el.addEventListener('mouseenter', showEnhancedTooltip);
+      el.addEventListener('mouseleave', hideEnhancedTooltip);
+    }
+  });
+
+  // Update settings to reflect tooltips are enabled
+  if (updateSetting) {
+    updateSetting('showTooltips', true);
+  }
+
+  // Show confirmation
+  const notification = document.createElement('div');
+  notification.textContent = 'Contextual tooltips enabled! Hover over elements to see help.';
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent, #007bff);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    z-index: 10002;
+    font-size: 14px;
+  `;
+  document.body.appendChild(notification);
+  setTimeout(() => notification.remove(), 3000);
+}
+
+function showEnhancedTooltip(e) {
+  const content = e.target.dataset.originalTitle;
+  if (!content) return;
+
+  const tooltip = document.createElement('div');
+  tooltip.className = 'enhanced-tooltip';
+  tooltip.textContent = content;
+  tooltip.style.cssText = `
+    position: fixed;
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 10002;
+    pointer-events: none;
+    max-width: 200px;
+    word-wrap: break-word;
+  `;
+
+  document.body.appendChild(tooltip);
+
+  const rect = e.target.getBoundingClientRect();
+  tooltip.style.left = `${rect.left + rect.width / 2}px`;
+  tooltip.style.top = `${rect.top - 8}px`;
+  tooltip.style.transform = 'translate(-50%, -100%)';
+
+  e.target._tooltip = tooltip;
+}
+
+function hideEnhancedTooltip(e) {
+  if (e.target._tooltip) {
+    e.target._tooltip.remove();
+    delete e.target._tooltip;
+  }
+}
+
+function initializeProgressiveDisclosure() {
+  const userLevel = localStorage.getItem('userExperienceLevel') || 'beginner';
+
+  // Hide advanced features based on user level
+  const advancedElements = document.querySelectorAll('.advanced-feature');
+  const expertElements = document.querySelectorAll('.expert-feature');
+
+  if (userLevel === 'beginner') {
+    advancedElements.forEach(el => el.style.display = 'none');
+    expertElements.forEach(el => el.style.display = 'none');
+  } else if (userLevel === 'intermediate') {
+    expertElements.forEach(el => el.style.display = 'none');
+  }
+  // Advanced users see everything
+}
+
+// Initialize onboarding system (after all functions are defined)
+initializeOnboarding();

@@ -59,6 +59,22 @@ Documentation & roadmap
 - For the complete roadmap with completed features and future plans, see `ROADMAP.md`.
 - For developer documentation, API reference, and contribution guidelines, see `DEVELOPER.md`.
 
+## Guided Tour
+
+ProfitPath includes a comprehensive 9-step guided tour to help new users understand all features:
+
+1. **Welcome to ProfitPath** - Introduction to the dashboard
+2. **Choose Your Mode** - Select Forecast or Current analysis mode
+3. **Team Configuration** - Set employee count and compensation details
+4. **Define Your Services** - Add service offerings with pricing and costs
+5. **Key Profitability Metric** - Net income indicator (green = profitable)
+6. **Capacity Utilization** - Monitor team utilization (aim for 80-90%)
+7. **Break-even Analysis** - Required clients and contribution margins
+8. **Charts & Visualizations** - Interactive charts and business analytics
+9. **Save, Export & Share** - Complete toolkit for managing and sharing scenarios
+
+The tour includes progress indicators, navigation arrows, and can be exited anytime with the ✕ button or Escape key. Access it anytime via the ❓ help button in the top-right corner or "🎯 Take Tour" in the mobile menu.
+
 Contributing
 - Create a branch: `git checkout -b feature/my-feature`
 - Make small, focused commits and open a PR when ready.
