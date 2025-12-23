@@ -8,40 +8,36 @@ See README.md for setup and development instructions.
 
 ## Top 3 Suggested Tasks
 
-Based on user impact and market expansion:
+Based on user impact and technical foundation:
+
+1. **Extract Calculation Logic**
+
+   - Refactor core calculation logic into a separate, testable library
+   - ~2 hours effort, enables unit testing and modularity
+
+2. **Add Unit Tests**
+
+   - Implement unit tests for core math and business logic functions
+   - ~2-3 hours effort, improves code reliability and prevents regressions
+
+3. **Scenario Manager Polish**
+
+   - Enhance scenario management UI with rename, import/export, and comparison affordances
+   - ~3-4 hours effort, improves user workflow for managing scenarios
+
+---
+
+## Fully Prioritized Backlog (high → low)
+
+**High priority**
 
 1. **Scenario Comparison Tool**
 
    - Side-by-side comparison of different business scenarios
    - 6-8 hours effort, enables better decision making
 
-2. **Advanced Data Visualization**
-
-   - Enhanced charts, graphs, and interactive reporting features
-   - 5-7 hours effort, improves data understanding and presentation
-
-3. **Multi-Currency Support**
-
-   - Enable international users with proper currency handling and formatting
-   - 8-10 hours effort, critical for global adoption and professional use
-
----
-
-## Fully Prioritized Backlog (high → low)
-
 High priority
 
-1. Extract calculation logic into a small library (e.g., `assets/lib/calc.js`) and formatting helpers to enable unit tests and isolate business logic.
-
-   - Effort: ~2 hours
-
-2. Add unit tests (Vitest) for core math functions (normalizeMix, rebalanceMix, calc in both modes).
-
-   - Effort: ~2–3 hours (after extraction)
-
-3. Scenario manager polish: rename, import/export, and UI affordances for comparing scenarios.
-
-   - Effort: ~3–4 hours
 
 4. Export & sharing: polish CSV headers and add optional shareable URL encoding.
    - Effort: ~1–3 hours

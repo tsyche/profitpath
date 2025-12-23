@@ -71,7 +71,6 @@
       <div class="mobile-menu-overlay" id="mobileMenuOverlay">
         <div class="mobile-menu" id="mobileMenu">
           <div class="mobile-menu-header">
-            <span class="mobile-menu-title">Menu</span>
             <div class="mobile-menu-center">
               <div class="mobile-menu-badge">
                 <span class="dot"></span>
@@ -92,6 +91,17 @@
               </div>
             </div>
             <button class="btn mobile-menu-btn" id="mobileShareBtn">🔗 Share Scenario</button>
+            <div class="mobile-templates-section">
+              <button class="btn mobile-menu-btn" id="mobileTemplatesBtn">🏢 Templates</button>
+              <div class="mobile-templates-options" id="mobileTemplatesOptions" style="display: none;">
+                <button class="btn mobile-submenu-btn" id="mobileTemplateConsulting" data-template="consulting">💼 Consulting</button>
+                <button class="btn mobile-submenu-btn" id="mobileTemplateCleaning" data-template="cleaning">🧹 Cleaning</button>
+                <button class="btn mobile-submenu-btn" id="mobileTemplateLandscaping" data-template="landscaping">🌳 Landscaping</button>
+                <button class="btn mobile-submenu-btn" id="mobileTemplateHandyman" data-template="handyman">🔧 Handyman</button>
+                <button class="btn mobile-submenu-btn" id="mobileTemplateFitness" data-template="fitness">💪 Fitness</button>
+                <button class="btn mobile-submenu-btn" id="mobileTemplatePhotography" data-template="photography">📸 Photography</button>
+              </div>
+            </div>
             <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
           </div>
         </div>
@@ -126,6 +136,26 @@
             <h4>Saved Scenarios</h4>
             <div id="scenariosList" class="scenarios-list">
               <div class="empty-state">No saved scenarios yet. Save one above!</div>
+            </div>
+          </div>
+
+          <div class="scenarios-section">
+            <h4>Compare Scenarios</h4>
+            <div class="comparison-controls">
+              <select id="compareScenario1" class="scenario-select">
+                <option value="">Select first scenario...</option>
+              </select>
+              <span class="vs-text">vs</span>
+              <select id="compareScenario2" class="scenario-select">
+                <option value="">Select second scenario...</option>
+              </select>
+              <button class="btn primary" id="compareBtn" type="button">Compare</button>
+            </div>
+            <div id="comparisonError" class="text-error" style="display: none; margin-top: 8px;"></div>
+            <div id="comparisonResults" class="comparison-results" style="display: none;">
+              <div class="comparison-table-wrap">
+                <!-- Comparison table will be inserted here -->
+              </div>
             </div>
           </div>
         </div>

@@ -20,6 +20,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Shareable URLs**: Encode scenarios in URLs for easy sharing with stakeholders
 - **Import/Export**: Load scenarios from URLs or share via email
 - **Industry Templates**: Pre-built configurations for common business types (consulting, cleaning, landscaping, etc.)
+- **Scenario Comparison**: Side-by-side comparison of saved scenarios with key metrics and differences
 
 ## Advanced Features
 

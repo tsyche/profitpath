@@ -2471,20 +2471,20 @@ function deleteScenario(scenarioId) {
 
     try {
       // Get scenarios once and filter
-      let scenarios = getAllScenarios();
+    let scenarios = getAllScenarios();
       const initialLength = scenarios.length;
-      scenarios = scenarios.filter((s) => s.id !== scenarioId);
+    scenarios = scenarios.filter((s) => s.id !== scenarioId);
 
       // Only update if we actually removed something
       if (scenarios.length < initialLength) {
-        localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
+    localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
         // Defer rendering to next tick to avoid blocking
         setTimeout(() => renderScenariosList(), 0);
       }
-    } catch (e) {
-      console.error('Failed to delete scenario:', e);
-      alert('Error deleting scenario');
-    }
+  } catch (e) {
+    console.error('Failed to delete scenario:', e);
+    alert('Error deleting scenario');
+  }
   };
 
   document.getElementById('confirmNo').onclick = () => {
@@ -3502,6 +3502,27 @@ function wire(skipLocalStorageLoading = false) {
     });
   }
 
+  const mobileTemplatesBtn = $('#mobileTemplatesBtn');
+  if (mobileTemplatesBtn) {
+    mobileTemplatesBtn.addEventListener('click', () => {
+      const options = $('#mobileTemplatesOptions');
+      if (options) {
+        options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
+      }
+    });
+  }
+
+  document.querySelectorAll('.mobile-templates-options .mobile-submenu-btn').forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.preventDefault();
+      const template = e.target.dataset.template;
+      const menu = $('#mobileTemplatesOptions');
+      if (menu) menu.style.display = 'none';
+      loadIndustryTemplate(template);
+      closeMobileMenu(); // Close mobile menu after loading template
+    });
+  });
+
   if (mobileScenariosBtn) {
     mobileScenariosBtn.addEventListener('click', () => {
       openScenarioModal();
@@ -3540,6 +3561,197 @@ function wire(skipLocalStorageLoading = false) {
       closeScenarioModal();
     }
   });
+}
+
+
+// ============================================================================
+// SCENARIO COMPARISON SYSTEM
+// ============================================================================
+
+// Helper to get selected scenario IDs from dropdowns
+function getSelectedComparisonScenarios() {
+  const scenario1Id = $('#compareScenario1').value;
+  const scenario2Id = $('#compareScenario2').value;
+  return { scenario1Id, scenario2Id };
+}
+
+// Populate scenario dropdowns
+function populateComparisonDropdowns() {
+  const scenarios = getAllScenarios();
+  const select1 = $('#compareScenario1');
+  const select2 = $('#compareScenario2');
+  if (!select1 || !select2) return;
+
+  select1.innerHTML = '<option value="">Select first scenario...</option>';
+  select2.innerHTML = '<option value="">Select second scenario...</option>';
+
+  scenarios.forEach(s => {
+    const option1 = document.createElement('option');
+    option1.value = s.id;
+    option1.textContent = s.name;
+    select1.appendChild(option1);
+
+    const option2 = document.createElement('option');
+    option2.value = s.id;
+    option2.textContent = s.name;
+    select2.appendChild(option2);
+  });
+}
+
+  // Render the comparison table
+  function renderComparisonResults(metrics1, metrics2) {
+    const comparisonResultsEl = $('#comparisonResults');
+    if (!comparisonResultsEl) return;
+
+    // Render into the wrapper div, not directly into comparisonResultsEl
+    const tableWrap = comparisonResultsEl.querySelector('.comparison-table-wrap');
+    if (!tableWrap) return;
+
+    const metricsToCompare = [
+      { label: 'Clients', key: 'clients', format: fmtInt },
+      { label: 'Annual Sessions', key: 'annualSessions', format: fmtInt },
+      { label: 'Service Hours', key: 'serviceHours', format: fmtInt },
+      { label: 'Utilization', key: 'utilizationPct', format: fmtPct1 },
+      { label: 'Revenue', key: 'revenue', format: fmtMoney0 },
+      { label: 'Fixed Costs', key: 'annualFixedCosts', format: fmtMoney0 },
+      { label: 'Payroll', key: 'annualPayroll', format: fmtMoney0 },
+      { label: 'Variable Costs', key: 'annualVariableCosts', format: fmtMoney0 },
+      { label: 'Net Income', key: 'netIncome', format: fmtMoney0 },
+      { label: 'Break-Even Clients', key: 'breakEvenClients', format: fmtInt },
+      { label: 'Break-Even Revenue', key: 'breakEvenRevenue', format: fmtMoney0 },
+      { label: 'Contribution Margin', key: 'contributionMarginPerClient', format: fmtMoney0 },
+    ];
+
+    let tableHtml = `
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th class="scenario-col">Scenario 1</th>
+            <th class="scenario-col">Scenario 2</th>
+            <th class="difference-col">Difference</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    metricsToCompare.forEach(m => {
+      const val1 = metrics1[m.key];
+      const val2 = metrics2[m.key];
+      const diff = val2 - val1;
+
+      let diffClass = 'difference-neutral';
+      if (m.key.includes('income') || m.key.includes('revenue') || m.key.includes('margin')) {
+        if (diff > 0) diffClass = 'difference-positive';
+        else if (diff < 0) diffClass = 'difference-negative';
+      } else if (m.key.includes('cost')) {
+        if (diff > 0) diffClass = 'difference-negative';
+        else if (diff < 0) diffClass = 'difference-positive';
+      } else if (m.key.includes('utilization') || m.key.includes('clients') || m.key.includes('sessions') || m.key.includes('hours')) {
+        if (diff > 0) diffClass = 'difference-positive';
+        else if (diff < 0) diffClass = 'difference-negative';
+      }
+
+      tableHtml += `
+        <tr>
+          <td class="metric-name">${m.label}</td>
+          <td class="scenario-col">${m.format(val1)}</td>
+          <td class="scenario-col">${m.format(val2)}</td>
+          <td class="difference-col ${diffClass}">${m.format(diff)}</td>
+        </tr>
+      `;
+    });
+
+    tableHtml += `
+        </tbody>
+      </table>
+    `;
+    tableWrap.innerHTML = tableHtml; // Assign to wrapper
+    comparisonResultsEl.style.display = 'block';
+  }
+
+// Handle comparison logic
+  function handleComparison() {
+    const comparisonErrorEl = $('#comparisonError');
+    if (comparisonErrorEl) comparisonErrorEl.style.display = 'none'; // Hide previous error
+
+    const { scenario1Id, scenario2Id } = getSelectedComparisonScenarios();
+    const scenarios = getAllScenarios();
+
+    const scenario1 = scenarios.find(s => s.id === scenario1Id);
+    const scenario2 = scenarios.find(s => s.id === scenario2Id);
+
+    if (!scenario1 || !scenario2) {
+      $('#comparisonResults').style.display = 'none';
+      return;
+    }
+
+  // Calculate metrics for both scenarios
+  const metrics1 = calc(scenario1.data || scenario1.state); // Handle older scenario structure
+  const metrics2 = calc(scenario2.data || scenario2.state); // Handle older scenario structure
+
+  renderComparisonResults(metrics1, metrics2);
+}
+
+// Update scenarios list and comparison dropdowns when modal opens
+const scenariosModal = $('#scenariosModal');
+if (scenariosModal) {
+  // Original scenario modal close and button handlers (delegated)
+  scenariosModal.addEventListener('click', (e) => {
+    if (e.target.closest('.modal-header .btn-close')) {
+      closeScenarioModal();
+    } else if (e.target.closest('.load-btn, .delete-btn')) {
+      const btn = e.target.closest('.load-btn, .delete-btn');
+      const scenarioId = btn.dataset.scenarioId;
+      if (!scenarioId) return;
+
+      if (btn.classList.contains('load-btn')) {
+        loadScenario(scenarioId);
+        closeScenarioModal();
+      } else if (btn.classList.contains('delete-btn')) {
+        deleteScenario(scenarioId);
+      }
+    }
+    // Handle comparison dropdowns to prevent default behavior from closing modal
+    if (e.target.closest('.scenario-select')) {
+      e.stopPropagation();
+    }
+  });
+
+  // Populate comparison dropdowns when the modal becomes visible
+  const observer = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+        if (!scenariosModal.classList.contains('hidden')) {
+          populateComparisonDropdowns();
+          handleComparison(); // Also run comparison if both are selected
+        } else {
+          // Hide comparison results when modal is closed
+          $('#comparisonResults').style.display = 'none';
+        }
+      }
+    }
+  });
+  observer.observe(scenariosModal, { attributes: true, attributeFilter: ['class'] });
+
+  // Initial population when app loads
+  populateComparisonDropdowns();
+}
+
+// Event listeners for comparison dropdowns and button
+const compareBtn = $('#compareBtn');
+if (compareBtn) {
+  compareBtn.addEventListener('click', handleComparison);
+}
+
+const compareScenario1 = $('#compareScenario1');
+if (compareScenario1) {
+  compareScenario1.addEventListener('change', handleComparison);
+}
+
+const compareScenario2 = $('#compareScenario2');
+if (compareScenario2) {
+  compareScenario2.addEventListener('change', handleComparison);
 }
 
 // Load scenario from URL first (if present), then localStorage
