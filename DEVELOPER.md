@@ -9,7 +9,7 @@ ProfitPath is a client-side profitability and capacity simulator for recurring s
 ### Core Components
 
 - **State Management**: Single global `state` object containing all application data
-- **Calculation Engine**: `calc()` function performs all business logic computations
+- **Calculation Engine**: Modular calculation system in `src/calculations/` with caching and debug capabilities
 - **UI Rendering**: Declarative rendering with DOM manipulation
 - **Persistence**: localStorage for scenario management and user preferences
 - **Export System**: Multiple format support (CSV, Excel, PDF, HTML, Email)
@@ -17,7 +17,8 @@ ProfitPath is a client-side profitability and capacity simulator for recurring s
 ### Key Files
 
 - `index.html` - Main HTML structure and external dependencies
-- `assets/app.js` - Core application logic (~3200 lines)
+- `assets/app.js` - Core application logic and UI management
+- `src/calculations/index.js` - Modular calculation engine with business logic
 - `assets/styles.css` - Styling and responsive design
 - `sw.js` - Service worker for offline functionality
 - `manifest.json` - PWA configuration
@@ -26,11 +27,16 @@ ProfitPath is a client-side profitability and capacity simulator for recurring s
 
 ### Core Functions
 
-#### `calc(stateInput?)`
+#### `calc(stateInput?, options?)`
 Main calculation engine that computes profitability metrics.
 
 **Parameters:**
 - `stateInput` (optional): State object to calculate with (defaults to global state)
+- `options` (optional): Calculation options
+  - `enableCache`: Enable/disable caching (default: true)
+  - `debug`: Include intermediate results for debugging (default: false)
+
+**Location:** `src/calculations/index.js`
 
 **Returns:** Object with calculation results:
 ```javascript

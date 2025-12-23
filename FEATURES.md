@@ -8,6 +8,9 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Forecast & Current Modes**: Switch between planning future growth and analyzing current operations
 - **Real-time Calculations**: Instant updates as you modify inputs
 - **Comprehensive Metrics**: Revenue, costs, profit, utilization, capacity, break-even analysis
+- **Modular Architecture**: Separated calculation logic for better maintainability and testing
+- **Performance Caching**: Intelligent caching system for improved calculation performance
+- **Debug Mode**: Intermediate calculation results for debugging and transparency
 
 ### Business Intelligence
 - **Break-even Analysis**: Visual indicators showing contribution margins and break-even points

@@ -1,10 +1,11 @@
+import { calc } from '../src/calculations/index.js';
+
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
 // Constants for business model assumptions
-const HOURS_PER_YEAR = 2080; // Standard paid hours per employee per year
 const DEFAULT_CURRENCY = 'USD';
 // Chart tooltip options: toggle what extra info to display
 const CHART_TOOLTIP_OPTIONS = {
@@ -439,26 +440,6 @@ function persistState() {
   }
 }
 
-function normalizeMix(offerings) {
-  const sum = offerings.reduce((a, o) => a + (Number(o.mixPct) || 0), 0);
-
-  // Return per-offering shares (sum to 1) for calculations.
-  // NOTE: this does NOT mutate state or the offering values shown in the UI.
-  if (sum <= 0) {
-    const evenShare = offerings.length ? 1 / offerings.length : 0;
-    return {
-      sum: 0,
-      needsNormalization: false,
-      shares: offerings.map(() => evenShare),
-    };
-  }
-
-  return {
-    sum,
-    needsNormalization: Math.abs(sum - 100) > 0.01,
-    shares: offerings.map((o) => (Number(o.mixPct) || 0) / sum),
-  };
-}
 
 function rebalanceMix(changedIdx, nextMixPct) {
   const n = state.offerings.length;
@@ -515,216 +496,7 @@ function rebalanceMix(changedIdx, nextMixPct) {
   }
 }
 
-function calc(stateInput) {
-  // Accept state as parameter for testability; defaults to global state if not provided
-  const s = stateInput || state;
-  const employees = Math.max(1, Number(s.employees) || 1);
-  const employeePay = Math.max(0, Number(s.employeePay) || 0);
-  const monthlyCosts = Math.max(0, Number(s.monthlyCosts) || 0);
-  const productiveUtilizationPct = clamp(Number(s.productiveUtilizationPct) || 0, 0, 100);
-
-  const annualFixedCosts = monthlyCosts * 12;
-  const annualPayroll = Math.max(0, employees - 1) * employeePay;
-
-  const annualPaidHours = employees * HOURS_PER_YEAR;
-  const annualServiceHours = annualPaidHours * (productiveUtilizationPct / 100);
-
-  // sanitize offerings
-  const offerings = s.offerings
-    .map((o) => ({
-      ...o,
-      name: (o.name || '').trim() || 'Offering',
-      priceMonthly: Math.max(0, Number(o.priceMonthly) || 0),
-      sessionsPerYear: Math.max(0, Number(o.sessionsPerYear) || 0),
-      hoursPerSession: Math.max(0, Number(o.hoursPerSession) || 0),
-      variableCostPerSession: Math.max(0, Number(o.variableCostPerSession) || 0),
-      mixPct: Math.max(0, Number(o.mixPct) || 0),
-      currentClients: Math.max(0, Math.floor(Number(o.currentClients) || 0)),
-    }))
-    .filter((o) => o.name.length > 0);
-
-  const mode = s.mode;
-
-  if (!offerings.length) {
-    return {
-      mode,
-      offerings,
-      annualPaidHours,
-      annualServiceHours,
-      annualFixedCosts,
-      annualPayroll,
-      clients: 0,
-      totalSessions: 0,
-      serviceHours: 0,
-      capacityPct: 0,
-      revenue: 0,
-      variableCosts: 0,
-      income: -annualFixedCosts - annualPayroll,
-      mixSum: 0,
-      mixNormalized: false,
-      // Break-even analysis (no offerings = infinite break-even)
-      breakEvenClients: Infinity,
-      breakEvenRevenue: Infinity,
-      contributionMarginPerClient: 0,
-      contributionMarginRatio: 0,
-    };
-  }
-
-  let clients = 0;
-  let totalSessions = 0;
-  let serviceHours = 0;
-  let capacityPct = 0;
-  let revenue = 0;
-  let variableCosts = 0;
-
-  if (mode === 'forecast') {
-    const { sum: mixSum, needsNormalization: mixNormalized, shares } = normalizeMix(offerings);
-
-    const targetUtilizationPct = clamp(Number(s.targetUtilizationPct) || 0, 0, 150);
-    serviceHours = annualServiceHours * (targetUtilizationPct / 100);
-
-    // Per-customer expectations (weighted by mix shares).
-    // shares[] always sums to 1, even if the user-entered mix doesn't sum to 100.
-    const serviceHoursPerClient = offerings.reduce((acc, o, idx) => {
-      const share = shares[idx] || 0;
-      return acc + share * o.sessionsPerYear * o.hoursPerSession;
-    }, 0);
-
-    const sessionsPerClient = offerings.reduce((acc, o, idx) => acc + (shares[idx] || 0) * o.sessionsPerYear, 0);
-
-    const revenuePerClient = offerings.reduce((acc, o, idx) => acc + (shares[idx] || 0) * (o.priceMonthly * 12), 0);
-
-    const variableCostPerClient = offerings.reduce((acc, o, idx) => acc + (shares[idx] || 0) * (o.sessionsPerYear * o.variableCostPerSession), 0);
-
-    clients = serviceHoursPerClient > 0 ? Math.floor(serviceHours / serviceHoursPerClient) : 0;
-    totalSessions = clients * sessionsPerClient;
-    revenue = clients * revenuePerClient;
-    variableCosts = clients * variableCostPerClient;
-
-    capacityPct = annualServiceHours > 0 ? (serviceHours / annualServiceHours) * 100 : 0;
-
-    // Per-offering metrics for forecast mode
-    const offeringMetrics = offerings.map((o, idx) => {
-      const share = shares[idx] || 0;
-      const offeringClients = Math.floor(clients * share);
-      const offeringSessions = offeringClients * o.sessionsPerYear;
-      const offeringRevenue = offeringClients * (o.priceMonthly * 12);
-      const offeringVariableCosts = offeringSessions * o.variableCostPerSession;
-      const offeringMargin = offeringRevenue - offeringVariableCosts;
-      const offeringMarginPct = offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0;
-      const serviceHoursPerClientOffering = o.sessionsPerYear * o.hoursPerSession;
-
-      return {
-        revenue: offeringRevenue,
-        variableCosts: offeringVariableCosts,
-        margin: offeringMargin,
-        marginPct: offeringMarginPct,
-        serviceHoursPerClient: serviceHoursPerClientOffering,
-      };
-    });
-
-    // Break-even analysis for forecast mode
-    const totalFixedCosts = annualFixedCosts + annualPayroll;
-    const contributionMarginPerClient = revenuePerClient - variableCostPerClient;
-    const contributionMarginRatio = revenuePerClient > 0 ? contributionMarginPerClient / revenuePerClient : 0;
-
-    const breakEvenClients = contributionMarginPerClient > 0 ? Math.ceil(totalFixedCosts / contributionMarginPerClient) : Infinity;
-    const breakEvenRevenue = contributionMarginRatio > 0 ? totalFixedCosts / contributionMarginRatio : Infinity;
-
-    return {
-      mode,
-      offerings,
-      annualPaidHours,
-      annualServiceHours,
-      annualFixedCosts,
-      annualPayroll,
-      clients,
-      totalSessions,
-      serviceHours,
-      capacityPct,
-      revenue,
-      variableCosts,
-      income: revenue - annualFixedCosts - annualPayroll - variableCosts,
-      mixSum,
-      mixNormalized,
-      targetUtilizationPct,
-      productiveUtilizationPct,
-      offeringMetrics,
-      // Break-even analysis
-      breakEvenClients,
-      breakEvenRevenue,
-      contributionMarginPerClient,
-      contributionMarginRatio,
-    };
-  }
-
-  // current mode
-  clients = offerings.reduce((a, o) => a + o.currentClients, 0);
-  totalSessions = offerings.reduce((a, o) => a + o.currentClients * o.sessionsPerYear, 0);
-  serviceHours = offerings.reduce((a, o) => a + o.currentClients * o.sessionsPerYear * o.hoursPerSession, 0);
-  revenue = offerings.reduce((a, o) => a + o.currentClients * o.priceMonthly * 12, 0);
-  variableCosts = offerings.reduce((a, o) => a + o.currentClients * o.sessionsPerYear * o.variableCostPerSession, 0);
-
-  capacityPct = annualServiceHours > 0 ? (serviceHours / annualServiceHours) * 100 : 0;
-
-  // Per-offering metrics for current mode
-  const offeringMetrics = offerings.map((o) => {
-    const offeringRevenue = o.currentClients * (o.priceMonthly * 12);
-    const offeringSessions = o.currentClients * o.sessionsPerYear;
-    const offeringVariableCosts = offeringSessions * o.variableCostPerSession;
-    const offeringMargin = offeringRevenue - offeringVariableCosts;
-    const offeringMarginPct = offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0;
-    const serviceHoursPerClientOffering = o.sessionsPerYear * o.hoursPerSession;
-
-    return {
-      revenue: offeringRevenue,
-      variableCosts: offeringVariableCosts,
-      margin: offeringMargin,
-      marginPct: offeringMarginPct,
-      serviceHoursPerClient: serviceHoursPerClientOffering,
-    };
-  });
-
-  // Break-even analysis for current mode
-  const totalFixedCosts = annualFixedCosts + annualPayroll;
-
-  // Calculate weighted average contribution margin per client
-  const totalContributionMargin = offerings.reduce((sum, o) => {
-    const clientContribution = (o.priceMonthly * 12) - (o.sessionsPerYear * o.variableCostPerSession);
-    return sum + (o.currentClients * clientContribution);
-  }, 0);
-
-  const contributionMarginPerClient = clients > 0 ? totalContributionMargin / clients : 0;
-  const contributionMarginRatio = revenue > 0 ? totalContributionMargin / revenue : 0;
-
-  const breakEvenClients = contributionMarginPerClient > 0 ? Math.ceil(totalFixedCosts / contributionMarginPerClient) : Infinity;
-  const breakEvenRevenue = contributionMarginRatio > 0 ? totalFixedCosts / contributionMarginRatio : Infinity;
-
-  return {
-    mode,
-    offerings,
-    annualPaidHours,
-    annualServiceHours,
-    annualFixedCosts,
-    annualPayroll,
-    clients,
-    totalSessions,
-    serviceHours,
-    capacityPct,
-    revenue,
-    variableCosts,
-    income: revenue - annualFixedCosts - annualPayroll - variableCosts,
-    mixSum: offerings.reduce((a, o) => a + (o.mixPct || 0), 0),
-    mixNormalized: false,
-    productiveUtilizationPct,
-    offeringMetrics,
-    // Break-even analysis
-    breakEvenClients,
-    breakEvenRevenue,
-    contributionMarginPerClient,
-    contributionMarginRatio,
-  };
-}
+// calc function moved to src/calculations/index.js
 
 function cssEscape(s) {
   if (globalThis.CSS?.escape) return globalThis.CSS.escape(String(s));

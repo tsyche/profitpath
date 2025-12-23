@@ -6,7 +6,8 @@
 This repository contains ProfitPath — a small client-side profitability and capacity simulator.
 
 What this repo contains
-- `index.html`, `assets/app.js`, `assets/styles.css` — main app code (vanilla JS, no build step required).
+- `index.html`, `assets/app.js`, `assets/styles.css` — main app code (vanilla JS with Vite build system).
+- `src/calculations/` — modular calculation engine with caching and debug capabilities.
 - `ROADMAP.md` — consolidated roadmap with completed features and planned improvements (single source of truth).
 
 Quick status
@@ -31,19 +32,25 @@ Testing & development
 - Load test scenarios: `?loadTestScenarios` - adds 9 test scenarios to localStorage
 - Load specific scenario: `?testScenario=default` (or high-profit, loss-making, multi-service, etc.)
 
-Building (optional)
+Building & development
 ```bash
 # Install dependencies
 npm install
 
-# Development build with watch
-npm run build:dev
+# Start development server (with hot reload)
+npm run dev
+
+# Run tests
+npm run test:run
+
+# Run linting
+npm run lint
 
 # Production build
 npm run build
 
-# Run development server
-npm run serve
+# Preview production build
+npm run preview
 ```
 
 Documentation & roadmap
