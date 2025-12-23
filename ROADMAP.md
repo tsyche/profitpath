@@ -25,18 +25,10 @@ Based on user impact and technical foundation:
 
 1. Simple visualizations: utilization gauge and optional richer charts.
 2. Scenario comparison (diff view).
-3. Add CI with linting and tests.
 
 Technical Foundation & Quality (Foundation Layer)
 
-4. Calculation Engine Refactoring
-
-   - Extract `calc()` into separate module with better separation of concerns
-   - Add calculation pipeline with intermediate results for debugging
-   - Implement calculation caching for performance
-   - Effort: ~3-4 hours
-
-5. Advanced Formatting & Localization
+3. Advanced Formatting & Localization
    - Multiple currency support beyond USD
    - Localized number formatting
    - Configurable decimal precision per metric
@@ -44,14 +36,14 @@ Technical Foundation & Quality (Foundation Layer)
 
 Business Intelligence & Analytics (Core Enhancement)
 
-6. Sensitivity Analysis & What-If Scenarios
+4. Sensitivity Analysis & What-If Scenarios
 
     - "What if" sliders for key variables (pricing, costs, utilization)
     - Tornado charts showing impact of variable changes
     - Monte Carlo simulation for risk assessment
     - Effort: ~6-8 hours
 
-7. Tax & Financial Calculations
+5. Tax & Financial Calculations
 
     - Self-employment tax calculations
     - Quarterly tax estimates
@@ -59,7 +51,7 @@ Business Intelligence & Analytics (Core Enhancement)
     - Profit sharing calculations
     - Effort: ~4-5 hours
 
-8. Customer Acquisition & Growth Modeling
+6. Customer Acquisition & Growth Modeling
     - Customer acquisition cost (CAC) tracking
     - Customer lifetime value (LTV) calculations
     - Churn rate modeling
@@ -68,14 +60,14 @@ Business Intelligence & Analytics (Core Enhancement)
 
 Enhanced User Experience (UX Layer)
 
-9. Shareable URLs & Collaboration
+7. Shareable URLs & Collaboration
 
     - Encode scenarios in URL fragments for sharing
     - Social media sharing with preview cards
     - Embeddable calculator widgets
     - Effort: ~3-4 hours
 
-10. Guided Experience & Onboarding
+8. Guided Experience & Onboarding
 
     - Interactive walkthrough for new users
     - Industry-specific setup wizards
@@ -83,7 +75,7 @@ Enhanced User Experience (UX Layer)
     - Contextual help tooltips
     - Effort: ~4-5 hours
 
-11. Accessibility & Mobile Experience
+9. Accessibility & Mobile Experience
     - Full keyboard navigation
     - Screen reader optimization
     - Mobile-responsive design improvements
@@ -92,7 +84,7 @@ Enhanced User Experience (UX Layer)
 
 Advanced Visualizations (Presentation Layer)
 
-12. Interactive Scenario Comparison
+10. Interactive Scenario Comparison
 
     - Side-by-side scenario comparison
     - Diff highlighting for changes
@@ -100,7 +92,7 @@ Advanced Visualizations (Presentation Layer)
     - Correlation analysis between variables
     - Effort: ~5-6 hours
 
-13. Advanced Chart Types
+11. Advanced Chart Types
     - Heat maps for multi-variable sensitivity
     - Radar charts for balanced scorecard
     - Funnel charts for customer journey
@@ -109,7 +101,7 @@ Advanced Visualizations (Presentation Layer)
 
 Industry Intelligence & Templates (Domain Layer)
 
-14. Industry Presets & Benchmarks
+12. Industry Presets & Benchmarks
 
     - Curated templates for common service businesses
     - Industry benchmark comparisons
@@ -117,7 +109,7 @@ Industry Intelligence & Templates (Domain Layer)
     - Success metric tracking
     - Effort: ~6-8 hours
 
-15. Seasonal & Market Adjustments
+13. Seasonal & Market Adjustments
     - Seasonal demand modeling
     - Geographic pricing variations
     - Market rate comparisons
@@ -126,7 +118,7 @@ Industry Intelligence & Templates (Domain Layer)
 
 Enterprise Features (Scale Layer)
 
-16. Advanced Scenario Management
+14. Advanced Scenario Management
 
     - Scenario versioning and history
     - Bulk import/export operations
@@ -134,7 +126,7 @@ Enterprise Features (Scale Layer)
     - Team sharing and permissions
     - Effort: ~8-10 hours
 
-17. Integration & Automation
+15. Integration & Automation
 
     - API for third-party integrations
     - Webhook notifications for key metrics
@@ -142,7 +134,7 @@ Enterprise Features (Scale Layer)
     - CRM/ERP system connections
     - Effort: ~10-12 hours
 
-18. Multi-Year Strategic Planning
+16. Multi-Year Strategic Planning
 
     - 3-5 year financial projections
     - Hiring and scaling recommendations
@@ -150,7 +142,7 @@ Enterprise Features (Scale Layer)
     - Strategic milestone tracking
     - Effort: ~8-10 hours
 
-19. Optimizer Mode & AI Insights
+17. Optimizer Mode & AI Insights
     - Automated optimization suggestions
     - Machine learning price optimization
     - Predictive analytics
@@ -163,5 +155,5 @@ Notes
 
 - The repo contains a stable, production-ready profitability simulator with comprehensive error handling, performance optimizations, PWA capabilities, and extensive export functionality.
 - **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, advanced testing infrastructure (Vite, Vitest, ESLint), scenario comparison tools, enhanced CSV export with professional headers and shareable URL encoding, improved mobile hamburger menu with better UX, icon consistency, and navigation, and modular calculation engine refactoring with caching and debug capabilities.
-- **Next priorities**: Advanced data visualization, multi-currency support, and advanced testing infrastructure for enhanced decision making and global adoption.
+- **Next priorities**: Advanced data visualization and multi-currency support for enhanced decision making and global adoption.
 - Enterprise features represent significant scope expansion and may require backend infrastructure changes.
