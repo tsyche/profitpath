@@ -4,14 +4,26 @@
   "description": "A lightweight client-side simulator for recurring service businesses",
   "main": "assets/app.js",
   "scripts": {
-    "build": "node build.js",
-    "build:dev": "node build.js --dev",
-    "serve": "python3 -m http.server 8000",
-    "dev": "npm run build:dev & npm run serve"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "lint": "eslint assets/app.js",
+    "lint:fix": "eslint assets/app.js --fix"
   },
   "devDependencies": {
-    "esbuild": "^0.19.0",
-    "typescript": "^5.0.0"
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitejs/plugin-legacy": "^4.1.1",
+    "@vitest/ui": "^0.34.6",
+    "eslint": "^8.55.0",
+    "jsdom": "^22.1.0",
+    "typescript": "^5.0.0",
+    "vite": "^4.5.14",
+    "vitest": "^0.34.6"
   },
   "keywords": [
     "business",

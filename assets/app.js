@@ -30,7 +30,6 @@ function uuid() {
 
 const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
-const fmtMoney2 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 const fmtPct1 = (n) => `${(Number.isFinite(n) ? n : 0).toFixed(1)}%`;
 
 // Lazy loading utility for scripts
@@ -729,7 +728,7 @@ function calc(stateInput) {
 
 function cssEscape(s) {
   if (globalThis.CSS?.escape) return globalThis.CSS.escape(String(s));
-  return String(s).replace(/[^a-zA-Z0-9_\-]/g, (ch) => `\\${ch}`);
+  return String(s).replace(/[^a-zA-Z0-9_-]/g, (ch) => `\\${ch}`);
 }
 
 function captureTableFocus() {
@@ -919,11 +918,7 @@ function setupChartEventListeners(el) {
   let pinned = false;
   let pinnedRect = null;
   const HOVER_OFFSET = 6; // px gap between bar and tooltip when hovering
-  let tooltipIsShown = false;
 
-  function stopFollow() {
-    // No longer using smooth follow animation
-  }
 
   // updatePinnedIndicator is intentionally a no-op for visuals - we do not highlight pinned segments.
   // Keeping the function so other code can call it without needing edits.
@@ -933,7 +928,7 @@ function setupChartEventListeners(el) {
     el.querySelectorAll('rect[data-pinned]').forEach((r) => r.removeAttribute('data-pinned'));
   }
 
-  function showTooltipForRect(rectEl, clientX = null, clientY = null, pinnedNow = false) {
+  function showTooltipForRect(rectEl, _clientX = null, _clientY = null, pinnedNow = false) {
     if (!rectEl) return;
     const offering = rectEl.getAttribute('data-offering') || '';
     const varVal = rectEl.getAttribute('data-var') || '';
@@ -941,7 +936,7 @@ function setupChartEventListeners(el) {
     const pct = rectEl.getAttribute('data-pct') || '';
     const hours = rectEl.getAttribute('data-hours') || '';
 
-    let html = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style=\"font-weight:700\">${offering}</div><div style=\"display:flex;gap:6px;align-items:center\"><button class=\"tooltip-pin\" aria-label=\"Pin tooltip\">📌</button><button class=\"tooltip-close\" aria-label=\"Close tooltip\">×</button></div></div>`;
+    let html = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-weight:700">${offering}</div><div style="display:flex;gap:6px;align-items:center"><button class="tooltip-pin" aria-label="Pin tooltip">📌</button><button class="tooltip-close" aria-label="Close tooltip">×</button></div></div>`;
     if (CHART_TOOLTIP_OPTIONS.showPercent) {
       html += `<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px">${pct}</div>`;
     }
@@ -973,7 +968,6 @@ function setupChartEventListeners(el) {
     const containerBox = el.getBoundingClientRect();
     const rectBox = rectEl.getBoundingClientRect();
     const centerX = rectBox.left + rectBox.width / 2 - containerBox.left;
-    const centerY = rectBox.top + rectBox.height / 2 - containerBox.top;
 
     // if hovering (not pinnedNow and not pinned), place tooltip at a static distance above the rect
     // otherwise (pinned or pinnedNow), allow centering near rect/mouse
@@ -995,7 +989,6 @@ function setupChartEventListeners(el) {
       // Position above the bar
       tooltip.style.left = `${leftClamped}px`;
       tooltip.style.top = `${topPos}px`;
-        tooltipIsShown = true;
       } else {
       // pinned behavior: same as hover - always position above the bar
       const tipRect2 = tooltip.getBoundingClientRect();
@@ -1022,7 +1015,6 @@ function setupChartEventListeners(el) {
     hideTimeout = setTimeout(() => {
       tooltip.style.display = 'none';
       tooltip.innerHTML = '';
-      tooltipIsShown = false;
     }, 150); // Short delay for normal hide
   }
 
@@ -1036,7 +1028,6 @@ function setupChartEventListeners(el) {
     updatePinnedIndicator(null);
       // Hide immediately
       tooltip.style.display = 'none';
-      tooltipIsShown = false;
     }
   }
 
@@ -1069,7 +1060,6 @@ function setupChartEventListeners(el) {
         updatePinnedIndicator(null);
         tooltip.style.display = 'none';
         tooltip.innerHTML = '';
-        tooltipIsShown = false;
       };
     }
 
@@ -1147,7 +1137,6 @@ function updateBreakEvenAnalysis(metrics) {
     return;
   }
 
-  const totalFixedCosts = metrics.annualFixedCosts + metrics.annualPayroll;
   const surplus = metrics.revenue - metrics.breakEvenRevenue;
   const surplusPct = metrics.breakEvenRevenue > 0 ? (surplus / metrics.breakEvenRevenue) * 100 : 0;
 
@@ -1580,12 +1569,8 @@ function onTableInput(e) {
     // Auto-fix common issues
     if (k === 'priceMonthly' && value === 0 && o.priceMonthly === 0) {
       // Suggest a reasonable default price
-      const suggestedPrice = o.name?.toLowerCase().includes('premium') ? 300 :
-                            o.name?.toLowerCase().includes('basic') ? 100 : 200;
     }
 
-    if (k === 'hoursPerSession' && value === 0.1 && o.hoursPerSession === 0.1) {
-    }
   }
 
   if (k === 'name') {
@@ -1957,7 +1942,7 @@ function restoreScheduling() {
   const scheduleData = localStorage.getItem('profitpath-schedule');
   if (scheduleData) {
     try {
-      const { frequency, format, started, intervalMs } = JSON.parse(scheduleData);
+      const { started, intervalMs } = JSON.parse(scheduleData);
       const elapsed = Date.now() - started;
 
       if (elapsed < intervalMs) {
@@ -3861,7 +3846,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        console.log('Service Worker registered successfully:', registration.scope);
+        // Service Worker registered successfully
 
         // Handle service worker updates
         registration.addEventListener('updatefound', () => {
@@ -3879,8 +3864,8 @@ if ('serviceWorker' in navigator) {
           }
         });
       })
-      .catch((error) => {
-        console.log('Service Worker registration failed:', error);
+      .catch((_error) => {
+        // Service Worker registration failed
       });
   });
 }

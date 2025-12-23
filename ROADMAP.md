@@ -15,17 +15,19 @@ Based on user impact and technical foundation:
    - Refactor core calculation logic into a separate, testable library
    - ~2 hours effort, enables unit testing and modularity
 
-2. **Add Unit Tests**
-
-   - Implement unit tests for core math and business logic functions
-   - ~2-3 hours effort, improves code reliability and prevents regressions
-
-3. **Calculation Engine Refactoring**
+2. **Calculation Engine Refactoring**
 
    - Extract `calc()` into separate module with better separation of concerns
    - Add calculation pipeline with intermediate results for debugging
    - Implement calculation caching for performance
    - ~3-4 hours effort
+
+3. **Advanced Testing Infrastructure**
+
+   - Add integration tests for UI components and user workflows
+   - Implement visual regression testing for charts and reports
+   - Add performance testing for calculation engine
+   - ~4-5 hours effort
 
 ---
 
@@ -172,6 +174,6 @@ Enterprise Features (Scale Layer)
 Notes
 
 - The repo contains a stable, production-ready profitability simulator with comprehensive error handling, performance optimizations, PWA capabilities, and extensive export functionality.
-- **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, advanced testing infrastructure, scenario comparison tools, enhanced CSV export with professional headers and shareable URL encoding, and improved mobile hamburger menu with better UX, icon consistency, and navigation.
+- **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, advanced testing infrastructure (Vite, Vitest, ESLint), scenario comparison tools, enhanced CSV export with professional headers and shareable URL encoding, and improved mobile hamburger menu with better UX, icon consistency, and navigation.
 - **Next priorities**: Advanced data visualization, calculation engine refactoring, and multi-currency support for enhanced decision making and global adoption.
 - Enterprise features represent significant scope expansion and may require backend infrastructure changes.
