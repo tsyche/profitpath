@@ -22,6 +22,8 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Auto-save**: Automatic persistence of current work to localStorage
 - **Shareable URLs**: Encode scenarios in URLs for easy sharing with stakeholders
 - **Import/Export**: Load scenarios from URLs or share via email
+- **Embeddable Widgets**: Generate iframe embed codes for website integration
+- **Social Media Sharing**: Open Graph and Twitter Card support for rich previews
 - **Industry Templates**: Pre-built configurations for common business types (consulting, cleaning, landscaping, etc.)
 - **Scenario Comparison**: Side-by-side comparison of saved scenarios with key metrics and differences
 

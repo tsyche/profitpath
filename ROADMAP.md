@@ -60,14 +60,7 @@ Business Intelligence & Analytics (Core Enhancement)
 
 Enhanced User Experience (UX Layer)
 
-7. Shareable URLs & Collaboration
-
-    - Encode scenarios in URL fragments for sharing
-    - Social media sharing with preview cards
-    - Embeddable calculator widgets
-    - Effort: ~3-4 hours
-
-8. Guided Experience & Onboarding
+7. Guided Experience & Onboarding
 
     - Interactive walkthrough for new users
     - Industry-specific setup wizards
@@ -75,7 +68,7 @@ Enhanced User Experience (UX Layer)
     - Contextual help tooltips
     - Effort: ~4-5 hours
 
-9. Accessibility & Mobile Experience
+8. Accessibility & Mobile Experience
     - Full keyboard navigation
     - Screen reader optimization
     - Mobile-responsive design improvements
@@ -84,7 +77,7 @@ Enhanced User Experience (UX Layer)
 
 Advanced Visualizations (Presentation Layer)
 
-10. Interactive Scenario Comparison
+8. Interactive Scenario Comparison
 
     - Side-by-side scenario comparison
     - Diff highlighting for changes
@@ -92,7 +85,7 @@ Advanced Visualizations (Presentation Layer)
     - Correlation analysis between variables
     - Effort: ~5-6 hours
 
-11. Advanced Chart Types
+9. Advanced Chart Types
     - Heat maps for multi-variable sensitivity
     - Radar charts for balanced scorecard
     - Funnel charts for customer journey
@@ -101,7 +94,7 @@ Advanced Visualizations (Presentation Layer)
 
 Industry Intelligence & Templates (Domain Layer)
 
-12. Industry Presets & Benchmarks
+10. Industry Presets & Benchmarks
 
     - Curated templates for common service businesses
     - Industry benchmark comparisons
@@ -109,7 +102,7 @@ Industry Intelligence & Templates (Domain Layer)
     - Success metric tracking
     - Effort: ~6-8 hours
 
-13. Seasonal & Market Adjustments
+11. Seasonal & Market Adjustments
     - Seasonal demand modeling
     - Geographic pricing variations
     - Market rate comparisons
@@ -118,7 +111,7 @@ Industry Intelligence & Templates (Domain Layer)
 
 Enterprise Features (Scale Layer)
 
-14. Advanced Scenario Management
+12. Advanced Scenario Management
 
     - Scenario versioning and history
     - Bulk import/export operations
@@ -126,7 +119,7 @@ Enterprise Features (Scale Layer)
     - Team sharing and permissions
     - Effort: ~8-10 hours
 
-15. Integration & Automation
+13. Integration & Automation
 
     - API for third-party integrations
     - Webhook notifications for key metrics
@@ -134,7 +127,7 @@ Enterprise Features (Scale Layer)
     - CRM/ERP system connections
     - Effort: ~10-12 hours
 
-16. Multi-Year Strategic Planning
+14. Multi-Year Strategic Planning
 
     - 3-5 year financial projections
     - Hiring and scaling recommendations
@@ -142,7 +135,7 @@ Enterprise Features (Scale Layer)
     - Strategic milestone tracking
     - Effort: ~8-10 hours
 
-17. Optimizer Mode & AI Insights
+15. Optimizer Mode & AI Insights
     - Automated optimization suggestions
     - Machine learning price optimization
     - Predictive analytics
@@ -154,6 +147,6 @@ Enterprise Features (Scale Layer)
 Notes
 
 - The repo contains a stable, production-ready profitability simulator with comprehensive error handling, performance optimizations, PWA capabilities, and extensive export functionality.
-- **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, advanced testing infrastructure (Vite, Vitest, ESLint), scenario comparison tools, enhanced CSV export with professional headers and shareable URL encoding, improved mobile hamburger menu with better UX, icon consistency, and navigation, and modular calculation engine refactoring with caching and debug capabilities.
+- **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, advanced testing infrastructure (Vite, Vitest, ESLint), scenario comparison tools, enhanced CSV export with professional headers and shareable URL encoding, improved mobile hamburger menu with better UX, icon consistency, and navigation, modular calculation engine refactoring with caching and debug capabilities, and shareable URLs & collaboration with social media sharing and embeddable calculator widgets.
 - **Next priorities**: Advanced data visualization and multi-currency support for enhanced decision making and global adoption.
 - Enterprise features represent significant scope expansion and may require backend infrastructure changes.

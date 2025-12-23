@@ -2430,6 +2430,140 @@ function loadScenarioFromURL() {
   }
 }
 
+function updateSocialMetaTags(scenarioData) {
+  // Calculate key metrics for the meta description
+  const revenue = scenarioData.mode === 'forecast' ?
+    calc({ ...scenarioData, clients: scenarioData.offerings.reduce((sum, o) => sum + (o.currentClients || 0), 0) }).revenue :
+    scenarioData.offerings.reduce((sum, o) => sum + (o.priceMonthly * (o.currentClients || 0)), 0);
+
+  const description = `Business Scenario: $${revenue.toLocaleString()}/month revenue, ${scenarioData.employees} employees, ${scenarioData.offerings.length} services.`;
+
+  // Update meta tags
+  updateMetaTag('description', description);
+  updateMetaTag('og:description', description);
+  updateMetaTag('twitter:description', description);
+  updateMetaTag('og:title', 'ProfitPath — Business Scenario');
+  updateMetaTag('twitter:title', 'ProfitPath — Business Scenario');
+
+  // Update URL
+  const shareUrl = encodeScenarioToURL(scenarioData);
+  updateMetaTag('og:url', shareUrl);
+  updateMetaTag('twitter:url', shareUrl);
+}
+
+function updateMetaTag(name, content) {
+  const meta = document.querySelector(`meta[name="${name}"]`) || document.querySelector(`meta[property="${name}"]`);
+  if (meta) {
+    meta.setAttribute('content', content);
+  }
+}
+
+// Embeddable widget functionality
+function initializeEmbeddableWidget() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const isEmbed = urlParams.get('embed') === 'true';
+
+  if (isEmbed) {
+    // Hide non-essential UI elements for embedded version
+    const elementsToHide = [
+      '.header-actions',
+      '#hamburgerBtn',
+      '.footer',
+      '.mobile-menu-overlay'
+    ];
+
+    elementsToHide.forEach(selector => {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.style.display = 'none';
+      }
+    });
+
+    // Add embedded styling
+    const style = document.createElement('style');
+    style.textContent = `
+      body { margin: 0; padding: 0; }
+      .container { max-width: none; padding: 0; }
+      .header { margin-bottom: 0; padding: 10px; }
+      .header h1 { font-size: 18px; margin: 0; }
+      .card { margin: 10px 0; }
+    `;
+    document.head.appendChild(style);
+
+    // Adjust container for embedding
+    const container = document.querySelector('.container');
+    if (container) {
+      container.style.maxWidth = '100%';
+      container.style.padding = '0';
+      container.style.margin = '0';
+    }
+  }
+}
+
+// Generate embed code for sharing
+function generateEmbedCode() {
+  const shareUrl = encodeScenarioToURL(state);
+  const embedUrl = shareUrl + (shareUrl.includes('?') ? '&' : '?') + 'embed=true';
+
+  const embedCode = `<iframe
+  src="${embedUrl}"
+  width="100%"
+  height="600"
+  frameborder="0"
+  style="border: 1px solid #e5e7eb; border-radius: 8px;">
+</iframe>
+
+<p><a href="${shareUrl}" target="_blank">View full calculator →</a></p>`;
+
+  return embedCode;
+}
+
+function showEmbedCode() {
+  const embedCode = generateEmbedCode();
+
+  // Copy to clipboard if available
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(embedCode).then(() => {
+      alert('Embed code copied to clipboard!\n\nPaste this code into your website to embed the calculator.');
+    }).catch(() => {
+      // Fallback: show the code
+      showEmbedDialog(embedCode);
+    });
+  } else {
+    // Fallback: show the code
+    showEmbedDialog(embedCode);
+  }
+}
+
+function showEmbedDialog(embedCode) {
+  const dialog = document.createElement('div');
+  dialog.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+
+  dialog.innerHTML = `
+    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+      <h3 style="margin-top: 0;">Embed Calculator Widget</h3>
+      <p>Copy this code to embed the calculator on your website:</p>
+      <textarea style="width: 100%; height: 150px; font-family: monospace; font-size: 12px;" readonly>${embedCode}</textarea>
+      <div style="margin-top: 15px; text-align: right;">
+        <button onclick="this.closest('div').parentElement.remove()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+}
+
 function shareScenario() {
   const shareUrl = encodeScenarioToURL(state);
   if (!shareUrl) {
@@ -2437,10 +2571,13 @@ function shareScenario() {
     return;
   }
 
+  // Update social media meta tags with scenario data
+  updateSocialMetaTags(state);
+
   // Copy to clipboard if available
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(shareUrl).then(() => {
-      alert('Shareable URL copied to clipboard!\n\nYou can now share this link with stakeholders.');
+      alert('Shareable URL copied to clipboard!\n\nYou can now share this link with stakeholders.\n\nSocial media previews will show scenario details.');
     }).catch(() => {
       // Fallback: show the URL
       prompt('Copy this shareable URL:', shareUrl);
@@ -3337,6 +3474,9 @@ function wire(skipLocalStorageLoading = false) {
         case 'email':
           shareViaEmail();
           break;
+        case 'embed':
+          showEmbedCode();
+          break;
         case 'schedule':
           showScheduleDialog();
           break;
@@ -3545,6 +3685,14 @@ function wire(skipLocalStorageLoading = false) {
   if (mobileExportEmail) {
     mobileExportEmail.addEventListener('click', () => {
       shareViaEmail();
+      closeMobileMenu();
+    });
+  }
+
+  const mobileExportEmbed = $('#mobileExportEmbed');
+  if (mobileExportEmbed) {
+    mobileExportEmbed.addEventListener('click', () => {
+      showEmbedCode();
       closeMobileMenu();
     });
   }
@@ -3930,3 +4078,6 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+
+// Initialize embeddable widget if in embed mode
+initializeEmbeddableWidget();
