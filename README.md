@@ -11,6 +11,8 @@ What this repo contains
 - `ROADMAP.md` — consolidated roadmap with completed features and planned improvements (single source of truth).
 
 Quick status
+- **Progressive Disclosure**: Beginner-friendly interface with optional advanced features unlocked via settings
+- **Experience Levels**: Beginner, Intermediate, and Advanced modes with appropriate feature sets
 - **Core Features**: Forecast/current mode simulation, revenue composition charts with interactive hover tooltips, scenario management with localStorage persistence.
 - **Business Intelligence**: Break-even analysis with visual indicators, contribution margin calculations, profitability insights, rich dashboard visualizations.
 - **Advanced Export**: Multi-format reporting (PDF with charts, Excel with formulas, HTML pages, automated scheduling), email sharing functionality.

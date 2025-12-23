@@ -1326,8 +1326,7 @@ input[type="checkbox"]{
   margin-top: 0.25rem;
 }
 
-.export-dropdown:hover .export-menu,
-.export-dropdown:focus-within .export-menu {
+.export-dropdown.active .export-menu {
   display: block;
 }
 
@@ -1349,6 +1348,167 @@ input[type="checkbox"]{
   color: #1d4ed8;
 }
 
+
+/* Settings dropdown */
+.settings-dropdown {
+  position: relative;
+}
+
+.settings-menu {
+  display: none;
+  position: absolute;
+  right: -8px;
+  top: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 280px;
+  max-width: 320px;
+  padding: var(--gap);
+  margin-top: 0.25rem;
+}
+
+.settings-dropdown.active .settings-menu {
+  display: block;
+}
+
+.settings-section {
+  margin-bottom: calc(var(--gap) * 1.5);
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.settings-section h4 {
+  margin: 0 0 calc(var(--gap) * 0.5) 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.settings-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.settings-options label:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.settings-options input[type="radio"],
+.settings-options input[type="checkbox"] {
+  margin: 0;
+  accent-color: #007bff;
+  transform: scale(1.1);
+}
+
+/* Desktop Settings Cog Button */
+.settings-cog-btn {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text);
+  transition: all 0.2s ease;
+  margin-left: 4px;
+}
+
+.settings-cog-btn:hover {
+  background: var(--panel-2);
+  transform: scale(1.05);
+}
+
+/* Hide cog button on mobile */
+@media (max-width: 768px) {
+  .settings-cog-btn {
+    display: none;
+  }
+
+  /* Mobile settings menu within hamburger menu */
+  .settings-menu {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+    margin-top: 8px;
+    max-width: none;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .settings-menu .settings-section h4 {
+    color: var(--text);
+  }
+
+  .settings-menu .settings-options label {
+    color: var(--text);
+  }
+
+  .settings-menu .settings-options label:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Header actions spacing */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-actions .btn.small,
+.header-actions .settings-cog-btn {
+  margin: 0;
+}
+
+/* Compact mode */
+.compact-mode .card {
+  padding: 8px;
+}
+
+.compact-mode .btn {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.compact-mode .header-actions {
+  gap: 4px;
+}
+
+/* Feature gating classes */
+.advanced-calculations,
+.detailed-breakdown,
+.comparison-tools,
+.export-options,
+.debug-panel {
+  display: none; /* Hidden by default, shown based on settings */
+}
 
 /* Templates dropdown */
 .templates-dropdown {
@@ -1372,8 +1532,7 @@ input[type="checkbox"]{
   margin-top: 0.25rem;
 }
 
-.templates-dropdown:hover .templates-menu,
-.templates-dropdown:focus-within .templates-menu {
+.templates-dropdown.active .templates-menu {
   display: block;
 }
 

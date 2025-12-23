@@ -44,6 +44,9 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **PWA Ready**: Installable web app with native app-like experience
 
 ### User Experience
+- **Progressive Disclosure**: Beginner-friendly interface with optional advanced features
+- **Experience Levels**: Beginner, Intermediate, and Advanced user modes with appropriate feature sets
+- **Feature Gating**: Advanced features unlocked via settings panel for power users
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices
 - **Interactive Charts**: Hover tooltips, pinnable legends, detailed breakdowns
 - **Mobile Hamburger Menu**: Full feature access on mobile devices with intuitive navigation, consistent icons, and auto-collapsing submenus

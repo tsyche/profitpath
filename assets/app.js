@@ -1,4 +1,9 @@
 import { calc } from '../src/calculations/index.js';
+import {
+  loadSettings,
+  updateSetting,
+  setExperienceLevel
+} from '../src/settings/index.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -430,6 +435,9 @@ const state = {
   targetUtilizationPct: 75, // forecasting target
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings
 };
+
+// Make state accessible to calculations module
+globalThis.state = state;
 
 // Persist state to localStorage (global helper so other modules can call it)
 function persistState() {
@@ -3107,12 +3115,110 @@ function wire(skipLocalStorageLoading = false) {
   if (templatesBtn) {
     templatesBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const menu = $('#templatesMenu');
-      if (menu) {
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      const dropdown = templatesBtn.closest('.templates-dropdown');
+      closeAllDropdowns();
+      dropdown.classList.toggle('active');
+    });
+  }
+
+  // Desktop Settings Cog Button
+  const settingsCogBtn = $('#settingsCogBtn');
+  if (settingsCogBtn) {
+    settingsCogBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const dropdown = document.querySelector('.settings-dropdown');
+      if (!dropdown) {
+        console.error('Settings dropdown not found');
+        return;
+      }
+      // If this dropdown is already active, just close it
+      if (dropdown.classList.contains('active')) {
+        dropdown.classList.remove('active');
+      } else {
+        // Close other dropdowns and open this one
+        closeAllDropdowns();
+        dropdown.classList.add('active');
       }
     });
   }
+
+
+  // Helper function to close all dropdowns
+  function closeAllDropdowns() {
+    // Close all types of dropdowns
+    document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+    document.querySelectorAll('.settings-dropdown').forEach(d => d.classList.remove('active'));
+    document.querySelectorAll('.templates-dropdown').forEach(d => d.classList.remove('active'));
+    document.querySelectorAll('.export-dropdown').forEach(d => d.classList.remove('active'));
+  }
+
+  // Settings management
+  function initializeSettings() {
+    const settings = loadSettings();
+
+    // Set experience level radio buttons
+    const experienceRadios = document.querySelectorAll('input[name="experienceLevel"]');
+    experienceRadios.forEach(radio => {
+      radio.checked = radio.value === settings.experienceLevel;
+      radio.addEventListener('change', (e) => {
+        setExperienceLevel(e.target.value);
+        initializeSettings(); // Reinitialize to apply new settings
+        updateUIForSettings();
+      });
+    });
+
+    // Set feature toggles
+    const checkboxes = [
+      'showAdvancedCalculations',
+      'showDetailedBreakdown',
+      'showComparisonTools',
+      'showExportOptions',
+      'showDebugPanel',
+      'compactMode',
+      'showTooltips'
+    ];
+
+    checkboxes.forEach(key => {
+      const checkbox = $(`#${key}`);
+      if (checkbox) {
+        checkbox.checked = settings[key];
+        checkbox.addEventListener('change', (e) => {
+          updateSetting(key, e.target.checked);
+          updateUIForSettings();
+        });
+      }
+    });
+  }
+
+  function updateUIForSettings() {
+    const settings = loadSettings();
+
+    // Show/hide elements based on feature gates
+    const elementsToToggle = [
+      { selector: '.advanced-calculations', setting: 'showAdvancedCalculations' },
+      { selector: '.detailed-breakdown', setting: 'showDetailedBreakdown' },
+      { selector: '.comparison-tools', setting: 'showComparisonTools' },
+      { selector: '.export-options', setting: 'showExportOptions' },
+      { selector: '.debug-panel', setting: 'showDebugPanel' }
+    ];
+
+    elementsToToggle.forEach(({ selector, setting }) => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach(el => {
+        el.style.display = settings[setting] ? 'block' : 'none';
+      });
+    });
+
+    // Apply compact mode
+    document.body.classList.toggle('compact-mode', settings.compactMode);
+
+    // Update tooltips visibility
+    // This would require additional implementation
+  }
+
+  // Initialize settings on app load
+  initializeSettings();
+  updateUIForSettings();
 
   // Template selection handlers
   document.querySelectorAll('.template-option').forEach(option => {
@@ -3130,26 +3236,27 @@ function wire(skipLocalStorageLoading = false) {
   if (exportBtn) {
     exportBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const menu = $('#exportMenu');
-      if (menu) {
-        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-      }
+      const dropdown = exportBtn.closest('.export-dropdown');
+      closeAllDropdowns();
+      dropdown.classList.toggle('active');
     });
   }
 
-  // Close export menu when clicking an export option or outside
   // Close menus when clicking outside
   document.addEventListener('click', (e) => {
-    // Close templates menu
+    // Close templates dropdown
     if (!e.target.closest('.templates-dropdown')) {
-      const templatesMenu = $('#templatesMenu');
-      if (templatesMenu) templatesMenu.style.display = 'none';
+      document.querySelectorAll('.templates-dropdown').forEach(d => d.classList.remove('active'));
     }
 
-    // Close export menu
+    // Close export dropdown
     if (!e.target.closest('.export-dropdown')) {
-      const exportMenu = $('#exportMenu');
-      if (exportMenu) exportMenu.style.display = 'none';
+      document.querySelectorAll('.export-dropdown').forEach(d => d.classList.remove('active'));
+    }
+
+    // Close settings dropdown
+    if (!e.target.closest('.settings-dropdown') && !e.target.closest('#settingsCogBtn')) {
+      document.querySelectorAll('.settings-dropdown').forEach(d => d.classList.remove('active'));
     }
   });
 
@@ -3192,6 +3299,107 @@ function wire(skipLocalStorageLoading = false) {
   const mobileExportBtn = $('#mobileExportBtn');
   const mobileShareBtn = $('#mobileShareBtn');
   const mobileScenariosBtn = $('#mobileScenariosBtn');
+
+  // Attach mobile settings handler when menu opens
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+        if (mobileMenuOverlay.classList.contains('active')) {
+          // Menu opened, attach settings handler
+          setTimeout(() => {
+            const mobileSettingsBtn = $('#mobileSettingsBtn');
+            if (mobileSettingsBtn && !mobileSettingsBtn._settingsHandlerAttached) {
+              mobileSettingsBtn._settingsHandlerAttached = true;
+              mobileSettingsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Toggle inline settings section
+                const existingSettings = document.querySelector('.mobile-menu .settings-section');
+                if (existingSettings) {
+                  existingSettings.style.display = existingSettings.style.display === 'none' ? 'block' : 'none';
+                } else {
+                  const settingsSection = document.createElement('div');
+                  settingsSection.className = 'settings-section';
+                  settingsSection.style.cssText = `
+                    margin-top: 12px;
+                    padding: 12px;
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: 8px;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                  `;
+                  settingsSection.innerHTML = `
+                    <div style="margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text);">Experience Level</div>
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
+                        <input type="radio" name="mobileExperienceLevel" value="beginner" style="accent-color: #007bff;">
+                        Beginner
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
+                        <input type="radio" name="mobileExperienceLevel" value="intermediate" style="accent-color: #007bff;">
+                        Intermediate
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
+                        <input type="radio" name="mobileExperienceLevel" value="advanced" style="accent-color: #007bff;">
+                        Advanced
+                      </label>
+                    </div>
+                    <div style="margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text);">Advanced Features</div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
+                        <input type="checkbox" id="mobileShowAdvancedCalculations" style="accent-color: #007bff;">
+                        Advanced calculations
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
+                        <input type="checkbox" id="mobileShowDetailedBreakdown" style="accent-color: #007bff;">
+                        Detailed breakdowns
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
+                        <input type="checkbox" id="mobileShowComparisonTools" style="accent-color: #007bff;">
+                        Scenario comparison
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
+                        <input type="checkbox" id="mobileShowExportOptions" style="accent-color: #007bff;">
+                        Export options
+                      </label>
+                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
+                        <input type="checkbox" id="mobileShowDebugPanel" style="accent-color: #007bff;">
+                        Debug panel
+                      </label>
+                    </div>
+                  `;
+
+                  mobileSettingsBtn.parentNode.insertBefore(settingsSection, mobileSettingsBtn.nextSibling);
+
+                  // Initialize with current settings
+                  const settings = loadSettings ? loadSettings() : {};
+                  const experienceRadios = settingsSection.querySelectorAll('input[name="mobileExperienceLevel"]');
+                  experienceRadios.forEach(radio => {
+                    radio.checked = radio.value === settings.experienceLevel;
+                    radio.addEventListener('change', (e) => {
+                      if (setExperienceLevel) setExperienceLevel(e.target.value);
+                      if (updateUIForSettings) updateUIForSettings();
+                    });
+                  });
+
+                  const checkboxes = settingsSection.querySelectorAll('input[type="checkbox"]');
+                  checkboxes.forEach(checkbox => {
+                    const settingKey = checkbox.id.replace('mobile', '').replace(/^\w/, c => c.toLowerCase());
+                    checkbox.checked = settings[settingKey];
+                    checkbox.addEventListener('change', (e) => {
+                      if (updateSetting) updateSetting(settingKey, e.target.checked);
+                      if (updateUIForSettings) updateUIForSettings();
+                    });
+                  });
+                }
+              });
+            }
+          }, 100);
+        }
+      }
+    });
+  });
+  observer.observe(mobileMenuOverlay, { attributes: true, attributeFilter: ['class'] });
 
   if (hamburgerBtn) {
     hamburgerBtn.addEventListener('click', toggleMobileMenu);

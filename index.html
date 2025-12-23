@@ -35,6 +35,35 @@
       <div class="header-actions">
         <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">💾 Scenarios</button>
         <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
+        <div class="settings-dropdown">
+          <div class="settings-menu" id="settingsMenu">
+            <div class="settings-section">
+              <h4>Experience Level</h4>
+              <div class="settings-options">
+                <label><input type="radio" name="experienceLevel" value="beginner"> Beginner</label>
+                <label><input type="radio" name="experienceLevel" value="intermediate"> Intermediate</label>
+                <label><input type="radio" name="experienceLevel" value="advanced"> Advanced</label>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h4>Advanced Features</h4>
+              <div class="settings-options">
+                <label><input type="checkbox" id="showAdvancedCalculations"> Advanced calculations</label>
+                <label><input type="checkbox" id="showDetailedBreakdown"> Detailed breakdowns</label>
+                <label><input type="checkbox" id="showComparisonTools"> Scenario comparison</label>
+                <label><input type="checkbox" id="showExportOptions"> Export options</label>
+                <label><input type="checkbox" id="showDebugPanel"> Debug panel</label>
+              </div>
+            </div>
+            <div class="settings-section">
+              <h4>Preferences</h4>
+              <div class="settings-options">
+                <label><input type="checkbox" id="compactMode"> Compact mode</label>
+                <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="templates-dropdown">
           <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢 Templates</button>
           <div class="templates-menu" id="templatesMenu">
@@ -57,6 +86,7 @@
             <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
           </div>
         </div>
+        <button class="settings-cog-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings">⚙️</button>
         <div class="badge" title="This is a static file app">
           <span class="dot"></span>
           <span class="muted">Static simulator</span>
@@ -97,6 +127,7 @@
                 <button class="btn mobile-submenu-btn" id="mobileExportEmail">📧 Email Report</button>
               </div>
             </div>
+            <button class="btn mobile-menu-btn" id="mobileSettingsBtn">⚙️ Settings</button>
           </div>
         </div>
       </div>
