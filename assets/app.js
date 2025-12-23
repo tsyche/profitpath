@@ -1670,36 +1670,38 @@ function exportAsCSV() {
 
   // CSV header with summary metrics
   const lines = [
-    'ProfitPath Export',
-    new Date().toLocaleString(),
+    'ProfitPath Business Analysis Report',
+    `Generated: ${new Date().toLocaleString()}`,
+    `Analysis Mode: ${state.mode === 'forecast' ? 'Forecast (Planning)' : 'Current (Operations Analysis)'}`,
     '',
-    'SUMMARY',
-    `Mode,${state.mode}`,
-    `Employees,${state.employees}`,
-    `Employee Pay,${fmtMoney0(state.employeePay)}`,
-    `Monthly Overhead,${fmtMoney0(state.monthlyCosts)}`,
-    `Productive Utilization,${fmtPct1(state.productiveUtilizationPct)}`,
-    `Target Utilization,${fmtPct1(state.targetUtilizationPct)}`,
+    'BUSINESS PARAMETERS',
+    'Parameter,Value,Unit',
+    `Number of Employees,${state.employees},people`,
+    `Annual Employee Compensation,${fmtMoney0(state.employeePay)},USD/year`,
+    `Monthly Overhead Costs,${fmtMoney0(state.monthlyCosts)},USD/month`,
+    `Productive Utilization Target,${fmtPct1(state.productiveUtilizationPct)},% of available hours`,
+    `Overall Utilization Target,${fmtPct1(state.targetUtilizationPct)},% of total capacity`,
     '',
-    'RESULTS',
-    `Total Revenue,${fmtMoney0(results.revenue)}`,
-    `Total Variable Costs,${fmtMoney0(results.variableCosts)}`,
-    `Contribution Margin,${fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))}`,
-    `Fixed Overhead,${fmtMoney0(results.annualFixedCosts)}`,
-    `Net Profit,${fmtMoney0(results.income)}`,
-    `Profit Margin,${fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)}`,
-    `Billable Hours,${fmtInt(results.serviceHours || 0)}`,
-    `Utilization,${fmtPct1(results.capacityPct || 0)}`,
+    'FINANCIAL RESULTS',
+    'Metric,Value,Unit',
+    `Total Annual Revenue,${fmtMoney0(results.revenue)},USD/year`,
+    `Total Variable Costs,${fmtMoney0(results.variableCosts)},USD/year`,
+    `Gross Contribution Margin,${fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))},USD/year`,
+    `Fixed Overhead Costs,${fmtMoney0(results.annualFixedCosts)},USD/year`,
+    `Net Profit (Loss),${fmtMoney0(results.income)},USD/year`,
+    `Profit Margin,${fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)},% of revenue`,
+    `Total Billable Hours,${fmtInt(results.serviceHours || 0)},hours/year`,
+    `Capacity Utilization,${fmtPct1(results.capacityPct || 0)},% of total capacity`,
     '',
-    'OFFERINGS',
-    'Name,Price/Month,Sessions/Year,Hours/Session,Variable Cost/Session,Mix %,Current Clients,Annual Revenue,Clients Needed',
+    'SERVICE OFFERINGS BREAKDOWN',
+    'Service Name,Monthly Price,Sessions per Year,Hours per Session,Variable Cost per Session,Client Mix %,Current Clients,Projected Annual Revenue,Capacity Required',
   ];
 
   state.offerings.forEach((o) => {
     const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
-    const clientsNeeded = state.mode === 'forecast' ? Math.ceil((o.sessionsPerYear * state.employees * state.productiveUtilizationPct / 100) / o.sessionsPerYear) : o.currentClients;
+    const capacityRequired = state.mode === 'forecast' ? Math.ceil((o.sessionsPerYear * state.employees * state.productiveUtilizationPct / 100) / o.sessionsPerYear) : o.currentClients;
     lines.push(
-      `"${o.name}",${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${fmtMoney0(annualRevenue)},${clientsNeeded}`
+      `"${o.name}",${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${fmtMoney0(annualRevenue)},${capacityRequired}`
     );
   });
 
@@ -2716,6 +2718,12 @@ function closeMobileMenu() {
   if (overlay && hamburger) {
     overlay.classList.remove('active');
     hamburger.classList.remove('active');
+
+    // Auto-collapse all submenus when closing menu
+    const exportOptions = $('#mobileExportOptions');
+    const templatesOptions = $('#mobileTemplatesOptions');
+    if (exportOptions) exportOptions.style.display = 'none';
+    if (templatesOptions) templatesOptions.style.display = 'none';
   }
 }
 

@@ -20,10 +20,12 @@ Based on user impact and technical foundation:
    - Implement unit tests for core math and business logic functions
    - ~2-3 hours effort, improves code reliability and prevents regressions
 
-3. **Scenario Manager Polish**
+3. **Calculation Engine Refactoring**
 
-   - Enhance scenario management UI with rename, import/export, and comparison affordances
-   - ~3-4 hours effort, improves user workflow for managing scenarios
+   - Extract `calc()` into separate module with better separation of concerns
+   - Add calculation pipeline with intermediate results for debugging
+   - Implement calculation caching for performance
+   - ~3-4 hours effort
 
 ---
 
@@ -31,33 +33,20 @@ Based on user impact and technical foundation:
 
 **High priority**
 
-1. **Scenario Comparison Tool**
-
-   - Side-by-side comparison of different business scenarios
-   - 6-8 hours effort, enables better decision making
-
-High priority
-
-
-4. Export & sharing: polish CSV headers and add optional shareable URL encoding.
-   - Effort: ~1–3 hours
-
-Medium priority
-
-5. Simple visualizations: utilization gauge and optional richer charts.
-6. Scenario comparison (diff view).
-7. Add CI with linting and tests.
+1. Simple visualizations: utilization gauge and optional richer charts.
+2. Scenario comparison (diff view).
+3. Add CI with linting and tests.
 
 Technical Foundation & Quality (Foundation Layer)
 
-8. Calculation Engine Refactoring
+4. Calculation Engine Refactoring
 
    - Extract `calc()` into separate module with better separation of concerns
    - Add calculation pipeline with intermediate results for debugging
    - Implement calculation caching for performance
    - Effort: ~3-4 hours
 
-9. Advanced Formatting & Localization
+5. Advanced Formatting & Localization
    - Multiple currency support beyond USD
    - Localized number formatting
    - Configurable decimal precision per metric
@@ -65,14 +54,14 @@ Technical Foundation & Quality (Foundation Layer)
 
 Business Intelligence & Analytics (Core Enhancement)
 
-10. Sensitivity Analysis & What-If Scenarios
+6. Sensitivity Analysis & What-If Scenarios
 
     - "What if" sliders for key variables (pricing, costs, utilization)
     - Tornado charts showing impact of variable changes
     - Monte Carlo simulation for risk assessment
     - Effort: ~6-8 hours
 
-11. Tax & Financial Calculations
+7. Tax & Financial Calculations
 
     - Self-employment tax calculations
     - Quarterly tax estimates
@@ -80,7 +69,7 @@ Business Intelligence & Analytics (Core Enhancement)
     - Profit sharing calculations
     - Effort: ~4-5 hours
 
-12. Customer Acquisition & Growth Modeling
+8. Customer Acquisition & Growth Modeling
     - Customer acquisition cost (CAC) tracking
     - Customer lifetime value (LTV) calculations
     - Churn rate modeling
@@ -89,15 +78,14 @@ Business Intelligence & Analytics (Core Enhancement)
 
 Enhanced User Experience (UX Layer)
 
-13. Shareable URLs & Collaboration
+9. Shareable URLs & Collaboration
 
     - Encode scenarios in URL fragments for sharing
     - Social media sharing with preview cards
     - Embeddable calculator widgets
     - Effort: ~3-4 hours
 
-
-15. Guided Experience & Onboarding
+10. Guided Experience & Onboarding
 
     - Interactive walkthrough for new users
     - Industry-specific setup wizards
@@ -105,7 +93,7 @@ Enhanced User Experience (UX Layer)
     - Contextual help tooltips
     - Effort: ~4-5 hours
 
-16. Accessibility & Mobile Experience
+11. Accessibility & Mobile Experience
     - Full keyboard navigation
     - Screen reader optimization
     - Mobile-responsive design improvements
@@ -114,7 +102,7 @@ Enhanced User Experience (UX Layer)
 
 Advanced Visualizations (Presentation Layer)
 
-18. Interactive Scenario Comparison
+12. Interactive Scenario Comparison
 
     - Side-by-side scenario comparison
     - Diff highlighting for changes
@@ -122,7 +110,7 @@ Advanced Visualizations (Presentation Layer)
     - Correlation analysis between variables
     - Effort: ~5-6 hours
 
-19. Advanced Chart Types
+13. Advanced Chart Types
     - Heat maps for multi-variable sensitivity
     - Radar charts for balanced scorecard
     - Funnel charts for customer journey
@@ -131,7 +119,7 @@ Advanced Visualizations (Presentation Layer)
 
 Industry Intelligence & Templates (Domain Layer)
 
-20. Industry Presets & Benchmarks
+14. Industry Presets & Benchmarks
 
     - Curated templates for common service businesses
     - Industry benchmark comparisons
@@ -139,7 +127,7 @@ Industry Intelligence & Templates (Domain Layer)
     - Success metric tracking
     - Effort: ~6-8 hours
 
-21. Seasonal & Market Adjustments
+15. Seasonal & Market Adjustments
     - Seasonal demand modeling
     - Geographic pricing variations
     - Market rate comparisons
@@ -148,7 +136,7 @@ Industry Intelligence & Templates (Domain Layer)
 
 Enterprise Features (Scale Layer)
 
-22. Advanced Scenario Management
+16. Advanced Scenario Management
 
     - Scenario versioning and history
     - Bulk import/export operations
@@ -156,7 +144,7 @@ Enterprise Features (Scale Layer)
     - Team sharing and permissions
     - Effort: ~8-10 hours
 
-23. Integration & Automation
+17. Integration & Automation
 
     - API for third-party integrations
     - Webhook notifications for key metrics
@@ -164,7 +152,7 @@ Enterprise Features (Scale Layer)
     - CRM/ERP system connections
     - Effort: ~10-12 hours
 
-24. Multi-Year Strategic Planning
+18. Multi-Year Strategic Planning
 
     - 3-5 year financial projections
     - Hiring and scaling recommendations
@@ -172,7 +160,7 @@ Enterprise Features (Scale Layer)
     - Strategic milestone tracking
     - Effort: ~8-10 hours
 
-25. Optimizer Mode & AI Insights
+19. Optimizer Mode & AI Insights
     - Automated optimization suggestions
     - Machine learning price optimization
     - Predictive analytics
@@ -184,6 +172,6 @@ Enterprise Features (Scale Layer)
 Notes
 
 - The repo contains a stable, production-ready profitability simulator with comprehensive error handling, performance optimizations, PWA capabilities, and extensive export functionality.
-- **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, and advanced testing infrastructure.
-- **Next priorities**: Scenario comparison tools, advanced data visualization, and multi-currency support for enhanced decision making and global adoption.
+- **Recently completed**: All major tech debt items including performance optimization, service worker implementation, CI/CD pipeline, comprehensive documentation, advanced testing infrastructure, scenario comparison tools, enhanced CSV export with professional headers and shareable URL encoding, and improved mobile hamburger menu with better UX, icon consistency, and navigation.
+- **Next priorities**: Advanced data visualization, calculation engine refactoring, and multi-currency support for enhanced decision making and global adoption.
 - Enterprise features represent significant scope expansion and may require backend infrastructure changes.

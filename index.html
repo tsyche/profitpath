@@ -33,10 +33,10 @@
         </a>
       </div>
       <div class="header-actions">
+        <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">💾 Scenarios</button>
+        <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
         <div class="templates-dropdown">
-          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">
-            <span class="template-icon">🏢</span> Templates
-          </button>
+          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢 Templates</button>
           <div class="templates-menu" id="templatesMenu">
             <button class="template-option" data-template="consulting" title="Management consulting services">💼 Consulting</button>
             <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹 Cleaning</button>
@@ -47,9 +47,7 @@
           </div>
         </div>
         <div class="export-dropdown">
-          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">
-            <span class="export-icon">📄</span> Export
-          </button>
+          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄 Export</button>
           <div class="export-menu" id="exportMenu">
             <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV Spreadsheet</button>
             <button class="export-option" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
@@ -59,8 +57,6 @@
             <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
           </div>
         </div>
-        <button class="btn small" id="shareBtn" type="button" title="Share current scenario">Share</button>
-        <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">Scenarios</button>
         <div class="badge" title="This is a static file app">
           <span class="dot"></span>
           <span class="muted">Static simulator</span>
@@ -71,25 +67,14 @@
       <div class="mobile-menu-overlay" id="mobileMenuOverlay">
         <div class="mobile-menu" id="mobileMenu">
           <div class="mobile-menu-header">
-            <div class="mobile-menu-center">
-              <div class="mobile-menu-badge">
-                <span class="dot"></span>
-                <span class="muted">Static simulator</span>
-              </div>
+            <div class="mobile-menu-badge">
+              <span class="dot"></span>
+              <span class="muted">Static simulator</span>
             </div>
             <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
           </div>
           <div class="mobile-menu-content">
-            <div class="mobile-export-section">
-              <button class="btn mobile-menu-btn" id="mobileExportBtn">📄 Export</button>
-              <div class="mobile-export-options" id="mobileExportOptions" style="display: none;">
-                <button class="btn mobile-submenu-btn" id="mobileExportCsv">📊 CSV Spreadsheet</button>
-                <button class="btn mobile-submenu-btn" id="mobileExportExcel">📈 Excel Workbook</button>
-                <button class="btn mobile-submenu-btn" id="mobileExportPdf">📋 PDF Report</button>
-                <button class="btn mobile-submenu-btn" id="mobileExportHtml">🌐 HTML Page</button>
-                <button class="btn mobile-submenu-btn" id="mobileExportEmail">📧 Email Report</button>
-              </div>
-            </div>
+            <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
             <button class="btn mobile-menu-btn" id="mobileShareBtn">🔗 Share Scenario</button>
             <div class="mobile-templates-section">
               <button class="btn mobile-menu-btn" id="mobileTemplatesBtn">🏢 Templates</button>
@@ -102,7 +87,16 @@
                 <button class="btn mobile-submenu-btn" id="mobileTemplatePhotography" data-template="photography">📸 Photography</button>
               </div>
             </div>
-            <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
+            <div class="mobile-export-section">
+              <button class="btn mobile-menu-btn" id="mobileExportBtn">📄 Export</button>
+              <div class="mobile-export-options" id="mobileExportOptions" style="display: none;">
+                <button class="btn mobile-submenu-btn" id="mobileExportCsv">📊 CSV Spreadsheet</button>
+                <button class="btn mobile-submenu-btn" id="mobileExportExcel">📈 Excel Workbook</button>
+                <button class="btn mobile-submenu-btn" id="mobileExportPdf">📋 PDF Report</button>
+                <button class="btn mobile-submenu-btn" id="mobileExportHtml">🌐 HTML Page</button>
+                <button class="btn mobile-submenu-btn" id="mobileExportEmail">📧 Email Report</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -254,26 +254,24 @@ body{
   color: var(--text);
 }
 
-.mobile-menu-center{
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
 
 .mobile-menu-badge{
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 16px;
   color: var(--muted);
+  margin-bottom: 4px;
+  margin-left: 4px;
 }
 
 .mobile-menu-badge .dot{
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--good);
   display: inline-block;
+  flex-shrink: 0;
 }
 
 .mobile-menu-title{
@@ -1147,6 +1145,43 @@ input[type="checkbox"]{
   z-index: 1001;
 }
 
+/* Make scenarios modal wider on desktop to fit comparison table */
+#scenariosModal .modal-content {
+  max-width: 900px;
+  width: 95%;
+}
+
+/* Mobile responsive adjustments for scenarios modal */
+@media (max-width: 768px) {
+  #scenariosModal .modal-content {
+    max-width: calc(100vw - 20px);
+    width: calc(100vw - 20px);
+    margin: 10px;
+  }
+}
+
+/* Make horizontal scrolling more obvious on mobile */
+@media (max-width: 768px) {
+  .comparison-table-wrap {
+    position: relative;
+  }
+
+  /* Add scroll hint for mobile users */
+  .comparison-table-wrap::before {
+    content: "⟷ Scroll to see all columns ⟷";
+    display: block;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--panel);
+    padding: 4px 8px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+}
+
 .modal-header{
   display: flex;
   align-items: center;
@@ -1314,9 +1349,6 @@ input[type="checkbox"]{
   color: #1d4ed8;
 }
 
-.export-icon {
-  margin-right: 0.25rem;
-}
 
 /* Templates dropdown */
 .templates-dropdown {
@@ -1363,9 +1395,6 @@ input[type="checkbox"]{
   color: #1d4ed8;
 }
 
-.template-icon {
-  margin-right: 0.25rem;
-}
 
 /* Mobile export options */
 .mobile-export-section {
