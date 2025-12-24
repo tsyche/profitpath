@@ -1,6 +1,6 @@
 // Service Worker for ProfitPath PWA
-const CACHE_NAME = 'profitpath-v1.0.0';
-const STATIC_CACHE = 'profitpath-static-v1.0.0';
+const CACHE_NAME = 'profitpath-v1.0.1';
+const STATIC_CACHE = 'profitpath-static-v1.0.1';
 
 // Assets to cache for offline functionality
 const STATIC_ASSETS = [
