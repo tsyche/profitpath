@@ -3699,13 +3699,16 @@ function wire(skipLocalStorageLoading = false) {
 
   // Function to close all mobile submenus
   const closeAllMobileSubmenus = () => {
-    const submenus = ['mobileExportOptions', 'mobileTemplatesOptions'];
-    submenus.forEach(id => {
-      const submenu = $(id);
-      if (submenu) {
-        submenu.style.display = 'none';
-      }
+    const submenuIds = ['mobileExportOptions', 'mobileTemplatesOptions'];
+    submenuIds.forEach(id => {
+      // Prefer getElementById for id strings, fall back to querySelector
+      const submenu = document.getElementById(id) || document.querySelector(`#${id}`) || document.querySelector(`.${id}`);
+      if (submenu) submenu.style.display = 'none';
     });
+
+    // Also collapse any inline settings section inserted into the mobile menu
+    const settingsSection = document.querySelector('.mobile-menu .settings-section');
+    if (settingsSection) settingsSection.style.display = 'none';
   };
 
   if (mobileExportBtn) {
@@ -4179,6 +4182,54 @@ function initializeOnboarding() {
   initializeProgressiveDisclosure();
 }
 
+// Scroll lock helpers for guided tour
+let _tourScrollLocked = false;
+let _tourPrevHtmlOverflow = '';
+let _tourPrevBodyOverflow = '';
+function _preventTourScroll(e) {
+  // allow certain inputs inside the tour dialog (handled by pointer events), but
+  // generally prevent default touch/wheel scrolling while tour is active
+  e.preventDefault();
+}
+
+function _trapTourKeys(e) {
+  // Prevent keyboard scrolling keys while tour active
+  const blocked = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
+  if (blocked.includes(e.key)) {
+    e.preventDefault();
+  }
+}
+
+function lockScrollForTour() {
+  if (_tourScrollLocked) return;
+  _tourScrollLocked = true;
+  try {
+    _tourPrevHtmlOverflow = document.documentElement.style.overflow || '';
+    _tourPrevBodyOverflow = document.body.style.overflow || '';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  } catch (e) {
+    // ignore
+  }
+  document.addEventListener('touchmove', _preventTourScroll, { passive: false });
+  document.addEventListener('wheel', _preventTourScroll, { passive: false });
+  document.addEventListener('keydown', _trapTourKeys, { passive: false });
+}
+
+function unlockScrollForTour() {
+  if (!_tourScrollLocked) return;
+  _tourScrollLocked = false;
+  try {
+    document.documentElement.style.overflow = _tourPrevHtmlOverflow || '';
+    document.body.style.overflow = _tourPrevBodyOverflow || '';
+  } catch (e) {
+    // ignore
+  }
+  document.removeEventListener('touchmove', _preventTourScroll);
+  document.removeEventListener('wheel', _preventTourScroll);
+  document.removeEventListener('keydown', _trapTourKeys);
+}
+
 function addOnboardingHelpButton() {
   // The help button is now in the HTML, just add event listeners
   const helpButton = document.getElementById('helpBtn');
@@ -4388,6 +4439,10 @@ function loadOnboardingIndustryTemplate(industryId) {
 }
 
 function startGuidedTour() {
+  // Lock scrolling while the guided tour is active so users can't interrupt
+  // the tour by manually scrolling. Programmatic scrolling (scrollIntoView)
+  // is still allowed.
+  lockScrollForTour();
   const tour = createGuidedTour();
   tour.start();
 }
@@ -4438,7 +4493,7 @@ function createGuidedTour() {
     {
       target: '.break-even-section-wrapper',
       title: 'Break-even Analysis',
-      content: 'See how many clients you need to break even and detailed break-even analysis.',
+      content: 'See how many clients you need to break even with a detailed break-even analysis.',
       position: 'left'
     },
     {
@@ -4462,7 +4517,7 @@ function createGuidedTour() {
   };
 }
 
-function showTourStep(stepIndex) {
+async function showTourStep(stepIndex) {
   if (!tourActive || stepIndex >= tourSteps.length) {
     completeTour();
     return;
@@ -4489,51 +4544,125 @@ function showTourStep(stepIndex) {
     return;
   }
 
-  // Scroll the target element into view
-  target.scrollIntoView({
-    behavior: 'smooth',
-    block: 'center',
-    inline: 'center'
-  });
+  // Scroll the target element into view smoothly, then wait for scrolling to stop
+  target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
 
-  // Simple, reliable scroll completion detection
-  let scrollCompleteTimeout;
-  const positionTooltipAfterScroll = () => {
-    clearTimeout(scrollCompleteTimeout);
-    scrollCompleteTimeout = setTimeout(() => {
-      // Scrolling has completed, now position the tooltip
-      const tooltip = createTooltip(step, target, null, stepIndex, tourSteps);
-      document.body.appendChild(tooltip);
+  // Wait until scrolling has settled and the target is roughly centered before creating the tooltip.
+  // This avoids creating the overlay while the page is still animating which caused the overlay
+  // to be slightly offset when long smooth-scrolls were required.
+  await waitForTargetSettled(target, { timeoutMs: 3000, idleMs: 250 });
 
-      // Add keyboard support
-      const handleKeydown = (e) => {
-        if (e.key === 'Escape' && tourActive) {
-          document.removeEventListener('keydown', handleKeydown);
-          exitTour();
-        }
-      };
-      document.addEventListener('keydown', handleKeydown);
+  // Remove any leftover tooltips/overlays to avoid duplicates or jumping.
+  document.querySelectorAll('.onboarding-tooltip, .onboarding-overlay').forEach(el => el.remove());
 
-      // Store cleanup function
-      tooltip._cleanupKeyboard = () => {
-        document.removeEventListener('keydown', handleKeydown);
-      };
-    }, 600); // Wait 600ms for smooth scroll to complete
+  // Now create the tooltip (createTooltip will append it to the DOM)
+  const tooltip = createTooltip(step, target, null, stepIndex, tourSteps);
+
+  // Add keyboard support
+  const handleKeydown = (e) => {
+    if (e.key === 'Escape' && tourActive) {
+      document.removeEventListener('keydown', handleKeydown);
+      exitTour();
+    }
   };
+  document.addEventListener('keydown', handleKeydown);
 
-  // Position tooltip immediately for non-scrolling cases, and after scroll for scrolling cases
-  setTimeout(positionTooltipAfterScroll, 100); // Short delay for initial positioning
-  window.addEventListener('scroll', positionTooltipAfterScroll);
+  // Store cleanup function
+  tooltip._cleanupKeyboard = () => {
+    document.removeEventListener('keydown', handleKeydown);
+  };
+}
 
-  // Clean up scroll listener after tooltip is positioned
-  setTimeout(() => {
-    window.removeEventListener('scroll', positionTooltipAfterScroll);
-  }, 1200);
+// Helper to wait until scrolling stops and the target is approximately centered
+function waitForTargetSettled(target, { timeoutMs = 3000, idleMs = 250, stableMs = 250 } = {}) {
+  return new Promise((resolve) => {
+    let idleTimer = null;
+    let timeoutTimer = null;
+    let rafId = null;
+
+    function cleanup() {
+      if (idleTimer) clearTimeout(idleTimer);
+      if (timeoutTimer) clearTimeout(timeoutTimer);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', onScroll, { passive: true });
+      window.removeEventListener('resize', onScroll);
+    }
+
+    // After we observe no scroll for idleMs, ensure the element's rect is stable
+    // for `stableMs` milliseconds before resolving. If the element is not near
+    // the center, perform an immediate snap and continue waiting for stability.
+    function ensureStableAndResolve() {
+      const startTime = Date.now();
+      let lastRect = target.getBoundingClientRect();
+      let lastChange = Date.now();
+
+      // If target is far from center, snap it into view first (instant)
+      const rectNow = lastRect;
+      const viewportCenterY = window.innerHeight / 2;
+      const deltaCenter = Math.abs((rectNow.top + rectNow.bottom) / 2 - viewportCenterY);
+      if (deltaCenter > window.innerHeight * 0.2) {
+        try {
+          target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
+        } catch (e) {
+          // ignore
+        }
+        // update lastRect after snapping
+        lastRect = target.getBoundingClientRect();
+        lastChange = Date.now();
+      }
+
+      function checkRect() {
+        const rect = target.getBoundingClientRect();
+        const dx = Math.abs(rect.top - lastRect.top) + Math.abs(rect.left - lastRect.left) + Math.abs(rect.width - lastRect.width) + Math.abs(rect.height - lastRect.height);
+        if (dx > 2) {
+          lastRect = rect;
+          lastChange = Date.now();
+        }
+
+        if (Date.now() - lastChange >= stableMs) {
+          cleanup();
+          resolve();
+          return;
+        }
+
+        if (Date.now() - startTime >= timeoutMs) {
+          cleanup();
+          resolve();
+          return;
+        }
+
+        rafId = requestAnimationFrame(checkRect);
+      }
+
+      checkRect();
+    }
+
+    function onScroll() {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        ensureStableAndResolve();
+      }, idleMs);
+    }
+
+    // Start listeners and safety timeout
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+
+    timeoutTimer = setTimeout(() => {
+      cleanup();
+      resolve();
+    }, timeoutMs + 200);
+
+    // Kick off initial idle check (in case no scroll events occur)
+    onScroll();
+  });
 }
 
 function exitTour() {
   tourActive = false;
   // Remove all tooltips and overlays
+  // Unlock scrolling when the tour exits
+  unlockScrollForTour();
   document.querySelectorAll('.onboarding-tooltip, .onboarding-overlay').forEach(el => el.remove());
 
   // Show exit confirmation
@@ -4553,6 +4682,8 @@ function exitTour() {
 
 function completeTour() {
   tourActive = false;
+  // Unlock scrolling when the tour completes
+  unlockScrollForTour();
   localStorage.setItem('onboardingCompleted', 'true');
 
   const completionDialog = createOnboardingDialog({
@@ -4754,44 +4885,46 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
     }
   }, 10);
 
-  // Simple, reliable highlighting - add border and animation directly to target
-  const originalBorder = target.style.border;
-  const originalBorderRadius = target.style.borderRadius;
-  const originalBoxShadow = target.style.boxShadow;
-  const originalPosition = target.style.position;
-  const originalZIndex = target.style.zIndex;
-  const originalOutline = target.style.outline;
-  const originalOutlineOffset = target.style.outlineOffset;
-  const originalAnimation = target.style.animation;
+  // Highlighting: place a fixed overlay around the target so we don't rely on modifying
+  // the target's own styles (avoids stacking-context/overflow issues and layout shifts).
+  const OVERLAY_PAD = 9; // pixels to expand the highlight beyond the element (increased by 1 to keep outer perimeter)
+  const BORDER_THICKNESS = 7; // highlight border thickness (reduced by 1px for less clipping)
 
-  // Apply highlighting styles directly to target element (avoid changing layout)
-  // Use a thicker outline and place it outside the element to avoid cutting off content.
-  target.style.outline = '6px solid #007bff';
-  target.style.outlineOffset = '6px';
-  target.style.borderRadius = '10px';
-  target.style.boxShadow = '0 0 0 0 rgba(0, 123, 255, 0.7)';
-  target.style.animation = 'pulse 2s infinite';
-  target.style.position = originalPosition || 'relative';
-  target.style.zIndex = '9998';
+  const rect2 = target.getBoundingClientRect();
+  const computed = window.getComputedStyle(target);
+  // If the target has no rounded corners, use a mild default so highlights look rounded
+  const parsedBR = parseFloat(computed.borderRadius) || 0;
+  const borderRadius = (parsedBR && parsedBR > 4) ? `${parsedBR}px` : '10px';
 
-  // Store original styles for cleanup
-  tooltip._targetElement = target;
-  tooltip._originalStyles = {
-    border: originalBorder,
-    borderRadius: originalBorderRadius,
-    boxShadow: originalBoxShadow,
-    position: originalPosition,
-    zIndex: originalZIndex,
-    outline: originalOutline,
-    outlineOffset: originalOutlineOffset,
-    animation: originalAnimation
-  };
+  const overlay = document.createElement('div');
+  overlay.className = 'onboarding-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    left: ${rect2.left - OVERLAY_PAD}px;
+    top: ${rect2.top - OVERLAY_PAD}px;
+    width: ${rect2.width + OVERLAY_PAD * 2}px;
+    height: ${rect2.height + OVERLAY_PAD * 2}px;
+    border: ${BORDER_THICKNESS}px solid #007bff;
+    border-radius: ${borderRadius};
+    box-shadow: 0 8px 32px rgba(0,123,255,0.12);
+    pointer-events: none;
+    z-index: 9999;
+    animation: pulse 2s infinite;
+  `;
 
-  // Restore original styles when tooltip is removed
+  // Append overlay underneath the tooltip (tooltip uses z-index:10000)
+  document.body.appendChild(overlay);
+
+  // Store overlay for cleanup
+  tooltip._overlay = overlay;
+
+  // Wrap original remove to also remove the overlay and keyboard handler
   const originalRemove = tooltip.remove;
   tooltip.remove = function () {
-    if (tooltip._targetElement && tooltip._originalStyles) {
-      Object.assign(tooltip._targetElement.style, tooltip._originalStyles);
+    try {
+      if (tooltip._overlay && tooltip._overlay.parentNode) tooltip._overlay.parentNode.removeChild(tooltip._overlay);
+    } catch (e) {
+      // ignore
     }
     if (tooltip._cleanupKeyboard) {
       tooltip._cleanupKeyboard();
