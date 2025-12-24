@@ -769,7 +769,7 @@ function setupChartEventListeners(el) {
       // Position above the bar
       tooltip.style.left = `${leftClamped}px`;
       tooltip.style.top = `${topPos}px`;
-      } else {
+    } else {
       // pinned behavior: same as hover - always position above the bar
       const tipRect2 = tooltip.getBoundingClientRect();
       const topPos = Math.max(8, rectBox.top - containerBox.top - tipRect2.height - HOVER_OFFSET);
@@ -803,9 +803,9 @@ function setupChartEventListeners(el) {
     pinnedRect = null;
     const tooltip = el.querySelector('.chart-tooltip');
     if (tooltip) {
-    tooltip.classList.remove('pinned');
-    tooltip.classList.remove('visible');
-    updatePinnedIndicator(null);
+      tooltip.classList.remove('pinned');
+      tooltip.classList.remove('visible');
+      updatePinnedIndicator(null);
       // Hide immediately
       tooltip.style.display = 'none';
     }
@@ -1789,13 +1789,13 @@ async function exportAsExcel() {
   ];
 
   const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-  summarySheet['!cols'] = [{wch: 25}, {wch: 15}];
+  summarySheet['!cols'] = [{ wch: 25 }, { wch: 15 }];
 
   // Format as percentages where appropriate
-  summarySheet['E6'] = {t: 'n', v: state.productiveUtilizationPct / 100, z: '0.00%'};
-  summarySheet['E7'] = {t: 'n', v: state.targetUtilizationPct / 100, z: '0.00%'};
-  summarySheet['E18'] = {t: 'n', v: (results.capacityPct || 0) / 100, z: '0.00%'};
-  summarySheet['E19'] = {t: 'n', v: ((results.income || 0) / (results.revenue || 1)), z: '0.00%'};
+  summarySheet['E6'] = { t: 'n', v: state.productiveUtilizationPct / 100, z: '0.00%' };
+  summarySheet['E7'] = { t: 'n', v: state.targetUtilizationPct / 100, z: '0.00%' };
+  summarySheet['E18'] = { t: 'n', v: (results.capacityPct || 0) / 100, z: '0.00%' };
+  summarySheet['E19'] = { t: 'n', v: ((results.income || 0) / (results.revenue || 1)), z: '0.00%' };
 
   XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
 
@@ -1822,12 +1822,12 @@ async function exportAsExcel() {
 
   const offeringsSheet = XLSX.utils.aoa_to_sheet(offeringsData);
   offeringsSheet['!cols'] = [
-    {wch: 20}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 18}, {wch: 8}, {wch: 14}, {wch: 14}, {wch: 14}
+    { wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 14 }
   ];
 
   // Format mix percentage column
   for (let i = 1; i < offeringsData.length; i++) {
-    offeringsSheet[XLSX.utils.encode_cell({r: i, c: 5})].z = '0.00%';
+    offeringsSheet[XLSX.utils.encode_cell({ r: i, c: 5 })].z = '0.00%';
   }
 
   XLSX.utils.book_append_sheet(workbook, offeringsSheet, 'Offerings');
@@ -2087,8 +2087,8 @@ function exportAsHTML() {
                 </thead>
                 <tbody>
                     ${state.offerings.map(o => {
-                      const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
-                      return `
+    const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
+    return `
                         <tr>
                             <td>${escapeHtml(o.name)}</td>
                             <td>${fmtMoney0(o.priceMonthly)}</td>
@@ -2100,7 +2100,7 @@ function exportAsHTML() {
                             <td>${fmtMoney0(annualRevenue)}</td>
                         </tr>
                       `;
-                    }).join('')}
+  }).join('')}
                 </tbody>
             </table>
         </div>
@@ -2238,20 +2238,20 @@ function deleteScenario(scenarioId) {
 
     try {
       // Get scenarios once and filter
-    let scenarios = getAllScenarios();
+      let scenarios = getAllScenarios();
       const initialLength = scenarios.length;
-    scenarios = scenarios.filter((s) => s.id !== scenarioId);
+      scenarios = scenarios.filter((s) => s.id !== scenarioId);
 
       // Only update if we actually removed something
       if (scenarios.length < initialLength) {
-    localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
+        localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
         // Defer rendering to next tick to avoid blocking
         setTimeout(() => renderScenariosList(), 0);
       }
-  } catch (e) {
-    console.error('Failed to delete scenario:', e);
-    alert('Error deleting scenario');
-  }
+    } catch (e) {
+      console.error('Failed to delete scenario:', e);
+      alert('Error deleting scenario');
+    }
   };
 
   document.getElementById('confirmNo').onclick = () => {
@@ -3209,26 +3209,26 @@ function loadSpecificTestScenario(key) {
 function wire(skipLocalStorageLoading = false) {
   // Load persisted state from localStorage if available (unless we loaded from URL)
   if (!skipLocalStorageLoading) {
-  try {
-    const saved = localStorage.getItem('profitpath-state');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Merge saved state with defaults to handle new fields gracefully
-      state.mode = parsed.mode ?? state.mode;
-      state.offerings = parsed.offerings ?? state.offerings;
-      state.employees = parsed.employees ?? state.employees;
-      state.employeePay = parsed.employeePay ?? state.employeePay;
-      state.monthlyCosts = parsed.monthlyCosts ?? state.monthlyCosts;
-      state.productiveUtilizationPct = parsed.productiveUtilizationPct ?? state.productiveUtilizationPct;
-      state.targetUtilizationPct = parsed.targetUtilizationPct ?? state.targetUtilizationPct;
-      state.lockMix = parsed.lockMix ?? state.lockMix;
+    try {
+      const saved = localStorage.getItem('profitpath-state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Merge saved state with defaults to handle new fields gracefully
+        state.mode = parsed.mode ?? state.mode;
+        state.offerings = parsed.offerings ?? state.offerings;
+        state.employees = parsed.employees ?? state.employees;
+        state.employeePay = parsed.employeePay ?? state.employeePay;
+        state.monthlyCosts = parsed.monthlyCosts ?? state.monthlyCosts;
+        state.productiveUtilizationPct = parsed.productiveUtilizationPct ?? state.productiveUtilizationPct;
+        state.targetUtilizationPct = parsed.targetUtilizationPct ?? state.targetUtilizationPct;
+        state.lockMix = parsed.lockMix ?? state.lockMix;
 
         // Validate loaded data and sanitize if needed
         validateAndSanitizeLoadedState();
+      }
+    } catch (e) {
+      console.warn('Failed to load saved state:', e);
     }
-  } catch (e) {
-    console.warn('Failed to load saved state:', e);
-  }
   }
 
   // migrate existing save calls to global persistState
@@ -3270,8 +3270,15 @@ function wire(skipLocalStorageLoading = false) {
     templatesBtn.addEventListener('click', (e) => {
       e.preventDefault();
       const dropdown = templatesBtn.closest('.templates-dropdown');
-      closeAllDropdowns();
-      dropdown.classList.toggle('active');
+      if (!dropdown) return;
+      // If this dropdown is already active, just close it
+      if (dropdown.classList.contains('active')) {
+        dropdown.classList.remove('active');
+      } else {
+        // Close other dropdowns and open this one
+        closeAllDropdowns();
+        dropdown.classList.add('active');
+      }
     });
   }
 
@@ -3326,7 +3333,7 @@ function wire(skipLocalStorageLoading = false) {
 
         // Position the menu directly under the cog button
         const menu = dropdown.querySelector('.settings-menu');
-      if (menu) {
+        if (menu) {
           const buttonRect = settingsCogBtn.getBoundingClientRect();
           const menuWidth = 320; // max-width from CSS
           const viewportWidth = window.innerWidth;
@@ -3452,8 +3459,15 @@ function wire(skipLocalStorageLoading = false) {
     exportBtn.addEventListener('click', (e) => {
       e.preventDefault();
       const dropdown = exportBtn.closest('.export-dropdown');
-      closeAllDropdowns();
-      dropdown.classList.toggle('active');
+      if (!dropdown) return;
+      // If this dropdown is already active, just close it
+      if (dropdown.classList.contains('active')) {
+        dropdown.classList.remove('active');
+      } else {
+        // Close other dropdowns and open this one
+        closeAllDropdowns();
+        dropdown.classList.add('active');
+      }
     });
   }
 
@@ -3858,31 +3872,31 @@ function populateComparisonDropdowns() {
   });
 }
 
-  // Render the comparison table
-  function renderComparisonResults(metrics1, metrics2) {
-    const comparisonResultsEl = $('#comparisonResults');
-    if (!comparisonResultsEl) return;
+// Render the comparison table
+function renderComparisonResults(metrics1, metrics2) {
+  const comparisonResultsEl = $('#comparisonResults');
+  if (!comparisonResultsEl) return;
 
-    // Render into the wrapper div, not directly into comparisonResultsEl
-    const tableWrap = comparisonResultsEl.querySelector('.comparison-table-wrap');
-    if (!tableWrap) return;
+  // Render into the wrapper div, not directly into comparisonResultsEl
+  const tableWrap = comparisonResultsEl.querySelector('.comparison-table-wrap');
+  if (!tableWrap) return;
 
-    const metricsToCompare = [
-      { label: 'Clients', key: 'clients', format: fmtInt },
-      { label: 'Annual Sessions', key: 'annualSessions', format: fmtInt },
-      { label: 'Service Hours', key: 'serviceHours', format: fmtInt },
-      { label: 'Utilization', key: 'utilizationPct', format: fmtPct1 },
-      { label: 'Revenue', key: 'revenue', format: fmtMoney0 },
-      { label: 'Fixed Costs', key: 'annualFixedCosts', format: fmtMoney0 },
-      { label: 'Payroll', key: 'annualPayroll', format: fmtMoney0 },
-      { label: 'Variable Costs', key: 'annualVariableCosts', format: fmtMoney0 },
-      { label: 'Net Income', key: 'netIncome', format: fmtMoney0 },
-      { label: 'Break-Even Clients', key: 'breakEvenClients', format: fmtInt },
-      { label: 'Break-Even Revenue', key: 'breakEvenRevenue', format: fmtMoney0 },
-      { label: 'Contribution Margin', key: 'contributionMarginPerClient', format: fmtMoney0 },
-    ];
+  const metricsToCompare = [
+    { label: 'Clients', key: 'clients', format: fmtInt },
+    { label: 'Annual Sessions', key: 'annualSessions', format: fmtInt },
+    { label: 'Service Hours', key: 'serviceHours', format: fmtInt },
+    { label: 'Utilization', key: 'utilizationPct', format: fmtPct1 },
+    { label: 'Revenue', key: 'revenue', format: fmtMoney0 },
+    { label: 'Fixed Costs', key: 'annualFixedCosts', format: fmtMoney0 },
+    { label: 'Payroll', key: 'annualPayroll', format: fmtMoney0 },
+    { label: 'Variable Costs', key: 'annualVariableCosts', format: fmtMoney0 },
+    { label: 'Net Income', key: 'netIncome', format: fmtMoney0 },
+    { label: 'Break-Even Clients', key: 'breakEvenClients', format: fmtInt },
+    { label: 'Break-Even Revenue', key: 'breakEvenRevenue', format: fmtMoney0 },
+    { label: 'Contribution Margin', key: 'contributionMarginPerClient', format: fmtMoney0 },
+  ];
 
-    let tableHtml = `
+  let tableHtml = `
       <table class="comparison-table">
         <thead>
           <tr>
@@ -3895,24 +3909,24 @@ function populateComparisonDropdowns() {
         <tbody>
     `;
 
-    metricsToCompare.forEach(m => {
-      const val1 = metrics1[m.key];
-      const val2 = metrics2[m.key];
-      const diff = val2 - val1;
+  metricsToCompare.forEach(m => {
+    const val1 = metrics1[m.key];
+    const val2 = metrics2[m.key];
+    const diff = val2 - val1;
 
-      let diffClass = 'difference-neutral';
-      if (m.key.includes('income') || m.key.includes('revenue') || m.key.includes('margin')) {
-        if (diff > 0) diffClass = 'difference-positive';
-        else if (diff < 0) diffClass = 'difference-negative';
-      } else if (m.key.includes('cost')) {
-        if (diff > 0) diffClass = 'difference-negative';
-        else if (diff < 0) diffClass = 'difference-positive';
-      } else if (m.key.includes('utilization') || m.key.includes('clients') || m.key.includes('sessions') || m.key.includes('hours')) {
-        if (diff > 0) diffClass = 'difference-positive';
-        else if (diff < 0) diffClass = 'difference-negative';
-      }
+    let diffClass = 'difference-neutral';
+    if (m.key.includes('income') || m.key.includes('revenue') || m.key.includes('margin')) {
+      if (diff > 0) diffClass = 'difference-positive';
+      else if (diff < 0) diffClass = 'difference-negative';
+    } else if (m.key.includes('cost')) {
+      if (diff > 0) diffClass = 'difference-negative';
+      else if (diff < 0) diffClass = 'difference-positive';
+    } else if (m.key.includes('utilization') || m.key.includes('clients') || m.key.includes('sessions') || m.key.includes('hours')) {
+      if (diff > 0) diffClass = 'difference-positive';
+      else if (diff < 0) diffClass = 'difference-negative';
+    }
 
-      tableHtml += `
+    tableHtml += `
         <tr>
           <td class="metric-name">${m.label}</td>
           <td class="scenario-col">${m.format(val1)}</td>
@@ -3920,31 +3934,31 @@ function populateComparisonDropdowns() {
           <td class="difference-col ${diffClass}">${m.format(diff)}</td>
         </tr>
       `;
-    });
+  });
 
-    tableHtml += `
+  tableHtml += `
         </tbody>
       </table>
     `;
-    tableWrap.innerHTML = tableHtml; // Assign to wrapper
-    comparisonResultsEl.style.display = 'block';
-  }
+  tableWrap.innerHTML = tableHtml; // Assign to wrapper
+  comparisonResultsEl.style.display = 'block';
+}
 
 // Handle comparison logic
-  function handleComparison() {
-    const comparisonErrorEl = $('#comparisonError');
-    if (comparisonErrorEl) comparisonErrorEl.style.display = 'none'; // Hide previous error
+function handleComparison() {
+  const comparisonErrorEl = $('#comparisonError');
+  if (comparisonErrorEl) comparisonErrorEl.style.display = 'none'; // Hide previous error
 
-    const { scenario1Id, scenario2Id } = getSelectedComparisonScenarios();
-    const scenarios = getAllScenarios();
+  const { scenario1Id, scenario2Id } = getSelectedComparisonScenarios();
+  const scenarios = getAllScenarios();
 
-    const scenario1 = scenarios.find(s => s.id === scenario1Id);
-    const scenario2 = scenarios.find(s => s.id === scenario2Id);
+  const scenario1 = scenarios.find(s => s.id === scenario1Id);
+  const scenario2 = scenarios.find(s => s.id === scenario2Id);
 
-    if (!scenario1 || !scenario2) {
-      $('#comparisonResults').style.display = 'none';
-      return;
-    }
+  if (!scenario1 || !scenario2) {
+    $('#comparisonResults').style.display = 'none';
+    return;
+  }
 
   // Calculate metrics for both scenarios
   const metrics1 = calc(scenario1.data || scenario1.state); // Handle older scenario structure
@@ -4241,8 +4255,8 @@ function showIndustrySelector() {
       <p style="margin-top: 16px; color: var(--muted);">This helps us provide tailored guidance and templates.</p>
     `,
     buttons: [
-      { text: 'Continue', action: () => {}, primary: true },
-      { text: 'Skip', action: () => {} }
+      { text: 'Continue', action: () => { }, primary: true },
+      { text: 'Skip', action: () => { } }
     ]
   });
 
@@ -4530,7 +4544,7 @@ function exitTour() {
       <p>Feel free to explore the features at your own pace!</p>
     `,
     buttons: [
-      { text: 'Got it!', action: () => {} }
+      { text: 'Got it!', action: () => { } }
     ]
   });
 
@@ -4548,7 +4562,7 @@ function completeTour() {
       <p>Explore the features at your own pace. Use the ❓ help button anytime for guidance.</p>
     `,
     buttons: [
-      { text: 'Got it!', action: () => {}, primary: true }
+      { text: 'Got it!', action: () => { }, primary: true }
     ]
   });
 
@@ -4747,11 +4761,14 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   const originalPosition = target.style.position;
   const originalZIndex = target.style.zIndex;
   const originalOutline = target.style.outline;
+  const originalOutlineOffset = target.style.outlineOffset;
+  const originalAnimation = target.style.animation;
 
   // Apply highlighting styles directly to target element (avoid changing layout)
-  target.style.outline = '4px solid #007bff';
-  target.style.outlineOffset = '-8px';
-  target.style.borderRadius = '9px';
+  // Use a thicker outline and place it outside the element to avoid cutting off content.
+  target.style.outline = '6px solid #007bff';
+  target.style.outlineOffset = '6px';
+  target.style.borderRadius = '10px';
   target.style.boxShadow = '0 0 0 0 rgba(0, 123, 255, 0.7)';
   target.style.animation = 'pulse 2s infinite';
   target.style.position = originalPosition || 'relative';
@@ -4766,13 +4783,13 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
     position: originalPosition,
     zIndex: originalZIndex,
     outline: originalOutline,
-    outlineOffset: '',
-    animation: ''
+    outlineOffset: originalOutlineOffset,
+    animation: originalAnimation
   };
 
   // Restore original styles when tooltip is removed
   const originalRemove = tooltip.remove;
-  tooltip.remove = function() {
+  tooltip.remove = function () {
     if (tooltip._targetElement && tooltip._originalStyles) {
       Object.assign(tooltip._targetElement.style, tooltip._originalStyles);
     }
@@ -4875,7 +4892,7 @@ function showHelpMenu() {
       </div>
     `,
     buttons: [
-      { text: 'Close', action: () => {} }
+      { text: 'Close', action: () => { } }
     ]
   });
 
