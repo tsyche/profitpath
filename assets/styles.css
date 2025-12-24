@@ -33,16 +33,22 @@ body{
   color: var(--text);
 }
 
+/* Ensure there is always a small bottom padding so content doesn't flush
+   against the viewport edge when scrolled to the bottom (helps mobile & desktop). */
+body {
+  padding-bottom: 24px;
+}
+
 .page{
   max-width: 100%;
   margin: 0 auto;
-  padding: 8px 4px 44px; /* Base padding */
+  padding: 8px 4px 32px; /* Base padding - ensure bottom spacing matches side padding */
 }
 
 /* Full screen spacing rules */
 @media (min-width: 1100px) {
   .page {
-    padding: 8px 24px 44px 32px; /* 32px left, 24px right - MORE LEFT SPACE */
+    padding: 8px 24px 32px 32px; /* 32px left/right and 32px bottom */
   }
   .header {
     max-width: calc(100vw - 48px); /* Full width minus 24px on each side */
@@ -59,14 +65,14 @@ body{
 
 @media (max-width: 480px){
   .page{
-    padding: 8px 24px 16px; /* Increased from 20px to 24px */
+    padding: 8px 24px 12px; /* Keep slightly larger bottom spacing on very small screens */
   }
   .header{
     justify-content: space-between !important; /* Force space-between on mobile */
     flex-wrap: wrap; /* Allow wrapping if needed */
     max-width: calc(100vw - 32px); /* Full width minus 16px on each side */
     margin: 0 auto; /* Center the header */
-    margin-bottom: 1px; /* SUPER tight gap to main content */
+    margin-bottom: 0; /* Reduced gap to main content */
   }
   .header-left {
     flex: 0 0 auto; /* Take natural width */
@@ -87,12 +93,14 @@ body{
   .header{
     max-width: calc(100vw - 32px); /* Full width minus 16px on each side */
     margin: 0 auto; /* Center the header */
-    margin-bottom: 1px; /* SUPER tight gap to main content */
+    margin-bottom: 0; /* Reduced gap to main content */
   }
 
   .grid{
     gap: 8px;
     width: 100%;
+    /* Slight top offset to bring grid closer to the header / warning banners */
+    margin-top: 6px;
   }
 
   .card{
@@ -103,7 +111,7 @@ body{
   }
 
   .header{
-    margin-bottom: 8px;
+    margin-bottom: 2px;
     padding: 8px 40px 8px 8px; /* Extra right padding for hamburger */
     width: 100%;
     min-height: 50px;
@@ -178,14 +186,56 @@ body{
   }
 }
 
+/* Reduce vertical spacing between header, validation banners and main grid so
+   the header sits closer to the Inputs/Outputs; values are conservative so
+   this shouldn't introduce layout regressions. */
+.validation-container {
+  margin: 6px 0;
+  padding: 6px 0;
+}
+
+.header + .validation-container,
+.validation-container + .grid,
+.header + .grid {
+  margin-top: 6px;
+}
+
+/* Final safe overrides: ensure bottom spacing and tighter header/content gap
+   across all breakpoints. These override earlier, more general rules that
+   (on some devices/browsers) remove body padding during scroll gestures. */
+body, html {
+  /* keep the page from touching bottom edge when scrolled */
+  padding-bottom: 24px !important;
+}
+
+.page {
+  padding-bottom: 24px !important;
+}
+
+.header {
+  margin-bottom: 0 !important; /* make header sit closer to content */
+}
+
+.validation-container {
+  /* Keep validation banners centered and matching the grid/card widths */
+  max-width: calc(100vw - 64px) !important;
+  margin: 4px auto 12px !important;
+  padding: 4px 0 !important;
+}
+
+.grid {
+  margin-top: 6px !important;
+  padding-bottom: 12px !important; /* extra safety so cards don't touch bottom */
+}
+
 .header{
   display:flex;
   align-items:center;
   justify-content: space-between;
-  gap:14px;
-  margin-bottom: 4px;
+  gap:12px;
+  margin-bottom: 0; /* bring header even closer to content */
   position: relative;
-  padding: 13px 0; /* Increased padding for logo positioning */
+  padding: 10px 0; /* slightly reduced vertical padding */
 }
 
 .header-left {
@@ -415,24 +465,31 @@ body{
 }
 
 .grid{
-  display:grid;
-  grid-template-columns: minmax(0, var(--input-max)) minmax(0, var(--side-max));
+  display: grid;
+  /* Use two equal flexible columns so Inputs and Outputs always match widths
+     and expand evenly on wide screens. The overall grid is constrained to
+     leave comfortable padding from viewport edges. */
+  grid-template-columns: 1fr 1fr;
   gap: var(--gap);
   align-items: start; /* prevent the Outputs card from stretching to match Inputs height */
+  max-width: calc(100vw - 64px); /* Keep ~32px space on each side */
+  margin: 0 auto;
 }
 
-/* Keep Outputs from getting too wide on large displays. */
+/* Allow cards to fill their column (no per-card max-width) so they expand
+   evenly. Column gap provides spacing between them and page padding gives
+   space from viewport edges. */
 .grid > aside.card{
   width: 100%;
-  max-width: var(--side-max);
-  justify-self: end;
-  margin: 0 3px 0 auto; /* 3px from right edge, auto left */
+  max-width: none;
+  justify-self: stretch;
+  margin: 0;
 }
 
 .grid > section.card{
-  margin: 0 auto; /* Center input card */
-  margin-left: 3px; /* 3px from left edge */
-  margin-right: 3px; /* 3px spacing between cards */
+  width: 100%;
+  max-width: none;
+  margin: 0;
 }
 @media (max-width: 1100px){
   .grid{
@@ -447,6 +504,23 @@ body{
     width: 100% !important;
     margin-left: auto !important;
     margin-right: auto !important;
+  }
+}
+
+/* Mobile: allow the grid to come very close to the viewport edges so the
+   inner boxes don't collide at narrow widths. Keep a few pixels of breathing
+   room (6px each side) and slightly reduce the gap to fit comfortably. */
+@media (max-width: 600px) {
+  .grid {
+    max-width: calc(100vw - 12px) !important; /* ~6px side padding */
+    gap: 8px; /* slightly smaller gap on very small screens */
+    margin: 0 6px;
+  }
+  /* Make validation banners align with the grid/cards on mobile */
+  .validation-container {
+    max-width: calc(100vw - 12px) !important;
+    margin: 0 6px 12px !important;
+    padding: 0 !important;
   }
 }
 
@@ -1041,9 +1115,10 @@ input[type="checkbox"]{
 
 /* Validation Messages */
 .validation-container{
-  max-width: 100%;
+  /* Match the grid's max-width and centering so banners line up with cards */
+  max-width: calc(100vw - 64px);
   margin: 0 auto 14px;
-  padding: 0 28px;
+  padding: 0; /* no extra side padding; grid handles spacing */
 }
 
 .validation-errors, .validation-warnings{
