@@ -49,30 +49,42 @@
           </div>
         </a>
       </div>
-      <div class="header-actions">
-        <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">💾 Scenarios</button>
-        <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
-        <div class="templates-dropdown">
-          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢 Templates</button>
-          <div class="templates-menu" id="templatesMenu">
-            <button class="template-option" data-template="consulting" title="Management consulting services">💼 Consulting</button>
-            <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹 Cleaning</button>
-            <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳 Landscaping</button>
-            <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧 Handyman</button>
-            <button class="template-option" data-template="fitness" title="Personal training and fitness">💪 Fitness</button>
-            <button class="template-option" data-template="photography" title="Photography and media services">📸 Photography</button>
+      <div class="header-right">
+        <div class="header-actions">
+          <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">💾 Scenarios</button>
+          <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
+          <div class="templates-dropdown">
+            <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢 Templates</button>
+            <div class="templates-menu" id="templatesMenu">
+              <button class="template-option" data-template="consulting" title="Management consulting services">💼 Consulting</button>
+              <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹 Cleaning</button>
+              <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳 Landscaping</button>
+              <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧 Handyman</button>
+              <button class="template-option" data-template="fitness" title="Personal training and fitness">💪 Fitness</button>
+              <button class="template-option" data-template="photography" title="Photography and media services">📸 Photography</button>
+            </div>
+          </div>
+          <div class="export-dropdown">
+            <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄 Export</button>
+            <div class="export-menu" id="exportMenu">
+              <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV Spreadsheet</button>
+              <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
+              <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF Report</button>
+              <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML Page</button>
+              <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
+              <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗 Embed Widget</button>
+              <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
+            </div>
           </div>
         </div>
-        <div class="export-dropdown">
-          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄 Export</button>
-          <div class="export-menu" id="exportMenu">
-            <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV Spreadsheet</button>
-            <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
-            <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF Report</button>
-            <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML Page</button>
-            <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
-            <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗 Embed Widget</button>
-            <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
+        <div class="badge-container">
+          <div class="badge" title="This is a static file app">
+            <span class="dot"></span>
+            <span class="muted">Static simulator</span>
+          </div>
+          <div class="badge-icons">
+            <button class="settings-cog-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings">⚙️</button>
+            <button class="help-button-inline" id="helpBtn" title="Help & Guided Tour">❓</button>
           </div>
         </div>
       </div>
@@ -104,11 +116,6 @@
               </div>
             </div>
           </div>
-        </div>
-        <button class="settings-cog-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings">⚙️</button>
-        <div class="badge" title="This is a static file app">
-          <span class="dot"></span>
-          <span class="muted">Static simulator</span>
         </div>
       </div>
 
@@ -145,6 +152,7 @@
                 <button class="btn mobile-submenu-btn" id="mobileExportHtml">🌐 HTML Page</button>
                 <button class="btn mobile-submenu-btn" id="mobileExportEmail">📧 Email Report</button>
                 <button class="btn mobile-submenu-btn expert-feature" id="mobileExportEmbed">🔗 Embed Widget</button>
+                <button class="btn mobile-submenu-btn" id="mobileExportSchedule">⏰ Auto Schedule</button>
               </div>
             </div>
             <button class="btn mobile-menu-btn" id="mobileTourBtn">🎯 Take Tour</button>

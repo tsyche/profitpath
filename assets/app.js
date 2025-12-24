@@ -3666,10 +3666,22 @@ function wire(skipLocalStorageLoading = false) {
     mobileMenuClose.addEventListener('click', closeMobileMenu);
   }
 
+  // Function to close all mobile submenus
+  const closeAllMobileSubmenus = () => {
+    const submenus = ['mobileExportOptions', 'mobileTemplatesOptions'];
+    submenus.forEach(id => {
+      const submenu = $(id);
+      if (submenu) {
+        submenu.style.display = 'none';
+      }
+    });
+  };
+
   if (mobileExportBtn) {
     mobileExportBtn.addEventListener('click', () => {
       const options = $('#mobileExportOptions');
       if (options) {
+        closeAllMobileSubmenus();
         options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
       }
     });
@@ -3737,6 +3749,7 @@ function wire(skipLocalStorageLoading = false) {
     mobileTemplatesBtn.addEventListener('click', () => {
       const options = $('#mobileTemplatesOptions');
       if (options) {
+        closeAllMobileSubmenus();
         options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
       }
     });
@@ -4133,44 +4146,11 @@ function initializeOnboarding() {
 }
 
 function addOnboardingHelpButton() {
-  // Position the help button below the "Static simulator" badge
-  const badge = document.querySelector('.badge');
-  if (!badge) return;
-
-  const helpButton = document.createElement('button');
-  helpButton.className = 'help-button-inline';
-  helpButton.innerHTML = '❓';
-  helpButton.title = 'Help & Guided Tour';
-  helpButton.style.cssText = `
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--text);
-    margin-left: 8px;
-    transition: all 0.2s ease;
-  `;
+  // The help button is now in the HTML, just add event listeners
+  const helpButton = document.getElementById('helpBtn');
+  if (!helpButton) return;
 
   helpButton.addEventListener('click', showHelpMenu);
-  helpButton.addEventListener('mouseenter', (e) => {
-    e.target.style.background = 'var(--accent, #007bff)';
-    e.target.style.color = 'white';
-    e.target.style.transform = 'scale(1.1)';
-  });
-  helpButton.addEventListener('mouseleave', (e) => {
-    e.target.style.background = 'var(--panel)';
-    e.target.style.color = 'var(--text)';
-    e.target.style.transform = 'scale(1)';
-  });
-
-  // Insert after the badge
-  badge.parentNode.insertBefore(helpButton, badge.nextSibling);
 }
 
 function showWelcomeDialog() {
@@ -4561,25 +4541,7 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   // Get fresh bounding rect after scrolling completes
   const rect = target.getBoundingClientRect();
 
-  const tooltip = document.createElement('div');
-  tooltip.className = 'onboarding-tooltip';
-  tooltip.style.cssText = `
-    position: fixed;
-    z-index: 10000;
-    background: white;
-    border: 2px solid #007bff;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-width: ${isMobile ? '280px' : '300px'};
-    pointer-events: auto;
-    font-size: ${isMobile ? '14px' : '16px'};
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s ease-out, visibility 0s 0.2s;
-  `;
-
-  // Position tooltip based on device and step.position
+  // Calculate final position first
   let left, top, transform;
 
   if (isMobile) {
@@ -4635,23 +4597,31 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
     if (!isMobile) transform = transform.replace('0', '-100%');
   }
 
-  // Append to DOM first while invisible
+  // Create tooltip with final position - no intermediate rendering
+  const tooltip = document.createElement('div');
+  tooltip.className = 'onboarding-tooltip';
+  tooltip.style.cssText = `
+    position: fixed;
+    z-index: 10000;
+    background: white;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-width: ${isMobile ? '280px' : '300px'};
+    pointer-events: auto;
+    font-size: ${isMobile ? '14px' : '16px'};
+    left: ${left}px;
+    top: ${top}px;
+    transform: ${transform};
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  `;
+
+  // Append to DOM and fade in from final position
   document.body.appendChild(tooltip);
-
-  // Force reflow to ensure DOM is ready
-  tooltip.offsetHeight;
-
-  // Now position and show
   requestAnimationFrame(() => {
-    tooltip.style.left = `${left}px`;
-    tooltip.style.top = `${top}px`;
-    tooltip.style.transform = transform;
-    tooltip.style.visibility = 'visible';
-
-    // Fade in after positioning
-    setTimeout(() => {
-      tooltip.style.opacity = '1';
-    }, 10);
+    tooltip.style.opacity = '1';
   });
 
   // Create progress dots
@@ -4759,9 +4729,9 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   const originalOutline = target.style.outline;
 
   // Apply highlighting styles directly to target element (avoid changing layout)
-  target.style.outline = '3px solid #007bff';
-  target.style.outlineOffset = '-3px';
-  target.style.borderRadius = '6px';
+  target.style.outline = '6px solid #007bff';
+  target.style.outlineOffset = '-6px';
+  target.style.borderRadius = '9px';
   target.style.boxShadow = '0 0 0 0 rgba(0, 123, 255, 0.7)';
   target.style.animation = 'pulse 2s infinite';
   target.style.position = originalPosition || 'relative';
@@ -5010,8 +4980,8 @@ function initializeProgressiveDisclosure() {
   const userLevel = localStorage.getItem('userExperienceLevel') || 'beginner';
 
   // Hide advanced features based on user level
-  const advancedElements = document.querySelectorAll('.advanced-feature');
-  const expertElements = document.querySelectorAll('.expert-feature');
+  const advancedElements = document.querySelectorAll('.advanced-feature:not(.export-option)');
+  const expertElements = document.querySelectorAll('.expert-feature:not(.export-option)');
 
   if (userLevel === 'beginner') {
     advancedElements.forEach(el => el.style.display = 'none');
@@ -5019,6 +4989,11 @@ function initializeProgressiveDisclosure() {
   } else if (userLevel === 'intermediate') {
     expertElements.forEach(el => el.style.display = 'none');
   }
+
+  // Always show all export options regardless of user level
+  document.querySelectorAll('.export-option.advanced-feature, .export-option.expert-feature, .mobile-submenu-btn.expert-feature').forEach(el => {
+    el.style.display = 'block';
+  });
 
   // Special handling for debug panel - show if user has enabled it regardless of level
   const showDebugPanel = localStorage.getItem('showDebugPanel') === 'true';
