@@ -3328,9 +3328,26 @@ function wire(skipLocalStorageLoading = false) {
         const menu = dropdown.querySelector('.settings-menu');
       if (menu) {
           const buttonRect = settingsCogBtn.getBoundingClientRect();
+          const menuWidth = 320; // max-width from CSS
+          const viewportWidth = window.innerWidth;
+
           menu.style.position = 'fixed';
-          menu.style.left = `${buttonRect.left + buttonRect.width / 2}px`;
           menu.style.top = `${buttonRect.bottom + 4}px`;
+
+          // Calculate left position, ensuring menu stays on screen
+          let leftPos = buttonRect.left + buttonRect.width / 2;
+          const menuHalfWidth = menuWidth / 2;
+
+          // If centering would put menu off left edge
+          if (leftPos - menuHalfWidth < 10) {
+            leftPos = menuHalfWidth + 10;
+          }
+          // If centering would put menu off right edge
+          else if (leftPos + menuHalfWidth > viewportWidth - 10) {
+            leftPos = viewportWidth - menuHalfWidth - 10;
+          }
+
+          menu.style.left = `${leftPos}px`;
           menu.style.transform = 'translateX(-50%)';
           menu.style.right = 'auto';
         }
@@ -4092,6 +4109,8 @@ try {
 }
 
 // Register service worker for PWA functionality
+// TEMPORARILY DISABLED - forcing network CSS loading
+/*
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
@@ -4119,6 +4138,7 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+*/
 
 // Initialize embeddable widget if in embed mode
 initializeEmbeddableWidget();
@@ -4729,8 +4749,8 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   const originalOutline = target.style.outline;
 
   // Apply highlighting styles directly to target element (avoid changing layout)
-  target.style.outline = '6px solid #007bff';
-  target.style.outlineOffset = '-6px';
+  target.style.outline = '4px solid #007bff';
+  target.style.outlineOffset = '-8px';
   target.style.borderRadius = '9px';
   target.style.boxShadow = '0 0 0 0 rgba(0, 123, 255, 0.7)';
   target.style.animation = 'pulse 2s infinite';
