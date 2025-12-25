@@ -58,6 +58,7 @@ npm run preview
 Documentation & roadmap
 - For the complete roadmap with completed features and future plans, see `ROADMAP.md`.
 - For developer documentation, API reference, and contribution guidelines, see `DEVELOPER.md`.
+- For an explanation of Experience Levels and which features are gated per level, see `docs/experience-levels.md`.
 
 ## Guided Tour
 

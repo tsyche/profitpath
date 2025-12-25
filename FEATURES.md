@@ -48,6 +48,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 ### User Experience
 - **Progressive Disclosure**: Beginner-friendly interface with optional advanced features
 - **Experience Levels**: Beginner, Intermediate, and Advanced user modes with appropriate feature sets
+	- See `docs/experience-levels.md` for a full mapping of which features are visible at each level and guidance for maintainers.
 - **Feature Gating**: Advanced features unlocked via settings panel for power users
 - **Guided Onboarding**: Interactive walkthrough for new users with step-by-step guidance
 - **Industry Setup Wizards**: Tailored configuration wizards for different business types (consulting, cleaning, landscaping, fitness, photography)
