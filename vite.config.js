@@ -7,6 +7,18 @@ export default defineConfig({
       targets: ['defaults', 'not IE 11']
     })
   ],
+  esbuild: {
+    loader: { '.js': 'jsx' },
+    jsxFactory: 'h',
+    jsxFragment: 'Fragment'
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      loader: { '.js': 'jsx' },
+      jsxFactory: 'h',
+      jsxFragment: 'Fragment'
+    }
+  },
   build: {
     outDir: 'dist',
     rollupOptions: {

@@ -1,9 +1,11 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ProfitPath — a lightweight client-side simulator for recurring-cadence service businesses. Plan pricing, forecast capacity, and optimize profitability." />
+  <meta name="description"
+    content="ProfitPath — a lightweight client-side simulator for recurring-cadence service businesses. Plan pricing, forecast capacity, and optimize profitability." />
   <meta name="theme-color" content="#1f2937" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -12,19 +14,24 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <link rel="stylesheet" href="assets/styles.css?t=1766542976" />
+  <link rel="stylesheet" href="/src/analytics/analytics.css?t=1766542976" />
+  <link rel="stylesheet" href="/src/analytics/feedback.css?t=1766542976" />
+  <link rel="stylesheet" href="/src/analytics/advanced-dashboard.css?t=1766542976" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://profitpath.app/" />
   <meta property="og:title" content="ProfitPath — Service Business Simulator" />
-  <meta property="og:description" content="Plan pricing, forecast capacity, and optimize profitability for your recurring service business." />
+  <meta property="og:description"
+    content="Plan pricing, forecast capacity, and optimize profitability for your recurring service business." />
   <meta property="og:image" content="https://profitpath.app/assets/logo-final.svg" />
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
   <meta property="twitter:url" content="https://profitpath.app/" />
   <meta property="twitter:title" content="ProfitPath — Service Business Simulator" />
-  <meta property="twitter:description" content="Plan pricing, forecast capacity, and optimize profitability for your recurring service business." />
+  <meta property="twitter:description"
+    content="Plan pricing, forecast capacity, and optimize profitability for your recurring service business." />
   <meta property="twitter:image" content="https://profitpath.app/assets/logo-final.svg" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="/assets/logo-final.svg" type="image/svg+xml" />
@@ -34,10 +41,12 @@
 
   <!-- Export libraries loaded lazily on demand -->
 </head>
+
 <body>
   <div class="page">
     <div class="file-warning hidden" id="fileWarning">
-      This app must be served over <span class="mono">http://localhost</span> (module scripts are blocked on <span class="mono">file://</span>). Start a server and open <span class="mono">http://localhost:8000/</span>.
+      This app must be served over <span class="mono">http://localhost</span> (module scripts are blocked on <span
+        class="mono">file://</span>). Start a server and open <span class="mono">http://localhost:8000/</span>.
     </div>
 
     <header class="header">
@@ -45,35 +54,51 @@
         <a href="/" class="logo-link">
           <div class="logo" id="logo">
             <img src="assets/logo-final.svg" class="logo-final" alt="ProfitPath logo" />
-            <div class="subtitle">A lightweight simulator for recurring-cadence service businesses (no backend, no build step).</div>
+            <div class="subtitle">A lightweight simulator for recurring-cadence service businesses (no backend, no build
+              step).</div>
           </div>
         </a>
       </div>
       <div class="header-right">
         <div class="header-actions">
-          <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">💾 Scenarios</button>
+          <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">💾
+            Scenarios</button>
           <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
           <div class="templates-dropdown">
-            <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢 Templates</button>
+            <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢
+              Templates</button>
             <div class="templates-menu" id="templatesMenu">
-              <button class="template-option" data-template="consulting" title="Management consulting services">💼 Consulting</button>
-              <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹 Cleaning</button>
-              <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳 Landscaping</button>
-              <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧 Handyman</button>
-              <button class="template-option" data-template="fitness" title="Personal training and fitness">💪 Fitness</button>
-              <button class="template-option" data-template="photography" title="Photography and media services">📸 Photography</button>
+              <button class="template-option" data-template="consulting" title="Management consulting services">💼
+                Consulting</button>
+              <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹
+                Cleaning</button>
+              <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳
+                Landscaping</button>
+              <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧
+                Handyman</button>
+              <button class="template-option" data-template="fitness" title="Personal training and fitness">💪
+                Fitness</button>
+              <button class="template-option" data-template="photography" title="Photography and media services">📸
+                Photography</button>
             </div>
           </div>
           <div class="export-dropdown">
-            <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄 Export</button>
+            <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄
+              Export</button>
             <div class="export-menu" id="exportMenu">
-              <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV Spreadsheet</button>
-              <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
-              <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF Report</button>
-              <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML Page</button>
+              <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV
+                Spreadsheet</button>
+              <button class="export-option advanced-feature" data-format="excel"
+                title="Export as Excel with formulas">📈 Excel Workbook</button>
+              <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF
+                Report</button>
+              <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML
+                Page</button>
               <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
-              <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗 Embed Widget</button>
-              <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
+              <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗
+                Embed Widget</button>
+              <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto
+                Schedule</button>
             </div>
           </div>
         </div>
@@ -83,153 +108,185 @@
             <span class="muted">Static simulator</span>
           </div>
           <div class="badge-icons">
-            <button class="settings-cog-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings">⚙️</button>
+            <button class="settings-cog-btn" id="settingsCogBtn" type="button" title="App settings and preferences"
+              aria-label="Settings">⚙️</button>
             <button class="help-button-inline" id="helpBtn" title="Help & Guided Tour">❓</button>
           </div>
         </div>
       </div>
       <div class="settings-dropdown">
-          <div class="settings-menu" id="settingsMenu">
-            <div class="settings-section">
-              <h4>Experience Level</h4>
-              <div class="settings-options">
-                <label><input type="radio" name="experienceLevel" value="beginner"> Beginner</label>
-                <label><input type="radio" name="experienceLevel" value="intermediate"> Intermediate</label>
-                <label><input type="radio" name="experienceLevel" value="advanced"> Advanced</label>
+        <div class="settings-menu" id="settingsMenu">
+          <div class="settings-section">
+            <h4>Experience Level</h4>
+            <div class="settings-options">
+              <label><input type="radio" name="experienceLevel" value="beginner"> Beginner</label>
+              <label><input type="radio" name="experienceLevel" value="intermediate"> Intermediate</label>
+              <label><input type="radio" name="experienceLevel" value="advanced"> Advanced</label>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h4>Advanced Features</h4>
+            <div class="settings-options">
+              <label><input type="checkbox" id="showAdvancedCalculations"> Advanced calculations</label>
+              <label><input type="checkbox" id="showDetailedBreakdown"> Detailed breakdowns</label>
+              <label><input type="checkbox" id="showComparisonTools"> Scenario comparison</label>
+              <label><input type="checkbox" id="showExportOptions"> Export options</label>
+              <label><input type="checkbox" id="showDebugPanel" class="expert-feature"> Debug panel</label>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h4>Preferences</h4>
+            <div class="settings-options">
+              <label><input type="checkbox" id="compactMode"> Compact mode</label>
+              <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
+            </div>
+          </div>
+          <div class="settings-section analytics-settings">
+            <h4>Analytics & Feedback</h4>
+            <div class="settings-options">
+              <label><input type="checkbox" id="analyticsEnabled"> Enable analytics</label>
+              <small style="color: var(--muted); font-size: 11px; margin-top: 4px; display: block;">Help improve
+                ProfitPath by sharing anonymous usage data</small>
+
+              <div id="analyticsOptions" style="margin-top: 8px; display: none;">
+                <label><input type="checkbox" id="trackUsage"> Track usage patterns</label>
+                <label><input type="checkbox" id="trackFeatures"> Track feature usage</label>
+                <label><input type="checkbox" id="trackExports"> Track export activity</label>
+                <label><input type="checkbox" id="trackTemplates"> Track template usage</label>
               </div>
             </div>
-            <div class="settings-section">
-              <h4>Advanced Features</h4>
-              <div class="settings-options">
-                <label><input type="checkbox" id="showAdvancedCalculations"> Advanced calculations</label>
-                <label><input type="checkbox" id="showDetailedBreakdown"> Detailed breakdowns</label>
-                <label><input type="checkbox" id="showComparisonTools"> Scenario comparison</label>
-                <label><input type="checkbox" id="showExportOptions"> Export options</label>
-                <label><input type="checkbox" id="showDebugPanel" class="expert-feature"> Debug panel</label>
-              </div>
-            </div>
-            <div class="settings-section">
-              <h4>Preferences</h4>
-              <div class="settings-options">
-                <label><input type="checkbox" id="compactMode"> Compact mode</label>
-                <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
-              </div>
+            <div class="analytics-actions" style="margin-top: 12px; display: none;" id="analyticsActions">
+              <button class="btn small" id="viewAnalyticsBtn" style="font-size: 11px; padding: 4px 8px;">📊 View My
+                Data</button>
+              <button class="btn small" id="exportAnalyticsBtn" style="font-size: 11px; padding: 4px 8px;">💾
+                Export</button>
+              <button class="btn small danger" id="clearAnalyticsBtn" style="font-size: 11px; padding: 4px 8px;">🗑️
+                Clear</button>
             </div>
           </div>
         </div>
       </div>
+  </div>
 
-      <!-- Mobile Menu -->
-      <div class="mobile-menu-overlay" id="mobileMenuOverlay">
-        <div class="mobile-menu" id="mobileMenu">
-          <div class="mobile-menu-header">
-            <div class="mobile-menu-badge">
-              <span class="dot"></span>
-              <span class="muted">Static simulator</span>
-            </div>
-            <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
-          </div>
-          <div class="mobile-menu-content">
-            <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
-            <button class="btn mobile-menu-btn" id="mobileShareBtn">🔗 Share Scenario</button>
-            <div class="mobile-templates-section">
-              <button class="btn mobile-menu-btn" id="mobileTemplatesBtn">🏢 Templates</button>
-              <div class="mobile-templates-options" id="mobileTemplatesOptions" style="display: none;">
-                <button class="btn mobile-submenu-btn" id="mobileTemplateConsulting" data-template="consulting">💼 Consulting</button>
-                <button class="btn mobile-submenu-btn" id="mobileTemplateCleaning" data-template="cleaning">🧹 Cleaning</button>
-                <button class="btn mobile-submenu-btn" id="mobileTemplateLandscaping" data-template="landscaping">🌳 Landscaping</button>
-                <button class="btn mobile-submenu-btn" id="mobileTemplateHandyman" data-template="handyman">🔧 Handyman</button>
-                <button class="btn mobile-submenu-btn" id="mobileTemplateFitness" data-template="fitness">💪 Fitness</button>
-                <button class="btn mobile-submenu-btn" id="mobileTemplatePhotography" data-template="photography">📸 Photography</button>
-              </div>
-            </div>
-            <div class="mobile-export-section">
-              <button class="btn mobile-menu-btn" id="mobileExportBtn">📄 Export</button>
-              <div class="mobile-export-options" id="mobileExportOptions" style="display: none;">
-                <button class="btn mobile-submenu-btn" id="mobileExportCsv">📊 CSV Spreadsheet</button>
-                <button class="btn mobile-submenu-btn" id="mobileExportExcel">📈 Excel Workbook</button>
-                <button class="btn mobile-submenu-btn" id="mobileExportPdf">📋 PDF Report</button>
-                <button class="btn mobile-submenu-btn" id="mobileExportHtml">🌐 HTML Page</button>
-                <button class="btn mobile-submenu-btn" id="mobileExportEmail">📧 Email Report</button>
-                <button class="btn mobile-submenu-btn expert-feature" id="mobileExportEmbed">🔗 Embed Widget</button>
-                <button class="btn mobile-submenu-btn" id="mobileExportSchedule">⏰ Auto Schedule</button>
-              </div>
-            </div>
-            <button class="btn mobile-menu-btn" id="mobileTourBtn">🎯 Take Tour</button>
-            <button class="btn mobile-menu-btn" id="mobileSettingsBtn">⚙️ Settings</button>
-          </div>
+  <!-- Mobile Menu -->
+  <div class="mobile-menu-overlay" id="mobileMenuOverlay">
+    <div class="mobile-menu" id="mobileMenu">
+      <div class="mobile-menu-header">
+        <div class="mobile-menu-badge">
+          <span class="dot"></span>
+          <span class="muted">Static simulator</span>
         </div>
+        <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
       </div>
-
-      <!-- Hamburger Menu Button -->
-      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-    </header>
-
-    <!-- Scenarios Modal -->
-    <div class="modal hidden" id="scenariosModal">
-      <div class="modal-overlay" id="scenariosOverlay"></div>
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Manage Scenarios</h3>
-          <button class="btn-close" id="scenariosCloseBtn" type="button" aria-label="Close scenarios modal">&times;</button>
+      <div class="mobile-menu-content">
+        <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
+        <button class="btn mobile-menu-btn" id="mobileShareBtn">🔗 Share Scenario</button>
+        <div class="mobile-templates-section">
+          <button class="btn mobile-menu-btn" id="mobileTemplatesBtn">🏢 Templates</button>
+          <div class="mobile-templates-options" id="mobileTemplatesOptions" style="display: none;">
+            <button class="btn mobile-submenu-btn" id="mobileTemplateConsulting" data-template="consulting">💼
+              Consulting</button>
+            <button class="btn mobile-submenu-btn" id="mobileTemplateCleaning" data-template="cleaning">🧹
+              Cleaning</button>
+            <button class="btn mobile-submenu-btn" id="mobileTemplateLandscaping" data-template="landscaping">🌳
+              Landscaping</button>
+            <button class="btn mobile-submenu-btn" id="mobileTemplateHandyman" data-template="handyman">🔧
+              Handyman</button>
+            <button class="btn mobile-submenu-btn" id="mobileTemplateFitness" data-template="fitness">💪
+              Fitness</button>
+            <button class="btn mobile-submenu-btn" id="mobileTemplatePhotography" data-template="photography">📸
+              Photography</button>
+          </div>
         </div>
-        <div class="modal-body">
-          <div class="scenarios-section">
-            <h4>Save Current Scenario</h4>
-            <div class="save-scenario-form">
-              <input id="scenarioNameInput" type="text" placeholder="Enter scenario name (e.g., 'Q1 Plan')" maxlength="50" />
-              <button class="btn primary" id="saveScenarioBtn" type="button">Save Scenario</button>
-            </div>
+        <div class="mobile-export-section">
+          <button class="btn mobile-menu-btn" id="mobileExportBtn">📄 Export</button>
+          <div class="mobile-export-options" id="mobileExportOptions" style="display: none;">
+            <button class="btn mobile-submenu-btn" id="mobileExportCsv">📊 CSV Spreadsheet</button>
+            <button class="btn mobile-submenu-btn" id="mobileExportExcel">📈 Excel Workbook</button>
+            <button class="btn mobile-submenu-btn" id="mobileExportPdf">📋 PDF Report</button>
+            <button class="btn mobile-submenu-btn" id="mobileExportHtml">🌐 HTML Page</button>
+            <button class="btn mobile-submenu-btn" id="mobileExportEmail">📧 Email Report</button>
+            <button class="btn mobile-submenu-btn expert-feature" id="mobileExportEmbed">🔗 Embed Widget</button>
+            <button class="btn mobile-submenu-btn" id="mobileExportSchedule">⏰ Auto Schedule</button>
           </div>
+        </div>
+        <button class="btn mobile-menu-btn" id="mobileTourBtn">🎯 Take Tour</button>
+        <button class="btn mobile-menu-btn" id="mobileSettingsBtn">⚙️ Settings</button>
+      </div>
+    </div>
+  </div>
 
-          <div class="scenarios-section">
-            <h4>Saved Scenarios</h4>
-            <div id="scenariosList" class="scenarios-list">
-              <div class="empty-state">No saved scenarios yet. Save one above!</div>
-            </div>
+  <!-- Hamburger Menu Button -->
+  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+  </header>
+
+  <!-- Scenarios Modal -->
+  <div class="modal hidden" id="scenariosModal">
+    <div class="modal-overlay" id="scenariosOverlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Manage Scenarios</h3>
+        <button class="btn-close" id="scenariosCloseBtn" type="button"
+          aria-label="Close scenarios modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="scenarios-section">
+          <h4>Save Current Scenario</h4>
+          <div class="save-scenario-form">
+            <input id="scenarioNameInput" type="text" placeholder="Enter scenario name (e.g., 'Q1 Plan')"
+              maxlength="50" />
+            <button class="btn primary" id="saveScenarioBtn" type="button">Save Scenario</button>
           </div>
+        </div>
 
-          <div class="scenarios-section">
-            <h4>Compare Scenarios</h4>
-            <div class="comparison-controls">
-              <select id="compareScenario1" class="scenario-select">
-                <option value="">Select first scenario...</option>
-              </select>
-              <span class="vs-text">vs</span>
-              <select id="compareScenario2" class="scenario-select">
-                <option value="">Select second scenario...</option>
-              </select>
-              <button class="btn primary" id="compareBtn" type="button">Compare</button>
-            </div>
-            <div id="comparisonError" class="text-error" style="display: none; margin-top: 8px;"></div>
-            <div id="comparisonResults" class="comparison-results" style="display: none;">
-              <div class="comparison-table-wrap">
-                <!-- Comparison table will be inserted here -->
-              </div>
+        <div class="scenarios-section">
+          <h4>Saved Scenarios</h4>
+          <div id="scenariosList" class="scenarios-list">
+            <div class="empty-state">No saved scenarios yet. Save one above!</div>
+          </div>
+        </div>
+
+        <div class="scenarios-section">
+          <h4>Compare Scenarios</h4>
+          <div class="comparison-controls">
+            <select id="compareScenario1" class="scenario-select">
+              <option value="">Select first scenario...</option>
+            </select>
+            <span class="vs-text">vs</span>
+            <select id="compareScenario2" class="scenario-select">
+              <option value="">Select second scenario...</option>
+            </select>
+            <button class="btn primary" id="compareBtn" type="button">Compare</button>
+          </div>
+          <div id="comparisonError" class="text-error" style="display: none; margin-top: 8px;"></div>
+          <div id="comparisonResults" class="comparison-results" style="display: none;">
+            <div class="comparison-table-wrap">
+              <!-- Comparison table will be inserted here -->
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Validation Messages -->
-    <div class="validation-container" id="validationContainer" style="display: none;"></div>
+  <!-- Validation Messages -->
+  <div class="validation-container" id="validationContainer" style="display: none;"></div>
 
-    <div class="grid">
-      <section class="card" id="controls">
-        <div class="card-h">
-          <h2>Inputs</h2>
-          <div class="footer-actions">
-            <button class="btn" id="resetBtn" type="button">Reset defaults</button>
-          </div>
+  <div class="grid">
+    <section class="card" id="controls">
+      <div class="card-h">
+        <h2>Inputs</h2>
+        <div class="footer-actions">
+          <button class="btn" id="resetBtn" type="button">Reset defaults</button>
         </div>
-        <div class="card-b">
-          <div class="section-box inputs-fields">
-            <div class="row">
+      </div>
+      <div class="card-b">
+        <div class="section-box inputs-fields">
+          <div class="row">
             <div class="field" style="min-width: 210px;">
               <label>Mode</label>
               <select id="modeSelect">
@@ -278,21 +335,21 @@
               <input id="targetUtilizationPct" type="number" min="0" max="150" step="1" value="75" />
               <div class="hint">Used only in Forecasting mode.</div>
             </div>
+          </div>
+        </div>
+
+        <div class="section-box offerings-section">
+          <div class="section-h">
+            <h3>Service Offerings</h3>
+            <div class="section-actions">
+              <button class="btn primary" id="addOfferingBtn" type="button">Add offering</button>
             </div>
           </div>
 
-          <div class="section-box offerings-section">
-            <div class="section-h">
-              <h3>Service Offerings</h3>
-              <div class="section-actions">
-                <button class="btn primary" id="addOfferingBtn" type="button">Add offering</button>
-              </div>
-            </div>
+          <div class="note" id="mixNote"></div>
 
-            <div class="note" id="mixNote"></div>
-
-            <div class="table-wrap">
-              <table class="table" id="offeringsTable" aria-label="Offerings">
+          <div class="table-wrap">
+            <table class="table" id="offeringsTable" aria-label="Offerings">
               <thead>
                 <tr>
                   <th>Offering</th>
@@ -309,125 +366,128 @@
               </thead>
               <tbody id="offeringsBody"></tbody>
             </table>
-            </div>
+          </div>
 
-            <div class="smallprint">
-              Notes: Mix % is interpreted as a % of customers (not revenue). In forecasting mode, totals are auto-normalized for the math.
-            </div>
+          <div class="smallprint">
+            Notes: Mix % is interpreted as a % of customers (not revenue). In forecasting mode, totals are
+            auto-normalized for the math.
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <aside class="card">
-        <div class="card-h">
-          <h2>Outputs</h2>
-          <div class="pill">
-            <span class="muted">Net income</span>
-            <strong id="kpiIncome" style="font-family: var(--mono)">$0</strong>
+    <aside class="card">
+      <div class="card-h">
+        <h2>Outputs</h2>
+        <div class="pill">
+          <span class="muted">Net income</span>
+          <strong id="kpiIncome" style="font-family: var(--mono)">$0</strong>
+        </div>
+      </div>
+      <div class="card-b">
+        <div class="capacity">
+          <div style="min-width: 190px;">
+            <div class="muted" style="font-size: 12px;">Capacity</div>
+            <div id="capacityLabel" style="font-weight: 650; margin-top: 4px;">Utilization: 0.0%</div>
+          </div>
+          <div class="meter" aria-hidden="true">
+            <div id="capacityBar"></div>
           </div>
         </div>
-        <div class="card-b">
-          <div class="capacity">
-            <div style="min-width: 190px;">
-              <div class="muted" style="font-size: 12px;">Capacity</div>
-              <div id="capacityLabel" style="font-weight: 650; margin-top: 4px;">Utilization: 0.0%</div>
-            </div>
-            <div class="meter" aria-hidden="true"><div id="capacityBar"></div></div>
+
+        <div style="height: 10px;"></div>
+
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="k">Clients</div>
+            <div class="v" id="kpiClients">0</div>
+            <div class="sub">Across all offerings</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Annual sessions</div>
+            <div class="v" id="kpiSessions">0</div>
+            <div class="sub">Total sessions across offerings</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Service hours</div>
+            <div class="v" id="kpiServiceHours">0</div>
+            <div class="sub">Hours required to deliver sessions</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Utilization</div>
+            <div class="v" id="kpiCapacity">0.0%</div>
+            <div class="sub">Relative to productive hours</div>
           </div>
 
-          <div style="height: 10px;"></div>
-
-          <div class="kpi-grid">
-            <div class="kpi">
-              <div class="k">Clients</div>
-              <div class="v" id="kpiClients">0</div>
-              <div class="sub">Across all offerings</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Annual sessions</div>
-              <div class="v" id="kpiSessions">0</div>
-              <div class="sub">Total sessions across offerings</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Service hours</div>
-              <div class="v" id="kpiServiceHours">0</div>
-              <div class="sub">Hours required to deliver sessions</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Utilization</div>
-              <div class="v" id="kpiCapacity">0.0%</div>
-              <div class="sub">Relative to productive hours</div>
-            </div>
-
-            <div class="kpi">
-              <div class="k">Revenue</div>
-              <div class="v" id="kpiRevenue">$0</div>
-              <div class="sub">Annual (gross)</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Fixed costs</div>
-              <div class="v" id="kpiFixedCosts">$0</div>
-              <div class="sub">Annual overhead</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Payroll</div>
-              <div class="v" id="kpiPayroll">$0</div>
-              <div class="sub">Annual employee wages</div>
-            </div>
-            <div class="kpi">
-              <div class="k">Variable costs</div>
-              <div class="v" id="kpiVariableCosts">$0</div>
-              <div class="sub">Per-session costs</div>
-            </div>
-
-            <div class="kpi">
-              <div class="k">Contribution margin</div>
-              <div class="v" id="kpiContributionMargin">$0</div>
-              <div class="sub">Per client (revenue - variables)</div>
-            </div>
+          <div class="kpi">
+            <div class="k">Revenue</div>
+            <div class="v" id="kpiRevenue">$0</div>
+            <div class="sub">Annual (gross)</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Fixed costs</div>
+            <div class="v" id="kpiFixedCosts">$0</div>
+            <div class="sub">Annual overhead</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Payroll</div>
+            <div class="v" id="kpiPayroll">$0</div>
+            <div class="sub">Annual employee wages</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Variable costs</div>
+            <div class="v" id="kpiVariableCosts">$0</div>
+            <div class="sub">Per-session costs</div>
           </div>
 
-          <div style="margin-top: 10px;" class="smallprint">
-            Assumptions: 2080 paid hours/year per employee; productive utilization converts paid hours into service hours.
-          </div>
-
-          <!-- Dedicated Break-even Section -->
-          <div class="break-even-section-wrapper" style="margin-top: 20px;">
-            <div class="break-even-kpis">
-              <div class="kpi">
-                <div class="k">Break-even clients</div>
-                <div class="v" id="kpiBreakEvenClients">∞</div>
-                <div class="sub">Clients needed to break even</div>
-              </div>
-              <div class="kpi">
-                <div class="k">Break-even revenue</div>
-                <div class="v" id="kpiBreakEvenRevenue">$∞</div>
-                <div class="sub">Annual revenue needed</div>
-              </div>
-            </div>
-            <!-- Break-even analysis section -->
-            <div id="breakEvenAnalysis" class="break-even-section" style="display: none;"></div>
-          </div>
-
-          <!-- Charts and Visualizations Container -->
-          <div class="charts-visualizations-container">
-            <!-- Simple chart: Revenue composition (variable costs vs contribution) -->
-            <div id="simpleChart" class="simple-chart" aria-hidden="true"></div>
-
-            <!-- Rich visualizations section -->
-            <div id="richVisualizations" class="rich-visualizations" style="display: none;"></div>
-          </div>
-
-          <!-- Debug panel (collapsible) placed at the bottom of the Outputs card -->
-          <div class="debug-wrapper expert-feature">
-            <button id="debugToggle" class="debug-toggle" aria-expanded="false" aria-controls="debugBody">▶ Debug</button>
-            <div id="debugBody" class="debug-body collapsed" aria-hidden="true">
-              <pre id="debugPanel" class="debug-pre">Debug: no data yet</pre>
-            </div>
+          <div class="kpi">
+            <div class="k">Contribution margin</div>
+            <div class="v" id="kpiContributionMargin">$0</div>
+            <div class="sub">Per client (revenue - variables)</div>
           </div>
         </div>
-      </aside>
-    </div>
+
+        <div style="margin-top: 10px;" class="smallprint">
+          Assumptions: 2080 paid hours/year per employee; productive utilization converts paid hours into service hours.
+        </div>
+
+        <!-- Dedicated Break-even Section -->
+        <div class="break-even-section-wrapper" style="margin-top: 20px;">
+          <div class="break-even-kpis">
+            <div class="kpi">
+              <div class="k">Break-even clients</div>
+              <div class="v" id="kpiBreakEvenClients">∞</div>
+              <div class="sub">Clients needed to break even</div>
+            </div>
+            <div class="kpi">
+              <div class="k">Break-even revenue</div>
+              <div class="v" id="kpiBreakEvenRevenue">$∞</div>
+              <div class="sub">Annual revenue needed</div>
+            </div>
+          </div>
+          <!-- Break-even analysis section -->
+          <div id="breakEvenAnalysis" class="break-even-section" style="display: none;"></div>
+        </div>
+
+        <!-- Charts and Visualizations Container -->
+        <div class="charts-visualizations-container">
+          <!-- Simple chart: Revenue composition (variable costs vs contribution) -->
+          <div id="simpleChart" class="simple-chart" aria-hidden="true"></div>
+
+          <!-- Rich visualizations section -->
+          <div id="richVisualizations" class="rich-visualizations" style="display: none;"></div>
+        </div>
+
+        <!-- Debug panel (collapsible) placed at the bottom of the Outputs card -->
+        <div class="debug-wrapper expert-feature">
+          <button id="debugToggle" class="debug-toggle" aria-expanded="false" aria-controls="debugBody">▶ Debug</button>
+          <div id="debugBody" class="debug-body collapsed" aria-hidden="true">
+            <pre id="debugPanel" class="debug-pre">Debug: no data yet</pre>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
   </div>
 
   <script>
@@ -436,11 +496,18 @@
       try {
         var isFile = location.protocol === 'file:' || location.origin === 'null';
         if (isFile) document.getElementById('fileWarning')?.classList.remove('hidden');
-      } catch (e) {}
+      } catch (e) { }
     })();
     // No-op here; logo is finalized as a single image.
   </script>
 
-  <script type="module" src="assets/app.js"></script>
+  <script type="module" src="/src/calculations/index.js"></script>
+  <script type="module" src="/src/analytics/analytics.js"></script>
+  <script type="module" src="/src/analytics/analytics-ui.js"></script>
+  <script type="module" src="/src/analytics/feedback.js"></script>
+  <script type="module" src="/src/analytics/feedback-ui.js"></script>
+  <script type="module" src="/src/analytics/advanced-dashboard.js"></script>
+  <script type="module" src="/assets/app.jsx"></script>
 </body>
+
 </html>

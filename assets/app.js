@@ -1663,6 +1663,19 @@ function startScheduling() {
           break;
       }
 
+      // Track export event
+      if (window.profitPathAnalytics) {
+        window.profitPathAnalytics.trackExport(format, 1, { scheduled: true });
+      }
+
+      // Show contextual feedback prompt
+      if (window.feedbackUI) {
+        window.feedbackUI.showContextualPrompt({
+          action: `scheduled ${format.toUpperCase()} export`,
+          feature: 'exports'
+        }, 3000);
+      }
+
       // Show download notification
       showNotification(`Scheduled ${format.toUpperCase()} report downloaded`, 'success');
     } catch (error) {
@@ -1834,6 +1847,19 @@ async function exportAsExcel() {
 
   // Write file
   XLSX.writeFile(workbook, `profitpath-export-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+  // Track export event
+  if (window.profitPathAnalytics) {
+    window.profitPathAnalytics.trackExport('excel', 1);
+  }
+
+  // Show contextual feedback prompt
+  if (window.feedbackUI) {
+    window.feedbackUI.showContextualPrompt({
+      action: 'Excel export completed',
+      feature: 'exports'
+    }, 2000);
+  }
 }
 
 async function exportAsPDF() {
@@ -1996,7 +2022,20 @@ async function exportAsPDF() {
     });
   }
 
-  doc.save(`profitpath-report-${new Date().toISOString().split('T')[0]}.pdf`);
+  doc.save(`profitpath-report-${new Date().toISOString().split('T')[0]}.pdf');
+  
+  // Track export event
+  if (window.profitPathAnalytics) {
+    window.profitPathAnalytics.trackExport('pdf', 1);
+  }
+
+  // Show contextual feedback prompt
+  if (window.feedbackUI) {
+    window.feedbackUI.showContextualPrompt({
+      action: 'PDF export completed',
+      feature: 'exports'
+    }, 2000);
+  }
 }
 
 function exportAsHTML() {
@@ -2010,112 +2049,7 @@ function exportAsHTML() {
   }
 
   // Create HTML content
-  const htmlContent = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProfitPath Report - ${new Date().toLocaleDateString()}</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f8fafc; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
-        .section { margin-bottom: 40px; }
-        .section h2 { color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: #f9fafb; padding: 20px; border-radius: 6px; border: 1px solid #e5e7eb; }
-        .metric { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .metric-label { font-weight: 500; color: #6b7280; }
-        .metric-value { font-weight: 600; color: #1f2937; }
-        .positive { color: #059669; }
-        .negative { color: #dc2626; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-        th { background: #f9fafb; font-weight: 600; }
-        .charts { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-        .chart-placeholder { width: 400px; height: 300px; background: #f3f4f6; border: 2px dashed #d1d5db; display: flex; align-items: center; justify-content: center; color: #6b7280; border-radius: 6px; }
-        @media print { body { background: white; } .container { box-shadow: none; } }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>ProfitPath Report</h1>
-            <p>Generated on ${new Date().toLocaleString()}</p>
-        </div>
-
-        <div class="section">
-            <h2>Business Summary</h2>
-            <div class="grid">
-                <div class="card">
-                    <h3>Configuration</h3>
-                    <div class="metric"><span class="metric-label">Mode:</span> <span class="metric-value">${state.mode}</span></div>
-                    <div class="metric"><span class="metric-label">Employees:</span> <span class="metric-value">${state.employees}</span></div>
-                    <div class="metric"><span class="metric-label">Employee Pay:</span> <span class="metric-value">${fmtMoney0(state.employeePay)}</span></div>
-                    <div class="metric"><span class="metric-label">Monthly Overhead:</span> <span class="metric-value">${fmtMoney0(state.monthlyCosts)}</span></div>
-                    <div class="metric"><span class="metric-label">Productive Utilization:</span> <span class="metric-value">${fmtPct1(state.productiveUtilizationPct)}</span></div>
-                    <div class="metric"><span class="metric-label">Target Utilization:</span> <span class="metric-value">${fmtPct1(state.targetUtilizationPct)}</span></div>
-                </div>
-                <div class="card">
-                    <h3>Financial Results</h3>
-                    <div class="metric"><span class="metric-label">Total Revenue:</span> <span class="metric-value">${fmtMoney0(results.revenue || 0)}</span></div>
-                    <div class="metric"><span class="metric-label">Variable Costs:</span> <span class="metric-value">${fmtMoney0(results.variableCosts || 0)}</span></div>
-                    <div class="metric"><span class="metric-label">Contribution Margin:</span> <span class="metric-value">${fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))}</span></div>
-                    <div class="metric"><span class="metric-label">Fixed Overhead:</span> <span class="metric-value">${fmtMoney0(results.annualFixedCosts || 0)}</span></div>
-                    <div class="metric ${results.income >= 0 ? 'positive' : 'negative'}"><span class="metric-label">Net Profit:</span> <span class="metric-value">${fmtMoney0(results.income || 0)}</span></div>
-                    <div class="metric"><span class="metric-label">Profit Margin:</span> <span class="metric-value">${fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)}</span></div>
-                    <div class="metric"><span class="metric-label">Utilization:</span> <span class="metric-value">${fmtPct1(results.capacityPct || 0)}</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Service Offerings</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Price/Month</th>
-                        <th>Sessions/Year</th>
-                        <th>Hours/Session</th>
-                        <th>Variable Cost/Session</th>
-                        <th>Mix %</th>
-                        <th>Current Clients</th>
-                        <th>Annual Revenue</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${state.offerings.map(o => {
-    const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
-    return `
-                        <tr>
-                            <td>${escapeHtml(o.name)}</td>
-                            <td>${fmtMoney0(o.priceMonthly)}</td>
-                            <td>${o.sessionsPerYear}</td>
-                            <td>${o.hoursPerSession}</td>
-                            <td>${fmtMoney0(o.variableCostPerSession)}</td>
-                            <td>${fmtPct1(o.mixPct)}</td>
-                            <td>${o.currentClients}</td>
-                            <td>${fmtMoney0(annualRevenue)}</td>
-                        </tr>
-                      `;
-  }).join('')}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="section">
-            <h2>Visualizations</h2>
-            <div class="charts">
-                <div class="chart-placeholder">
-                    <div>Charts would appear here in the interactive version</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>`;
+  const htmlContent = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>ProfitPath Report - ' + new Date().toLocaleDateString() + '</title>\n    <style>\n      body {font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif; margin: 0; padding: 20px; background: #f8fafc;}\n      .container {max-width: 1200px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}\n      .header {text-align: center; margin-bottom: 40px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px;}\n      .section {margin-bottom: 40px;}\n      .section h2 {color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;}\n      .grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;}\n      .card {background: #f9fafb; padding: 20px; border-radius: 6px; border: 1px solid #e5e7eb;}\n      .metric {display: flex; justify-content: space-between; margin-bottom: 8px;}\n      .metric-label {font-weight: 500; color: #6b7280;}\n      .metric-value {font-weight: 600; color: #1f2937;}\n      .positive {color: #10b981;}\n      .negative {color: #ef4444;}\n      table {width: 100%; border-collapse: collapse; margin-top: 20px;}\n      th, td {padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;}\n      th {background: #f3f4f6; font-weight: 600;}\n    </style>\n  </head>\n  <body>\n    <div class="container">\n      <div class="header">\n        <h1>ProfitPath Report</h1>\n        <p>Generated on ' + new Date().toLocaleDateString() + '</p>\n      </div>\n\n      <div class="section">\n        <h2>Business Parameters</h2>\n        <div class="grid">\n          <div class="card">\n            <h3>Capacity</h3>\n            <div class="metric">\n              <span class="metric-label">Employees:</span>\n              <span class="metric-value">' + state.employees + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Employee Pay:</span>\n              <span class="metric-value">' + fmtMoney0(state.employeePay) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Monthly Overhead:</span>\n              <span class="metric-value">' + fmtMoney0(state.monthlyCosts) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Productive Utilization:</span>\n              <span class="metric-value">' + fmtPct1(state.productiveUtilizationPct) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Target Utilization:</span>\n              <span class="metric-value">' + fmtPct1(state.targetUtilizationPct) + '</span>\n            </div>\n          </div>\n          <div class="card">\n            <h3>Financial Results</h3>\n            <div class="metric">\n              <span class="metric-label">Total Revenue:</span>\n              <span class="metric-value">' + fmtMoney0(results.revenue || 0) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Variable Costs:</span>\n              <span class="metric-value">' + fmtMoney0(results.variableCosts || 0) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Contribution Margin:</span>\n              <span class="metric-value">' + fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0))) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Fixed Overhead:</span>\n              <span class="metric-value">' + fmtMoney0(results.annualFixedCosts || 0) + '</span>\n            </div>\n            <div class="metric ' + (results.income >= 0 ? 'positive' : 'negative') + '">\n              <span class="metric-label">Net Profit:</span>\n              <span class="metric-value">' + fmtMoney0(results.income || 0) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Profit Margin:</span>\n              <span class="metric-value">' + fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Utilization:</span>\n              <span class="metric-value">' + fmtPct1(results.capacityPct || 0) + '</span>\n            </div>\n          </div>\n        </div>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Target Utilization:</span>\n        <span class="metric-value">' + fmtPct1(state.targetUtilizationPct) + '</span>\n      </div>\n    </div>\n    <div class="card">\n      <h3>Financial Results</h3>\n      <div class="metric">\n        <span class="metric-label">Total Revenue:</span>\n        <span class="metric-value">' + fmtMoney0(results.revenue || 0) + '</span>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Variable Costs:</span>\n        <span class="metric-value">' + fmtMoney0(results.variableCosts || 0) + '</span>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Contribution Margin:</span>\n        <span class="metric-value">' + fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0))) + '</span>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Fixed Overhead:</span>\n        <span class="metric-value">' + fmtMoney0(results.annualFixedCosts || 0) + '</span>\n      </div>\n      <div class="metric ' + (results.income >= 0 ? 'positive' : 'negative') + '">\n        <span class="metric-label">Net Profit:</span>\n        <span class="metric-value">' + fmtMoney0(results.income || 0) + '</span>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Profit Margin:</span>\n        <span class="metric-value">' + fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100) + '</span>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Utilization:</span>\n        <span class="metric-value">' + fmtPct1(results.capacityPct || 0) + '</span>\n      </div>\n    </div>\n  </div>\n</div>\n\n<div class="section">\n  <h2>Service Offerings</h2>\n  <table>\n    <thead>\n      <tr>\n        <th>Name</th>\n        <th>Price/Month</th>\n        <th>Sessions/Year</th>\n        <th>Hours/Session</th>\n        <th>Variable Cost/Session</th>\n        <th>Mix %</th>\n        <th>Current Clients</th>\n        <th>Annual Revenue</th>\n      </tr>\n    </thead>\n    <tbody>\n      ' + state.offerings.map(function(o) {\n        return '<tr>\n          <td>' + o.name + '</td>\n          <td>' + fmtMoney0(o.priceMonthly) + '</td>\n          <td>' + o.sessionsPerYear + '</td>\n          <td>' + o.hoursPerSession + '</td>\n          <td>' + fmtMoney0(o.variableCostPerSession) + '</td>\n          <td>' + fmtPct1(o.mixPct) + '</td>\n          <td>' + (state.mode === 'forecast' ? Math.round(o.mixPct / 100 * results.clients) : o.currentClients) + '</td>\n          <td>' + fmtMoney0((state.mode === 'forecast' ? o.mixPct / 100 * results.clients : o.currentClients) * o.priceMonthly * 12) + '</td>\n        </tr>';\n      }).join('') + '\n    </tbody>\n  </table>\n</div>\n</div>\n</body>\n</html>';
 
   // Download the HTML file
   const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
@@ -2123,18 +2057,31 @@ function exportAsHTML() {
   const url = URL.createObjectURL(blob);
 
   link.setAttribute('href', url);
-  link.setAttribute('download', `profitpath-report-${new Date().toISOString().split('T')[0]}.html`);
+  link.setAttribute('download', 'profitpath-report-' + new Date().toISOString().split('T')[0] + '.html');
   link.style.visibility = 'hidden';
 
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+
+  // Track export event
+  if (window.profitPathAnalytics) {
+    window.profitPathAnalytics.trackExport('html', 1);
+  }
+
+  // Show contextual feedback prompt
+  if (window.feedbackUI) {
+    window.feedbackUI.showContextualPrompt({
+      action: 'HTML export completed',
+      feature: 'exports'
+    }, 2000);
+  }
 }
 
 // Scenario Management
 function getAllScenarios() {
   try {
-    const saved = localStorage.getItem('profitpath-scenarios');
+    const saved = localStorage.getItem('profitpath_scenarios');
     return saved ? JSON.parse(saved) : [];
   } catch (e) {
     console.warn('Failed to load scenarios:', e);
@@ -2160,6 +2107,14 @@ function saveScenario(name) {
 
     scenarios.push(scenario);
     localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
+
+    // Track scenario save
+    if (window.profitPathAnalytics) {
+      window.profitPathAnalytics.trackScenarioAction('create', {
+        scenarioName: name.trim(),
+        totalScenarios: scenarios.length
+      });
+    }
 
     // Clear input and re-render list
     $('#scenarioNameInput').value = '';
@@ -2196,6 +2151,14 @@ function loadScenario(scenarioId) {
     persistState(); // Save loaded scenario as current state
     render();
     closeScenarioModal();
+
+    // Track scenario load
+    if (window.profitPathAnalytics) {
+      window.profitPathAnalytics.trackScenarioAction('load', {
+        scenarioName: scenario.name,
+        scenarioId: scenarioId
+      });
+    }
   } catch (e) {
     console.error('Failed to load scenario:', e);
     alert('Error loading scenario');
@@ -2212,17 +2175,7 @@ function deleteScenario(scenarioId) {
 
   // Create custom confirmation dialog to avoid native confirm issues
   const modal = document.createElement('div');
-  modal.innerHTML = `
-    <div id="confirmModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
-      <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center;">
-        <p style="margin: 0 0 20px 0; color: #374151;">Delete this scenario?</p>
-        <div style="display: flex; gap: 10px; justify-content: center;">
-          <button id="confirmYes" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
-          <button id="confirmNo" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
-        </div>
-      </div>
-    </div>
-  `;
+  modal.innerHTML = '<div id="confirmModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;"><div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center;"><p style="margin: 0 0 20px 0; color: #374151;">Delete this scenario?</p><div style="display: flex; gap: 10px; justify-content: center;"><button id="confirmYes" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Delete</button><button id="confirmNo" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button></div></div></div>';
 
   document.body.appendChild(modal);
 
@@ -2245,6 +2198,15 @@ function deleteScenario(scenarioId) {
       // Only update if we actually removed something
       if (scenarios.length < initialLength) {
         localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
+
+        // Track scenario deletion
+        if (window.profitPathAnalytics) {
+          window.profitPathAnalytics.trackScenarioAction('delete', {
+            scenarioId: scenarioId,
+            remainingScenarios: scenarios.length
+          });
+        }
+
         // Defer rendering to next tick to avoid blocking
         setTimeout(() => renderScenariosList(), 0);
       }
@@ -2276,15 +2238,15 @@ function renderScenariosList() {
     itemDiv.className = 'scenario-item';
 
     itemDiv.innerHTML = `
-      <div>
+    < div >
         <div class="scenario-item-name">${escapeHtml(s.name)}</div>
         <div class="scenario-item-meta">Saved ${s.timestamp}</div>
-      </div>
-      <div class="scenario-item-actions">
-        <button class="btn small load-btn" data-scenario-id="${escapeHtml(s.id)}">Load</button>
-        <button class="btn small danger delete-btn" data-scenario-id="${escapeHtml(s.id)}">Delete</button>
-      </div>
-    `;
+      </div >
+    <div class="scenario-item-actions">
+      <button class="btn small load-btn" data-scenario-id="${escapeHtml(s.id)}">Load</button>
+      <button class="btn small danger delete-btn" data-scenario-id="${escapeHtml(s.id)}">Delete</button>
+    </div>
+      `;
 
     fragment.appendChild(itemDiv);
   });
@@ -2357,7 +2319,7 @@ function encodeScenarioToURL(state) {
 
     // Create shareable URL
     const baseUrl = window.location.origin + window.location.pathname;
-    return `${baseUrl}#scenario=${encoded}`;
+    return `${ baseUrl }#scenario = ${ encoded }`;
   } catch (e) {
     console.error('Failed to encode scenario:', e);
     return null;
@@ -2436,7 +2398,7 @@ function updateSocialMetaTags(scenarioData) {
     calc({ ...scenarioData, clients: scenarioData.offerings.reduce((sum, o) => sum + (o.currentClients || 0), 0) }).revenue :
     scenarioData.offerings.reduce((sum, o) => sum + (o.priceMonthly * (o.currentClients || 0)), 0);
 
-  const description = `Business Scenario: $${revenue.toLocaleString()}/month revenue, ${scenarioData.employees} employees, ${scenarioData.offerings.length} services.`;
+  const description = `Business Scenario: $${ revenue.toLocaleString() } / month revenue, ${ scenarioData.employees } employees, ${ scenarioData.offerings.length } services.`;
 
   // Update meta tags
   updateMetaTag('description', description);
@@ -2452,7 +2414,7 @@ function updateSocialMetaTags(scenarioData) {
 }
 
 function updateMetaTag(name, content) {
-  const meta = document.querySelector(`meta[name="${name}"]`) || document.querySelector(`meta[property="${name}"]`);
+  const meta = document.querySelector(`meta[name = "${name}"]`) || document.querySelector(`meta[property = "${name}"]`);
   if (meta) {
     meta.setAttribute('content', content);
   }
@@ -2483,11 +2445,12 @@ function initializeEmbeddableWidget() {
     const style = document.createElement('style');
     style.textContent = `
       body { margin: 0; padding: 0; }
-      .container { max-width: none; padding: 0; }
-      .header { margin-bottom: 0; padding: 10px; }
-      .header h1 { font-size: 18px; margin: 0; }
+    .container { max - width: none; padding: 0;
+}
+      .header { margin - bottom: 0; padding: 10px; }
+      .header h1 { font - size: 18px; margin: 0; }
       .card { margin: 10px 0; }
-    `;
+`;
     document.head.appendChild(style);
 
     // Adjust container for embedding
@@ -2505,15 +2468,15 @@ function generateEmbedCode() {
   const shareUrl = encodeScenarioToURL(state);
   const embedUrl = shareUrl + (shareUrl.includes('?') ? '&' : '?') + 'embed=true';
 
-  const embedCode = `<iframe
-  src="${embedUrl}"
-  width="100%"
-  height="600"
-  frameborder="0"
-  style="border: 1px solid #e5e7eb; border-radius: 8px;">
-</iframe>
+  const embedCode = `< iframe
+src = "${embedUrl}"
+width = "100%"
+height = "600"
+frameborder = "0"
+style = "border: 1px solid #e5e7eb; border-radius: 8px;" >
+      </iframe >
 
-<p><a href="${shareUrl}" target="_blank">View full calculator →</a></p>`;
+  <p><a href="${shareUrl}" target="_blank">View full calculator →</a></p>`;
 
   return embedCode;
 }
@@ -2538,27 +2501,27 @@ function showEmbedCode() {
 function showEmbedDialog(embedCode) {
   const dialog = document.createElement('div');
   dialog.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-  `;
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: rgba(0, 0, 0, 0.5);
+display: flex;
+align - items: center;
+justify - content: center;
+z - index: 10000;
+`;
 
   dialog.innerHTML = `
-    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
-      <h3 style="margin-top: 0;">Embed Calculator Widget</h3>
-      <p>Copy this code to embed the calculator on your website:</p>
-      <textarea style="width: 100%; height: 150px; font-family: monospace; font-size: 12px;" readonly>${embedCode}</textarea>
-      <div style="margin-top: 15px; text-align: right;">
-        <button class="embed-close-btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
-      </div>
-    </div>
+  < div style = "background: white; padding: 20px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;" >
+        <h3 style="margin-top: 0;">Embed Calculator Widget</h3>
+        <p>Copy this code to embed the calculator on your website:</p>
+        <textarea style="width: 100%; height: 150px; font-family: monospace; font-size: 12px;" readonly>${embedCode}</textarea>
+        <div style="margin-top: 15px; text-align: right;">
+          <button class="embed-close-btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+        </div>
+      </div >
   `;
 
   document.body.appendChild(dialog);
@@ -2862,7 +2825,7 @@ function loadIndustryTemplate(templateKey) {
     return;
   }
 
-  if (!confirm(`Load ${template.name} template? This will replace your current configuration.`)) {
+  if (!confirm(`Load ${ template.name } template ? This will replace your current configuration.`)) {
     return;
   }
 
@@ -2875,7 +2838,7 @@ function loadIndustryTemplate(templateKey) {
     render();
 
     // Show success message
-    alert(`✅ Loaded ${template.name} template!\n\nThis provides typical pricing and configuration for ${template.description.toLowerCase()}. Adjust the values as needed for your specific business.`);
+    alert(`✅ Loaded ${ template.name } template!\n\nThis provides typical pricing and configuration for ${ template.description.toLowerCase() }.Adjust the values as needed for your specific business.`);
   } catch (e) {
     console.error('Error loading template:', e);
     alert('Error loading template. Please try again.');
@@ -3132,8 +3095,8 @@ function loadTestScenarios() {
 
   try {
     const scenarios = Object.entries(TEST_SCENARIOS).map(([key, scenario]) => ({
-      id: `test-${key}-${Date.now()}`,
-      name: `[TEST] ${scenario.name}`,
+      id: `test - ${ key } -${ Date.now() } `,
+      name: `[TEST] ${ scenario.name } `,
       timestamp: Date.now() + Object.keys(TEST_SCENARIOS).indexOf(key) * 1000,
       data: scenario.data
     }));
@@ -3167,7 +3130,7 @@ function loadTestScenarios() {
 
     // Show notification
     setTimeout(() => {
-      alert(`Loaded ${scenarios.length} test scenarios!\n\nCheck the Scenarios menu for [TEST] scenarios.`);
+      alert(`Loaded ${ scenarios.length } test scenarios!\n\nCheck the Scenarios menu for [TEST] scenarios.`);
     }, 100);
 
     return scenarios.length;
@@ -3339,7 +3302,7 @@ function wire(skipLocalStorageLoading = false) {
           const viewportWidth = window.innerWidth;
 
           menu.style.position = 'fixed';
-          menu.style.top = `${buttonRect.bottom + 4}px`;
+          menu.style.top = `${ buttonRect.bottom + 4 } px`;
 
           // Calculate left position, ensuring menu stays on screen
           let leftPos = buttonRect.left + buttonRect.width / 2;
@@ -3354,7 +3317,7 @@ function wire(skipLocalStorageLoading = false) {
             leftPos = viewportWidth - menuHalfWidth - 10;
           }
 
-          menu.style.left = `${leftPos}px`;
+          menu.style.left = `${ leftPos } px`;
           menu.style.transform = 'translateX(-50%)';
           menu.style.right = 'auto';
         }
@@ -3401,7 +3364,7 @@ function wire(skipLocalStorageLoading = false) {
     ];
 
     checkboxes.forEach(key => {
-      const checkbox = $(`#${key}`);
+      const checkbox = $(`#${ key } `);
       if (checkbox) {
         checkbox.checked = settings[key];
         checkbox.addEventListener('change', (e) => {
@@ -3449,6 +3412,12 @@ function wire(skipLocalStorageLoading = false) {
       const template = e.target.dataset.template;
       const menu = $('#templatesMenu');
       if (menu) menu.style.display = 'none';
+
+      // Track template usage
+      if (window.profitPathAnalytics) {
+        window.profitPathAnalytics.trackTemplateUsage(template, e.target.textContent.trim());
+      }
+
       loadIndustryTemplate(template);
     });
   });
@@ -3574,14 +3543,14 @@ function wire(skipLocalStorageLoading = false) {
                   const settingsSection = document.createElement('div');
                   settingsSection.className = 'settings-section';
                   settingsSection.style.cssText = `
-                    margin-top: 12px;
-                    padding: 12px;
-                    background: rgba(255, 255, 255, 0.05);
-                    border-radius: 8px;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                  `;
+margin - top: 12px;
+padding: 12px;
+background: rgba(255, 255, 255, 0.05);
+border - radius: 8px;
+border: 1px solid rgba(255, 255, 255, 0.1);
+`;
                   settingsSection.innerHTML = `
-                    <div style="margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text);">Experience Level</div>
+  < div style = "margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text);" > Experience Level</div >
                     <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
                       <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
                         <input type="radio" name="mobileExperienceLevel" value="beginner" style="accent-color: #007bff;">
@@ -3619,7 +3588,7 @@ function wire(skipLocalStorageLoading = false) {
                         Debug panel
                       </label>
                     </div>
-                  `;
+`;
 
                   mobileSettingsBtn.parentNode.insertBefore(settingsSection, mobileSettingsBtn.nextSibling);
 
@@ -3702,7 +3671,7 @@ function wire(skipLocalStorageLoading = false) {
     const submenuIds = ['mobileExportOptions', 'mobileTemplatesOptions'];
     submenuIds.forEach(id => {
       // Prefer getElementById for id strings, fall back to querySelector
-      const submenu = document.getElementById(id) || document.querySelector(`#${id}`) || document.querySelector(`.${id}`);
+      const submenu = document.getElementById(id) || document.querySelector(`#${ id } `) || document.querySelector(`.${ id } `);
       if (submenu) submenu.style.display = 'none';
     });
 
@@ -3795,6 +3764,12 @@ function wire(skipLocalStorageLoading = false) {
       const template = e.target.dataset.template;
       const menu = $('#mobileTemplatesOptions');
       if (menu) menu.style.display = 'none';
+
+      // Track template usage
+      if (window.profitPathAnalytics) {
+        window.profitPathAnalytics.trackTemplateUsage(template, e.target.textContent.trim());
+      }
+
       loadIndustryTemplate(template);
       closeMobileMenu(); // Close mobile menu after loading template
     });
@@ -3900,7 +3875,7 @@ function renderComparisonResults(metrics1, metrics2) {
   ];
 
   let tableHtml = `
-      <table class="comparison-table">
+  < table class="comparison-table" >
         <thead>
           <tr>
             <th>Metric</th>
@@ -3910,7 +3885,7 @@ function renderComparisonResults(metrics1, metrics2) {
           </tr>
         </thead>
         <tbody>
-    `;
+          `;
 
   metricsToCompare.forEach(m => {
     const val1 = metrics1[m.key];
@@ -3930,19 +3905,19 @@ function renderComparisonResults(metrics1, metrics2) {
     }
 
     tableHtml += `
-        <tr>
-          <td class="metric-name">${m.label}</td>
-          <td class="scenario-col">${m.format(val1)}</td>
-          <td class="scenario-col">${m.format(val2)}</td>
-          <td class="difference-col ${diffClass}">${m.format(diff)}</td>
-        </tr>
-      `;
+          <tr>
+            <td class="metric-name">${m.label}</td>
+            <td class="scenario-col">${m.format(val1)}</td>
+            <td class="scenario-col">${m.format(val2)}</td>
+            <td class="difference-col ${diffClass}">${m.format(diff)}</td>
+          </tr>
+          `;
   });
 
   tableHtml += `
         </tbody>
-      </table>
-    `;
+      </table >
+  `;
   tableWrap.innerHTML = tableHtml; // Assign to wrapper
   comparisonResultsEl.style.display = 'block';
 }
@@ -4049,7 +4024,7 @@ try {
 } catch (e) {
   console.error('Render failed:', e);
   const dbg = $('#debugPanel');
-  if (dbg) dbg.textContent = `Render error: ${e && e.stack ? e.stack : String(e)}`;
+  if (dbg) dbg.textContent = `Render error: ${ e && e.stack ? e.stack : String(e) } `;
 }
 
 
@@ -4058,7 +4033,7 @@ window.addEventListener('error', (ev) => {
   const dbg = $('#debugPanel');
   const msg = ev?.error?.stack || ev?.message || String(ev);
   console.error('Uncaught error:', ev.error || ev.message || ev);
-  if (dbg) dbg.textContent = `Uncaught error: ${msg}`;
+  if (dbg) dbg.textContent = `Uncaught error: ${ msg } `;
 });
 
 // Debug panel toggle wiring: collapsible panel above the simple chart
@@ -4076,9 +4051,9 @@ function initDebugPanel() {
     try {
       const res = calc();
       pre.textContent = JSON.stringify(res, null, 2);
-      toggle.textContent = `▶ Debug — clients: ${res.clients || 0}, revenue: ${fmtMoney0(res.revenue || 0)}`;
+      toggle.textContent = `▶ Debug — clients: ${ res.clients || 0 }, revenue: ${ fmtMoney0(res.revenue || 0) } `;
     } catch (e) {
-      pre.textContent = `Error generating debug: ${e && e.stack ? e.stack : String(e)}`;
+      pre.textContent = `Error generating debug: ${ e && e.stack ? e.stack : String(e) } `;
       toggle.textContent = `▶ Debug — error`;
     }
   }
@@ -4129,33 +4104,33 @@ try {
 // TEMPORARILY DISABLED - forcing network CSS loading
 /*
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        // Service Worker registered successfully
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              // Service Worker registered successfully
 
-        // Handle service worker updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New version available
-                if (confirm('A new version of ProfitPath is available. Reload to update?')) {
-                  newWorker.postMessage({ type: 'SKIP_WAITING' });
-                  window.location.reload();
+              // Handle service worker updates
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                      // New version available
+                      if (confirm('A new version of ProfitPath is available. Reload to update?')) {
+                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        window.location.reload();
+                      }
+                    }
+                  });
                 }
-              }
+              });
+            })
+            .catch((_error) => {
+              // Service Worker registration failed
             });
-          }
         });
-      })
-      .catch((_error) => {
-        // Service Worker registration failed
-      });
-  });
 }
-*/
+      */
 
 // Initialize embeddable widget if in embed mode
 initializeEmbeddableWidget();
@@ -4242,22 +4217,22 @@ function showWelcomeDialog() {
   const dialog = createOnboardingDialog({
     title: 'Welcome to ProfitPath! 🎉',
     content: `
-      <div class="welcome-content">
+  < div class="welcome-content" >
         <p>Get started with your profitability analysis in just a few minutes.</p>
         <p>Would you like a quick guided tour of the key features?</p>
-      </div>
-      <div style="display: flex; gap: 10px; justify-content: center;">
-        <button class="welcome-btn" data-action="tour" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
-          Take Tour
-        </button>
-        <button class="welcome-btn" data-action="industry" style="background: #f8f9fa; color: #333; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-          Choose Industry
-        </button>
-        <button class="welcome-btn" data-action="skip" style="background: transparent; color: #666; border: none; padding: 10px 20px; cursor: pointer;">
-          Skip for Now
-        </button>
-      </div>
-    `,
+      </div >
+  <div style="display: flex; gap: 10px; justify-content: center;">
+    <button class="welcome-btn" data-action="tour" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+      Take Tour
+    </button>
+    <button class="welcome-btn" data-action="industry" style="background: #f8f9fa; color: #333; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+      Choose Industry
+    </button>
+    <button class="welcome-btn" data-action="skip" style="background: transparent; color: #666; border: none; padding: 10px 20px; cursor: pointer;">
+      Skip for Now
+    </button>
+  </div>
+`,
     buttons: [] // We'll handle buttons manually
   });
 
@@ -4292,19 +4267,18 @@ function showIndustrySelector() {
   ];
 
   const industryGrid = industries.map(industry => `
-    <div class="industry-option" data-industry="${industry.id}">
-      <div class="industry-icon" style="font-size: 32px; margin-bottom: 8px;">${industry.icon}</div>
-      <div class="industry-name">${industry.name}</div>
-      <div class="industry-desc">${industry.description}</div>
-    </div>
+  < div class="industry-option" data - industry="${industry.id}" >
+        <div class="industry-icon" style="font-size: 32px; margin-bottom: 8px;">${industry.icon}</div>
+        <div class="industry-name">${industry.name}</div>
+        <div class="industry-desc">${industry.description}</div>
+      </div >
   `).join('');
 
   const dialog = createOnboardingDialog({
     title: 'What type of service business do you run?',
     content: `
-      <div class="industry-grid">${industryGrid}</div>
-      <p style="margin-top: 16px; color: var(--muted);">This helps us provide tailored guidance and templates.</p>
-    `,
+  < div class="industry-grid" > ${ industryGrid }</div >
+    <p style="margin-top: 16px; color: var(--muted);">This helps us provide tailored guidance and templates.</p>`,
     buttons: [
       { text: 'Continue', action: () => { }, primary: true },
       { text: 'Skip', action: () => { } }
@@ -4337,19 +4311,19 @@ function selectIndustry(industryId, dialog) {
   const successDialog = createOnboardingDialog({
     title: 'Great choice! 🎯',
     content: `
-      <div class="success-content">
+      < div class="success-content" >
         <p>We've loaded a template configuration for your industry.</p>
         <p>Would you like to take a quick tour to learn how to customize it?</p>
-      </div>
-      <div style="display: flex; gap: 10px; justify-content: center;">
-        <button class="success-btn" data-action="tour" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
-          Show Me How
-        </button>
-        <button class="success-btn" data-action="explore" style="background: #f8f9fa; color: #333; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-          Explore on My Own
-        </button>
-      </div>
-    `,
+      </div >
+  <div style="display: flex; gap: 10px; justify-content: center;">
+    <button class="success-btn" data-action="tour" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+      Show Me How
+    </button>
+    <button class="success-btn" data-action="explore" style="background: #f8f9fa; color: #333; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+      Explore on My Own
+    </button>
+  </div>
+`,
     buttons: [] // We'll handle buttons manually
   });
 
@@ -4539,7 +4513,7 @@ async function showTourStep(stepIndex) {
   }
 
   if (!target) {
-    console.warn(`Tour step ${stepIndex} target not found: ${step.target}, skipping...`);
+    console.warn(`Tour step ${ stepIndex } target not found: ${ step.target }, skipping...`);
     showTourStep(stepIndex + 1);
     return;
   }
@@ -4669,9 +4643,9 @@ function exitTour() {
   const exitDialog = createOnboardingDialog({
     title: 'Tour Exited',
     content: `
-      <p>You can resume the guided tour anytime by clicking the ❓ help button in the top-right corner.</p>
-      <p>Feel free to explore the features at your own pace!</p>
-    `,
+  < p > You can resume the guided tour anytime by clicking the ❓ help button in the top - right corner.</p >
+    <p>Feel free to explore the features at your own pace!</p>
+`,
     buttons: [
       { text: 'Got it!', action: () => { } }
     ]
@@ -4689,9 +4663,9 @@ function completeTour() {
   const completionDialog = createOnboardingDialog({
     title: 'Tour Complete! 🎉',
     content: `
-      <p>You now know the basics of ProfitPath!</p>
-      <p>Explore the features at your own pace. Use the ❓ help button anytime for guidance.</p>
-    `,
+  < p > You now know the basics of ProfitPath!</p >
+    <p>Explore the features at your own pace. Use the ❓ help button anytime for guidance.</p>
+`,
     buttons: [
       { text: 'Got it!', action: () => { }, primary: true }
     ]
@@ -4766,22 +4740,22 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   const tooltip = document.createElement('div');
   tooltip.className = 'onboarding-tooltip';
   tooltip.style.cssText = `
-    position: fixed;
-    z-index: 10000;
-    background: white;
-    border: 2px solid #007bff;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-width: ${isMobile ? '280px' : '300px'};
-    pointer-events: auto;
-    font-size: ${isMobile ? '14px' : '16px'};
-    left: ${left}px;
-    top: ${top}px;
-    transform: ${transform};
-    opacity: 0;
-    transition: opacity 0.3s ease-out;
-  `;
+position: fixed;
+z - index: 10000;
+background: white;
+border: 2px solid #007bff;
+border - radius: 8px;
+padding: 16px;
+box - shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+max - width: ${ isMobile ? '280px' : '300px' };
+pointer - events: auto;
+font - size: ${ isMobile ? '14px' : '16px' };
+left: ${ left } px;
+top: ${ top } px;
+transform: ${ transform };
+opacity: 0;
+transition: opacity 0.3s ease - out;
+`;
 
   // Append to DOM and fade in from final position
   document.body.appendChild(tooltip);
@@ -4791,26 +4765,26 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
 
   // Create progress dots
   const progressDots = steps.map((_, index) => `
-    <span class="tour-dot ${index === stepIndex ? 'active' : ''} ${index < stepIndex ? 'completed' : ''}"
-          data-step="${index}"
-          style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 2px; cursor: pointer; background: ${index === stepIndex ? '#007bff' : index < stepIndex ? '#28a745' : '#ddd'}; transition: all 0.2s;">
-    </span>
+  < span class="tour-dot ${index === stepIndex ? 'active' : ''} ${index < stepIndex ? 'completed' : ''}"
+data - step="${index}"
+style = "display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 2px; cursor: pointer; background: ${index === stepIndex ? '#007bff' : index < stepIndex ? '#28a745' : '#ddd'}; transition: all 0.2s;" >
+      </span >
   `).join('');
 
   tooltip.innerHTML = `
-    <div style="position: relative; padding-right: 24px;">
-      <button class="tour-exit-btn" style="position: absolute; top: 0; right: 0; background: transparent; border: none; font-size: 16px; cursor: pointer; color: var(--text, #666); padding: 4px; line-height: 1;">✕</button>
-      <div style="font-weight: bold; margin-bottom: 8px; color: var(--text, #007bff);">${step.title}</div>
-      <div style="margin-bottom: 16px; color: var(--text, #333); line-height: 1.4;">${step.content}</div>
+  < div style = "position: relative; padding-right: 24px;" >
+        <button class="tour-exit-btn" style="position: absolute; top: 0; right: 0; background: transparent; border: none; font-size: 16px; cursor: pointer; color: var(--text, #666); padding: 4px; line-height: 1;">✕</button>
+        <div style="font-weight: bold; margin-bottom: 8px; color: var(--text, #007bff);">${step.title}</div>
+        <div style="margin-bottom: 16px; color: var(--text, #333); line-height: 1.4;">${step.content}</div>
 
-      <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px; position: relative;">
-        <div class="tour-navigation" style="display: flex; align-items: center;">
-          ${stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: 8px; font-size: 18px; line-height: 1;">‹</button>' : '<div style="width: 32px;"></div>'}
-          <div class="tour-dots" style="display: flex; align-items: center;">${progressDots}</div>
-          ${stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background: #007bff; color: white; border: none; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; font-size: 18px; line-height: 1;">›</button>' : '<button class="tour-finish-btn" style="background: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; font-size: 16px; line-height: 1;">✓</button>'}
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px; position: relative;">
+          <div class="tour-navigation" style="display: flex; align-items: center;">
+            ${stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: 8px; font-size: 18px; line-height: 1;">‹</button>' : '<div style="width: 32px;"></div>'}
+            <div class="tour-dots" style="display: flex; align-items: center;">${progressDots}</div>
+            ${stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background: #007bff; color: white; border: none; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; font-size: 18px; line-height: 1;">›</button>' : '<button class="tour-finish-btn" style="background: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; font-size: 16px; line-height: 1;">✓</button>'}
+          </div>
         </div>
-      </div>
-    </div>
+      </div >
   `;
 
   // Add event listeners for navigation
@@ -4894,23 +4868,23 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   const computed = window.getComputedStyle(target);
   // If the target has no rounded corners, use a mild default so highlights look rounded
   const parsedBR = parseFloat(computed.borderRadius) || 0;
-  const borderRadius = (parsedBR && parsedBR > 4) ? `${parsedBR}px` : '10px';
+  const borderRadius = (parsedBR && parsedBR > 4) ? `${ parsedBR } px` : '10px';
 
   const overlay = document.createElement('div');
   overlay.className = 'onboarding-overlay';
   overlay.style.cssText = `
-    position: fixed;
-    left: ${rect2.left - OVERLAY_PAD}px;
-    top: ${rect2.top - OVERLAY_PAD}px;
-    width: ${rect2.width + OVERLAY_PAD * 2}px;
-    height: ${rect2.height + OVERLAY_PAD * 2}px;
-    border: ${BORDER_THICKNESS}px solid #007bff;
-    border-radius: ${borderRadius};
-    box-shadow: 0 8px 32px rgba(0,123,255,0.12);
-    pointer-events: none;
-    z-index: 9999;
-    animation: pulse 2s infinite;
-  `;
+position: fixed;
+left: ${ rect2.left - OVERLAY_PAD } px;
+top: ${ rect2.top - OVERLAY_PAD } px;
+width: ${ rect2.width + OVERLAY_PAD * 2 } px;
+height: ${ rect2.height + OVERLAY_PAD * 2 } px;
+border: ${ BORDER_THICKNESS }px solid #007bff;
+border - radius: ${ borderRadius };
+box - shadow: 0 8px 32px rgba(0, 123, 255, 0.12);
+pointer - events: none;
+z - index: 9999;
+animation: pulse 2s infinite;
+`;
 
   // Append overlay underneath the tooltip (tooltip uses z-index:10000)
   document.body.appendChild(overlay);
@@ -4939,33 +4913,33 @@ function createOnboardingDialog({ title, content, buttons }) {
   const dialog = document.createElement('div');
   dialog.className = 'onboarding-dialog-overlay';
   dialog.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10001;
-  `;
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: rgba(0, 0, 0, 0.6);
+display: flex;
+align - items: center;
+justify - content: center;
+z - index: 10001;
+`;
 
   const dialogContent = document.createElement('div');
   dialogContent.style.cssText = `
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    max-width: 500px;
-    width: 90%;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  `;
+background: white;
+border - radius: 12px;
+padding: 24px;
+max - width: 500px;
+width: 90 %;
+box - shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+`;
 
   dialogContent.innerHTML = `
-    <h2 style="margin: 0 0 16px 0; color: var(--text, #333); font-size: 24px;">${title}</h2>
-    <div style="color: var(--text, #666); line-height: 1.5;">${content}</div>
-    <div style="margin-top: 24px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
-      ${buttons.map((btn, index) => `
+  < h2 style = "margin: 0 0 16px 0; color: var(--text, #333); font-size: 24px;" > ${ title }</h2 >
+      <div style="color: var(--text, #666); line-height: 1.5;">${content}</div>
+      <div style="margin-top: 24px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
+        ${buttons.map((btn, index) => `
         <button class="dialog-btn" data-action="${index}" data-primary="${btn.primary ? 'true' : 'false'}"
                 style="
                   padding: 8px 16px;
@@ -4979,8 +4953,8 @@ function createOnboardingDialog({ title, content, buttons }) {
           ${btn.text}
         </button>
       `).join('')}
-    </div>
-  `;
+      </div>
+`;
 
   // Add event listeners for dialog buttons
   setTimeout(() => {
@@ -5004,26 +4978,26 @@ function showHelpMenu() {
   const helpDialog = createOnboardingDialog({
     title: 'Help & Learning Center',
     content: `
-      <div style="display: grid; gap: 12px;">
+  < div style = "display: grid; gap: 12px;" >
         <button class="help-menu-btn" data-action="tour"
-                style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
+          style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
           🎯 <strong>Take Guided Tour</strong><br>
-          <small>Step-by-step walkthrough of key features</small>
+            <small>Step-by-step walkthrough of key features</small>
         </button>
 
         <button class="help-menu-btn" data-action="industry"
-                style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
+          style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
           🏢 <strong>Change Industry</strong><br>
-          <small>Switch to a different business template</small>
+            <small>Switch to a different business template</small>
         </button>
 
         <button class="help-menu-btn" data-action="tooltips"
-                style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
+          style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
           💡 <strong>Show Tooltips</strong><br>
-          <small>Enable contextual help throughout the app</small>
+            <small>Enable contextual help throughout the app</small>
         </button>
-      </div>
-    `,
+      </div >
+  `,
     buttons: [
       { text: 'Close', action: () => { } }
     ]
@@ -5094,17 +5068,17 @@ function showContextualHelp() {
   const notification = document.createElement('div');
   notification.textContent = 'Contextual tooltips enabled! Hover over elements to see help.';
   notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent, #007bff);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 6px;
-    z-index: 10002;
-    font-size: 14px;
-  `;
+position: fixed;
+top: 20px;
+left: 50 %;
+transform: translateX(-50 %);
+background: var(--accent, #007bff);
+color: white;
+padding: 10px 20px;
+border - radius: 6px;
+z - index: 10002;
+font - size: 14px;
+`;
   document.body.appendChild(notification);
   setTimeout(() => notification.remove(), 3000);
 }
@@ -5117,23 +5091,23 @@ function showEnhancedTooltip(e) {
   tooltip.className = 'enhanced-tooltip';
   tooltip.textContent = content;
   tooltip.style.cssText = `
-    position: fixed;
-    background: #333;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    z-index: 10002;
-    pointer-events: none;
-    max-width: 200px;
-    word-wrap: break-word;
-  `;
+position: fixed;
+background: #333;
+color: white;
+padding: 8px 12px;
+border - radius: 4px;
+font - size: 12px;
+z - index: 10002;
+pointer - events: none;
+max - width: 200px;
+word - wrap: break-word;
+`;
 
   document.body.appendChild(tooltip);
 
   const rect = e.target.getBoundingClientRect();
-  tooltip.style.left = `${rect.left + rect.width / 2}px`;
-  tooltip.style.top = `${rect.top - 8}px`;
+  tooltip.style.left = `${ rect.left + rect.width / 2 } px`;
+  tooltip.style.top = `${ rect.top - 8 } px`;
   tooltip.style.transform = 'translate(-50%, -100%)';
 
   e.target._tooltip = tooltip;

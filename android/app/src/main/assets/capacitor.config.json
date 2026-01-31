@@ -1,0 +1,17 @@
+{
+	"appId": "com.profitpath.app",
+	"appName": "ProfitPath",
+	"webDir": "dist",
+	"bundledWebRuntime": false,
+	"server": {
+		"androidScheme": "https"
+	},
+	"android": {
+		"statusBar": {
+			"style": "DARK",
+			"backgroundColor": "#1f2937"
+		},
+		"allowMixedContent": true,
+		"captureInput": true
+	}
+}
