@@ -2228,7 +2228,7 @@ function updateMetaTag(name, content) {
 }
 
 // Embeddable widget functionality
-function _initializeEmbeddableWidget() {
+function initializeEmbeddableWidget() {
   const urlParams = new URLSearchParams(window.location.search);
   const isEmbed = urlParams.get('embed') === 'true';
 
@@ -3270,8 +3270,8 @@ function wire(skipLocalStorageLoading = false) {
   const mobileMenuOverlay = $('#mobileMenuOverlay');
   const mobileMenuClose = $('#mobileMenuClose');
   const mobileExportBtn = $('#mobileExportBtn');
-  const _mobileShareBtn = $('#mobileShareBtn');
-  const _mobileScenariosBtn = $('#mobileScenariosBtn');
+  const mobileShareBtn = $('#mobileShareBtn');
+  const mobileScenariosBtn = $('#mobileScenariosBtn');
 
   // Attach mobile settings handler when menu opens
   const observer = new MutationObserver((mutations) => {
@@ -3394,7 +3394,7 @@ function wire(skipLocalStorageLoading = false) {
   }
 
   // Function to close all mobile submenus
-  const _closeAllMobileSubmenus = () => {
+  const closeAllMobileSubmenus = () => {
     const submenuIds = ['mobileExportOptions', 'mobileTemplatesOptions'];
     submenuIds.forEach(id => {
       // Prefer getElementById for id strings, fall back to querySelector
@@ -3416,9 +3416,11 @@ function wire(skipLocalStorageLoading = false) {
   if (hamburgerBtn) {
     hamburgerBtn.addEventListener('click', toggleMobileMenu);
   }
+
+  const mobileExportCsv = $('#mobileExportCsv');
 }
 
-const mobileExportCsv = $('#mobileExportCsv');
+// ... (rest of the file continues)
 const mobileExportExcel = $('#mobileExportExcel');
 const mobileExportPdf = $('#mobileExportPdf');
 const mobileExportHtml = $('#mobileExportHtml');
@@ -3467,8 +3469,6 @@ if (mobileExportEmbed) {
   });
 }
 
-const mobileShareBtn = $('#mobileShareBtn');
-
 if (mobileShareBtn) {
   mobileShareBtn.addEventListener('click', () => {
     shareScenario();
@@ -3481,27 +3481,10 @@ if (mobileTemplatesBtn) {
   mobileTemplatesBtn.addEventListener('click', () => {
     const options = $('#mobileTemplatesOptions');
     if (options) {
-      _closeAllMobileSubmenus();
+      closeAllMobileSubmenus();
       options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
     }
   });
-}
-
-// Close any open mobile submenus
-function _closeAllMobileSubmenus() {
-  try {
-    document.querySelectorAll('.mobile-submenu').forEach(el => {
-      if (el && el.style) el.style.display = 'none';
-    });
-    // Also hide known submenu containers
-    const containers = ['#mobileTemplatesOptions', '#mobileExportOptions', '#mobileShareOptions'];
-    containers.forEach(sel => {
-      const c = document.querySelector(sel);
-      if (c && c.style) c.style.display = 'none';
-    });
-  } catch (e) {
-    // Fail silently in environments without DOM
-  }
 }
 
 document.querySelectorAll('.mobile-templates-options .mobile-submenu-btn').forEach(option => {
@@ -3520,8 +3503,6 @@ document.querySelectorAll('.mobile-templates-options .mobile-submenu-btn').forEa
     closeMobileMenu(); // Close mobile menu after loading template
   });
 });
-
-const mobileScenariosBtn = $('#mobileScenariosBtn');
 
 if (mobileScenariosBtn) {
   mobileScenariosBtn.addEventListener('click', () => {
@@ -3561,6 +3542,7 @@ document.addEventListener('keydown', (e) => {
     closeScenarioModal();
   }
 });
+}
 
 
 // ============================================================================
@@ -3858,8 +3840,11 @@ if ('serviceWorker' in navigator) {
 }
       */
 
+// Initialize embeddable widget if in embed mode
+initializeEmbeddableWidget();
+
 // Onboarding system for guided experience
-const _initializeOnboarding = () => {
+function initializeOnboarding() {
   // Check if user has completed onboarding
   const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
 

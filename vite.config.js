@@ -8,13 +8,14 @@ export default defineConfig({
     })
   ],
   esbuild: {
-    loader: { '.js': 'jsx' },
+    loader: 'jsx',
+    include: /assets\/app\.jsx$/,
     jsxFactory: 'h',
     jsxFragment: 'Fragment'
   },
   optimizeDeps: {
     esbuildOptions: {
-      loader: { '.js': 'jsx' },
+      loader: { '.jsx': 'jsx' },
       jsxFactory: 'h',
       jsxFragment: 'Fragment'
     }
@@ -27,6 +28,17 @@ export default defineConfig({
       }
     }
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.js'],
+    esbuild: {
+      loader: 'jsx',
+      include: /assets\/app\.jsx$/,
+      jsxFactory: 'h',
+      jsxFragment: 'Fragment'
+    }
+  },
   server: {
     port: 3000,
     host: true,
@@ -36,10 +48,5 @@ export default defineConfig({
     watch: {
       usePolling: true
     }
-  },
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./src/test/setup.js']
   }
 })

@@ -107,65 +107,70 @@
             <span class="dot"></span>
             <span class="muted">Static simulator</span>
           </div>
-          <div class="badge-icons">
-            <button class="settings-cog-btn" id="settingsCogBtn" type="button" title="App settings and preferences"
-              aria-label="Settings">⚙️</button>
-            <button class="help-button-inline" id="helpBtn" title="Help & Guided Tour">❓</button>
-          </div>
+          <button class="btn small feedback-btn" id="feedbackBtn" type="button" title="Send feedback">✉️
+            Feedback</button>
+        </div>
+        <div class="right-icons">
+          <button class="settings-cog-btn" id="settingsCogBtn" type="button" title="App settings and preferences"
+            aria-label="Settings">⚙️</button>
+          <button class="help-button-inline" id="helpBtn" title="Help & Guided Tour">❓</button>
+          <button class="analytics-btn" id="analyticsBtn" title="Analytics Dashboard">📊</button>
+          <button class="feedback-btn-inline" id="desktopFeedbackBtn" title="Send Feedback">✉️</button>
         </div>
       </div>
-      <div class="settings-dropdown">
-        <div class="settings-menu" id="settingsMenu">
-          <div class="settings-section">
-            <h4>Experience Level</h4>
-            <div class="settings-options">
-              <label><input type="radio" name="experienceLevel" value="beginner"> Beginner</label>
-              <label><input type="radio" name="experienceLevel" value="intermediate"> Intermediate</label>
-              <label><input type="radio" name="experienceLevel" value="advanced"> Advanced</label>
-            </div>
-          </div>
-          <div class="settings-section">
-            <h4>Advanced Features</h4>
-            <div class="settings-options">
-              <label><input type="checkbox" id="showAdvancedCalculations"> Advanced calculations</label>
-              <label><input type="checkbox" id="showDetailedBreakdown"> Detailed breakdowns</label>
-              <label><input type="checkbox" id="showComparisonTools"> Scenario comparison</label>
-              <label><input type="checkbox" id="showExportOptions"> Export options</label>
-              <label><input type="checkbox" id="showDebugPanel" class="expert-feature"> Debug panel</label>
-            </div>
-          </div>
-          <div class="settings-section">
-            <h4>Preferences</h4>
-            <div class="settings-options">
-              <label><input type="checkbox" id="compactMode"> Compact mode</label>
-              <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
-            </div>
-          </div>
-          <div class="settings-section analytics-settings">
-            <h4>Analytics & Feedback</h4>
-            <div class="settings-options">
-              <label><input type="checkbox" id="analyticsEnabled"> Enable analytics</label>
-              <small style="color: var(--muted); font-size: 11px; margin-top: 4px; display: block;">Help improve
-                ProfitPath by sharing anonymous usage data</small>
+  </div>
+  <div class="settings-dropdown">
+    <div class="settings-menu" id="settingsMenu">
+      <div class="settings-section">
+        <h4>Experience Level</h4>
+        <div class="settings-options">
+          <label><input type="radio" name="experienceLevel" value="beginner"> Beginner</label>
+          <label><input type="radio" name="experienceLevel" value="intermediate"> Intermediate</label>
+          <label><input type="radio" name="experienceLevel" value="advanced"> Advanced</label>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h4>Advanced Features</h4>
+        <div class="settings-options">
+          <label><input type="checkbox" id="showAdvancedCalculations"> Advanced calculations</label>
+          <label><input type="checkbox" id="showDetailedBreakdown"> Detailed breakdowns</label>
+          <label><input type="checkbox" id="showComparisonTools"> Scenario comparison</label>
+          <label><input type="checkbox" id="showExportOptions"> Export options</label>
+          <label><input type="checkbox" id="showDebugPanel" class="expert-feature"> Debug panel</label>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h4>Preferences</h4>
+        <div class="settings-options">
+          <label><input type="checkbox" id="compactMode"> Compact mode</label>
+          <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
+        </div>
+      </div>
+      <div class="settings-section analytics-settings">
+        <h4>Analytics & Feedback</h4>
+        <div class="settings-options">
+          <label><input type="checkbox" id="analyticsEnabled"> Enable analytics</label>
+          <small style="color: var(--muted); font-size: 11px; margin-top: 4px; display: block;">Help improve
+            ProfitPath by sharing anonymous usage data</small>
 
-              <div id="analyticsOptions" style="margin-top: 8px; display: none;">
-                <label><input type="checkbox" id="trackUsage"> Track usage patterns</label>
-                <label><input type="checkbox" id="trackFeatures"> Track feature usage</label>
-                <label><input type="checkbox" id="trackExports"> Track export activity</label>
-                <label><input type="checkbox" id="trackTemplates"> Track template usage</label>
-              </div>
-            </div>
-            <div class="analytics-actions" style="margin-top: 12px; display: none;" id="analyticsActions">
-              <button class="btn small" id="viewAnalyticsBtn" style="font-size: 11px; padding: 4px 8px;">📊 View My
-                Data</button>
-              <button class="btn small" id="exportAnalyticsBtn" style="font-size: 11px; padding: 4px 8px;">💾
-                Export</button>
-              <button class="btn small danger" id="clearAnalyticsBtn" style="font-size: 11px; padding: 4px 8px;">🗑️
-                Clear</button>
-            </div>
+          <div id="analyticsOptions" style="margin-top: 8px; display: none;">
+            <label><input type="checkbox" id="trackUsage"> Track usage patterns</label>
+            <label><input type="checkbox" id="trackFeatures"> Track feature usage</label>
+            <label><input type="checkbox" id="trackExports"> Track export activity</label>
+            <label><input type="checkbox" id="trackTemplates"> Track template usage</label>
           </div>
         </div>
+        <div class="analytics-actions" style="margin-top: 12px; display: none;" id="analyticsActions">
+          <button class="btn small" id="viewAnalyticsBtn" style="font-size: 11px; padding: 4px 8px;">📊 View My
+            Data</button>
+          <button class="btn small" id="exportAnalyticsBtn" style="font-size: 11px; padding: 4px 8px;">💾
+            Export</button>
+          <button class="btn small danger" id="clearAnalyticsBtn" style="font-size: 11px; padding: 4px 8px;">🗑️
+            Clear</button>
+        </div>
       </div>
+    </div>
+  </div>
   </div>
 
   <!-- Mobile Menu -->
@@ -178,9 +183,11 @@
         </div>
         <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
       </div>
-      <div class="mobile-menu-content">
+      <div class="mobile-menu-content" style="max-height: 70vh; overflow-y: auto;">
         <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
         <button class="btn mobile-menu-btn" id="mobileShareBtn">🔗 Share Scenario</button>
+        <button class="btn mobile-menu-btn" id="mobileFeedbackBtn">✉️ Give Feedback</button>
+        <button class="btn mobile-menu-btn" id="mobileHelpBtn">❓ Help & Tour</button>
         <div class="mobile-templates-section">
           <button class="btn mobile-menu-btn" id="mobileTemplatesBtn">🏢 Templates</button>
           <div class="mobile-templates-options" id="mobileTemplatesOptions" style="display: none;">
@@ -212,6 +219,25 @@
         </div>
         <button class="btn mobile-menu-btn" id="mobileTourBtn">🎯 Take Tour</button>
         <button class="btn mobile-menu-btn" id="mobileSettingsBtn">⚙️ Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Modal -->
+  <div class="modal" id="feedbackModal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Send Feedback</h3>
+        <button class="modal-close" id="feedbackModalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>We value your feedback! Please share your thoughts, suggestions, or report issues.</p>
+        <textarea id="feedbackText" placeholder="Enter your feedback here..." rows="6"
+          style="width: 100%; margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn primary" id="submitFeedback">Submit Feedback</button>
+        <button class="btn secondary" id="cancelFeedback">Cancel</button>
       </div>
     </div>
   </div>

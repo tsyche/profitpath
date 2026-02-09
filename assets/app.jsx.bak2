@@ -31,17 +31,17 @@ function uuid() {
   bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
   const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20);
 }
 
 const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
-const fmtPct1 = (n) => `${(Number.isFinite(n) ? n : 0).toFixed(1)}%`;
+const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
 // Lazy loading utility for scripts
 function loadScript(src) {
   return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
+    if (document.querySelector('script[src="' + src + '"]')) {
       resolve(); // Already loaded
       return;
     }
@@ -128,8 +128,8 @@ function validateBusinessLogic() {
     if (!offering.name || offering.name.trim().length === 0) {
       issues.push({
         severity: 'error',
-        message: `Offering ${index + 1} has no name`,
-        field: `offering-${index}-name`,
+        message: 'Offering ' + (index + 1) + ' has no name',
+        field: 'offering-' + index + '-name',
         suggestion: 'Enter a descriptive name for this offering'
       });
     }
@@ -137,8 +137,8 @@ function validateBusinessLogic() {
     if (offering.priceMonthly <= 0) {
       issues.push({
         severity: 'error',
-        message: `"${offering.name || 'Unnamed offering'}" has invalid price`,
-        field: `offering-${index}-priceMonthly`,
+        message: '"' + (offering.name || 'Unnamed offering') + '" has invalid price',
+        field: 'offering-' + index + '-priceMonthly',
         suggestion: 'Monthly price must be greater than $0'
       });
     }
@@ -146,8 +146,8 @@ function validateBusinessLogic() {
     if (offering.sessionsPerYear <= 0) {
       issues.push({
         severity: 'error',
-        message: `"${offering.name || 'Unnamed offering'}" has invalid sessions per year`,
-        field: `offering-${index}-sessionsPerYear`,
+        message: '"' + (offering.name || 'Unnamed offering') + '" has invalid sessions per year',
+        field: 'offering-' + index + '-sessionsPerYear',
         suggestion: 'Must have at least 1 session per year'
       });
     }
@@ -155,8 +155,8 @@ function validateBusinessLogic() {
     if (offering.hoursPerSession <= 0) {
       issues.push({
         severity: 'error',
-        message: `"${offering.name || 'Unnamed offering'}" has invalid hours per session`,
-        field: `offering-${index}-hoursPerSession`,
+        message: '"' + (offering.name || 'Unnamed offering') + '" has invalid hours per session',
+        field: 'offering-' + index + '-hoursPerSession',
         suggestion: 'Each session must take at least 0.1 hours'
       });
     }
@@ -164,8 +164,8 @@ function validateBusinessLogic() {
     if (offering.variableCostPerSession < 0) {
       issues.push({
         severity: 'error',
-        message: `"${offering.name || 'Unnamed offering'}" has negative variable costs`,
-        field: `offering-${index}-variableCostPerSession`,
+        message: '"' + (offering.name || 'Unnamed offering') + '" has negative variable costs',
+        field: 'offering-' + index + '-variableCostPerSession',
         suggestion: 'Variable costs cannot be negative'
       });
     }
@@ -173,8 +173,8 @@ function validateBusinessLogic() {
     if (offering.mixPct < 0 || offering.mixPct > 100) {
       issues.push({
         severity: 'error',
-        message: `"${offering.name || 'Unnamed offering'}" mix percentage is invalid`,
-        field: `offering-${index}-mixPct`,
+        message: '"' + (offering.name || 'Unnamed offering') + '" mix percentage is invalid',
+        field: 'offering-' + index + '-mixPct',
         suggestion: 'Mix percentage must be between 0% and 100%'
       });
     }
@@ -182,8 +182,8 @@ function validateBusinessLogic() {
     if (state.mode === 'current' && offering.currentClients < 0) {
       issues.push({
         severity: 'error',
-        message: `"${offering.name || 'Unnamed offering'}" has negative client count`,
-        field: `offering-${index}-currentClients`,
+        message: '"' + (offering.name || 'Unnamed offering') + '" has negative client count',
+        field: 'offering-' + index + '-currentClients',
         suggestion: 'Client count cannot be negative'
       });
     }
@@ -197,7 +197,7 @@ function validateBusinessLogic() {
     if (!state.lockMix && delta >= 0.1) {
       warnings.push({
         severity: 'warning',
-        message: `Mix percentages sum to ${mixSum.toFixed(1)}% (should be 100%)`,
+        message: 'Mix percentages sum to ' + (mixSum.toFixed(1)) + '% (should be 100%)',
         field: 'mix-total',
         suggestion: 'Enable "Auto-balance Mix %" or manually adjust percentages to total 100%'
       });
@@ -220,14 +220,14 @@ function validateBusinessLogic() {
     if (metrics.capacityPct > 120) {
       warnings.push({
         severity: 'warning',
-        message: `Utilization is ${fmtPct1(metrics.capacityPct)} - consider overtime pay or hiring`,
+        message: 'Utilization is ' + (fmtPct1(metrics.capacityPct)) + ' - consider overtime pay or hiring',
         field: 'utilization-high',
         suggestion: 'High utilization may indicate need for more staff or reduced workload'
       });
     } else if (metrics.capacityPct < 50 && metrics.clients > 0) {
       warnings.push({
         severity: 'info',
-        message: `Utilization is only ${fmtPct1(metrics.capacityPct)} - opportunity for more clients`,
+        message: 'Utilization is only ' + (fmtPct1(metrics.capacityPct)) + ' - opportunity for more clients',
         field: 'utilization-low',
         suggestion: 'Low utilization suggests capacity for additional business'
       });
@@ -237,7 +237,7 @@ function validateBusinessLogic() {
     if (metrics.income < 0 && metrics.revenue > 0) {
       warnings.push({
         severity: 'warning',
-        message: `Currently operating at a loss: ${fmtMoney0(metrics.income)}`,
+        message: 'Currently operating at a loss: ' + (fmtMoney0(metrics.income)),
         field: 'profitability',
         suggestion: 'Consider increasing prices, reducing costs, or improving utilization'
       });
@@ -249,14 +249,14 @@ function validateBusinessLogic() {
       if (revenuePerHour < 25) {
         warnings.push({
           severity: 'info',
-          message: `Revenue per service hour (${fmtMoney0(revenuePerHour)}) seems low`,
+          message: 'Revenue per service hour (' + (fmtMoney0(revenuePerHour)) + ') seems low',
           field: 'pricing-efficiency',
           suggestion: 'Consider if pricing adequately covers your time and expertise'
         });
       } else if (revenuePerHour > 500) {
         warnings.push({
           severity: 'info',
-          message: `Revenue per service hour (${fmtMoney0(revenuePerHour)}) is very high`,
+          message: 'Revenue per service hour (' + (fmtMoney0(revenuePerHour)) + ') is very high',
           field: 'pricing-validation',
           suggestion: 'Verify this pricing is appropriate for your market and value delivered'
         });
@@ -377,14 +377,8 @@ function updateValidationDisplay() {
 
     issues.forEach(issue => {
       const errorEl = document.createElement('div');
-      errorEl.className = `validation-item validation-${issue.severity}`;
-      errorEl.innerHTML = `
-        <div class="validation-message">
-          <strong>${issue.severity === 'error' ? '⚠️' : 'ℹ️'}</strong>
-          ${issue.message}
-        </div>
-        <div class="validation-suggestion">${issue.suggestion}</div>
-      `;
+      errorEl.className = 'validation-item validation-' + (issue.severity);
+      errorEl.innerHTML = '<div class="validation-message"><strong>' + (issue.severity === 'error' ? '⚠️' : 'ℹ️') + '</strong>' + (issue.message) + '</div><div class="validation-suggestion">' + (issue.suggestion) + '</div>';
       errorsEl.appendChild(errorEl);
     });
 
@@ -398,14 +392,8 @@ function updateValidationDisplay() {
 
     warnings.forEach(warning => {
       const warningEl = document.createElement('div');
-      warningEl.className = `validation-item validation-${warning.severity}`;
-      warningEl.innerHTML = `
-        <div class="validation-message">
-          <strong>${warning.severity === 'warning' ? '⚠️' : '💡'}</strong>
-          ${warning.message}
-        </div>
-        <div class="validation-suggestion">${warning.suggestion}</div>
-      `;
+      warningEl.className = 'validation-item validation-' + (warning.severity);
+      warningEl.innerHTML = '<div class="validation-message"><strong>' + (warning.severity === 'warning' ? '⚠️' : '💡') + '</strong>' + (warning.message) + '</div><div class="validation-suggestion">' + (warning.suggestion) + '</div>';
       warningsEl.appendChild(warningEl);
     });
 
@@ -508,7 +496,7 @@ function rebalanceMix(changedIdx, nextMixPct) {
 
 function cssEscape(s) {
   if (globalThis.CSS?.escape) return globalThis.CSS.escape(String(s));
-  return String(s).replace(/[^a-zA-Z0-9_-]/g, (ch) => `\\${ch}`);
+  return String(s).replace(/[^a-zA-Z0-9_-]/g, (ch) => '\\' + (ch) + '\\');
 }
 
 function captureTableFocus() {
@@ -529,7 +517,7 @@ function captureTableFocus() {
 function restoreTableFocus(focus) {
   if (!focus) return;
 
-  const sel = `#offeringsBody [data-k="${cssEscape(focus.k)}"][data-i="${cssEscape(focus.i)}"]`;
+  const sel = '#offeringsBody [data-k="' + cssEscape(focus.k) + '"][data-i="' + cssEscape(focus.i) + '"]';
   const el = $(sel);
   if (!(el instanceof HTMLInputElement)) return;
   el.selectionStart = focus.selectionStart;
@@ -621,7 +609,7 @@ function renderSimpleChart(metrics) {
     const contrib = Math.max(0, rev - variable);
     const serviceHoursPerClient = Number(o.sessionsPerYear || 0) * Number(o.hoursPerSession || 0);
     const pct = totalRevenue > 0 ? (rev / totalRevenue) : 0;
-    return { name: o.name || `Offering ${idx + 1}`, rev, variable, contrib, serviceHoursPerClient, pct };
+    return { name: o.name || 'Offering ' + (idx + 1), rev, variable, contrib, serviceHoursPerClient, pct };
   });
 
   // SVG: draw each offering as variable (red) then contribution (green) adjacent; x coord in percentage of totalRevenue
@@ -651,39 +639,28 @@ function renderSimpleChart(metrics) {
   rects.forEach((r) => {
     const xPos = (r.x * 100).toFixed(3);
     const w = (r.w * 100).toFixed(3);
-    // include data attributes for a custom tooltip (avoid native <title> which can be inconsistent)
+    // include data attributes for a custom tooltip (avoid native <title>which can be inconsistent)
     const offeringAttr = escapeHtml(r.offering || '');
     const typeAttr = escapeHtml(r.type || '');
     const varAttr = escapeHtml(fmtMoney0(r.varVal || 0));
     const contribAttr = escapeHtml(fmtMoney0(r.contribVal || 0));
     const pctAttr = escapeHtml(((r.pct || 0) * 100).toFixed(0) + '%');
     const hoursAttr = escapeHtml((r.hours || 0).toFixed(1));
-    svgParts.push(`<rect x="${xPos}" y="2" width="${w}" height="16" rx="3" fill="${r.color}" data-offering="${offeringAttr}" data-type="${typeAttr}" data-var="${varAttr}" data-contrib="${contribAttr}" data-pct="${pctAttr}" data-hours="${hoursAttr}"></rect>`);
+    svgParts.push('<rect x="' + (xPos) + '" y="2" width="' + (w) + '" height="16" rx="3" fill="' + (r.color) + '" data-offering="' + (offeringAttr) + '" data-type="' + (typeAttr) + '" data-var="' + (varAttr) + '" data-contrib="' + (contribAttr) + '" data-pct="' + (pctAttr) + '" data-hours="' + (hoursAttr) + '"></rect>');
   });
 
   // intentionally do not render per-offering inline labels (legend below provides totals)
   svgParts.push('</svg>');
 
-  const legend = `
-    <div class="chart-labels">
-      <div class="left">
-        <div class="pill-legend"><span class="legend-swatch legend-variable"></span><span>Variable: ${fmtMoney0(totalVariable)}</span></div>
-        <div class="pill-legend"><span class="legend-swatch legend-margin"></span><span>Contribution: ${fmtMoney0(totalContribution)}</span></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div class="center" style="font-family:var(--mono);color:var(--muted);">${Math.round((totalVariable / totalRevenue) * 100)}% / ${Math.round((totalContribution / totalRevenue) * 100)}%</div>
-        <div class="right">Revenue: <strong>${fmtMoney0(totalRevenue)}</strong></div>
-      </div>
-    </div>
-  `;
+  const legend = '<div class="chart-labels"><div class="left"><div class="pill-legend"><span class="legend-swatch legend-variable"></span><span>Variable: ' + (fmtMoney0(totalVariable)) + '</span></div><div class="pill-legend"><span class="legend-swatch legend-margin"></span><span>Contribution: ' + (fmtMoney0(totalContribution)) + '</span></div></div><div style="display:flex;align-items:center;gap:12px"><div class="center" style="font-family:var(--mono);color:var(--muted);">' + (Math.round((totalVariable / totalRevenue) * 100)) + '% / ' + (Math.round((totalContribution / totalRevenue) * 100)) + '%</div><div class="right">Revenue: <strong>' + (fmtMoney0(totalRevenue)) + '</strong></div></div></div>';
 
   // Build a compact offering list under the legend (name / pct / annual rev).
   const offeringItems = data.map((d) => {
     const pct = totalRevenue > 0 ? Math.round((d.rev / totalRevenue) * 100) : 0;
-    return `<div class="offering-item"><div class="off-left"><span class="o-name">${escapeHtml(d.name)}</span><span class="o-pct">${pct}%</span></div><div class="o-val">${fmtMoney0(d.rev)}</div></div>`;
+    return '<div class="offering-item"><div class="off-left"><span class="o-name">' + (escapeHtml(d.name)) + '</span><span class="o-pct">' + (pct) + '%</span></div><div class="o-val">' + (fmtMoney0(d.rev)) + '</div></div>';
   }).join('');
 
-  const offeringListHTML = `<div class="offering-list">${offeringItems}</div>`;
+  const offeringListHTML = '<div class="offering-list">' + (offeringItems) + '</div>';
 
   // append a tooltip element used for hover
   el.innerHTML = svgParts.join('') + legend + offeringListHTML + '<div class="chart-tooltip" aria-hidden="true"></div>';
@@ -700,7 +677,7 @@ function setupChartEventListeners(el) {
   const HOVER_OFFSET = 6; // px gap between bar and tooltip when hovering
 
 
-  // updatePinnedIndicator is intentionally a no-op for visuals - we do not highlight pinned segments.
+  // updatePinnedIndicator is intentionally a no-op for visuals-we do not highlight pinned segments.
   // Keeping the function so other code can call it without needing edits.
   function updatePinnedIndicator(/* rectEl */) {
     // no-op: visual pinned indicators (outline/overlay) removed per UX preference
@@ -716,14 +693,14 @@ function setupChartEventListeners(el) {
     const pct = rectEl.getAttribute('data-pct') || '';
     const hours = rectEl.getAttribute('data-hours') || '';
 
-    let html = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-weight:700">${offering}</div><div style="display:flex;gap:6px;align-items:center"><button class="tooltip-pin" aria-label="Pin tooltip">📌</button><button class="tooltip-close" aria-label="Close tooltip">×</button></div></div>`;
+    let html = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-weight:700">' + (offering) + '</div><div style="display:flex;gap:6px;align-items:center"><button class="tooltip-pin" aria-label="Pin tooltip">📌</button><button class="tooltip-close" aria-label="Close tooltip">×</button></div></div>';
     if (CHART_TOOLTIP_OPTIONS.showPercent) {
-      html += `<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px">${pct}</div>`;
+      html += '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px">' + (pct) + '</div>';
     }
-    html += `<div style="font-family:var(--mono);font-size:12px">Variable: ${varVal}</div>`;
-    html += `<div style="font-family:var(--mono);color:var(--accent);font-size:12px">Contribution: ${contribVal}</div>`;
+    html += '<div style="font-family:var(--mono);font-size:12px">Variable: ' + (varVal) + '</div>';
+    html += '<div style="font-family:var(--mono);color:var(--accent);font-size:12px">Contribution: ' + (contribVal) + '</div>';
     if (CHART_TOOLTIP_OPTIONS.showServiceHoursPerClient) {
-      html += `<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px">Service hours/client: ${hours}</div>`;
+      html += '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px">Service hours / client: ' + (hours) + '</div>';
     }
 
     const tooltip = el.querySelector('.chart-tooltip');
@@ -767,15 +744,15 @@ function setupChartEventListeners(el) {
       tooltip.classList.remove('below');
 
       // Position above the bar
-      tooltip.style.left = `${leftClamped}px`;
-      tooltip.style.top = `${topPos}px`;
+      tooltip.style.left = (leftClamped) + 'px';
+      tooltip.style.top = (topPos) + 'px';
     } else {
-      // pinned behavior: same as hover - always position above the bar
+      // pinned behavior: same as hover-always position above the bar
       const tipRect2 = tooltip.getBoundingClientRect();
       const topPos = Math.max(8, rectBox.top - containerBox.top - tipRect2.height - HOVER_OFFSET);
 
-      tooltip.style.left = `${leftClamped}px`;
-      tooltip.style.top = `${topPos}px`;
+      tooltip.style.left = (leftClamped) + 'px';
+      tooltip.style.top = (topPos) + 'px';
     }
 
     if (pinnedNow) {
@@ -923,10 +900,10 @@ function updateBreakEvenAnalysis(metrics) {
   let status = '';
   let statusColor = '';
   if (surplus > 0) {
-    status = `Above break-even by ${fmtMoney0(surplus)} (${surplusPct.toFixed(1)}%)`;
+    status = 'Above break-even by ' + (fmtMoney0(surplus)) + ' (' + (surplusPct.toFixed(1)) + '%)';
     statusColor = 'var(--good)';
   } else if (surplus < 0) {
-    status = `Below break-even by ${fmtMoney0(Math.abs(surplus))} (${Math.abs(surplusPct).toFixed(1)}%)`;
+    status = 'Below break-even by ' + (fmtMoney0(Math.abs(surplus))) + ' (' + (Math.abs(surplusPct).toFixed(1)) + '%)';
     statusColor = 'var(--bad)';
   } else {
     status = 'At break-even point';
@@ -936,38 +913,14 @@ function updateBreakEvenAnalysis(metrics) {
   const clientGap = metrics.breakEvenClients - metrics.clients;
   let clientStatus = '';
   if (clientGap > 0) {
-    clientStatus = `Need ${fmtInt(clientGap)} more clients to break even`;
+    clientStatus = 'Need ' + (fmtInt(clientGap)) + ' more clients to break even';
   } else if (clientGap < 0) {
-    clientStatus = `${fmtInt(Math.abs(clientGap))} clients above break-even`;
+    clientStatus = (fmtInt(Math.abs(clientGap))) + ' clients above break-even';
   } else {
     clientStatus = 'At break-even client count';
   }
 
-  analysisEl.innerHTML = `
-    <div class="break-even-header">
-      <h4 style="margin: 0 0 8px 0; font-size: 14px; color: var(--text);">Break-Even Analysis</h4>
-    </div>
-    <div class="break-even-content">
-      <div class="break-even-item">
-        <span class="break-even-label">Status:</span>
-        <span class="break-even-value" style="color: ${statusColor};">${status}</span>
-      </div>
-      <div class="break-even-item">
-        <span class="break-even-label">Client status:</span>
-        <span class="break-even-value">${clientStatus}</span>
-      </div>
-      <div class="break-even-item">
-        <span class="break-even-label">Fixed costs covered:</span>
-        <span class="break-even-value">${fmtPct1(Math.min(100, (metrics.revenue / metrics.breakEvenRevenue) * 100))}</span>
-      </div>
-      ${metrics.contributionMarginRatio > 0 ? `
-      <div class="break-even-item">
-        <span class="break-even-label">Contribution ratio:</span>
-        <span class="break-even-value">${fmtPct1(metrics.contributionMarginRatio * 100)}</span>
-      </div>
-      ` : ''}
-    </div>
-  `;
+  analysisEl.innerHTML = '<div class="break-even-header"><h4 style="margin:0 0 8px 0;font-size:14px;color:var(--text);">Break-Even Analysis</h4></div><div class="break-even-content"><div class="break-even-item"><span class="break-even-label">Status:</span><span class="break-even-value" style="color:' + (statusColor) + ';">' + (status) + '</span></div><div class="break-even-item"><span class="break-even-label">Client status:</span><span class="break-even-value">' + (clientStatus) + '</span></div><div class="break-even-item"><span class="break-even-label">Fixed costs covered:</span><span class="break-even-value">' + (fmtPct1(Math.min(100, (metrics.revenue / metrics.breakEvenRevenue) * 100))) + '</span></div>' + (metrics.contributionMarginRatio > 0 ? '<div class="break-even-item"><span class="break-even-label">Contribution ratio:</span><span class="break-even-value">' + (fmtPct1(metrics.contributionMarginRatio * 100)) + '</span></div>' : '') + '</div>';
 
   analysisEl.style.display = 'block';
 
@@ -989,21 +942,7 @@ function updateRichVisualizations(metrics) {
   // Create profit/loss waterfall (simplified version)
   const profitWaterfall = createProfitWaterfall(metrics);
 
-  vizEl.innerHTML = `
-    <div class="viz-header">
-      <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--text);">Rich Visualizations</h4>
-    </div>
-    <div class="viz-content">
-      <div class="viz-item">
-        <h5 style="margin: 0 0 8px 0; font-size: 12px; color: var(--muted); font-weight: 600;">Utilization Gauge</h5>
-        ${utilizationGauge}
-      </div>
-      <div class="viz-item">
-        <h5 style="margin: 0 0 8px 0; font-size: 12px; color: var(--muted); font-weight: 600;">Profit Waterfall</h5>
-        ${profitWaterfall}
-      </div>
-    </div>
-  `;
+  vizEl.innerHTML = '<div class="viz-header"><h4 style="margin:0 0 12px 0;font-size:14px;color:var(--text);">Rich Visualizations</h4></div><div class="viz-content"><div class="viz-item"><h5 style="margin:0 0 8px 0;font-size:12px;color:var(--muted);font-weight:600;">Utilization Gauge</h5>' + (utilizationGauge) + '</div><div class="viz-item"><h5 style="margin:0 0 8px 0;font-size:12px;color:var(--muted);font-weight:600;">Profit Waterfall</h5>' + (profitWaterfall) + '</div></div>';
 
   vizEl.style.display = 'block';
 }
@@ -1012,27 +951,7 @@ function createUtilizationGauge(metrics) {
   const utilization = Math.min(150, Math.max(0, metrics.capacityPct || 0));
   const angle = (utilization / 150) * 180; // Semi-circle gauge
 
-  return `
-    <div class="utilization-gauge">
-      <svg viewBox="0 0 120 80" class="gauge-svg">
-        <!-- Background arc -->
-        <path d="M 10 70 A 50 50 0 0 1 110 70" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
-        <!-- Utilization arc -->
-        <path d="M 10 70 A 50 50 0 0 1 ${10 + Math.cos((angle - 90) * Math.PI / 180) * 50 + 50} ${70 - Math.sin((angle - 90) * Math.PI / 180) * 50}"
-              fill="none" stroke="${utilization > 100 ? 'var(--bad)' : utilization > 75 ? 'var(--warn)' : 'var(--good)'}" stroke-width="8"/>
-        <!-- Needle -->
-        <line x1="60" y1="70" x2="${60 + Math.cos((angle - 90) * Math.PI / 180) * 40}"
-              y2="${70 - Math.sin((angle - 90) * Math.PI / 180) * 40}"
-              stroke="var(--accent)" stroke-width="3"/>
-        <!-- Center dot -->
-        <circle cx="60" cy="70" r="4" fill="var(--accent)"/>
-      </svg>
-      <div class="gauge-labels">
-        <div class="gauge-value">${fmtPct1(utilization)}</div>
-        <div class="gauge-text">Utilization</div>
-      </div>
-    </div>
-  `;
+  return '<div class="utilization-gauge"><svg viewBox="0 0 120 80" class="gauge-svg"><!--Background arc--><path d="M 10 70 A 50 50 0 0 1 110 70" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/><!--Utilization arc--><path d="M 10 70 A 50 50 0 0 1 ' + (10 + Math.cos((angle - 90) * Math.PI / 180) * 50 + 50) + ' ' + (70 - Math.sin((angle - 90) * Math.PI / 180) * 50) + '" fill="none" stroke="' + (utilization > 100 ? 'var(--bad)' : utilization > 75 ? 'var(--warn)' : 'var(--good)') + '" stroke-width="8"/><!--Needle--><line x1="60" y1="70" x2="' + (60 + Math.cos((angle - 90) * Math.PI / 180) * 40) + '" y2="' + (70 - Math.sin((angle - 90) * Math.PI / 180) * 40) + '" stroke="var(--accent)" stroke-width="3"/><!--Center dot--><circle cx="60" cy="70" r="4" fill="var(--accent)"/></svg><div class="gauge-labels"><div class="gauge-value">' + (fmtPct1(utilization)) + '</div><div class="gauge-text">Utilization</div></div></div>';
 }
 
 function createProfitWaterfall(metrics) {
@@ -1053,32 +972,10 @@ function createProfitWaterfall(metrics) {
     const y = Math.min(startY, endY);
     const barHeight = Math.max(1, height * 0.5); // Scale for visibility
 
-    return `
-      <rect x="${index * 25 + 5}" y="${60 - y * 0.5 - barHeight}" width="15" height="${barHeight}"
-            fill="${item.color}" opacity="0.7"/>
-      <text x="${index * 25 + 12.5}" y="75" text-anchor="middle" font-size="8" fill="var(--muted)">
-        ${item.label.split(' ')[0]}
-      </text>
-    `;
+    return '<rect x="' + (index * 25 + 5) + '" y="' + (60 - y * 0.5 - barHeight) + '" width="15" height="' + (barHeight) + '" fill="' + (item.color) + '" opacity="0.7"/><text x="' + (index * 25 + 12.5) + '" y="75" text-anchor="middle" font-size="8" fill="var(--muted)">' + (item.label.split(' ')[0]) + '</text>';
   }).join('');
 
-  return `
-    <div class="profit-waterfall">
-      <svg viewBox="0 0 100 80" class="waterfall-svg">
-        ${bars}
-        <!-- Zero line -->
-        <line x1="0" y1="60" x2="100" y2="60" stroke="var(--border)" stroke-width="1"/>
-      </svg>
-      <div class="waterfall-summary">
-        <div class="summary-item">
-          <span class="summary-label">Net:</span>
-          <span class="summary-value" style="color: ${metrics.income >= 0 ? 'var(--good)' : 'var(--bad)'}">
-            ${fmtMoney0(metrics.income)}
-          </span>
-        </div>
-      </div>
-    </div>
-  `;
+  return '<div class="profit-waterfall"><svg viewBox="0 0 100 80" class="waterfall-svg">' + (bars) + '<!--Zero line--><line x1="0" y1="60" x2="100" y2="60" stroke="var(--border)" stroke-width="1"/></svg><div class="waterfall-summary"><div class="summary-item"><span class="summary-label">Net:</span><span class="summary-value" style="color:' + (metrics.income >= 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtMoney0(metrics.income)) + '</span></div></div></div>';
 }
 
 function render() {
@@ -1092,7 +989,7 @@ function render() {
     // Return early with error state
     const dbg = $('#debugPanel');
     if (dbg) {
-      dbg.textContent = `Calculation error: ${e && e.stack ? e.stack : String(e)}`;
+      dbg.textContent = 'Calculation error: ' + (e && e.stack ? e.stack : String(e));
       dbg.style.display = 'block';
     }
     return;
@@ -1125,12 +1022,12 @@ function render() {
     const tr = document.createElement('tr');
 
     const mixCell = isForecast
-      ? `<input aria-label="Mix % for ${escapeHtml(o.name)}" class="mode-edit" type="number" min="0" max="100" step="1" value="${(o.mixPct ?? 0).toFixed(1)}" data-k="mixPct" data-i="${idx}" />`
-      : `<span class="muted">—</span>`;
+      ? '<input aria-label="Mix % for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" max="100" step="1" value="' + ((o.mixPct ?? 0).toFixed(1)) + '" data-k="mixPct" data-i="' + (idx) + '" />'
+      : '<span class="muted">—</span>';
 
     const clientsCell = isForecast
-      ? `<span class="muted">—</span>`
-      : `<input aria-label="Clients for ${escapeHtml(o.name)}" class="mode-edit" type="number" min="0" step="1" value="${o.currentClients ?? 0}" data-k="currentClients" data-i="${idx}" />`;
+      ? '<span class="muted">—</span>'
+      : '<input aria-label="Clients for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" step="1" value="' + (o.currentClients ?? 0) + '" data-k="currentClients" data-i="' + (idx) + '" />';
 
     const estClients = isForecast
       ? Math.floor(metrics.clients * ((o.mixPct || 0) / 100))
@@ -1140,23 +1037,19 @@ function render() {
       ? Math.round(estClients * o.sessionsPerYear)
       : Math.round((o.currentClients || 0) * o.sessionsPerYear);
 
-    tr.innerHTML = `
-      <td class="cell-edit group-start group-inputs" data-label="Offering"><input aria-label="Offering name" type="text" value="${escapeHtml(o.name)}" data-k="name" data-i="${idx}" /></td>
-      <td class="cell-edit group-inputs" data-label="Price / mo"><input aria-label="Price per month for ${escapeHtml(o.name)}" type="number" min="0" step="10" value="${o.priceMonthly}" data-k="priceMonthly" data-i="${idx}" /></td>
-  <td class="cell-edit group-inputs" data-label="Sessions / yr"><input aria-label="Sessions per year for ${escapeHtml(o.name)}" type="number" min="0" step="1" value="${o.sessionsPerYear}" data-k="sessionsPerYear" data-i="${idx}" /></td>
-  <td class="cell-edit group-inputs" data-label="Hours / session"><input aria-label="Hours per session for ${escapeHtml(o.name)}" type="number" min="0" step="0.1" value="${o.hoursPerSession}" data-k="hoursPerSession" data-i="${idx}" /></td>
-  <td class="cell-edit group-inputs group-end" data-label="Var $ / session"><input aria-label="Variable cost per session for ${escapeHtml(o.name)}" type="number" min="0" step="1" value="${o.variableCostPerSession}" data-k="variableCostPerSession" data-i="${idx}" /></td>
-    <td class="cell-edit group-start group-mode" data-label="Mix % (forecast)">${mixCell}</td>
-    <td class="cell-edit group-mode group-end" data-label="Clients (current)">${clientsCell}</td>
-    <td class="cell-readonly group-start group-est" data-label="Est. clients"><span class="mono">${fmtInt(estClients)}</span></td>
-  <td class="cell-readonly group-est" data-label="Est. sessions"><span class="mono">${fmtInt(estSessions)}</span></td>
-      <td class="cell-readonly group-metrics" data-label="Annual Revenue"><span class="mono">${fmtMoney0(metrics.offeringMetrics[idx]?.revenue || 0)}</span></td>
-      <td class="cell-readonly group-metrics" data-label="Margin %"><span class="mono" style="color: ${(metrics.offeringMetrics[idx]?.marginPct || 0) >= 50 ? 'var(--good)' : (metrics.offeringMetrics[idx]?.marginPct || 0) >= 30 ? 'var(--warn)' : 'var(--bad)'}">${fmtPct1(metrics.offeringMetrics[idx]?.marginPct || 0)}</span></td>
-  <td class="cell-readonly group-metrics group-end" data-label="Service hours / client"><span class="mono">${(metrics.offeringMetrics[idx]?.serviceHoursPerClient || 0).toFixed(1)}</span></td>
-      <td class="cell-edit group-actions" data-label="Actions">
-        <button class="btn small danger" data-action="removeOffering" data-i="${idx}" aria-label="Remove ${escapeHtml(o.name)}">Remove</button>
-      </td>
-    `;
+    tr.innerHTML = '<td class="cell-edit group-start group-inputs" data-label="Offering"><input aria-label="Offering name" type="text" value="' + (escapeHtml(o.name)) + '" data-k="name" data-i="' + (idx) + '"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Price / mo"><input aria-label="Price per month for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="10" value="' + (o.priceMonthly) + '" data-k="priceMonthly" data-i="' + (idx) + '"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Sessions / yr"><input aria-label="Sessions per year for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.sessionsPerYear) + '" data-k="sessionsPerYear" data-i="' + (idx) + '"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Hours / session"><input aria-label="Hours per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="0.1" value="' + (o.hoursPerSession) + '" data-k="hoursPerSession" data-i="' + (idx) + '"/></td>' +
+      '<td class="cell-edit group-inputs group-end" data-label="Var $ / session"><input aria-label="Variable cost per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.variableCostPerSession) + '" data-k="variableCostPerSession" data-i="' + (idx) + '"/></td>' +
+      '<td class="cell-edit group-start group-mode" data-label="Mix % (forecast)">' + (mixCell) + '</td>' +
+      '<td class="cell-edit group-mode group-end" data-label="Clients (current)">' + (clientsCell) + '</td>' +
+      '<td class="cell-readonly group-start group-est" data-label="Est. clients"><span class="mono">' + (fmtInt(estClients)) + '</span></td>' +
+      '<td class="cell-readonly group-est" data-label="Est. sessions"><span class="mono">' + (fmtInt(estSessions)) + '</span></td>' +
+      '<td class="cell-readonly group-metrics" data-label="Annual Revenue"><span class="mono">' + (fmtMoney0(metrics.offeringMetrics[idx]?.revenue || 0)) + '</span></td>' +
+      '<td class="cell-readonly group-metrics" data-label="Margin %"><span class="mono" style="color:' + ((metrics.offeringMetrics[idx]?.marginPct || 0) > 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtPct1(metrics.offeringMetrics[idx]?.marginPct || 0)) + '</span></td>' +
+      '<td class="cell-readonly group-metrics group-end" data-label="Annual Profit"><span class="mono" style="color:' + ((metrics.offeringMetrics[idx]?.profit || 0) > 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtMoney0(metrics.offeringMetrics[idx]?.profit || 0)) + '</span></td>' +
+      '<td class="cell-edit group-actions" data-label="Actions"><button class="btn small danger" data-action="removeOffering" data-i="' + (idx) + '" aria-label="Remove ' + (escapeHtml(o.name)) + '">Remove</button></td>';
 
     tbody.appendChild(tr);
   });
@@ -1178,8 +1071,8 @@ function render() {
     mixNote.textContent = state.lockMix
       ? 'Forecast mode: editing Mix % (locked to 100%, auto-balancing others)'
       : (delta < 0.05
-        ? `Forecast mode: editing Mix % (current total ${sum.toFixed(1)}%)`
-        : `Forecast mode: editing Mix % (current total ${sum.toFixed(1)}% — auto-normalized for calculations)`);
+        ? 'Forecast mode: editing Mix % (current total ' + (sum.toFixed(1)) + '%)'
+        : 'Forecast mode: editing Mix % (current total ' + (sum.toFixed(1)) + '% — auto-normalized for calculations)');
   } else {
     const total = metrics.offerings.reduce((a, o) => a + (Number(o.currentClients) || 0), 0);
     mixNote.classList.add('note-current');
@@ -1236,11 +1129,11 @@ function updateOutputs(metrics) {
     // Capacity meter
     const cap = clamp(metrics.capacityPct, 0, 150);
     const capBar = $('#capacityBar');
-    if (capBar) capBar.style.width = `${(cap / 150) * 100}%`;
+    if (capBar) capBar.style.width = ((cap / 150) * 100) + '%';
     const capLabel = $('#capacityLabel');
     if (capLabel) capLabel.textContent = metrics.capacityPct > 100
-      ? `Over capacity: ${fmtPct1(metrics.capacityPct)} (overtime likely)`
-      : `Utilization: ${fmtPct1(metrics.capacityPct)}`;
+      ? 'Over capacity: ' + (fmtPct1(metrics.capacityPct)) + '(overtime likely)'
+      : 'Utilization: ' + (fmtPct1(metrics.capacityPct));
 
     // Lazy load simple revenue composition chart when visible
     lazyLoadChart(metrics);
@@ -1344,7 +1237,7 @@ function onTableInput(e) {
 
   // Show validation error if any and provide auto-fix for some cases
   if (validationError) {
-    // Validation error handled - value has been sanitized
+    // Validation error handled-value has been sanitized
 
     // Auto-fix common issues
     if (k === 'priceMonthly' && value === 0 && o.priceMonthly === 0) {
@@ -1400,7 +1293,7 @@ function onTableClick(e) {
 function addOffering() {
   state.offerings.push({
     id: uuid(),
-    name: `Offering ${state.offerings.length + 1}`,
+    name: 'Offering ' + (state.offerings.length + 1),
     priceMonthly: 100,
     sessionsPerYear: 12,
     hoursPerSession: 1.0,
@@ -1436,27 +1329,27 @@ function exportAsCSV() {
   // CSV header with summary metrics
   const lines = [
     'ProfitPath Business Analysis Report',
-    `Generated: ${new Date().toLocaleString()}`,
-    `Analysis Mode: ${state.mode === 'forecast' ? 'Forecast (Planning)' : 'Current (Operations Analysis)'}`,
+    'Generated: ' + (new Date().toLocaleString()),
+    'Analysis Mode: ' + (state.mode === 'forecast' ? 'Forecast(Planning)' : 'Current(Operations Analysis)'),
     '',
     'BUSINESS PARAMETERS',
     'Parameter,Value,Unit',
-    `Number of Employees,${state.employees},people`,
-    `Annual Employee Compensation,${fmtMoney0(state.employeePay)},USD/year`,
-    `Monthly Overhead Costs,${fmtMoney0(state.monthlyCosts)},USD/month`,
-    `Productive Utilization Target,${fmtPct1(state.productiveUtilizationPct)},% of available hours`,
-    `Overall Utilization Target,${fmtPct1(state.targetUtilizationPct)},% of total capacity`,
+    'Number of Employees, ' + (state.employees) + ', people',
+    'Annual Employee Compensation, ' + (fmtMoney0(state.employeePay)) + ', USD / year',
+    'Monthly Overhead Costs, ' + (fmtMoney0(state.monthlyCosts)) + ', USD / month',
+    'Productive Utilization Target, ' + (fmtPct1(state.productiveUtilizationPct)) + ',% of available hours',
+    'Overall Utilization Target, ' + (fmtPct1(state.targetUtilizationPct)) + ',% of total capacity',
     '',
     'FINANCIAL RESULTS',
     'Metric,Value,Unit',
-    `Total Annual Revenue,${fmtMoney0(results.revenue)},USD/year`,
-    `Total Variable Costs,${fmtMoney0(results.variableCosts)},USD/year`,
-    `Gross Contribution Margin,${fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))},USD/year`,
-    `Fixed Overhead Costs,${fmtMoney0(results.annualFixedCosts)},USD/year`,
-    `Net Profit (Loss),${fmtMoney0(results.income)},USD/year`,
-    `Profit Margin,${fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)},% of revenue`,
-    `Total Billable Hours,${fmtInt(results.serviceHours || 0)},hours/year`,
-    `Capacity Utilization,${fmtPct1(results.capacityPct || 0)},% of total capacity`,
+    'Total Annual Revenue, ' + (fmtMoney0(results.revenue)) + ', USD / year',
+    'Total Variable Costs, ' + (fmtMoney0(results.variableCosts)) + ', USD / year',
+    'Gross Contribution Margin, ' + (fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))) + ', USD / year',
+    'Fixed Overhead Costs, ' + (fmtMoney0(results.annualFixedCosts)) + ', USD / year',
+    'Net Profit(Loss), ' + (fmtMoney0(results.income)) + ', USD / year',
+    'Profit Margin, ' + (fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)) + ',% of revenue',
+    'Total Billable Hours, ' + (fmtInt(results.serviceHours || 0)) + ', hours / year',
+    'Capacity Utilization, ' + (fmtPct1(results.capacityPct || 0)) + ',% of total capacity',
     '',
     'SERVICE OFFERINGS BREAKDOWN',
     'Service Name,Monthly Price,Sessions per Year,Hours per Session,Variable Cost per Session,Client Mix %,Current Clients,Projected Annual Revenue,Capacity Required',
@@ -1466,7 +1359,7 @@ function exportAsCSV() {
     const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
     const capacityRequired = state.mode === 'forecast' ? Math.ceil((o.sessionsPerYear * state.employees * state.productiveUtilizationPct / 100) / o.sessionsPerYear) : o.currentClients;
     lines.push(
-      `"${o.name}",${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${fmtMoney0(annualRevenue)},${capacityRequired}`
+      '"' + (o.name) + '", ' + (o.priceMonthly) + ', ' + (o.sessionsPerYear) + ', ' + (o.hoursPerSession) + ', ' + (o.variableCostPerSession) + ', ' + (o.mixPct) + ', ' + (o.currentClients) + ', ' + (fmtMoney0(annualRevenue)) + ', ' + (capacityRequired)
     );
   });
 
@@ -1476,7 +1369,7 @@ function exportAsCSV() {
   const url = URL.createObjectURL(blob);
 
   link.setAttribute('href', url);
-  link.setAttribute('download', `profitpath-export-${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('download', 'profitpath-export-' + (new Date().toISOString().split('T')[0]) + '.csv');
   link.style.visibility = 'hidden';
 
   document.body.appendChild(link);
@@ -1494,83 +1387,17 @@ function shareViaEmail() {
     return;
   }
 
-  const subject = encodeURIComponent(`ProfitPath Report - ${new Date().toLocaleDateString()}`);
-  const body = encodeURIComponent(`ProfitPath Business Analysis Report
+  const subject = encodeURIComponent('ProfitPath Report - ' + (new Date().toLocaleDateString()));
+  const body = encodeURIComponent('ProfitPath Business Analysis Report\n\nGenerated: ' + (new Date().toLocaleString()) + '\n\nBUSINESS SUMMARY:\n  - Mode: ' + (state.mode) + '\n  - Employees: ' + (state.employees) + '\n  - Employee Pay: ' + (fmtMoney0(state.employeePay)) + '\n  - Monthly Overhead: ' + (fmtMoney0(state.monthlyCosts)) + '\n  - Productive Utilization: ' + (fmtPct1(state.productiveUtilizationPct)) + '\n\nFINANCIAL RESULTS:\n  - Total Revenue: ' + (fmtMoney0(results.revenue || 0)) + '\n  - Total Variable Costs: ' + (fmtMoney0(results.variableCosts || 0)) + '\n  - Net Profit: ' + (fmtMoney0(results.income || 0)) + '\n  - Profit Margin: ' + (fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)) + '\n  - Utilization: ' + (fmtPct1(results.capacityPct || 0)) + '\n\nSERVICE OFFERINGS:\n' + (state.offerings.map(o => '- ' + (o.name) + ': ' + (fmtMoney0(o.priceMonthly)) + '/month').join('\n')) + '\n\n--- This report was generated using ProfitPath - a service business simulator.\nFor the full report with charts and detailed analysis, please see the attached export file.\n\nView the interactive simulator: ' + (window.location.origin) + (window.location.pathname));
 
-Generated: ${new Date().toLocaleString()}
-
-BUSINESS SUMMARY:
-- Mode: ${state.mode}
-- Employees: ${state.employees}
-- Employee Pay: ${fmtMoney0(state.employeePay)}
-- Monthly Overhead: ${fmtMoney0(state.monthlyCosts)}
-- Productive Utilization: ${fmtPct1(state.productiveUtilizationPct)}
-
-FINANCIAL RESULTS:
-- Total Revenue: ${fmtMoney0(results.revenue || 0)}
-- Total Variable Costs: ${fmtMoney0(results.variableCosts || 0)}
-- Net Profit: ${fmtMoney0(results.income || 0)}
-- Profit Margin: ${fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)}
-- Utilization: ${fmtPct1(results.capacityPct || 0)}
-
-SERVICE OFFERINGS:
-${state.offerings.map(o => `- ${o.name}: ${fmtMoney0(o.priceMonthly)}/month`).join('\n')}
-
----
-This report was generated using ProfitPath - a service business simulator.
-For the full report with charts and detailed analysis, please see the attached export file.
-
-View the interactive simulator: ${window.location.origin}${window.location.pathname}
-`);
-
-  const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+  const mailtoLink = 'mailto:?subject=' + (subject) + '&body=' + (body);
   window.open(mailtoLink);
 }
 
 function showScheduleDialog() {
   // Create modal dialog
   const modal = document.createElement('div');
-  modal.innerHTML = `
-    <div id="scheduleModal" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;">
-      <div class="modal-content" style="background: white; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-        <h3 style="margin-top: 0; color: #1f2937;">Automated Report Scheduling</h3>
-        <p style="color: #6b7280; margin-bottom: 20px;">Schedule automatic report generation and downloads.</p>
-
-        <form id="scheduleForm">
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 500;">Frequency:</label>
-            <select id="scheduleFrequency" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-          </div>
-
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 500;">Format:</label>
-            <select id="scheduleFormat" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
-              <option value="pdf">PDF Report</option>
-              <option value="excel">Excel Workbook</option>
-              <option value="csv">CSV Spreadsheet</option>
-              <option value="html">HTML Page</option>
-            </select>
-          </div>
-
-          <div style="margin-bottom: 20px;">
-            <label style="display: block; margin-bottom: 5px; font-weight: 500;">Next Run:</label>
-            <div id="nextRunTime" style="color: #6b7280; font-size: 0.9em;">Next run: calculating...</div>
-          </div>
-
-          <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button type="button" id="cancelSchedule" style="padding: 8px 16px; border: 1px solid #d1d5db; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
-            <button type="submit" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">Start Scheduling</button>
-          </div>
-        </form>
-
-        <div id="scheduleStatus" style="margin-top: 15px; padding: 10px; border-radius: 4px; display: none;"></div>
-      </div>
-    </div>
-  `;
+  modal.innerHTML = '<div id="scheduleModal" class="modal-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;"><div class="modal-content" style="background:white;padding:30px;border-radius:8px;max-width:500px;width:90%;box-shadow:0 10px 25px rgba(0,0,0,0.2);"><h3 style="margin-top:0;color:#1f2937;">Automated Report Scheduling</h3><p style="color:#6b7280;margin-bottom:20px;">Schedule automatic report generation and downloads.</p><form id="scheduleForm"><div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:500;">Frequency:</label><select id="scheduleFrequency" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:4px;"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div><div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:500;">Format:</label><select id="scheduleFormat" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:4px;"><option value="pdf">PDF Report</option><option value="excel">Excel Workbook</option><option value="csv">CSV Spreadsheet</option><option value="html">HTML Page</option></select></div><div style="margin-bottom:20px;"><label style="display:block;margin-bottom:5px;font-weight:500;">Next Run:</label><div id="nextRunTime" style="color:#6b7280;font-size:0.9em;">Next run: calculating...</div></div><div style="display:flex;gap:10px;justify-content:flex-end;"><button type="button" id="cancelSchedule" style="padding:8px 16px;border:1px solid #d1d5db;background:white;border-radius:4px;cursor:pointer;">Cancel</button><button type="submit" style="padding:8px 16px;background:#3b82f6;color:white;border:none;border-radius:4px;cursor:pointer;">Start Scheduling</button></div></form><div id="scheduleStatus" style="margin-top:15px;padding:10px;border-radius:4px;display:none;"></div></div></div>';
 
   document.body.appendChild(modal);
 
@@ -1610,7 +1437,7 @@ function updateNextRunTime() {
 
   const nextRunElement = document.getElementById('nextRunTime');
   if (nextRunElement) {
-    nextRunElement.textContent = `Next run: ${nextRun.toLocaleString()}`;
+    nextRunElement.textContent = 'Next run: ' + nextRun.toLocaleString();
   }
 }
 
@@ -1642,7 +1469,7 @@ function startScheduling() {
     statusElement.style.display = 'block';
     statusElement.style.background = '#d1fae5';
     statusElement.style.color = '#065f46';
-    statusElement.textContent = `✅ Scheduling started: ${format.toUpperCase()} reports every ${frequency}`;
+    statusElement.textContent = '✅ Scheduling started: ' + format.toUpperCase() + ' reports every ' + frequency;
   }
 
   // Start scheduling
@@ -1671,13 +1498,13 @@ function startScheduling() {
       // Show contextual feedback prompt
       if (window.feedbackUI) {
         window.feedbackUI.showContextualPrompt({
-          action: `scheduled ${format.toUpperCase()} export`,
+          action: 'scheduled ' + (format.toUpperCase()) + ' export',
           feature: 'exports'
         }, 3000);
       }
 
       // Show download notification
-      showNotification(`Scheduled ${format.toUpperCase()} report downloaded`, 'success');
+      showNotification('Scheduled ' + (format.toUpperCase()) + ' report downloaded', 'success');
     } catch (error) {
       console.error('Scheduled export failed:', error);
       showNotification('Scheduled export failed', 'error');
@@ -1692,24 +1519,13 @@ function startScheduling() {
     intervalMs
   }));
 
-  showNotification(`Report scheduling started (${frequency} ${format.toUpperCase()})`, 'success');
+  showNotification('Report scheduling started(' + (frequency) + ' ' + (format.toUpperCase()) + ')', 'success');
 }
 
 function showNotification(message, type = 'info') {
   // Create notification element
   const notification = document.createElement('div');
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 12px 16px;
-    border-radius: 6px;
-    color: white;
-    font-weight: 500;
-    z-index: 3000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    max-width: 300px;
-  `;
+  notification.style.cssText = 'position: fixed;top: 20px;right: 20px;padding: 12px 16px;border-radius: 6px;color: white;font-weight: 500;z-index: 3000;box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);max-width: 300px;';
 
   if (type === 'success') {
     notification.style.background = '#059669';
@@ -1846,7 +1662,7 @@ async function exportAsExcel() {
   XLSX.utils.book_append_sheet(workbook, offeringsSheet, 'Offerings');
 
   // Write file
-  XLSX.writeFile(workbook, `profitpath-export-${new Date().toISOString().split('T')[0]}.xlsx`);
+  XLSX.writeFile(workbook, 'profitpath-export-' + (new Date().toISOString().split('T')[0]) + '.xlsx');
 
   // Track export event
   if (window.profitPathAnalytics) {
@@ -1902,7 +1718,7 @@ async function exportAsPDF() {
 
   // Date
   doc.setFontSize(12);
-  doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 45);
+  doc.text('Generated: ' + (new Date().toLocaleString()), 20, 45);
 
   // Summary section
   doc.setFontSize(16);
@@ -1912,17 +1728,17 @@ async function exportAsPDF() {
   let yPos = 80;
   const lineHeight = 7;
 
-  doc.text(`Mode: ${state.mode}`, 20, yPos);
+  doc.text('Mode: ' + (state.mode), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Employees: ${state.employees}`, 20, yPos);
+  doc.text('Employees: ' + (state.employees), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Employee Pay: ${fmtMoney0(state.employeePay)}`, 20, yPos);
+  doc.text('Employee Pay: ' + (fmtMoney0(state.employeePay)), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Monthly Overhead: ${fmtMoney0(state.monthlyCosts)}`, 20, yPos);
+  doc.text('Monthly Overhead: ' + (fmtMoney0(state.monthlyCosts)), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Productive Utilization: ${fmtPct1(state.productiveUtilizationPct)}`, 20, yPos);
+  doc.text('Productive Utilization: ' + (fmtPct1(state.productiveUtilizationPct)), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Target Utilization: ${fmtPct1(state.targetUtilizationPct)}`, 20, yPos);
+  doc.text('Target Utilization: ' + (fmtPct1(state.targetUtilizationPct)), 20, yPos);
 
   // Results section
   yPos += lineHeight * 2;
@@ -1931,21 +1747,21 @@ async function exportAsPDF() {
   yPos += lineHeight * 2;
 
   doc.setFontSize(11);
-  doc.text(`Total Revenue: ${fmtMoney0(results.revenue || 0)}`, 20, yPos);
+  doc.text('Total Revenue: ' + (fmtMoney0(results.revenue || 0)), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Total Variable Costs: ${fmtMoney0(results.variableCosts || 0)}`, 20, yPos);
+  doc.text('Total Variable Costs: ' + (fmtMoney0(results.variableCosts || 0)), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Contribution Margin: ${fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))}`, 20, yPos);
+  doc.text('Contribution Margin: ' + (fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Fixed Overhead: ${fmtMoney0(results.annualFixedCosts || 0)}`, 20, yPos);
+  doc.text('Fixed Overhead: ' + (fmtMoney0(results.annualFixedCosts || 0)), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Net Profit: ${fmtMoney0(results.income || 0)}`, 20, yPos);
+  doc.text('Net Profit: ' + (fmtMoney0(results.income || 0)), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Profit Margin: ${fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)}`, 20, yPos);
+  doc.text('Profit Margin: ' + (fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Billable Hours: ${fmtInt(results.serviceHours || 0)}`, 20, yPos);
+  doc.text('Billable Hours: ' + (fmtInt(results.serviceHours || 0)), 20, yPos);
   yPos += lineHeight;
-  doc.text(`Utilization: ${fmtPct1(results.capacityPct || 0)}`, 20, yPos);
+  doc.text('Utilization: ' + (fmtPct1(results.capacityPct || 0)), 20, yPos);
 
   // Try to capture charts if they exist
   try {
@@ -2022,8 +1838,8 @@ async function exportAsPDF() {
     });
   }
 
-  doc.save(`profitpath-report-${new Date().toISOString().split('T')[0]}.pdf');
-  
+  doc.save('profitpath-report-' + (new Date().toISOString().split('T')[0]) + '.pdf');
+
   // Track export event
   if (window.profitPathAnalytics) {
     window.profitPathAnalytics.trackExport('pdf', 1);
@@ -2048,8 +1864,8 @@ function exportAsHTML() {
     return;
   }
 
-  // Create HTML content
-  const htmlContent = '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>ProfitPath Report - ' + new Date().toLocaleDateString() + '</title>\n    <style>\n      body {font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif; margin: 0; padding: 20px; background: #f8fafc;}\n      .container {max-width: 1200px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}\n      .header {text-align: center; margin-bottom: 40px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px;}\n      .section {margin-bottom: 40px;}\n      .section h2 {color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;}\n      .grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;}\n      .card {background: #f9fafb; padding: 20px; border-radius: 6px; border: 1px solid #e5e7eb;}\n      .metric {display: flex; justify-content: space-between; margin-bottom: 8px;}\n      .metric-label {font-weight: 500; color: #6b7280;}\n      .metric-value {font-weight: 600; color: #1f2937;}\n      .positive {color: #10b981;}\n      .negative {color: #ef4444;}\n      table {width: 100%; border-collapse: collapse; margin-top: 20px;}\n      th, td {padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;}\n      th {background: #f3f4f6; font-weight: 600;}\n    </style>\n  </head>\n  <body>\n    <div class="container">\n      <div class="header">\n        <h1>ProfitPath Report</h1>\n        <p>Generated on ' + new Date().toLocaleDateString() + '</p>\n      </div>\n\n      <div class="section">\n        <h2>Business Parameters</h2>\n        <div class="grid">\n          <div class="card">\n            <h3>Capacity</h3>\n            <div class="metric">\n              <span class="metric-label">Employees:</span>\n              <span class="metric-value">' + state.employees + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Employee Pay:</span>\n              <span class="metric-value">' + fmtMoney0(state.employeePay) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Monthly Overhead:</span>\n              <span class="metric-value">' + fmtMoney0(state.monthlyCosts) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Productive Utilization:</span>\n              <span class="metric-value">' + fmtPct1(state.productiveUtilizationPct) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Target Utilization:</span>\n              <span class="metric-value">' + fmtPct1(state.targetUtilizationPct) + '</span>\n            </div>\n          </div>\n          <div class="card">\n            <h3>Financial Results</h3>\n            <div class="metric">\n              <span class="metric-label">Total Revenue:</span>\n              <span class="metric-value">' + fmtMoney0(results.revenue || 0) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Variable Costs:</span>\n              <span class="metric-value">' + fmtMoney0(results.variableCosts || 0) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Contribution Margin:</span>\n              <span class="metric-value">' + fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0))) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Fixed Overhead:</span>\n              <span class="metric-value">' + fmtMoney0(results.annualFixedCosts || 0) + '</span>\n            </div>\n            <div class="metric ' + (results.income >= 0 ? 'positive' : 'negative') + '">\n              <span class="metric-label">Net Profit:</span>\n              <span class="metric-value">' + fmtMoney0(results.income || 0) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Profit Margin:</span>\n              <span class="metric-value">' + fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100) + '</span>\n            </div>\n            <div class="metric">\n              <span class="metric-label">Utilization:</span>\n              <span class="metric-value">' + fmtPct1(results.capacityPct || 0) + '</span>\n            </div>\n          </div>\n        </div>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Target Utilization:</span>\n        <span class="metric-value">' + fmtPct1(state.targetUtilizationPct) + '</span>\n      </div>\n    </div>\n    <div class="card">\n      <h3>Financial Results</h3>\n      <div class="metric">\n        <span class="metric-label">Total Revenue:</span>\n        <span class="metric-value">' + fmtMoney0(results.revenue || 0) + '</span>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Variable Costs:</span>\n        <span class="metric-value">' + fmtMoney0(results.variableCosts || 0) + '</span>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Contribution Margin:</span>\n        <span class="metric-value">' + fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0))) + '</span>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Fixed Overhead:</span>\n        <span class="metric-value">' + fmtMoney0(results.annualFixedCosts || 0) + '</span>\n      </div>\n      <div class="metric ' + (results.income >= 0 ? 'positive' : 'negative') + '">\n        <span class="metric-label">Net Profit:</span>\n        <span class="metric-value">' + fmtMoney0(results.income || 0) + '</span>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Profit Margin:</span>\n        <span class="metric-value">' + fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100) + '</span>\n      </div>\n      <div class="metric">\n        <span class="metric-label">Utilization:</span>\n        <span class="metric-value">' + fmtPct1(results.capacityPct || 0) + '</span>\n      </div>\n    </div>\n  </div>\n</div>\n\n<div class="section">\n  <h2>Service Offerings</h2>\n  <table>\n    <thead>\n      <tr>\n        <th>Name</th>\n        <th>Price/Month</th>\n        <th>Sessions/Year</th>\n        <th>Hours/Session</th>\n        <th>Variable Cost/Session</th>\n        <th>Mix %</th>\n        <th>Current Clients</th>\n        <th>Annual Revenue</th>\n      </tr>\n    </thead>\n    <tbody>\n      ' + state.offerings.map(function(o) {\n        return '<tr>\n          <td>' + o.name + '</td>\n          <td>' + fmtMoney0(o.priceMonthly) + '</td>\n          <td>' + o.sessionsPerYear + '</td>\n          <td>' + o.hoursPerSession + '</td>\n          <td>' + fmtMoney0(o.variableCostPerSession) + '</td>\n          <td>' + fmtPct1(o.mixPct) + '</td>\n          <td>' + (state.mode === 'forecast' ? Math.round(o.mixPct / 100 * results.clients) : o.currentClients) + '</td>\n          <td>' + fmtMoney0((state.mode === 'forecast' ? o.mixPct / 100 * results.clients : o.currentClients) * o.priceMonthly * 12) + '</td>\n        </tr>';\n      }).join('') + '\n    </tbody>\n  </table>\n</div>\n</div>\n</body>\n</html>';
+  // Create simple HTML content
+  const htmlContent = '<!DOCTYPE html><html><head><title>ProfitPath Report</title><style>body{font-family:sans-serif;margin:20px;}</style></head><body><h1>ProfitPath Report</h1><p>Generated: ' + new Date().toLocaleDateString() + '</p><h2>Results</h2><p>Revenue: ' + (fmtMoney0(results.revenue || 0)) + '</p><p>Profit: ' + (fmtMoney0(results.income || 0)) + '</p></body></html>';
 
   // Download the HTML file
   const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
@@ -2175,17 +1991,7 @@ function deleteScenario(scenarioId) {
 
   // Create custom confirmation dialog to avoid native confirm issues
   const modal = document.createElement('div');
-  modal.innerHTML = `
-    < div id = "confirmModal" style = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;" >
-    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center;">
-      <p style="margin: 0 0 20px 0; color: #374151;">Delete this scenario?</p>
-      <div style="display: flex; gap: 10px; justify-content: center;">
-        <button id="confirmYes" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">Delete</button>
-        <button id="confirmNo" style="padding: 8px 16px; background: #6b7280; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
-      </div>
-    </div>
-    </div >
-    `;
+  modal.innerHTML = '<div id="confirmModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;"><div style="background:white;padding:20px;border-radius:8px;max-width:400px;width:90%;text-align:center;"><p style="margin:0 0 20px 0;color:#374151;">Delete this scenario?</p><div style="display:flex;gap:10px;justify-content:center;"><button id="confirmYes" style="padding:8px 16px;background:#dc2626;color:white;border:none;border-radius:4px;cursor:pointer;">Delete</button><button id="confirmNo" style="padding:8px 16px;background:#6b7280;color:white;border:none;border-radius:4px;cursor:pointer;">Cancel</button></div></div></div>';
 
   document.body.appendChild(modal);
 
@@ -2247,16 +2053,7 @@ function renderScenariosList() {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'scenario-item';
 
-    itemDiv.innerHTML = `
-    < div >
-        <div class="scenario-item-name">${escapeHtml(s.name)}</div>
-        <div class="scenario-item-meta">Saved ${s.timestamp}</div>
-      </div >
-    <div class="scenario-item-actions">
-      <button class="btn small load-btn" data-scenario-id="${escapeHtml(s.id)}">Load</button>
-      <button class="btn small danger delete-btn" data-scenario-id="${escapeHtml(s.id)}">Delete</button>
-    </div>
-      `;
+    itemDiv.innerHTML = '<div><div class="scenario-item-name">' + escapeHtml(s.name) + '</div><div class="scenario-item-meta">Saved ' + s.timestamp + '</div></div><div class="scenario-item-actions"><button class="btn small load-btn" data-scenario-id="' + escapeHtml(s.id) + '">Load</button><button class="btn small danger delete-btn" data-scenario-id="' + escapeHtml(s.id) + '">Delete</button></div>';
 
     fragment.appendChild(itemDiv);
   });
@@ -2329,7 +2126,7 @@ function encodeScenarioToURL(state) {
 
     // Create shareable URL
     const baseUrl = window.location.origin + window.location.pathname;
-    return `${ baseUrl }#scenario = ${ encoded }`;
+    return baseUrl + '#scenario=' + encoded;
   } catch (e) {
     console.error('Failed to encode scenario:', e);
     return null;
@@ -2408,7 +2205,7 @@ function updateSocialMetaTags(scenarioData) {
     calc({ ...scenarioData, clients: scenarioData.offerings.reduce((sum, o) => sum + (o.currentClients || 0), 0) }).revenue :
     scenarioData.offerings.reduce((sum, o) => sum + (o.priceMonthly * (o.currentClients || 0)), 0);
 
-  const description = `Business Scenario: $${ revenue.toLocaleString() } / month revenue, ${ scenarioData.employees } employees, ${ scenarioData.offerings.length } services.`;
+  const description = 'Business Scenario: $' + revenue.toLocaleString() + ' / month revenue, ' + scenarioData.employees + ' employees, ' + scenarioData.offerings.length + ' services.';
 
   // Update meta tags
   updateMetaTag('description', description);
@@ -2424,7 +2221,7 @@ function updateSocialMetaTags(scenarioData) {
 }
 
 function updateMetaTag(name, content) {
-  const meta = document.querySelector(`meta[name = "${name}"]`) || document.querySelector(`meta[property = "${name}"]`);
+  const meta = document.querySelector('meta[name="' + name + '"]') || document.querySelector('meta[property="' + name + '"]');
   if (meta) {
     meta.setAttribute('content', content);
   }
@@ -2453,14 +2250,7 @@ function initializeEmbeddableWidget() {
 
     // Add embedded styling
     const style = document.createElement('style');
-    style.textContent = `
-      body { margin: 0; padding: 0; }
-    .container { max - width: none; padding: 0;
-}
-      .header { margin - bottom: 0; padding: 10px; }
-      .header h1 { font - size: 18px; margin: 0; }
-      .card { margin: 10px 0; }
-`;
+    style.textContent = 'body { margin: 0;padding: 0;} .container { max-width: none;padding: 0;} .header { margin-bottom: 0;padding: 10px;} .header h1 { font-size: 18px;margin: 0;} .card { margin: 10px 0;}';
     document.head.appendChild(style);
 
     // Adjust container for embedding
@@ -2478,15 +2268,7 @@ function generateEmbedCode() {
   const shareUrl = encodeScenarioToURL(state);
   const embedUrl = shareUrl + (shareUrl.includes('?') ? '&' : '?') + 'embed=true';
 
-  const embedCode = `< iframe
-src = "${embedUrl}"
-width = "100%"
-height = "600"
-frameborder = "0"
-style = "border: 1px solid #e5e7eb; border-radius: 8px;" >
-      </iframe >
-
-  <p><a href="${shareUrl}" target="_blank">View full calculator →</a></p>`;
+  const embedCode = '<iframe src="' + embedUrl + '" width="100%" height="600" frameborder="0" style="border:1px solid #e5e7eb;border-radius:8px;"></iframe><p><a href="' + shareUrl + '" target="_blank">View full calculator →</a></p>';
 
   return embedCode;
 }
@@ -2510,29 +2292,9 @@ function showEmbedCode() {
 
 function showEmbedDialog(embedCode) {
   const dialog = document.createElement('div');
-  dialog.style.cssText = `
-position: fixed;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-background: rgba(0, 0, 0, 0.5);
-display: flex;
-align - items: center;
-justify - content: center;
-z - index: 10000;
-`;
+  dialog.style.cssText = 'position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(0, 0, 0, 0.5);display: flex;align-items: center;justify-content: center;z-index: 10000;';
 
-  dialog.innerHTML = `
-  < div style = "background: white; padding: 20px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;" >
-        <h3 style="margin-top: 0;">Embed Calculator Widget</h3>
-        <p>Copy this code to embed the calculator on your website:</p>
-        <textarea style="width: 100%; height: 150px; font-family: monospace; font-size: 12px;" readonly>${embedCode}</textarea>
-        <div style="margin-top: 15px; text-align: right;">
-          <button class="embed-close-btn" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
-        </div>
-      </div >
-  `;
+  dialog.innerHTML = '<div style="background:white;padding:20px;border-radius:8px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;"><h3 style="margin-top:0;">Embed Calculator Widget</h3><p>Copy this code to embed the calculator on your website:</p><textarea style="width:100%;height:150px;font-family:monospace;font-size:12px;" readonly>' + embedCode + '</textarea><div style="margin-top:15px;text-align:right;"><button class="embed-close-btn" style="padding:8px 16px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;">Close</button></div></div>';
 
   document.body.appendChild(dialog);
 
@@ -2835,7 +2597,7 @@ function loadIndustryTemplate(templateKey) {
     return;
   }
 
-  if (!confirm(`Load ${ template.name } template ? This will replace your current configuration.`)) {
+  if (!confirm('Load ' + template.name + ' template ? This will replace your current configuration.')) {
     return;
   }
 
@@ -2848,7 +2610,7 @@ function loadIndustryTemplate(templateKey) {
     render();
 
     // Show success message
-    alert(`✅ Loaded ${ template.name } template!\n\nThis provides typical pricing and configuration for ${ template.description.toLowerCase() }.Adjust the values as needed for your specific business.`);
+    alert('✅ Loaded ' + template.name + ' template!\n\nThis provides typical pricing and configuration for ' + template.description.toLowerCase() + '. Adjust the values as needed for your specific business.');
   } catch (e) {
     console.error('Error loading template:', e);
     alert('Error loading template. Please try again.');
@@ -2909,7 +2671,7 @@ const TEST_SCENARIOS = {
 
   'loss-making': {
     name: 'Loss Making Scenario',
-    description: 'Operating at a loss - needs price adjustment',
+    description: 'Operating at a loss-needs price adjustment',
     data: {
       mode: 'forecast',
       employees: 4,
@@ -2996,7 +2758,7 @@ const TEST_SCENARIOS = {
 
   'under-capacity': {
     name: 'Under Capacity Scenario',
-    description: 'Business with low utilization - opportunity for growth',
+    description: 'Business with low utilization-opportunity for growth',
     data: {
       mode: 'forecast',
       employees: 4,
@@ -3105,8 +2867,8 @@ function loadTestScenarios() {
 
   try {
     const scenarios = Object.entries(TEST_SCENARIOS).map(([key, scenario]) => ({
-      id: `test - ${ key } -${ Date.now() } `,
-      name: `[TEST] ${ scenario.name } `,
+      id: 'test-' + key + '-' + Date.now(),
+      name: '[TEST] ' + scenario.name,
       timestamp: Date.now() + Object.keys(TEST_SCENARIOS).indexOf(key) * 1000,
       data: scenario.data
     }));
@@ -3140,7 +2902,7 @@ function loadTestScenarios() {
 
     // Show notification
     setTimeout(() => {
-      alert(`Loaded ${ scenarios.length } test scenarios!\n\nCheck the Scenarios menu for [TEST] scenarios.`);
+      alert('Loaded ' + scenarios.length + ' test scenarios!\n\nCheck the Scenarios menu for [TEST] scenarios.');
     }, 100);
 
     return scenarios.length;
@@ -3277,7 +3039,7 @@ function wire(skipLocalStorageLoading = false) {
     }
   }
 
-  // Global settings change listener - refresh desktop settings when any setting changes
+  // Global settings change listener-refresh desktop settings when any setting changes
   window.addEventListener('settingsChanged', () => {
     setTimeout(refreshDesktopSettings, 10); // Small delay to ensure settings are saved
   });
@@ -3312,7 +3074,7 @@ function wire(skipLocalStorageLoading = false) {
           const viewportWidth = window.innerWidth;
 
           menu.style.position = 'fixed';
-          menu.style.top = `${ buttonRect.bottom + 4 } px`;
+          menu.style.top = (buttonRect.bottom + 4) + 'px';
 
           // Calculate left position, ensuring menu stays on screen
           let leftPos = buttonRect.left + buttonRect.width / 2;
@@ -3327,7 +3089,7 @@ function wire(skipLocalStorageLoading = false) {
             leftPos = viewportWidth - menuHalfWidth - 10;
           }
 
-          menu.style.left = `${ leftPos } px`;
+          menu.style.left = leftPos + 'px';
           menu.style.transform = 'translateX(-50%)';
           menu.style.right = 'auto';
         }
@@ -3374,7 +3136,7 @@ function wire(skipLocalStorageLoading = false) {
     ];
 
     checkboxes.forEach(key => {
-      const checkbox = $(`#${ key } `);
+      const checkbox = $('#' + key);
       if (checkbox) {
         checkbox.checked = settings[key];
         checkbox.addEventListener('change', (e) => {
@@ -3462,6 +3224,26 @@ function wire(skipLocalStorageLoading = false) {
       document.querySelectorAll('.export-dropdown').forEach(d => d.classList.remove('active'));
     }
 
+    // Add desktop feedback button handler
+    const desktopFeedbackBtn = $('#desktopFeedbackBtn');
+    if (desktopFeedbackBtn && !desktopFeedbackBtn._feedbackHandlerAttached) {
+      desktopFeedbackBtn._feedbackHandlerAttached = true;
+      desktopFeedbackBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showFeedbackModal();
+      });
+    }
+
+    // Add analytics button handler
+    const analyticsBtn = $('#analyticsBtn');
+    if (analyticsBtn && !analyticsBtn._analyticsHandlerAttached) {
+      analyticsBtn._analyticsHandlerAttached = true;
+      analyticsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Analytics dashboard coming soon! This feature tracks usage patterns to improve the app.');
+      });
+    }
+
     // Close settings dropdown
     if (!e.target.closest('.settings-dropdown') && !e.target.closest('#settingsCogBtn')) {
       document.querySelectorAll('.settings-dropdown').forEach(d => d.classList.remove('active'));
@@ -3539,6 +3321,9 @@ function wire(skipLocalStorageLoading = false) {
             }
 
             const mobileSettingsBtn = $('#mobileSettingsBtn');
+            const mobileHelpBtn = $('#mobileHelpBtn');
+            const mobileFeedbackBtn = $('#mobileFeedbackBtn');
+
             if (mobileSettingsBtn && !mobileSettingsBtn._settingsHandlerAttached) {
               mobileSettingsBtn._settingsHandlerAttached = true;
               mobileSettingsBtn.addEventListener('click', (e) => {
@@ -3552,53 +3337,8 @@ function wire(skipLocalStorageLoading = false) {
                 } else {
                   const settingsSection = document.createElement('div');
                   settingsSection.className = 'settings-section';
-                  settingsSection.style.cssText = `
-margin - top: 12px;
-padding: 12px;
-background: rgba(255, 255, 255, 0.05);
-border - radius: 8px;
-border: 1px solid rgba(255, 255, 255, 0.1);
-`;
-                  settingsSection.innerHTML = `
-  < div style = "margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text);" > Experience Level</div >
-                    <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
-                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
-                        <input type="radio" name="mobileExperienceLevel" value="beginner" style="accent-color: #007bff;">
-                        Beginner
-                      </label>
-                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
-                        <input type="radio" name="mobileExperienceLevel" value="intermediate" style="accent-color: #007bff;">
-                        Intermediate
-                      </label>
-                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
-                        <input type="radio" name="mobileExperienceLevel" value="advanced" style="accent-color: #007bff;">
-                        Advanced
-                      </label>
-                    </div>
-                    <div style="margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text);">Advanced Features</div>
-                    <div style="display: flex; flex-direction: column; gap: 6px;">
-                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
-                        <input type="checkbox" id="mobileShowAdvancedCalculations" style="accent-color: #007bff;">
-                        Advanced calculations
-                      </label>
-                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
-                        <input type="checkbox" id="mobileShowDetailedBreakdown" style="accent-color: #007bff;">
-                        Detailed breakdowns
-                      </label>
-                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
-                        <input type="checkbox" id="mobileShowComparisonTools" style="accent-color: #007bff;">
-                        Scenario comparison
-                      </label>
-                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
-                        <input type="checkbox" id="mobileShowExportOptions" style="accent-color: #007bff;">
-                        Export options
-                      </label>
-                      <label style="display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer;">
-                        <input type="checkbox" id="mobileShowDebugPanel" style="accent-color: #007bff;">
-                        Debug panel
-                      </label>
-                    </div>
-`;
+                  settingsSection.style.cssText = 'margin-top: 12px;padding: 12px;background: rgba(255, 255, 255, 0.05);border-radius: 8px;border: 1px solid rgba(255, 255, 255, 0.1);';
+                  settingsSection.innerHTML = '<div style="margin-bottom:12px;font-size:14px;font-weight:600;color:var(--text);">Experience Level</div><div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="radio" name="mobileExperienceLevel" value="beginner" style="accent-color:#007bff;">Beginner</label><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="radio" name="mobileExperienceLevel" value="intermediate" style="accent-color:#007bff;">Intermediate</label><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="radio" name="mobileExperienceLevel" value="advanced" style="accent-color:#007bff;">Advanced</label></div><div style="margin-bottom:12px;font-size:14px;font-weight:600;color:var(--text);">Advanced Features</div><div style="display:flex;flex-direction:column;gap:6px;"><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="checkbox" id="mobileShowAdvancedCalculations" style="accent-color:#007bff;">Advanced calculations</label><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="checkbox" id="mobileShowDetailedBreakdown" style="accent-color:#007bff;">Detailed breakdowns</label><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="checkbox" id="mobileShowComparisonTools" style="accent-color:#007bff;">Scenario comparison</label><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="checkbox" id="mobileShowExportOptions" style="accent-color:#007bff;">Export options</label><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="checkbox" id="mobileShowDebugPanel" style="accent-color:#007bff;">Debug panel</label></div>';
 
                   mobileSettingsBtn.parentNode.insertBefore(settingsSection, mobileSettingsBtn.nextSibling);
 
@@ -3631,198 +3371,235 @@ border: 1px solid rgba(255, 255, 255, 0.1);
                   const experienceRadios = settingsSection.querySelectorAll('input[name="mobileExperienceLevel"]');
                   experienceRadios.forEach(radio => {
                     radio.checked = radio.value === settings.experienceLevel;
-                    radio.addEventListener('change', (e) => {
-                      if (setExperienceLevel) setExperienceLevel(e.target.value);
-                      if (updateUIForSettings) updateUIForSettings();
-                      // Refresh mobile checkboxes to reflect new feature gates
-                      setTimeout(refreshMobileCheckboxes, 10);
-                      // Desktop settings will be refreshed automatically via settingsChanged event
-                    });
                   });
 
-                  const checkboxes = settingsSection.querySelectorAll('input[type="checkbox"]');
-                  checkboxes.forEach(checkbox => {
-                    const settingKey = checkbox.id.replace('mobile', '').replace(/^\w/, c => c.toLowerCase());
-                    checkbox.checked = settings[settingKey];
-                    checkbox.addEventListener('change', (e) => {
-                      if (updateSetting) updateSetting(settingKey, e.target.checked);
-                      if (updateUIForSettings) updateUIForSettings();
-                      // Desktop settings will be refreshed automatically via settingsChanged event
+                  // Add mobile help button handler
+                  if (mobileHelpBtn && !mobileHelpBtn._helpHandlerAttached) {
+                    mobileHelpBtn._helpHandlerAttached = true;
+                    mobileHelpBtn.addEventListener('click', (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      closeMobileMenu();
+                      showHelpMenu();
                     });
-                  });
+                  }
+
+                  // Add mobile feedback button handler
+                  if (mobileFeedbackBtn && !mobileFeedbackBtn._feedbackHandlerAttached) {
+                    mobileFeedbackBtn._feedbackHandlerAttached = true;
+                    mobileFeedbackBtn.addEventListener('click', (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      closeMobileMenu();
+                      showFeedbackModal();
+                    });
+                  }
                 }
+
+                const checkboxes = settingsSection.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                  const settingKey = checkbox.id.replace('mobile', '').replace(/^\w/, c => c.toLowerCase());
+                  checkbox.checked = settings[settingKey];
+                  checkbox.addEventListener('change', (e) => {
+                    if (updateSetting) updateSetting(settingKey, e.target.checked);
+                    if (updateUIForSettings) updateUIForSettings();
+                    // Desktop settings will be refreshed automatically via settingsChanged event
+                  });
+                });
               });
             }
-          }, 100);
+          });
         }
-      }
-    });
-  });
-  observer.observe(mobileMenuOverlay, { attributes: true, attributeFilter: ['class'] });
-
-  if (hamburgerBtn) {
-    hamburgerBtn.addEventListener('click', toggleMobileMenu);
+      }, 100);
   }
-
-  if (mobileMenuOverlay) {
-    mobileMenuOverlay.addEventListener('click', (e) => {
-      if (e.target === mobileMenuOverlay) {
-        closeMobileMenu();
-      }
-    });
-  }
-
-  if (mobileMenuClose) {
-    mobileMenuClose.addEventListener('click', closeMobileMenu);
-  }
-
-  // Function to close all mobile submenus
-  const closeAllMobileSubmenus = () => {
-    const submenuIds = ['mobileExportOptions', 'mobileTemplatesOptions'];
-    submenuIds.forEach(id => {
-      // Prefer getElementById for id strings, fall back to querySelector
-      const submenu = document.getElementById(id) || document.querySelector(`#${ id } `) || document.querySelector(`.${ id } `);
-      if (submenu) submenu.style.display = 'none';
-    });
-
-    // Also collapse any inline settings section inserted into the mobile menu
-    const settingsSection = document.querySelector('.mobile-menu .settings-section');
-    if (settingsSection) settingsSection.style.display = 'none';
-  };
-
-  if (mobileExportBtn) {
-    mobileExportBtn.addEventListener('click', () => {
-      const options = $('#mobileExportOptions');
-      if (options) {
-        closeAllMobileSubmenus();
-        options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
-      }
-    });
-  }
-
-  // Mobile export option handlers
-  const mobileExportCsv = $('#mobileExportCsv');
-  const mobileExportExcel = $('#mobileExportExcel');
-  const mobileExportPdf = $('#mobileExportPdf');
-  const mobileExportHtml = $('#mobileExportHtml');
-  const mobileExportEmail = $('#mobileExportEmail');
-
-  if (mobileExportCsv) {
-    mobileExportCsv.addEventListener('click', () => {
-      exportAsCSV();
-      closeMobileMenu();
-    });
-  }
-
-  if (mobileExportExcel) {
-    mobileExportExcel.addEventListener('click', () => {
-      exportAsExcel();
-      closeMobileMenu();
-    });
-  }
-
-  if (mobileExportPdf) {
-    mobileExportPdf.addEventListener('click', () => {
-      exportAsPDF();
-      closeMobileMenu();
-    });
-  }
-
-  if (mobileExportHtml) {
-    mobileExportHtml.addEventListener('click', () => {
-      exportAsHTML();
-      closeMobileMenu();
-    });
-  }
-
-  if (mobileExportEmail) {
-    mobileExportEmail.addEventListener('click', () => {
-      shareViaEmail();
-      closeMobileMenu();
-    });
-  }
-
-  const mobileExportEmbed = $('#mobileExportEmbed');
-  if (mobileExportEmbed) {
-    mobileExportEmbed.addEventListener('click', () => {
-      showEmbedCode();
-      closeMobileMenu();
-    });
-  }
-
-  if (mobileShareBtn) {
-    mobileShareBtn.addEventListener('click', () => {
-      shareScenario();
-      closeMobileMenu();
-    });
-  }
-
-  const mobileTemplatesBtn = $('#mobileTemplatesBtn');
-  if (mobileTemplatesBtn) {
-    mobileTemplatesBtn.addEventListener('click', () => {
-      const options = $('#mobileTemplatesOptions');
-      if (options) {
-        closeAllMobileSubmenus();
-        options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
-      }
-    });
-  }
-
-  document.querySelectorAll('.mobile-templates-options .mobile-submenu-btn').forEach(option => {
-    option.addEventListener('click', (e) => {
-      e.preventDefault();
-      const template = e.target.dataset.template;
-      const menu = $('#mobileTemplatesOptions');
-      if (menu) menu.style.display = 'none';
-
-      // Track template usage
-      if (window.profitPathAnalytics) {
-        window.profitPathAnalytics.trackTemplateUsage(template, e.target.textContent.trim());
-      }
-
-      loadIndustryTemplate(template);
-      closeMobileMenu(); // Close mobile menu after loading template
-    });
   });
 
-  if (mobileScenariosBtn) {
-    mobileScenariosBtn.addEventListener('click', () => {
-      openScenarioModal();
-      closeMobileMenu();
-    });
+if (hamburgerBtn) {
+  hamburgerBtn.addEventListener('click', toggleMobileMenu);
+}
+if (mobileMenuClose) {
+  mobileMenuClose.addEventListener('click', closeMobileMenu);
+}
+
+// ============================================================================
+// SCENARIO COMPARISON SYSTEM
+// ============================================================================
+
+// Helper to get selected scenario IDs from dropdowns
+function getSelectedComparisonScenarios() {
+  const scenario1Id = $('#compareScenario1').value;
+  const scenario2Id = $('#compareScenario2').value;
+  return { scenario1Id, scenario2Id };
+}
+textarea.value = '';
+    }
+  }
+}
+
+// Function to submit feedback
+function submitFeedback() {
+  const textarea = document.getElementById('feedbackText');
+  const feedbackText = textarea ? textarea.value.trim() : '';
+
+  if (!feedbackText) {
+    alert('Please enter your feedback before submitting.');
+    return;
   }
 
-  $('#offeringsBody').addEventListener('input', onTableInput);
-  $('#offeringsBody').addEventListener('click', onTableClick);
+  // Here you would normally send to your backend
+  console.log('Feedback submitted:', feedbackText);
+  alert('Thank you for your feedback! We appreciate your input.');
 
-  // Save state when table content changes
-  $('#offeringsBody').addEventListener('input', persistState);
-  $('#offeringsBody').addEventListener('click', () => setTimeout(persistState, 0));
+  closeFeedbackModal();
+}
 
-  // Scenario modal wiring
-  $('#scenariosBtn').addEventListener('click', openScenarioModal);
-  $('#scenariosCloseBtn').addEventListener('click', closeScenarioModal);
-  $('#scenariosOverlay').addEventListener('click', closeScenarioModal);
+// Function to close all mobile submenus
+const closeAllMobileSubmenus = () => {
+  const submenuIds = ['mobileExportOptions', 'mobileTemplatesOptions'];
+  submenuIds.forEach(id => {
+    // Prefer getElementById for id strings, fall back to querySelector
+    const submenu = document.getElementById(id) || document.querySelector('#' + id) || document.querySelector('.' + id);
+    if (submenu) submenu.style.display = 'none';
+  });
 
-  $('#saveScenarioBtn').addEventListener('click', () => {
+  // Also collapse any inline settings section inserted into the mobile menu
+  const settingsSection = document.querySelector('.mobile-menu .settings-section');
+  if (settingsSection) settingsSection.style.display = 'none';
+};
+
+if (mobileExportBtn) {
+  mobileExportBtn.addEventListener('click', () => {
+    const options = $('#mobileExportOptions');
+    if (options) {
+      closeAllMobileSubmenus();
+      options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
+    }
+  });
+}
+
+// Mobile export option handlers
+const mobileExportCsv = $('#mobileExportCsv');
+const mobileExportExcel = $('#mobileExportExcel');
+const mobileExportPdf = $('#mobileExportPdf');
+const mobileExportHtml = $('#mobileExportHtml');
+const mobileExportEmail = $('#mobileExportEmail');
+
+if (mobileExportCsv) {
+  mobileExportCsv.addEventListener('click', () => {
+    exportAsCSV();
+    closeMobileMenu();
+  });
+}
+
+if (mobileExportExcel) {
+  mobileExportExcel.addEventListener('click', () => {
+    exportAsExcel();
+    closeMobileMenu();
+  });
+}
+
+if (mobileExportPdf) {
+  mobileExportPdf.addEventListener('click', () => {
+    exportAsPDF();
+    closeMobileMenu();
+  });
+}
+
+if (mobileExportHtml) {
+  mobileExportHtml.addEventListener('click', () => {
+    exportAsHTML();
+    closeMobileMenu();
+  });
+}
+
+if (mobileExportEmail) {
+  mobileExportEmail.addEventListener('click', () => {
+    shareViaEmail();
+    closeMobileMenu();
+  });
+}
+
+const mobileExportEmbed = $('#mobileExportEmbed');
+if (mobileExportEmbed) {
+  mobileExportEmbed.addEventListener('click', () => {
+    showEmbedCode();
+    closeMobileMenu();
+  });
+}
+
+if (mobileShareBtn) {
+  mobileShareBtn.addEventListener('click', () => {
+    shareScenario();
+    closeMobileMenu();
+  });
+}
+
+const mobileTemplatesBtn = $('#mobileTemplatesBtn');
+if (mobileTemplatesBtn) {
+  mobileTemplatesBtn.addEventListener('click', () => {
+    const options = $('#mobileTemplatesOptions');
+    if (options) {
+      closeAllMobileSubmenus();
+      options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
+    }
+  });
+}
+
+document.querySelectorAll('.mobile-templates-options .mobile-submenu-btn').forEach(option => {
+  option.addEventListener('click', (e) => {
+    e.preventDefault();
+    const template = e.target.dataset.template;
+    const menu = $('#mobileTemplatesOptions');
+    if (menu) menu.style.display = 'none';
+
+    // Track template usage
+    if (window.profitPathAnalytics) {
+      window.profitPathAnalytics.trackTemplateUsage(template, e.target.textContent.trim());
+    }
+
+    loadIndustryTemplate(template);
+    closeMobileMenu(); // Close mobile menu after loading template
+  });
+});
+
+if (mobileScenariosBtn) {
+  mobileScenariosBtn.addEventListener('click', () => {
+    openScenarioModal();
+    closeMobileMenu();
+  });
+}
+
+$('#offeringsBody').addEventListener('input', onTableInput);
+$('#offeringsBody').addEventListener('click', onTableClick);
+
+// Save state when table content changes
+$('#offeringsBody').addEventListener('input', persistState);
+$('#offeringsBody').addEventListener('click', () => setTimeout(persistState, 0));
+
+// Scenario modal wiring
+$('#scenariosBtn').addEventListener('click', openScenarioModal);
+$('#scenariosCloseBtn').addEventListener('click', closeScenarioModal);
+$('#scenariosOverlay').addEventListener('click', closeScenarioModal);
+
+$('#saveScenarioBtn').addEventListener('click', () => {
+  const name = $('#scenarioNameInput').value;
+  saveScenario(name);
+});
+
+// Allow Enter key to save scenario
+$('#scenarioNameInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
     const name = $('#scenarioNameInput').value;
     saveScenario(name);
-  });
+  }
+});
 
-  // Allow Enter key to save scenario
-  $('#scenarioNameInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      const name = $('#scenarioNameInput').value;
-      saveScenario(name);
-    }
-  });
-
-  // Close modal on Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !$('#scenariosModal').classList.contains('hidden')) {
-      closeScenarioModal();
-    }
-  });
+// Close modal on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('#scenariosModal').classList.contains('hidden')) {
+    closeScenarioModal();
+  }
+});
 }
 
 
@@ -3884,18 +3661,7 @@ function renderComparisonResults(metrics1, metrics2) {
     { label: 'Contribution Margin', key: 'contributionMarginPerClient', format: fmtMoney0 },
   ];
 
-  let tableHtml = `
-  < table class="comparison-table" >
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th class="scenario-col">Scenario 1</th>
-            <th class="scenario-col">Scenario 2</th>
-            <th class="difference-col">Difference</th>
-          </tr>
-        </thead>
-        <tbody>
-          `;
+  let tableHtml = '<table class="comparison-table"><thead><tr><th>Metric</th><th class="scenario-col">Scenario 1</th><th class="scenario-col">Scenario 2</th><th class="difference-col">Difference</th></tr></thead><tbody>';
 
   metricsToCompare.forEach(m => {
     const val1 = metrics1[m.key];
@@ -3914,20 +3680,10 @@ function renderComparisonResults(metrics1, metrics2) {
       else if (diff < 0) diffClass = 'difference-negative';
     }
 
-    tableHtml += `
-          <tr>
-            <td class="metric-name">${m.label}</td>
-            <td class="scenario-col">${m.format(val1)}</td>
-            <td class="scenario-col">${m.format(val2)}</td>
-            <td class="difference-col ${diffClass}">${m.format(diff)}</td>
-          </tr>
-          `;
+    tableHtml += '<tr><td class="metric-name">' + m.label + '</td><td class="scenario-col">' + m.format(val1) + '</td><td class="scenario-col">' + m.format(val2) + '</td><td class="difference-col ' + diffClass + '">' + m.format(diff) + '</td></tr>';
   });
 
-  tableHtml += `
-        </tbody>
-      </table >
-  `;
+  tableHtml += '</tbody></table>';
   tableWrap.innerHTML = tableHtml; // Assign to wrapper
   comparisonResultsEl.style.display = 'block';
 }
@@ -4034,7 +3790,7 @@ try {
 } catch (e) {
   console.error('Render failed:', e);
   const dbg = $('#debugPanel');
-  if (dbg) dbg.textContent = `Render error: ${ e && e.stack ? e.stack : String(e) } `;
+  if (dbg) dbg.textContent = 'Render error: ' + (e && e.stack ? e.stack : String(e));
 }
 
 
@@ -4043,7 +3799,7 @@ window.addEventListener('error', (ev) => {
   const dbg = $('#debugPanel');
   const msg = ev?.error?.stack || ev?.message || String(ev);
   console.error('Uncaught error:', ev.error || ev.message || ev);
-  if (dbg) dbg.textContent = `Uncaught error: ${ msg } `;
+  if (dbg) dbg.textContent = 'Uncaught error: ' + msg;
 });
 
 // Debug panel toggle wiring: collapsible panel above the simple chart
@@ -4061,10 +3817,10 @@ function initDebugPanel() {
     try {
       const res = calc();
       pre.textContent = JSON.stringify(res, null, 2);
-      toggle.textContent = `▶ Debug — clients: ${ res.clients || 0 }, revenue: ${ fmtMoney0(res.revenue || 0) } `;
+      toggle.textContent = '▶ Debug — clients: ' + (res.clients || 0) + ', revenue: ' + fmtMoney0(res.revenue || 0);
     } catch (e) {
-      pre.textContent = `Error generating debug: ${ e && e.stack ? e.stack : String(e) } `;
-      toggle.textContent = `▶ Debug — error`;
+      pre.textContent = 'Error generating debug: ' + (e && e.stack ? e.stack : String(e));
+      toggle.textContent = '▶ Debug — error';
     }
   }
 
@@ -4111,19 +3867,19 @@ try {
 }
 
 // Register service worker for PWA functionality
-// TEMPORARILY DISABLED - forcing network CSS loading
+// TEMPORARILY DISABLED-forcing network CSS loading
 /*
 if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
+        window.addEventListener('load', () =>{
           navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
+            .then((registration) =>{
               // Service Worker registered successfully
-
+ 
               // Handle service worker updates
-              registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
+              registration.addEventListener('updatefound', () =>{
+                const newWorker=registration.installing;
                 if (newWorker) {
-                  newWorker.addEventListener('statechange', () => {
+                  newWorker.addEventListener('statechange', () =>{
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                       // New version available
                       if (confirm('A new version of ProfitPath is available. Reload to update?')) {
@@ -4135,7 +3891,7 @@ if ('serviceWorker' in navigator) {
                 }
               });
             })
-            .catch((_error) => {
+            .catch((_error) =>{
               // Service Worker registration failed
             });
         });
@@ -4226,23 +3982,7 @@ function addOnboardingHelpButton() {
 function showWelcomeDialog() {
   const dialog = createOnboardingDialog({
     title: 'Welcome to ProfitPath! 🎉',
-    content: `
-  < div class="welcome-content" >
-        <p>Get started with your profitability analysis in just a few minutes.</p>
-        <p>Would you like a quick guided tour of the key features?</p>
-      </div >
-  <div style="display: flex; gap: 10px; justify-content: center;">
-    <button class="welcome-btn" data-action="tour" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
-      Take Tour
-    </button>
-    <button class="welcome-btn" data-action="industry" style="background: #f8f9fa; color: #333; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-      Choose Industry
-    </button>
-    <button class="welcome-btn" data-action="skip" style="background: transparent; color: #666; border: none; padding: 10px 20px; cursor: pointer;">
-      Skip for Now
-    </button>
-  </div>
-`,
+    content: '<div class="welcome-content"><p>Get started with your profitability analysis in just a few minutes.</p><p>Would you like a quick guided tour of the key features?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="welcome-btn" data-action="tour" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Take Tour</button><button class="welcome-btn" data-action="industry" style="background:#f8f9fa;color:#333;border:1px solid #dee2e6;padding:10px 20px;border-radius:6px;cursor:pointer;">Choose Industry</button><button class="welcome-btn" data-action="skip" style="background:transparent;color:#666;border:none;padding:10px 20px;cursor:pointer;">Skip for Now</button></div>',
     buttons: [] // We'll handle buttons manually
   });
 
@@ -4276,19 +4016,16 @@ function showIndustrySelector() {
     { id: 'other', name: 'Other Service Business', icon: '🏭', description: 'Custom service business setup' }
   ];
 
-  const industryGrid = industries.map(industry => `
-  < div class="industry-option" data - industry="${industry.id}" >
-        <div class="industry-icon" style="font-size: 32px; margin-bottom: 8px;">${industry.icon}</div>
-        <div class="industry-name">${industry.name}</div>
-        <div class="industry-desc">${industry.description}</div>
-      </div >
-  `).join('');
+  const industryGrid = industries.map(industry => '<div class="industry-option" data-industry="' + industry.id + '">' +
+    '<div class="industry-icon" style="font-size:32px;margin-bottom:8px;">' + industry.icon + '</div>' +
+    '<div class="industry-name">' + industry.name + '</div>' +
+    '<div class="industry-desc">' + industry.description + '</div>' +
+    '</div>'
+  ).join('');
 
   const dialog = createOnboardingDialog({
     title: 'What type of service business do you run?',
-    content: `
-  < div class="industry-grid" > ${ industryGrid }</div >
-    <p style="margin-top: 16px; color: var(--muted);">This helps us provide tailored guidance and templates.</p>`,
+    content: '<div class="industry-grid">' + industryGrid + '</div><p style="margin-top:16px;color:var(--muted);">This helps us provide tailored guidance and templates.</p>',
     buttons: [
       { text: 'Continue', action: () => { }, primary: true },
       { text: 'Skip', action: () => { } }
@@ -4320,20 +4057,7 @@ function selectIndustry(industryId, dialog) {
 
   const successDialog = createOnboardingDialog({
     title: 'Great choice! 🎯',
-    content: `
-      < div class="success-content" >
-        <p>We've loaded a template configuration for your industry.</p>
-        <p>Would you like to take a quick tour to learn how to customize it?</p>
-      </div >
-  <div style="display: flex; gap: 10px; justify-content: center;">
-    <button class="success-btn" data-action="tour" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
-      Show Me How
-    </button>
-    <button class="success-btn" data-action="explore" style="background: #f8f9fa; color: #333; border: 1px solid #dee2e6; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-      Explore on My Own
-    </button>
-  </div>
-`,
+    content: '<div class="success-content"><p>We\'ve loaded a template configuration for your industry.</p><p>Would you like to take a quick tour to learn how to customize it?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="success-btn" data-action="tour" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Show Me How</button><button class="success-btn" data-action="explore" style="background:#f8f9fa;color:#333;border:1px solid #dee2e6;padding:10px 20px;border-radius:6px;cursor:pointer;">Explore on My Own</button></div>',
     buttons: [] // We'll handle buttons manually
   });
 
@@ -4523,7 +4247,7 @@ async function showTourStep(stepIndex) {
   }
 
   if (!target) {
-    console.warn(`Tour step ${ stepIndex } target not found: ${ step.target }, skipping...`);
+    console.warn('Tour step ' + stepIndex + ' target not found: ' + step.target + ', skipping...');
     showTourStep(stepIndex + 1);
     return;
   }
@@ -4573,7 +4297,7 @@ function waitForTargetSettled(target, { timeoutMs = 3000, idleMs = 250, stableMs
     }
 
     // After we observe no scroll for idleMs, ensure the element's rect is stable
-    // for `stableMs` milliseconds before resolving. If the element is not near
+    // for stableMs milliseconds before resolving. If the element is not near
     // the center, perform an immediate snap and continue waiting for stability.
     function ensureStableAndResolve() {
       const startTime = Date.now();
@@ -4652,10 +4376,7 @@ function exitTour() {
   // Show exit confirmation
   const exitDialog = createOnboardingDialog({
     title: 'Tour Exited',
-    content: `
-  < p > You can resume the guided tour anytime by clicking the ❓ help button in the top - right corner.</p >
-    <p>Feel free to explore the features at your own pace!</p>
-`,
+    content: '<p>You can resume the guided tour anytime by clicking the ❓ help button in the top-right corner.</p><p>Feel free to explore the features at your own pace!</p>',
     buttons: [
       { text: 'Got it!', action: () => { } }
     ]
@@ -4672,10 +4393,7 @@ function completeTour() {
 
   const completionDialog = createOnboardingDialog({
     title: 'Tour Complete! 🎉',
-    content: `
-  < p > You now know the basics of ProfitPath!</p >
-    <p>Explore the features at your own pace. Use the ❓ help button anytime for guidance.</p>
-`,
+    content: '<p>You now know the basics of ProfitPath!</p><p>Explore the features at your own pace. Use the ❓ help button anytime for guidance.</p>',
     buttons: [
       { text: 'Got it!', action: () => { }, primary: true }
     ]
@@ -4746,26 +4464,10 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
     if (!isMobile) transform = transform.replace('0', '-100%');
   }
 
-  // Create tooltip with final position - no intermediate rendering
+  // Create tooltip with final position-no intermediate rendering
   const tooltip = document.createElement('div');
   tooltip.className = 'onboarding-tooltip';
-  tooltip.style.cssText = `
-position: fixed;
-z - index: 10000;
-background: white;
-border: 2px solid #007bff;
-border - radius: 8px;
-padding: 16px;
-box - shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-max - width: ${ isMobile ? '280px' : '300px' };
-pointer - events: auto;
-font - size: ${ isMobile ? '14px' : '16px' };
-left: ${ left } px;
-top: ${ top } px;
-transform: ${ transform };
-opacity: 0;
-transition: opacity 0.3s ease - out;
-`;
+  tooltip.style.cssText = 'position: fixed;z-index: 10000;background: white;border: 2px solid #007bff;border-radius: 8px;padding: 16px;box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);max-width: ' + (isMobile ? '280px' : '300px') + ';pointer-events: auto;font-size: ' + (isMobile ? '14px' : '16px') + ';left: ' + left + 'px;top: ' + top + 'px;transform: ' + transform + ';opacity: 0;transition: opacity 0.3s ease-out;';
 
   // Append to DOM and fade in from final position
   document.body.appendChild(tooltip);
@@ -4774,28 +4476,9 @@ transition: opacity 0.3s ease - out;
   });
 
   // Create progress dots
-  const progressDots = steps.map((_, index) => `
-  < span class="tour-dot ${index === stepIndex ? 'active' : ''} ${index < stepIndex ? 'completed' : ''}"
-data - step="${index}"
-style = "display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 2px; cursor: pointer; background: ${index === stepIndex ? '#007bff' : index < stepIndex ? '#28a745' : '#ddd'}; transition: all 0.2s;" >
-      </span >
-  `).join('');
+  const progressDots = steps.map((_, index) => '<span class="tour-dot ' + (index === stepIndex ? 'active' : '') + ' ' + (index < stepIndex ? 'completed' : '') + '" data-step="' + index + '" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px;cursor:pointer;background:' + (index === stepIndex ? '#007bff' : index < stepIndex ? '#28a745' : '#ddd') + ';transition:all 0.2s;"></span>').join('');
 
-  tooltip.innerHTML = `
-  < div style = "position: relative; padding-right: 24px;" >
-        <button class="tour-exit-btn" style="position: absolute; top: 0; right: 0; background: transparent; border: none; font-size: 16px; cursor: pointer; color: var(--text, #666); padding: 4px; line-height: 1;">✕</button>
-        <div style="font-weight: bold; margin-bottom: 8px; color: var(--text, #007bff);">${step.title}</div>
-        <div style="margin-bottom: 16px; color: var(--text, #333); line-height: 1.4;">${step.content}</div>
-
-        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px; position: relative;">
-          <div class="tour-navigation" style="display: flex; align-items: center;">
-            ${stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-right: 8px; font-size: 18px; line-height: 1;">‹</button>' : '<div style="width: 32px;"></div>'}
-            <div class="tour-dots" style="display: flex; align-items: center;">${progressDots}</div>
-            ${stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background: #007bff; color: white; border: none; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; font-size: 18px; line-height: 1;">›</button>' : '<button class="tour-finish-btn" style="background: #28a745; color: white; border: none; border-radius: 4px; width: 24px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 8px; font-size: 16px; line-height: 1;">✓</button>'}
-          </div>
-        </div>
-      </div >
-  `;
+  tooltip.innerHTML = '<div style="position:relative;padding-right:24px;"><button class="tour-exit-btn" style="position:absolute;top:0;right:0;background:transparent;border:none;font-size:16px;cursor:pointer;color:var(--text, #666);padding:4px;line-height:1;">✕</button><div style="font-weight:bold;margin-bottom:8px;color:var(--text, #007bff);">' + step.title + '</div><div style="margin-bottom:16px;color:var(--text, #333);line-height:1.4;">' + step.content + '</div><div style="display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;"><div class="tour-navigation" style="display:flex;align-items:center;">' + (stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:18px;line-height:1;">‹</button>' : '<div style="width:32px;"></div>') + '<div class="tour-dots" style="display:flex;align-items:center;">' + progressDots + '</div>' + (stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background:#007bff;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:18px;line-height:1;">›</button>' : '<button class="tour-finish-btn" style="background:#28a745;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:16px;line-height:1;">✓</button>') + '</div></div></div>';
 
   // Add event listeners for navigation
   setTimeout(() => {
@@ -4878,23 +4561,11 @@ style = "display: inline-block; width: 8px; height: 8px; border-radius: 50%; mar
   const computed = window.getComputedStyle(target);
   // If the target has no rounded corners, use a mild default so highlights look rounded
   const parsedBR = parseFloat(computed.borderRadius) || 0;
-  const borderRadius = (parsedBR && parsedBR > 4) ? `${ parsedBR } px` : '10px';
+  const borderRadius = (parsedBR && parsedBR > 4) ? parsedBR + 'px' : '10px';
 
   const overlay = document.createElement('div');
   overlay.className = 'onboarding-overlay';
-  overlay.style.cssText = `
-position: fixed;
-left: ${ rect2.left - OVERLAY_PAD } px;
-top: ${ rect2.top - OVERLAY_PAD } px;
-width: ${ rect2.width + OVERLAY_PAD * 2 } px;
-height: ${ rect2.height + OVERLAY_PAD * 2 } px;
-border: ${ BORDER_THICKNESS }px solid #007bff;
-border - radius: ${ borderRadius };
-box - shadow: 0 8px 32px rgba(0, 123, 255, 0.12);
-pointer - events: none;
-z - index: 9999;
-animation: pulse 2s infinite;
-`;
+  overlay.style.cssText = 'position: fixed;left: ' + (rect2.left - OVERLAY_PAD) + 'px;top: ' + (rect2.top - OVERLAY_PAD) + 'px;width: ' + (rect2.width + OVERLAY_PAD * 2) + 'px;height: ' + (rect2.height + OVERLAY_PAD * 2) + 'px;border: ' + BORDER_THICKNESS + 'px solid #007bff;border-radius: ' + borderRadius + ';box-shadow: 0 8px 32px rgba(0, 123, 255, 0.12);pointer-events: none;z-index: 9999;animation: pulse 2s infinite;';
 
   // Append overlay underneath the tooltip (tooltip uses z-index:10000)
   document.body.appendChild(overlay);
@@ -4922,49 +4593,12 @@ animation: pulse 2s infinite;
 function createOnboardingDialog({ title, content, buttons }) {
   const dialog = document.createElement('div');
   dialog.className = 'onboarding-dialog-overlay';
-  dialog.style.cssText = `
-position: fixed;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-background: rgba(0, 0, 0, 0.6);
-display: flex;
-align - items: center;
-justify - content: center;
-z - index: 10001;
-`;
+  dialog.style.cssText = 'position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(0, 0, 0, 0.6);display: flex;align-items: center;justify-content: center;z-index: 10001;';
 
   const dialogContent = document.createElement('div');
-  dialogContent.style.cssText = `
-background: white;
-border - radius: 12px;
-padding: 24px;
-max - width: 500px;
-width: 90 %;
-box - shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-`;
+  dialogContent.style.cssText = 'background: white;border-radius: 12px;padding: 24px;max-width: 500px;width: 90%;box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);';
 
-  dialogContent.innerHTML = `
-  < h2 style = "margin: 0 0 16px 0; color: var(--text, #333); font-size: 24px;" > ${ title }</h2 >
-      <div style="color: var(--text, #666); line-height: 1.5;">${content}</div>
-      <div style="margin-top: 24px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;">
-        ${buttons.map((btn, index) => `
-        <button class="dialog-btn" data-action="${index}" data-primary="${btn.primary ? 'true' : 'false'}"
-                style="
-                  padding: 8px 16px;
-                  border: ${btn.primary ? 'none' : '1px solid #ddd'};
-                  border-radius: 6px;
-                  background: ${btn.primary ? '#007bff' : 'white'};
-                  color: ${btn.primary ? 'white' : '#333'};
-                  cursor: pointer;
-                  font-weight: ${btn.primary ? 'bold' : 'normal'};
-                ">
-          ${btn.text}
-        </button>
-      `).join('')}
-      </div>
-`;
+  dialogContent.innerHTML = '<h2 style="margin:0 0 16px 0;color:var(--text, #333);font-size:24px;">' + title + '</h2><div style="color:var(--text, #666);line-height:1.5;">' + content + '</div><div style="margin-top:24px;text-align:right;display:flex;gap:8px;justify-content:flex-end;">' + buttons.map((btn, index) => '<button class="dialog-btn" data-action="' + index + '" data-primary="' + (btn.primary ? 'true' : 'false') + '" style="padding:8px 16px;border:' + (btn.primary ? 'none' : '1px solid #ddd') + ';border-radius:6px;background:' + (btn.primary ? '#007bff' : 'white') + ';color:' + (btn.primary ? 'white' : '#333') + ';cursor:pointer;font-weight:' + (btn.primary ? 'bold' : 'normal') + ';">' + btn.text + '</button>').join('') + '</div>';
 
   // Add event listeners for dialog buttons
   setTimeout(() => {
@@ -4987,27 +4621,7 @@ box - shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 function showHelpMenu() {
   const helpDialog = createOnboardingDialog({
     title: 'Help & Learning Center',
-    content: `
-  < div style = "display: grid; gap: 12px;" >
-        <button class="help-menu-btn" data-action="tour"
-          style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
-          🎯 <strong>Take Guided Tour</strong><br>
-            <small>Step-by-step walkthrough of key features</small>
-        </button>
-
-        <button class="help-menu-btn" data-action="industry"
-          style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
-          🏢 <strong>Change Industry</strong><br>
-            <small>Switch to a different business template</small>
-        </button>
-
-        <button class="help-menu-btn" data-action="tooltips"
-          style="display: block; width: 100%; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; text-align: left; cursor: pointer;">
-          💡 <strong>Show Tooltips</strong><br>
-            <small>Enable contextual help throughout the app</small>
-        </button>
-      </div >
-  `,
+    content: '<div style="display:grid;gap:12px;"><button class="help-menu-btn" data-action="tour" style="display:block;width:100%;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;text-align:left;cursor:pointer;">🎯 <strong>Take Guided Tour</strong><br><small>Step-by-step walkthrough of key features</small></button><button class="help-menu-btn" data-action="industry" style="display:block;width:100%;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;text-align:left;cursor:pointer;">🏢 <strong>Change Industry</strong><br><small>Switch to a different business template</small></button><button class="help-menu-btn" data-action="tooltips" style="display:block;width:100%;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;text-align:left;cursor:pointer;">💡 <strong>Show Tooltips</strong><br><small>Enable contextual help throughout the app</small></button></div>',
     buttons: [
       { text: 'Close', action: () => { } }
     ]
@@ -5077,20 +4691,41 @@ function showContextualHelp() {
   // Show confirmation
   const notification = document.createElement('div');
   notification.textContent = 'Contextual tooltips enabled! Hover over elements to see help.';
-  notification.style.cssText = `
-position: fixed;
-top: 20px;
-left: 50 %;
-transform: translateX(-50 %);
-background: var(--accent, #007bff);
-color: white;
-padding: 10px 20px;
-border - radius: 6px;
-z - index: 10002;
-font - size: 14px;
-`;
+  notification.style.cssText = 'position: fixed;top: 20px;left: 50%;transform: translateX(-50%);background: var(--accent, #007bff);color: white;padding: 10px 20px;border-radius: 6px;z-index: 10002;font-size: 14px;';
   document.body.appendChild(notification);
   setTimeout(() => notification.remove(), 3000);
+}
+
+// Auto-start tour on first visit
+function checkAndStartTour() {
+  const tourCompleted = localStorage.getItem('tourCompleted');
+  const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+
+  // Only start tour if user hasn't completed it and hasn't seen onboarding
+  if (!tourCompleted && !hasSeenOnboarding) {
+    // Wait a bit for page to load
+    setTimeout(() => {
+      if (typeof startTour === 'function') {
+        startTour();
+      }
+    }, 1500);
+  }
+}
+
+// Initialize app when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
+}
+
+function initializeApp() {
+  // Check and start tour if needed
+  checkAndStartTour();
+
+  // Rest of initialization...
+  render();
+  setupEventListeners();
 }
 
 function showEnhancedTooltip(e) {
@@ -5100,24 +4735,13 @@ function showEnhancedTooltip(e) {
   const tooltip = document.createElement('div');
   tooltip.className = 'enhanced-tooltip';
   tooltip.textContent = content;
-  tooltip.style.cssText = `
-position: fixed;
-background: #333;
-color: white;
-padding: 8px 12px;
-border - radius: 4px;
-font - size: 12px;
-z - index: 10002;
-pointer - events: none;
-max - width: 200px;
-word - wrap: break-word;
-`;
+  tooltip.style.cssText = 'position: fixed;background: #333;color: white;padding: 8px 12px;border-radius: 4px;font-size: 12px;z-index: 10002;pointer-events: none;max-width: 200px;word-wrap: break-word;';
 
   document.body.appendChild(tooltip);
 
   const rect = e.target.getBoundingClientRect();
-  tooltip.style.left = `${ rect.left + rect.width / 2 } px`;
-  tooltip.style.top = `${ rect.top - 8 } px`;
+  tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+  tooltip.style.top = (rect.top - 8) + 'px';
   tooltip.style.transform = 'translate(-50%, -100%)';
 
   e.target._tooltip = tooltip;
@@ -5149,15 +4773,11 @@ function initializeProgressiveDisclosure() {
     el.style.display = 'block';
   });
 
-  // Special handling for debug panel - show if user has enabled it regardless of level
+  // Special handling for debug panel-show if user has enabled it regardless of level
   const showDebugPanel = localStorage.getItem('showDebugPanel') === 'true';
   if (showDebugPanel) {
     document.querySelectorAll('.debug-wrapper.expert-feature').forEach(el => {
       el.style.display = 'block';
     });
   }
-  // Advanced users see everything
 }
-
-// Initialize onboarding system (after all functions are defined)
-initializeOnboarding();

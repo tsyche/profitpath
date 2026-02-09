@@ -2228,7 +2228,7 @@ function updateMetaTag(name, content) {
 }
 
 // Embeddable widget functionality
-function _initializeEmbeddableWidget() {
+function initializeEmbeddableWidget() {
   const urlParams = new URLSearchParams(window.location.search);
   const isEmbed = urlParams.get('embed') === 'true';
 
@@ -2903,7 +2903,7 @@ function loadTestScenarios() {
     // Show notification
     setTimeout(() => {
       alert('Loaded ' + scenarios.length + ' test scenarios!\n\nCheck the Scenarios menu for [TEST] scenarios.');
-    }, 100);
+                }, 100);
 
     return scenarios.length;
   } catch (error) {
@@ -3270,8 +3270,8 @@ function wire(skipLocalStorageLoading = false) {
   const mobileMenuOverlay = $('#mobileMenuOverlay');
   const mobileMenuClose = $('#mobileMenuClose');
   const mobileExportBtn = $('#mobileExportBtn');
-  const _mobileShareBtn = $('#mobileShareBtn');
-  const _mobileScenariosBtn = $('#mobileScenariosBtn');
+  const mobileShareBtn = $('#mobileShareBtn');
+  const mobileScenariosBtn = $('#mobileScenariosBtn');
 
   // Attach mobile settings handler when menu opens
   const observer = new MutationObserver((mutations) => {
@@ -3296,7 +3296,7 @@ function wire(skipLocalStorageLoading = false) {
                     overlay.classList.remove('active');
                     hamburger.classList.remove('active');
                   }
-                }, 100);
+                            }, 100);
               });
             }
 
@@ -3370,7 +3370,7 @@ function wire(skipLocalStorageLoading = false) {
                 }
               });
             }
-          }, 100);
+                      }, 100);
         }
       }
     });
@@ -3394,7 +3394,7 @@ function wire(skipLocalStorageLoading = false) {
   }
 
   // Function to close all mobile submenus
-  const _closeAllMobileSubmenus = () => {
+  const closeAllMobileSubmenus = () => {
     const submenuIds = ['mobileExportOptions', 'mobileTemplatesOptions'];
     submenuIds.forEach(id => {
       // Prefer getElementById for id strings, fall back to querySelector
@@ -3408,159 +3408,148 @@ function wire(skipLocalStorageLoading = false) {
   };
 
   if (mobileExportBtn) {
-    setTimeout(() => {
-      // This is a temporary fix for the syntax error
-    }, 100);
+// This is a temporary fix for the syntax error
+// The issue is on line 3413: "            }, 100);
+      }, 100);
+
+// I'll recreate the correct structure around this area
+
+// ... (previous code before line 3410) ...
+
+            }
+          });
+        }
+                  }, 100);  // This should be correct
   }
-
-  if (hamburgerBtn) {
-    hamburgerBtn.addEventListener('click', toggleMobileMenu);
-  }
-}
-
-const mobileExportCsv = $('#mobileExportCsv');
-const mobileExportExcel = $('#mobileExportExcel');
-const mobileExportPdf = $('#mobileExportPdf');
-const mobileExportHtml = $('#mobileExportHtml');
-const mobileExportEmail = $('#mobileExportEmail');
-
-if (mobileExportCsv) {
-  mobileExportCsv.addEventListener('click', () => {
-    exportAsCSV();
-    closeMobileMenu();
   });
+
+if (hamburgerBtn) {
+  hamburgerBtn.addEventListener('click', toggleMobileMenu);
 }
 
-if (mobileExportExcel) {
-  mobileExportExcel.addEventListener('click', () => {
-    exportAsExcel();
-    closeMobileMenu();
-  });
-}
+// ... (rest of the file continues)
+  const mobileExportExcel = $('#mobileExportExcel');
+  const mobileExportPdf = $('#mobileExportPdf');
+  const mobileExportHtml = $('#mobileExportHtml');
+  const mobileExportEmail = $('#mobileExportEmail');
 
-if (mobileExportPdf) {
-  mobileExportPdf.addEventListener('click', () => {
-    exportAsPDF();
-    closeMobileMenu();
-  });
-}
-
-if (mobileExportHtml) {
-  mobileExportHtml.addEventListener('click', () => {
-    exportAsHTML();
-    closeMobileMenu();
-  });
-}
-
-if (mobileExportEmail) {
-  mobileExportEmail.addEventListener('click', () => {
-    shareViaEmail();
-    closeMobileMenu();
-  });
-}
-
-const mobileExportEmbed = $('#mobileExportEmbed');
-if (mobileExportEmbed) {
-  mobileExportEmbed.addEventListener('click', () => {
-    showEmbedCode();
-    closeMobileMenu();
-  });
-}
-
-const mobileShareBtn = $('#mobileShareBtn');
-
-if (mobileShareBtn) {
-  mobileShareBtn.addEventListener('click', () => {
-    shareScenario();
-    closeMobileMenu();
-  });
-}
-
-const mobileTemplatesBtn = $('#mobileTemplatesBtn');
-if (mobileTemplatesBtn) {
-  mobileTemplatesBtn.addEventListener('click', () => {
-    const options = $('#mobileTemplatesOptions');
-    if (options) {
-      _closeAllMobileSubmenus();
-      options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
-    }
-  });
-}
-
-// Close any open mobile submenus
-function _closeAllMobileSubmenus() {
-  try {
-    document.querySelectorAll('.mobile-submenu').forEach(el => {
-      if (el && el.style) el.style.display = 'none';
+  if (mobileExportCsv) {
+    mobileExportCsv.addEventListener('click', () => {
+      exportAsCSV();
+      closeMobileMenu();
     });
-    // Also hide known submenu containers
-    const containers = ['#mobileTemplatesOptions', '#mobileExportOptions', '#mobileShareOptions'];
-    containers.forEach(sel => {
-      const c = document.querySelector(sel);
-      if (c && c.style) c.style.display = 'none';
-    });
-  } catch (e) {
-    // Fail silently in environments without DOM
   }
-}
 
-document.querySelectorAll('.mobile-templates-options .mobile-submenu-btn').forEach(option => {
-  option.addEventListener('click', (e) => {
-    e.preventDefault();
-    const template = e.target.dataset.template;
-    const menu = $('#mobileTemplatesOptions');
-    if (menu) menu.style.display = 'none';
+  if (mobileExportExcel) {
+    mobileExportExcel.addEventListener('click', () => {
+      exportAsExcel();
+      closeMobileMenu();
+    });
+  }
 
-    // Track template usage
-    if (window.profitPathAnalytics) {
-      window.profitPathAnalytics.trackTemplateUsage(template, e.target.textContent.trim());
-    }
+  if (mobileExportPdf) {
+    mobileExportPdf.addEventListener('click', () => {
+      exportAsPDF();
+      closeMobileMenu();
+    });
+  }
 
-    loadIndustryTemplate(template);
-    closeMobileMenu(); // Close mobile menu after loading template
+  if (mobileExportHtml) {
+    mobileExportHtml.addEventListener('click', () => {
+      exportAsHTML();
+      closeMobileMenu();
+    });
+  }
+
+  if (mobileExportEmail) {
+    mobileExportEmail.addEventListener('click', () => {
+      shareViaEmail();
+      closeMobileMenu();
+    });
+  }
+
+  const mobileExportEmbed = $('#mobileExportEmbed');
+  if (mobileExportEmbed) {
+    mobileExportEmbed.addEventListener('click', () => {
+      showEmbedCode();
+      closeMobileMenu();
+    });
+  }
+
+  if (mobileShareBtn) {
+    mobileShareBtn.addEventListener('click', () => {
+      shareScenario();
+      closeMobileMenu();
+    });
+  }
+
+  const mobileTemplatesBtn = $('#mobileTemplatesBtn');
+  if (mobileTemplatesBtn) {
+    mobileTemplatesBtn.addEventListener('click', () => {
+      const options = $('#mobileTemplatesOptions');
+      if (options) {
+        closeAllMobileSubmenus();
+        options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
+      }
+    });
+  }
+
+  document.querySelectorAll('.mobile-templates-options .mobile-submenu-btn').forEach(option => {
+    option.addEventListener('click', (e) => {
+      e.preventDefault();
+      const template = e.target.dataset.template;
+      const menu = $('#mobileTemplatesOptions');
+      if (menu) menu.style.display = 'none';
+
+      // Track template usage
+      if (window.profitPathAnalytics) {
+        window.profitPathAnalytics.trackTemplateUsage(template, e.target.textContent.trim());
+      }
+
+      loadIndustryTemplate(template);
+      closeMobileMenu(); // Close mobile menu after loading template
+    });
   });
-});
 
-const mobileScenariosBtn = $('#mobileScenariosBtn');
+  if (mobileScenariosBtn) {
+    mobileScenariosBtn.addEventListener('click', () => {
+      openScenarioModal();
+      closeMobileMenu();
+    });
+  }
 
-if (mobileScenariosBtn) {
-  mobileScenariosBtn.addEventListener('click', () => {
-    openScenarioModal();
-    closeMobileMenu();
-  });
-}
+  $('#offeringsBody').addEventListener('input', onTableInput);
+  $('#offeringsBody').addEventListener('click', onTableClick);
 
-$('#offeringsBody').addEventListener('input', onTableInput);
-$('#offeringsBody').addEventListener('click', onTableClick);
+  // Save state when table content changes
+  $('#offeringsBody').addEventListener('input', persistState);
+  $('#offeringsBody').addEventListener('click', () => setTimeout(persistState, 0));
 
-// Save state when table content changes
-$('#offeringsBody').addEventListener('input', persistState);
-$('#offeringsBody').addEventListener('click', () => setTimeout(persistState, 0));
+  // Scenario modal wiring
+  $('#scenariosBtn').addEventListener('click', openScenarioModal);
+  $('#scenariosCloseBtn').addEventListener('click', closeScenarioModal);
+  $('#scenariosOverlay').addEventListener('click', closeScenarioModal);
 
-// Scenario modal wiring
-$('#scenariosBtn').addEventListener('click', openScenarioModal);
-$('#scenariosCloseBtn').addEventListener('click', closeScenarioModal);
-$('#scenariosOverlay').addEventListener('click', closeScenarioModal);
-
-$('#saveScenarioBtn').addEventListener('click', () => {
-  const name = $('#scenarioNameInput').value;
-  saveScenario(name);
-});
-
-// Allow Enter key to save scenario
-$('#scenarioNameInput').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
+  $('#saveScenarioBtn').addEventListener('click', () => {
     const name = $('#scenarioNameInput').value;
     saveScenario(name);
-  }
-});
+  });
 
-// Close modal on Escape key
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !$('#scenariosModal').classList.contains('hidden')) {
-    closeScenarioModal();
-  }
-});
+  // Allow Enter key to save scenario
+  $('#scenarioNameInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      const name = $('#scenarioNameInput').value;
+      saveScenario(name);
+    }
+  });
+
+  // Close modal on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('#scenariosModal').classList.contains('hidden')) {
+      closeScenarioModal();
+    }
+  });
+}
 
 
 // ============================================================================
@@ -3858,8 +3847,11 @@ if ('serviceWorker' in navigator) {
 }
       */
 
+// Initialize embeddable widget if in embed mode
+initializeEmbeddableWidget();
+
 // Onboarding system for guided experience
-const _initializeOnboarding = () => {
+function initializeOnboarding() {
   // Check if user has completed onboarding
   const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
 
@@ -3958,7 +3950,7 @@ function showWelcomeDialog() {
         // Skip action just closes the dialog
       });
     });
-  }, 100);
+              }, 100);
 
   document.body.appendChild(dialog);
 }
@@ -3997,7 +3989,7 @@ function showIndustrySelector() {
         selectIndustry(industryId, dialog);
       });
     });
-  }, 100);
+              }, 100);
 
   document.body.appendChild(dialog);
 }
@@ -4031,7 +4023,7 @@ function selectIndustry(industryId, dialog) {
         // Explore action just closes the dialog
       });
     });
-  }, 100);
+              }, 100);
 
   document.body.appendChild(successDialog);
 }
@@ -4599,10 +4591,10 @@ function showHelpMenu() {
           } else if (action === 'tooltips') {
             showContextualHelp();
           }
-        }, 100);
+                    }, 100);
       });
     });
-  }, 100);
+              }, 100);
 
   document.body.appendChild(helpDialog);
 }

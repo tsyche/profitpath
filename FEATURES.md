@@ -26,6 +26,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Social Media Sharing**: Open Graph and Twitter Card support for rich previews
 - **Industry Templates**: Pre-built configurations for common business types (consulting, cleaning, landscaping, etc.)
 - **Scenario Comparison**: Side-by-side comparison of saved scenarios with key metrics and differences
+- **Analytics Tracking**: Background usage tracking for admin analysis (currently user-facing - needs refactor to admin-only with opt-out)
 
 ## Advanced Features
 
@@ -50,22 +51,25 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Experience Levels**: Beginner, Intermediate, and Advanced user modes with appropriate feature sets
 	- See `docs/experience-levels.md` for a full mapping of which features are visible at each level and guidance for maintainers.
 - **Feature Gating**: Advanced features unlocked via settings panel for power users
-- **Guided Onboarding**: Interactive walkthrough for new users with step-by-step guidance
+- **Guided Onboarding**: Interactive walkthrough for new users with step-by-step guidance (currently not auto-starting on first run - needs fix)
 - **Industry Setup Wizards**: Tailored configuration wizards for different business types (consulting, cleaning, landscaping, fitness, photography)
 - **Contextual Help Tooltips**: Smart tooltips that appear on hover to explain features
-- **Help Center**: Comprehensive help system accessible via ❓ button in header
+- **Help Center**: Comprehensive help system accessible via ❓ button in header (currently not functional - needs fix)
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices
 - **Interactive Charts**: Hover tooltips, pinnable legends, detailed breakdowns
-- **Mobile Hamburger Menu**: Full feature access on mobile devices with intuitive navigation, consistent icons, and auto-collapsing submenus
+- **Mobile Hamburger Menu**: Full feature access on mobile devices (currently has scrolling and icon placement issues - needs fix)
 - **Accessibility**: Keyboard navigation, screen reader support, high contrast options
+- **Feedback System**: User feedback collection (currently missing modal and submission - needs implementation)
 
 ### Developer Features
-- **Modern Development Stack**: Vite for fast development and optimized builds
-- **Comprehensive Testing**: Vitest unit tests with jsdom environment and testing utilities
+- **Modern Development Stack**: Vite for fast development and optimized builds with JSX support
+- **Comprehensive Testing**: Vitest unit tests with jsdom environment (111 tests passing)
+- **Syntax Validation**: Dedicated syntax test to prevent parsing errors and regressions
 - **Code Quality**: ESLint configuration with automated linting and CI integration
 - **Debug Panel**: Built-in developer tools for testing and debugging
 - **CI/CD Pipeline**: Automated testing, linting, and quality checks
 - **Comprehensive Documentation**: API reference, architecture guide, contribution guidelines
+- **Error-Free Development**: All template literals and syntax issues resolved
 
 ## How to Use
 

@@ -2228,7 +2228,7 @@ function updateMetaTag(name, content) {
 }
 
 // Embeddable widget functionality
-function _initializeEmbeddableWidget() {
+function initializeEmbeddableWidget() {
   const urlParams = new URLSearchParams(window.location.search);
   const isEmbed = urlParams.get('embed') === 'true';
 
@@ -3224,6 +3224,26 @@ function wire(skipLocalStorageLoading = false) {
       document.querySelectorAll('.export-dropdown').forEach(d => d.classList.remove('active'));
     }
 
+    // Add desktop feedback button handler
+    const desktopFeedbackBtn = $('#desktopFeedbackBtn');
+    if (desktopFeedbackBtn && !desktopFeedbackBtn._feedbackHandlerAttached) {
+      desktopFeedbackBtn._feedbackHandlerAttached = true;
+      desktopFeedbackBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showFeedbackModal();
+      });
+    }
+
+    // Add analytics button handler
+    const analyticsBtn = $('#analyticsBtn');
+    if (analyticsBtn && !analyticsBtn._analyticsHandlerAttached) {
+      analyticsBtn._analyticsHandlerAttached = true;
+      analyticsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Analytics dashboard coming soon! This feature tracks usage patterns to improve the app.');
+      });
+    }
+
     // Close settings dropdown
     if (!e.target.closest('.settings-dropdown') && !e.target.closest('#settingsCogBtn')) {
       document.querySelectorAll('.settings-dropdown').forEach(d => d.classList.remove('active'));
@@ -3270,8 +3290,8 @@ function wire(skipLocalStorageLoading = false) {
   const mobileMenuOverlay = $('#mobileMenuOverlay');
   const mobileMenuClose = $('#mobileMenuClose');
   const mobileExportBtn = $('#mobileExportBtn');
-  const _mobileShareBtn = $('#mobileShareBtn');
-  const _mobileScenariosBtn = $('#mobileScenariosBtn');
+  const mobileShareBtn = $('#mobileShareBtn');
+  const mobileScenariosBtn = $('#mobileScenariosBtn');
 
   // Attach mobile settings handler when menu opens
   const observer = new MutationObserver((mutations) => {
@@ -3301,6 +3321,9 @@ function wire(skipLocalStorageLoading = false) {
             }
 
             const mobileSettingsBtn = $('#mobileSettingsBtn');
+            const mobileHelpBtn = $('#mobileHelpBtn');
+            const mobileFeedbackBtn = $('#mobileFeedbackBtn');
+
             if (mobileSettingsBtn && !mobileSettingsBtn._settingsHandlerAttached) {
               mobileSettingsBtn._settingsHandlerAttached = true;
               mobileSettingsBtn.addEventListener('click', (e) => {
@@ -3348,76 +3371,113 @@ function wire(skipLocalStorageLoading = false) {
                   const experienceRadios = settingsSection.querySelectorAll('input[name="mobileExperienceLevel"]');
                   experienceRadios.forEach(radio => {
                     radio.checked = radio.value === settings.experienceLevel;
-                    radio.addEventListener('change', (e) => {
-                      if (setExperienceLevel) setExperienceLevel(e.target.value);
-                      if (updateUIForSettings) updateUIForSettings();
-                      // Refresh mobile checkboxes to reflect new feature gates
-                      setTimeout(refreshMobileCheckboxes, 10);
-                      // Desktop settings will be refreshed automatically via settingsChanged event
-                    });
                   });
 
-                  const checkboxes = settingsSection.querySelectorAll('input[type="checkbox"]');
-                  checkboxes.forEach(checkbox => {
-                    const settingKey = checkbox.id.replace('mobile', '').replace(/^\w/, c => c.toLowerCase());
-                    checkbox.checked = settings[settingKey];
-                    checkbox.addEventListener('change', (e) => {
-                      if (updateSetting) updateSetting(settingKey, e.target.checked);
-                      if (updateUIForSettings) updateUIForSettings();
-                      // Desktop settings will be refreshed automatically via settingsChanged event
+                  // Add mobile help button handler
+                  if (mobileHelpBtn && !mobileHelpBtn._helpHandlerAttached) {
+                    mobileHelpBtn._helpHandlerAttached = true;
+                    mobileHelpBtn.addEventListener('click', (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      closeMobileMenu();
+                      showHelpMenu();
                     });
-                  });
+                  }
+
+                  // Add mobile feedback button handler
+                  if (mobileFeedbackBtn && !mobileFeedbackBtn._feedbackHandlerAttached) {
+                    mobileFeedbackBtn._feedbackHandlerAttached = true;
+                    mobileFeedbackBtn.addEventListener('click', (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      closeMobileMenu();
+                      showFeedbackModal();
+                    });
+                  }
                 }
+
+                const checkboxes = settingsSection.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                  const settingKey = checkbox.id.replace('mobile', '').replace(/^\w/, c => c.toLowerCase());
+                  checkbox.checked = settings[settingKey];
+                  checkbox.addEventListener('change', (e) => {
+                    if (updateSetting) updateSetting(settingKey, e.target.checked);
+                    if (updateUIForSettings) updateUIForSettings();
+                    // Desktop settings will be refreshed automatically via settingsChanged event
+                  });
+                });
               });
             }
-          }, 100);
+          });
         }
-      }
-    });
+      }, 100);
+  }
   });
-  observer.observe(mobileMenuOverlay, { attributes: true, attributeFilter: ['class'] });
 
-  if (hamburgerBtn) {
-    hamburgerBtn.addEventListener('click', toggleMobileMenu);
-  }
+if (hamburgerBtn) {
+  hamburgerBtn.addEventListener('click', toggleMobileMenu);
+}
+if (mobileMenuClose) {
+  mobileMenuClose.addEventListener('click', closeMobileMenu);
+}
 
-  if (mobileMenuOverlay) {
-    mobileMenuOverlay.addEventListener('click', (e) => {
-      if (e.target === mobileMenuOverlay) {
-        closeMobileMenu();
-      }
-    });
-  }
+// ============================================================================
+// SCENARIO COMPARISON SYSTEM
+// ============================================================================
 
-  if (mobileMenuClose) {
-    mobileMenuClose.addEventListener('click', closeMobileMenu);
-  }
-
-  // Function to close all mobile submenus
-  const _closeAllMobileSubmenus = () => {
-    const submenuIds = ['mobileExportOptions', 'mobileTemplatesOptions'];
-    submenuIds.forEach(id => {
-      // Prefer getElementById for id strings, fall back to querySelector
-      const submenu = document.getElementById(id) || document.querySelector('#' + id) || document.querySelector('.' + id);
-      if (submenu) submenu.style.display = 'none';
-    });
-
-    // Also collapse any inline settings section inserted into the mobile menu
-    const settingsSection = document.querySelector('.mobile-menu .settings-section');
-    if (settingsSection) settingsSection.style.display = 'none';
-  };
-
-  if (mobileExportBtn) {
-    setTimeout(() => {
-      // This is a temporary fix for the syntax error
-    }, 100);
-  }
-
-  if (hamburgerBtn) {
-    hamburgerBtn.addEventListener('click', toggleMobileMenu);
+// Helper to get selected scenario IDs from dropdowns
+function getSelectedComparisonScenarios() {
+  const scenario1Id = $('#compareScenario1').value;
+  const scenario2Id = $('#compareScenario2').value;
+  return { scenario1Id, scenario2Id };
+}
+textarea.value = '';
+    }
   }
 }
 
+// Function to submit feedback
+function submitFeedback() {
+  const textarea = document.getElementById('feedbackText');
+  const feedbackText = textarea ? textarea.value.trim() : '';
+
+  if (!feedbackText) {
+    alert('Please enter your feedback before submitting.');
+    return;
+  }
+
+  // Here you would normally send to your backend
+  console.log('Feedback submitted:', feedbackText);
+  alert('Thank you for your feedback! We appreciate your input.');
+
+  closeFeedbackModal();
+}
+
+// Function to close all mobile submenus
+const closeAllMobileSubmenus = () => {
+  const submenuIds = ['mobileExportOptions', 'mobileTemplatesOptions'];
+  submenuIds.forEach(id => {
+    // Prefer getElementById for id strings, fall back to querySelector
+    const submenu = document.getElementById(id) || document.querySelector('#' + id) || document.querySelector('.' + id);
+    if (submenu) submenu.style.display = 'none';
+  });
+
+  // Also collapse any inline settings section inserted into the mobile menu
+  const settingsSection = document.querySelector('.mobile-menu .settings-section');
+  if (settingsSection) settingsSection.style.display = 'none';
+};
+
+if (mobileExportBtn) {
+  mobileExportBtn.addEventListener('click', () => {
+    const options = $('#mobileExportOptions');
+    if (options) {
+      closeAllMobileSubmenus();
+      options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
+    }
+  });
+}
+
+// Mobile export option handlers
 const mobileExportCsv = $('#mobileExportCsv');
 const mobileExportExcel = $('#mobileExportExcel');
 const mobileExportPdf = $('#mobileExportPdf');
@@ -3467,8 +3527,6 @@ if (mobileExportEmbed) {
   });
 }
 
-const mobileShareBtn = $('#mobileShareBtn');
-
 if (mobileShareBtn) {
   mobileShareBtn.addEventListener('click', () => {
     shareScenario();
@@ -3481,27 +3539,10 @@ if (mobileTemplatesBtn) {
   mobileTemplatesBtn.addEventListener('click', () => {
     const options = $('#mobileTemplatesOptions');
     if (options) {
-      _closeAllMobileSubmenus();
+      closeAllMobileSubmenus();
       options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
     }
   });
-}
-
-// Close any open mobile submenus
-function _closeAllMobileSubmenus() {
-  try {
-    document.querySelectorAll('.mobile-submenu').forEach(el => {
-      if (el && el.style) el.style.display = 'none';
-    });
-    // Also hide known submenu containers
-    const containers = ['#mobileTemplatesOptions', '#mobileExportOptions', '#mobileShareOptions'];
-    containers.forEach(sel => {
-      const c = document.querySelector(sel);
-      if (c && c.style) c.style.display = 'none';
-    });
-  } catch (e) {
-    // Fail silently in environments without DOM
-  }
 }
 
 document.querySelectorAll('.mobile-templates-options .mobile-submenu-btn').forEach(option => {
@@ -3520,8 +3561,6 @@ document.querySelectorAll('.mobile-templates-options .mobile-submenu-btn').forEa
     closeMobileMenu(); // Close mobile menu after loading template
   });
 });
-
-const mobileScenariosBtn = $('#mobileScenariosBtn');
 
 if (mobileScenariosBtn) {
   mobileScenariosBtn.addEventListener('click', () => {
@@ -3561,6 +3600,7 @@ document.addEventListener('keydown', (e) => {
     closeScenarioModal();
   }
 });
+}
 
 
 // ============================================================================
@@ -3858,8 +3898,11 @@ if ('serviceWorker' in navigator) {
 }
       */
 
+// Initialize embeddable widget if in embed mode
+initializeEmbeddableWidget();
+
 // Onboarding system for guided experience
-const _initializeOnboarding = () => {
+function initializeOnboarding() {
   // Check if user has completed onboarding
   const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
 
@@ -4653,6 +4696,38 @@ function showContextualHelp() {
   setTimeout(() => notification.remove(), 3000);
 }
 
+// Auto-start tour on first visit
+function checkAndStartTour() {
+  const tourCompleted = localStorage.getItem('tourCompleted');
+  const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+
+  // Only start tour if user hasn't completed it and hasn't seen onboarding
+  if (!tourCompleted && !hasSeenOnboarding) {
+    // Wait a bit for page to load
+    setTimeout(() => {
+      if (typeof startTour === 'function') {
+        startTour();
+      }
+    }, 1500);
+  }
+}
+
+// Initialize app when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
+}
+
+function initializeApp() {
+  // Check and start tour if needed
+  checkAndStartTour();
+
+  // Rest of initialization...
+  render();
+  setupEventListeners();
+}
+
 function showEnhancedTooltip(e) {
   const content = e.target.dataset.originalTitle;
   if (!content) return;
@@ -4691,7 +4766,6 @@ function initializeProgressiveDisclosure() {
     expertElements.forEach(el => el.style.display = 'none');
   } else if (userLevel === 'intermediate') {
     expertElements.forEach(el => el.style.display = 'none');
-  }
 
   // Always show all export options regardless of user level
   document.querySelectorAll('.export-option.advanced-feature, .export-option.expert-feature, .mobile-submenu-btn.expert-feature').forEach(el => {
@@ -4704,5 +4778,3 @@ function initializeProgressiveDisclosure() {
     document.querySelectorAll('.debug-wrapper.expert-feature').forEach(el => {
       el.style.display = 'block';
     });
-  }
-}
