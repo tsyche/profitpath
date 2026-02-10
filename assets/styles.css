@@ -474,13 +474,13 @@ body, html {
 
 .right-icons button:hover{background:var(--accent); color:#fff}
 
-/* Hide desktop badge on mobile */
+/* Hide desktop badge and right-icons on mobile */
 @media (max-width: 768px) {
   .header .badge-container {
     display: none;
   }
-  /* Ensure right-icons remain visible on mobile and sit left of the hamburger */
-  .right-icons{display:flex}
+  /* Hide right-icons on mobile since they're now in hamburger menu */
+  .right-icons{display:none}
 }
 
 .grid{

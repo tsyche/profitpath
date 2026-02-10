@@ -3005,14 +3005,16 @@ function wire(skipLocalStorageLoading = false) {
     templatesBtn.addEventListener('click', (e) => {
       e.preventDefault();
       const dropdown = templatesBtn.closest('.templates-dropdown');
-      if (!dropdown) return;
-      // If this dropdown is already active, just close it
-      if (dropdown.classList.contains('active')) {
-        dropdown.classList.remove('active');
+      const menu = $('#templatesMenu');
+      if (!dropdown || !menu) return;
+
+      // If this menu is already active, just close it
+      if (menu.style.display === 'block') {
+        menu.style.display = 'none';
       } else {
         // Close other dropdowns and open this one
         closeAllDropdowns();
-        dropdown.classList.add('active');
+        menu.style.display = 'block';
       }
     });
   }
@@ -3107,6 +3109,15 @@ function wire(skipLocalStorageLoading = false) {
     document.querySelectorAll('.settings-dropdown').forEach(d => d.classList.remove('active'));
     document.querySelectorAll('.templates-dropdown').forEach(d => d.classList.remove('active'));
     document.querySelectorAll('.export-dropdown').forEach(d => d.classList.remove('active'));
+    // Also close templates and export menus
+    const templatesMenu = $('#templatesMenu');
+    if (templatesMenu) {
+      templatesMenu.style.display = 'none';
+    }
+    const exportMenu = $('#exportMenu');
+    if (exportMenu) {
+      exportMenu.style.display = 'none';
+    }
   }
 
   // Settings management
@@ -3200,28 +3211,38 @@ function wire(skipLocalStorageLoading = false) {
     exportBtn.addEventListener('click', (e) => {
       e.preventDefault();
       const dropdown = exportBtn.closest('.export-dropdown');
-      if (!dropdown) return;
-      // If this dropdown is already active, just close it
-      if (dropdown.classList.contains('active')) {
-        dropdown.classList.remove('active');
+      const menu = $('#exportMenu');
+      if (!dropdown || !menu) return;
+
+      // If this menu is already active, just close it
+      if (menu.style.display === 'block') {
+        menu.style.display = 'none';
       } else {
         // Close other dropdowns and open this one
         closeAllDropdowns();
-        dropdown.classList.add('active');
+        menu.style.display = 'block';
       }
     });
   }
 
   // Close menus when clicking outside
   document.addEventListener('click', (e) => {
-    // Close templates dropdown
+    // Close templates dropdown and menu
     if (!e.target.closest('.templates-dropdown')) {
       document.querySelectorAll('.templates-dropdown').forEach(d => d.classList.remove('active'));
+      const templatesMenu = $('#templatesMenu');
+      if (templatesMenu) {
+        templatesMenu.style.display = 'none';
+      }
     }
 
-    // Close export dropdown
+    // Close export dropdown and menu
     if (!e.target.closest('.export-dropdown')) {
       document.querySelectorAll('.export-dropdown').forEach(d => d.classList.remove('active'));
+      const exportMenu = $('#exportMenu');
+      if (exportMenu) {
+        exportMenu.style.display = 'none';
+      }
     }
 
     // Close settings dropdown
@@ -3530,6 +3551,82 @@ if (mobileScenariosBtn) {
   });
 }
 
+const mobileAnalyticsBtn = $('#mobileAnalyticsBtn');
+if (mobileAnalyticsBtn) {
+  mobileAnalyticsBtn.addEventListener('click', () => {
+    // More robust check for analytics UI
+    const checkAnalyticsUI = () => {
+      if (window.profitPathAnalyticsUI) {
+        // Check if method exists on instance or prototype
+        if (typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
+          window.profitPathAnalyticsUI.showAnalyticsDashboard();
+        } else if (typeof window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard === 'function') {
+          // Call via prototype if instance method not available
+          window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard.call(window.profitPathAnalyticsUI);
+        } else {
+          console.warn('Mobile Analytics UI method not available, retrying...');
+          setTimeout(checkAnalyticsUI, 100);
+        }
+      } else {
+        console.warn('Mobile Analytics UI not loaded yet');
+        setTimeout(checkAnalyticsUI, 100);
+      }
+    };
+    checkAnalyticsUI();
+    closeMobileMenu();
+  });
+}
+
+const mobileFeedbackBtn = $('#mobileFeedbackBtn');
+if (mobileFeedbackBtn) {
+  mobileFeedbackBtn.addEventListener('click', () => {
+    // More robust check for feedback UI
+    const checkFeedbackUI = () => {
+      if (window.feedbackUI) {
+        // Check if method exists on instance or prototype
+        if (typeof window.feedbackUI.openFeedbackModal === 'function') {
+          window.feedbackUI.openFeedbackModal();
+        } else if (typeof window.feedbackUI.constructor.prototype.openFeedbackModal === 'function') {
+          // Call via prototype if instance method not available
+          window.feedbackUI.constructor.prototype.openFeedbackModal.call(window.feedbackUI);
+        } else {
+          console.warn('Mobile Feedback UI method not available, retrying...');
+          setTimeout(checkFeedbackUI, 100);
+        }
+      } else {
+        console.warn('Mobile Feedback UI not loaded yet');
+        setTimeout(checkFeedbackUI, 100);
+      }
+    };
+    checkFeedbackUI();
+    closeMobileMenu();
+  });
+}
+
+const mobileHelpBtn = $('#mobileHelpBtn');
+if (mobileHelpBtn) {
+  mobileHelpBtn.addEventListener('click', () => {
+    // Call the same help menu function as desktop
+    if (typeof showHelpMenu === 'function') {
+      showHelpMenu();
+    } else {
+      console.warn('showHelpMenu function not available');
+    }
+    closeMobileMenu();
+  });
+}
+
+const mobileSettingsBtn = $('#mobileSettingsBtn');
+if (mobileSettingsBtn) {
+  mobileSettingsBtn.addEventListener('click', () => {
+    const settingsCogBtn = $('#settingsCogBtn');
+    if (settingsCogBtn) {
+      settingsCogBtn.click();
+    }
+    closeMobileMenu();
+  });
+}
+
 $('#offeringsBody').addEventListener('input', onTableInput);
 $('#offeringsBody').addEventListener('click', onTableClick);
 
@@ -3541,6 +3638,66 @@ $('#offeringsBody').addEventListener('click', () => setTimeout(persistState, 0))
 $('#scenariosBtn').addEventListener('click', openScenarioModal);
 $('#scenariosCloseBtn').addEventListener('click', closeScenarioModal);
 $('#scenariosOverlay').addEventListener('click', closeScenarioModal);
+
+// Desktop menu buttons wiring - defer until scripts are loaded
+function setupDesktopMenuButtons() {
+  const analyticsBtn = $('#analyticsBtn');
+  if (analyticsBtn) {
+    analyticsBtn.addEventListener('click', () => {
+      // More robust check for analytics UI
+      const checkAnalyticsUI = () => {
+        if (window.profitPathAnalyticsUI) {
+          // Check if method exists on instance or prototype
+          if (typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
+            window.profitPathAnalyticsUI.showAnalyticsDashboard();
+          } else if (typeof window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard === 'function') {
+            // Call via prototype if instance method not available
+            window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard.call(window.profitPathAnalyticsUI);
+          } else {
+            console.warn('Analytics UI method not available, retrying...');
+            setTimeout(checkAnalyticsUI, 100);
+          }
+        } else {
+          console.warn('Analytics UI not loaded yet');
+          setTimeout(checkAnalyticsUI, 100);
+        }
+      };
+      checkAnalyticsUI();
+    });
+  }
+
+  const desktopFeedbackBtn = $('#desktopFeedbackBtn');
+  if (desktopFeedbackBtn) {
+    desktopFeedbackBtn.addEventListener('click', () => {
+      // More robust check for feedback UI
+      const checkFeedbackUI = () => {
+        if (window.feedbackUI) {
+          // Check if method exists on instance or prototype
+          if (typeof window.feedbackUI.openFeedbackModal === 'function') {
+            window.feedbackUI.openFeedbackModal();
+          } else if (typeof window.feedbackUI.constructor.prototype.openFeedbackModal === 'function') {
+            // Call via prototype if instance method not available
+            window.feedbackUI.constructor.prototype.openFeedbackModal.call(window.feedbackUI);
+          } else {
+            console.warn('Feedback UI method not available, retrying...');
+            setTimeout(checkFeedbackUI, 100);
+          }
+        } else {
+          console.warn('Feedback UI not loaded yet');
+          setTimeout(checkFeedbackUI, 100);
+        }
+      };
+      checkFeedbackUI();
+    });
+  }
+}
+
+// Setup desktop buttons after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupDesktopMenuButtons);
+} else {
+  setupDesktopMenuButtons();
+}
 
 $('#saveScenarioBtn').addEventListener('click', () => {
   const name = $('#scenarioNameInput').value;
@@ -3676,7 +3833,11 @@ const scenariosModal = $('#scenariosModal');
 if (scenariosModal) {
   // Original scenario modal close and button handlers (delegated)
   scenariosModal.addEventListener('click', (e) => {
-    if (e.target.closest('.modal-header .btn-close')) {
+    // Only close modal if clicking on close button, overlay, or outside modal content
+    if (e.target.closest('.modal-header .btn-close') ||
+      e.target.closest('#scenariosOverlay') ||
+      e.target.closest('#scenariosModal') ||
+      e.target.closest('.modal-content')) {
       closeScenarioModal();
     } else if (e.target.closest('.load-btn, .delete-btn')) {
       const btn = e.target.closest('.load-btn, .delete-btn');
@@ -3688,10 +3849,11 @@ if (scenariosModal) {
         closeScenarioModal();
       } else if (btn.classList.contains('delete-btn')) {
         deleteScenario(scenarioId);
+        closeScenarioModal();
       }
     }
     // Handle comparison dropdowns to prevent default behavior from closing modal
-    if (e.target.closest('.scenario-select')) {
+    else if (e.target.closest('.scenario-select')) {
       e.stopPropagation();
     }
   });
@@ -3878,6 +4040,13 @@ const _initializeOnboarding = () => {
 
   // Initialize progressive disclosure
   initializeProgressiveDisclosure();
+}
+
+// Initialize onboarding system after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _initializeOnboarding);
+} else {
+  _initializeOnboarding();
 }
 
 // Scroll lock helpers for guided tour
