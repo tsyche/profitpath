@@ -126,19 +126,26 @@
   font-size: 24px;
   cursor: pointer;
   padding: 4px;
-  transition: transform 0.1s;
+  margin: 0 2px;
+  color: #ddd;
+  transition: all 0.2s ease;
+  border-radius: 4px;
 }
 
 .rating-star:hover {
   transform: scale(1.1);
+  color: #fde68a;
 }
 
 .rating-star.active {
   color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  border: 2px solid #fbbf24;
 }
 
 .rating-star.preview {
   color: #fde68a;
+  transform: scale(1.05);
 }
 
 .character-count {
@@ -301,29 +308,29 @@
     width: 95%;
     max-height: 95vh;
   }
-  
+
   .feedback-header {
     padding: 16px 20px 12px;
   }
-  
+
   #feedbackForm {
     padding: 16px 20px 20px;
   }
-  
+
   .feedback-actions {
     flex-direction: column;
   }
-  
+
   .feedback-actions .btn {
     width: 100%;
   }
-  
+
   .feedback-prompt {
     left: 20px;
     right: 20px;
     max-width: none;
   }
-  
+
   .feedback-btn {
     font-size: 11px;
     padding: 6px 10px;
@@ -336,6 +343,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -352,6 +360,7 @@
     opacity: 0;
     transform: translateX(100%);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);

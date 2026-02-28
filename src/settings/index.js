@@ -141,7 +141,7 @@ export function getExperienceLevel() {
  */
 export function setExperienceLevel(level) {
   if (!FEATURE_GATES[level]) {
-    console.warn(`Invalid experience level: ${level}`);
+    console.warn('Invalid experience level: ' + level);
     return;
   }
 

@@ -77,6 +77,17 @@ class AnalyticsUI {
     if (advancedBtn) {
       advancedBtn.addEventListener('click', () => this.showAdvancedDashboard());
     }
+
+    // Analytics disabled state buttons
+    const enableBtn = document.getElementById('enableAnalyticsBtn');
+    if (enableBtn) {
+      enableBtn.addEventListener('click', () => this.enableAnalytics());
+    }
+
+    const closeBtn = document.getElementById('closeAnalyticsBtn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeModal());
+    }
   }
 
   handleAnalyticsToggle(enabled) {
@@ -121,13 +132,25 @@ class AnalyticsUI {
 
   renderDashboard(summary, events) {
     const hasData = events.length > 0;
+    const isEnabled = this.analytics.settings.enabled;
 
-    if (!hasData) {
+    if (!isEnabled) {
       return `
         <div class="analytics-empty">
-          <p style="text-align: center; color: var(--muted); padding: 40px 20px;">
-            No analytics data yet. Enable analytics and start using ProfitPath to see your usage patterns!
-          </p>
+          <div style="text-align: center; padding: 40px 20px;">
+            <h3 style="color: var(--muted); margin-bottom: 20px;">📊 Analytics is Disabled</h3>
+            <p style="color: var(--muted); margin-bottom: 30px; line-height: 1.5;">
+              Enable analytics to track your usage patterns and gain insights into your business performance.
+            </p>
+            <div style="margin-bottom: 20px;">
+              <button id="enableAnalyticsBtn" class="btn btn-primary" style="margin-right: 10px;">
+                📊 Enable Analytics
+              </button>
+              <button id="closeAnalyticsBtn" class="btn btn-secondary">
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       `;
     }
@@ -228,30 +251,10 @@ class AnalyticsUI {
       const a = document.createElement('a');
       a.href = url;
       a.download = `profitpath-analytics-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      this.showNotification('Analytics data exported successfully');
-      this.analytics.trackFeatureUsage('analytics_export');
     } catch (error) {
+      console.error('Failed to export analytics data:', error);
       this.showNotification('Failed to export analytics data', 'error');
-      console.error('Export error:', error);
-    }
-  }
-
-  clearAnalyticsData() {
-    if (confirm('Are you sure you want to delete all analytics data? This cannot be undone.')) {
-      try {
-        this.analytics.clearAllData();
-        this.initializeSettings(); // Refresh UI
-        this.showNotification('All analytics data cleared');
-        this.analytics.trackFeatureUsage('analytics_clear'); // This won't be saved since data is cleared
-      } catch (error) {
-        this.showNotification('Failed to clear analytics data', 'error');
-        console.error('Clear error:', error);
-      }
     }
   }
 
@@ -318,42 +321,77 @@ class AnalyticsUI {
   }
 
   showNotification(message, type = 'success') {
-    // Create a simple notification (could be enhanced with existing notification system)
+    // Simple notification implementation
     const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
+    notification.className = `notification notification-${type}`;
     notification.textContent = message;
     notification.style.cssText = `
       position: fixed;
-      bottom: 20px;
+      top: 20px;
       right: 20px;
-      background: ${type === 'error' ? 'var(--bad)' : 'var(--good)'};
+      background: var(--success);
       color: white;
       padding: 12px 20px;
       border-radius: 6px;
       z-index: 10000;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     `;
-
     document.body.appendChild(notification);
 
-    // Animate in
     setTimeout(() => {
-      notification.style.opacity = '1';
-      notification.style.transform = 'translateY(0)';
-    }, 10);
-
-    // Remove after 3 seconds
-    setTimeout(() => {
-      notification.style.opacity = '0';
-      notification.style.transform = 'translateY(20px)';
-      setTimeout(() => {
-        if (document.body.contains(notification)) {
-          document.body.removeChild(notification);
-        }
-      }, 300);
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
     }, 3000);
+  }
+
+  enableAnalytics() {
+    // Enable analytics and refresh dashboard
+    if (this.analytics && this.analytics.saveSettings) {
+      this.analytics.saveSettings({ enabled: true });
+
+      // Show success notification
+      this.showNotification('📊 Analytics enabled! Start using ProfitPath to see your data.', 'success');
+
+      // Close current modal and reopen dashboard
+      const currentModal = document.querySelector('.analytics-modal');
+      if (currentModal) {
+        document.body.removeChild(currentModal);
+      }
+
+      // Reopen dashboard to show updated state
+      setTimeout(() => {
+        this.showAnalyticsDashboard();
+      }, 100);
+    } else {
+      this.showNotification('Analytics not available', 'error');
+    }
+  }
+
+  clearAnalyticsData() {
+    try {
+      // Ask for confirmation before clearing
+      const confirmed = confirm('Are you sure you want to delete all analytics data? This cannot be undone.');
+      if (!confirmed) {
+        return;
+      }
+
+      this.analytics.clearAllData();
+      this.showNotification('Analytics data cleared successfully');
+      this.analytics.trackFeatureUsage('analytics_cleared');
+
+      // Refresh dashboard if it's open
+      const currentModal = document.querySelector('.analytics-modal');
+      if (currentModal) {
+        document.body.removeChild(currentModal);
+        setTimeout(() => {
+          this.showAnalyticsDashboard();
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Failed to clear analytics data:', error);
+      this.showNotification('Failed to clear analytics data', 'error');
+    }
   }
 }
 

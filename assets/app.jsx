@@ -1897,7 +1897,7 @@ function exportAsHTML() {
 // Scenario Management
 function getAllScenarios() {
   try {
-    const saved = localStorage.getItem('profitpath_scenarios');
+    const saved = localStorage.getItem('profitpath-scenarios');
     return saved ? JSON.parse(saved) : [];
   } catch (e) {
     console.warn('Failed to load scenarios:', e);
@@ -1907,7 +1907,7 @@ function getAllScenarios() {
 
 function saveScenario(name) {
   if (!name || !name.trim()) {
-    alert('Please enter a scenario name');
+    showNotification('Please enter a scenario name', 'error');
     return;
   }
 
@@ -1935,9 +1935,12 @@ function saveScenario(name) {
     // Clear input and re-render list
     $('#scenarioNameInput').value = '';
     renderScenariosList();
+
+    // Show success notification
+    showNotification('Scenario saved successfully!', 'success');
   } catch (e) {
     console.error('Failed to save scenario:', e);
-    alert('Error saving scenario');
+    showNotification('Failed to save scenario', 'error');
   }
 }
 
@@ -3637,7 +3640,6 @@ $('#offeringsBody').addEventListener('click', () => setTimeout(persistState, 0))
 // Scenario modal wiring
 $('#scenariosBtn').addEventListener('click', openScenarioModal);
 $('#scenariosCloseBtn').addEventListener('click', closeScenarioModal);
-$('#scenariosOverlay').addEventListener('click', closeScenarioModal);
 
 // Desktop menu buttons wiring - defer until scripts are loaded
 function setupDesktopMenuButtons() {
@@ -3835,9 +3837,7 @@ if (scenariosModal) {
   scenariosModal.addEventListener('click', (e) => {
     // Only close modal if clicking on close button, overlay, or outside modal content
     if (e.target.closest('.modal-header .btn-close') ||
-      e.target.closest('#scenariosOverlay') ||
-      e.target.closest('#scenariosModal') ||
-      e.target.closest('.modal-content')) {
+      e.target.closest('#scenariosOverlay')) {
       closeScenarioModal();
     } else if (e.target.closest('.load-btn, .delete-btn')) {
       const btn = e.target.closest('.load-btn, .delete-btn');
@@ -4040,7 +4040,10 @@ const _initializeOnboarding = () => {
 
   // Initialize progressive disclosure
   initializeProgressiveDisclosure();
-}
+
+  // Initialize scenarios functionality
+  initializeScenarios();
+};
 
 // Initialize onboarding system after DOM is ready
 if (document.readyState === 'loading') {
@@ -4845,6 +4848,71 @@ function hideEnhancedTooltip(e) {
   if (e.target._tooltip) {
     e.target._tooltip.remove();
     delete e.target._tooltip;
+  }
+}
+
+// Make functions global
+window.getAllScenarios = getAllScenarios;
+window.saveScenario = saveScenario;
+window.renderScenariosList = renderScenariosList;
+window.loadScenario = loadScenario;
+window.deleteScenario = deleteScenario;
+window.openScenarioModal = openScenarioModal;
+window.closeScenarioModal = closeScenarioModal;
+window.encodeScenarioToURL = encodeScenarioToURL;
+window.decodeScenarioFromURL = decodeScenarioFromURL;
+window.loadScenarioFromURL = loadScenarioFromURL;
+
+// Initialize scenarios event listeners
+function initializeScenarios() {
+  // Set up scenarios button
+  const scenariosBtn = document.getElementById('scenariosBtn');
+  if (scenariosBtn) {
+    scenariosBtn.addEventListener('click', openScenarioModal);
+  }
+
+  // Set up modal close button
+  const modalCloseBtn = document.querySelector('#scenariosModal .modal-close');
+  if (modalCloseBtn) {
+    modalCloseBtn.addEventListener('click', closeScenarioModal);
+  }
+
+  // Set up save button
+  const saveBtn = document.getElementById('saveScenarioBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const input = document.getElementById('scenarioNameInput');
+      if (input) {
+        saveScenario(input.value);
+      }
+    });
+  }
+
+  // Set up input enter key
+  const input = document.getElementById('scenarioNameInput');
+  if (input) {
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        saveScenario(input.value);
+      }
+    });
+  }
+
+  // Delegate events for load and delete buttons
+  const scenariosList = document.getElementById('scenariosList');
+  if (scenariosList) {
+    scenariosList.addEventListener('click', (e) => {
+      const target = e.target;
+      const scenarioId = target.dataset.scenarioId;
+
+      if (target.classList.contains('load-btn') && scenarioId) {
+        loadScenario(scenarioId);
+      } else if (target.classList.contains('delete-btn') && scenarioId) {
+        if (confirm('Are you sure you want to delete this scenario?')) {
+          deleteScenario(scenarioId);
+        }
+      }
+    });
   }
 }
 

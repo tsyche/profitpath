@@ -63,12 +63,12 @@ describe('Settings System', () => {
     })
 
     it('should handle invalid JSON gracefully', () => {
-      localStorageMock.getItem.mockReturnValue('invalid json')
+      localStorageMock.getItem.mockReturnValue('invalid json');
 
-      const settings = loadSettings()
+      const settings = loadSettings();
 
-      expect(settings).toEqual(DEFAULT_SETTINGS)
-    })
+      expect(settings).toEqual(DEFAULT_SETTINGS);
+    });
   })
 
   describe('saveSettings', () => {
@@ -107,7 +107,7 @@ describe('Settings System', () => {
     })
 
     it('should warn for invalid experience level', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { })
 
       const result = setExperienceLevel('invalid')
 

@@ -48,6 +48,11 @@ class FeedbackCollector {
 
     localStorage.setItem(this.storageKey, JSON.stringify(allFeedback));
 
+    // Attempt to send email if contact allowed
+    if (feedback.allowContact && feedback.comment) {
+      this.sendEmailNotification(feedback);
+    }
+
     // Track feedback submission if analytics is enabled
     if (window.profitPathAnalytics) {
       window.profitPathAnalytics.trackFeedback(
@@ -58,6 +63,43 @@ class FeedbackCollector {
     }
 
     return feedback;
+  }
+
+  /**
+   * Send email notification for feedback
+   */
+  async sendEmailNotification(feedback) {
+    try {
+      // Create email content
+      const emailContent = `
+ProfitPath Feedback Received
+============================
+
+Rating: ${feedback.rating}/5 stars
+Category: ${feedback.category}
+Comment: ${feedback.comment}
+Context: ${feedback.context ? JSON.stringify(feedback.context, null, 2) : 'None'}
+Timestamp: ${new Date(feedback.timestamp).toLocaleString()}
+User Agent: ${feedback.userAgent}
+Page: ${feedback.url}
+
+---
+This feedback was submitted via the ProfitPath feedback form.
+`;
+
+      // Create mailto link
+      const subject = encodeURIComponent('ProfitPath Feedback Received');
+      const body = encodeURIComponent(emailContent);
+      const mailtoLink = `mailto:gh@tsyche.anonaddy.com?subject=${subject}&body=${body}`;
+
+      // Open email client
+      window.open(mailtoLink, '_blank');
+
+      console.log('Email client opened for feedback submission');
+
+    } catch (error) {
+      console.error('Failed to send email notification:', error);
+    }
   }
 
   /**
