@@ -31,7 +31,7 @@ jobs:
     - name: Check file sizes
       run: |
         echo "File sizes:"
-        wc -c assets/app.js
+        wc -c assets/app.jsx
         wc -c assets/styles.css
         wc -c index.html
 
@@ -45,7 +45,7 @@ jobs:
 
     - name: Check for console.log statements
       run: |
-        if grep -r "console\.log" assets/app.js; then
+        if grep -r "console\.log" assets/app.jsx; then
           echo "⚠️  Found console.log statements (should be removed in production)"
         else
           echo "✅ No console.log statements found"

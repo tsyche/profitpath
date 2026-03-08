@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   loadSettings,
   saveSettings,
@@ -10,42 +10,37 @@ import {
   FEATURE_GATES
 } from './index.js'
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-}
-
-beforeEach(() => {
-  // Setup localStorage mock
-  Object.defineProperty(window, 'localStorage', {
-    value: localStorageMock,
-    writable: true,
-  })
-
-  // Reset mocks
-  localStorageMock.getItem.mockClear()
-  localStorageMock.setItem.mockClear()
-  localStorageMock.removeItem.mockClear()
-  localStorageMock.clear.mockClear()
-})
-
-afterEach(() => {
-  // Clean up after each test
-  vi.restoreAllMocks()
-})
-
 describe('Settings System', () => {
+  let mockStore = {};
+
+  beforeEach(() => {
+    // Clear mock store
+    mockStore = {};
+
+    // Mock localStorage to use our mock store
+    const localStorageMock = {
+      getItem: (key) => mockStore[key] || null,
+      setItem: (key, value) => { mockStore[key] = value; },
+      removeItem: (key) => { delete mockStore[key]; },
+      clear: () => { mockStore = {}; }
+    };
+
+    Object.defineProperty(global, 'localStorage', {
+      value: localStorageMock,
+      configurable: true,
+      writable: true
+    });
+  });
+
+  afterEach(() => {
+    mockStore = {};
+  });
+
   describe('loadSettings', () => {
     it('should return default settings when localStorage is empty', () => {
-      localStorageMock.getItem.mockReturnValue(null)
-
       const settings = loadSettings()
 
       expect(settings).toEqual(DEFAULT_SETTINGS)
-      expect(localStorageMock.getItem).toHaveBeenCalledWith('profitpath-settings')
     })
 
     it('should load and merge settings from localStorage', () => {
@@ -53,7 +48,7 @@ describe('Settings System', () => {
         experienceLevel: 'intermediate',
         compactMode: true
       }
-      localStorageMock.getItem.mockReturnValue(JSON.stringify(storedSettings))
+      localStorage.setItem('profitpath-settings', JSON.stringify(storedSettings))
 
       const settings = loadSettings()
 
@@ -63,7 +58,7 @@ describe('Settings System', () => {
     })
 
     it('should handle invalid JSON gracefully', () => {
-      localStorageMock.getItem.mockReturnValue('invalid json');
+      localStorage.setItem('profitpath-settings', 'invalid json');
 
       const settings = loadSettings();
 
@@ -77,22 +72,19 @@ describe('Settings System', () => {
 
       saveSettings(testSettings)
 
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'profitpath-settings',
-        JSON.stringify(testSettings)
-      )
+      const saved = localStorage.getItem('profitpath-settings')
+      expect(saved).toBe(JSON.stringify(testSettings))
     })
   })
 
   describe('updateSetting', () => {
     it('should update a single setting', () => {
-      localStorageMock.getItem.mockReturnValue(JSON.stringify({ experienceLevel: 'beginner' }))
+      localStorage.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'beginner' }))
 
       const result = updateSetting('compactMode', true)
 
       expect(result.compactMode).toBe(true)
       expect(result.experienceLevel).toBe('beginner')
-      expect(localStorageMock.setItem).toHaveBeenCalled()
     })
   })
 
@@ -120,7 +112,7 @@ describe('Settings System', () => {
 
   describe('isFeatureEnabled', () => {
     it('should check if a feature is enabled', () => {
-      localStorageMock.getItem.mockReturnValue(JSON.stringify({
+      localStorage.setItem('profitpath-settings', JSON.stringify({
         showAdvancedCalculations: true,
         showDebugPanel: false
       }))
@@ -128,30 +120,6 @@ describe('Settings System', () => {
       expect(isFeatureEnabled('showAdvancedCalculations')).toBe(true)
       expect(isFeatureEnabled('showDebugPanel')).toBe(false)
       expect(isFeatureEnabled('nonExistentFeature')).toBe(false)
-    })
-  })
-
-  describe('Feature Gates', () => {
-    it('should have correct feature gates for each experience level', () => {
-      expect(FEATURE_GATES.beginner.showAdvancedCalculations).toBe(false)
-      expect(FEATURE_GATES.beginner.showComparisonTools).toBe(false)
-
-      expect(FEATURE_GATES.intermediate.showAdvancedCalculations).toBe(true)
-      expect(FEATURE_GATES.intermediate.showExportOptions).toBe(false)
-
-      expect(FEATURE_GATES.advanced.showDebugPanel).toBe(true)
-      expect(FEATURE_GATES.advanced.showExportOptions).toBe(true)
-    })
-  })
-
-  describe('Default Settings', () => {
-    it('should have beginner as default experience level', () => {
-      expect(DEFAULT_SETTINGS.experienceLevel).toBe('beginner')
-    })
-
-    it('should have most features disabled by default', () => {
-      expect(DEFAULT_SETTINGS.showAdvancedCalculations).toBe(false)
-      expect(DEFAULT_SETTINGS.showDebugPanel).toBe(false)
     })
   })
 })

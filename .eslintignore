@@ -1,0 +1,2 @@
+# Ignore the built/large assets that cause parser issues
+assets/app.jsx

@@ -293,9 +293,9 @@ class AnalyticsUI {
 
   createModal(title, content) {
     const modal = document.createElement('div');
-    modal.className = 'modal-overlay analytics-modal';
+    modal.className = 'modal';
     modal.innerHTML = `
-      <div class="modal">
+      <div class="modal-content">
         <div class="modal-header">
           <h3>${title}</h3>
           <button class="modal-close">&times;</button>
@@ -307,15 +307,27 @@ class AnalyticsUI {
     `;
 
     // Close handlers
-    modal.querySelector('.modal-close').addEventListener('click', () => {
-      document.body.removeChild(modal);
-    });
+    const closeBtn = modal.querySelector('.modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        document.body.removeChild(modal);
+      });
+    }
 
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         document.body.removeChild(modal);
       }
     });
+
+    // ESC key handler
+    const escHandler = (e) => {
+      if (e.key === 'Escape' && document.body.contains(modal)) {
+        document.body.removeChild(modal);
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
 
     return modal;
   }
@@ -325,16 +337,22 @@ class AnalyticsUI {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
+
+    // Use explicit colors instead of CSS variables
+    const bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff';
+
     notification.style.cssText = `
       position: fixed;
       top: 20px;
       right: 20px;
-      background: var(--success);
+      background: ${bgColor};
       color: white;
       padding: 12px 20px;
       border-radius: 6px;
       z-index: 10000;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
     `;
     document.body.appendChild(notification);
 
