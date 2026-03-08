@@ -2,6 +2,7 @@
   "name": "profitpath",
   "version": "1.3.2",
   "description": "A lightweight client-side simulator for recurring service businesses",
+  "type": "module",
   "main": "assets/app.jsx",
   "scripts": {
     "dev": "vite",
@@ -10,8 +11,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "lint": "eslint assets/app.jsx",
-    "lint:fix": "eslint assets/app.jsx --fix"
+    "lint": "eslint --no-ignore assets/app.jsx",
+    "lint:fix": "eslint --no-ignore assets/app.jsx --fix"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
@@ -20,7 +21,7 @@
     "@vitejs/plugin-legacy": "^7.2.1",
     "@vitest/ui": "^4.0.18",
     "eslint": "^8.55.0",
-    "jsdom": "^22.1.0",
+    "jsdom": "^28.1.0",
     "typescript": "^5.0.0",
     "vite": "^7.3.1",
     "vitest": "^4.0.18"

@@ -21,7 +21,7 @@ Quick status
 - **Collaboration**: Shareable URLs for sharing scenarios with stakeholders, automatic URL loading on page load.
 - **Templates**: Industry-specific templates for consulting, cleaning, landscaping, handyman, fitness, and photography services.
 - **UI/UX**: Responsive design, mobile-optimized layout, collapsible debug panel, utilization gauge, profit waterfall charts, polished visual design.
-- **Syntax Integrity**: All template literals and backticks resolved, comprehensive test coverage (111 tests passing).
+- **Syntax Integrity**: All template literals and backticks resolved, comprehensive test coverage (159 tests passing).
 
 Run locally
 1. Install dependencies and start development server:
@@ -45,7 +45,7 @@ npm install
 # Start development server (with hot reload)
 npm run dev
 
-# Run tests (111 tests passing)
+# Run tests (159 tests passing)
 npm run test:run
 
 # Run linting

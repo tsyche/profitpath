@@ -7,7 +7,7 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/assets/styles.css',
-  '/assets/app.js',
+  '/assets/app.jsx',
   '/assets/logo-final.svg'
 ];
 

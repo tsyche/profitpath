@@ -1705,27 +1705,105 @@ input[type="checkbox"] {
   display: none !important;
 }
 
-.modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.1);
-  pointer-events: none;
-}
-
 .modal-content {
   position: relative;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  background: white !important;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
-  z-index: 1001;
+  z-index: 1002;
+  color: #333 !important;
+}
+
+/* Force all modal content to use light theme colors */
+.modal-content * {
+  color: #333 !important;
+  background-color: transparent !important;
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  background: white !important;
+  border: 1px solid #dee2e6 !important;
+  color: #333 !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+}
+
+.modal-content button {
+  background: white !important;
+  border: 1px solid #dee2e6 !important;
+  color: #333 !important;
+}
+
+.modal-content button.primary {
+  background: #007bff !important;
+  border-color: #007bff !important;
+  color: white !important;
+}
+
+.modal-content button.secondary {
+  background: white !important;
+  border: 1px solid #dee2e6 !important;
+  color: #333 !important;
+}
+
+.modal-content button.danger {
+  background: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: white !important;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 24px;
+  color: #333;
+  font-weight: normal;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #f8f9fa;
+  color: #333;
+}
+
+.modal-body {
+  color: #666;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
 }
 
 /* Make scenarios modal wider on desktop to fit comparison table */
@@ -1741,6 +1819,62 @@ input[type="checkbox"] {
     width: calc(100vw - 20px);
     margin: 10px;
   }
+}
+
+/* Override scenarios modal styling to match help modal exactly */
+#scenariosModal .modal-content {
+  background: white !important;
+}
+
+#scenariosModal .scenarios-section h4 {
+  font-size: 18px !important;
+  color: #333 !important;
+  margin: 0 0 12px 0 !important;
+  font-weight: normal !important;
+  letter-spacing: normal !important;
+}
+
+#scenariosModal .modal-body {
+  color: #333 !important;
+  line-height: 1.5 !important;
+}
+
+#scenariosModal .modal-body * {
+  color: #333 !important;
+}
+
+#scenariosModal .empty-state {
+  color: #666 !important;
+}
+
+#scenariosModal input {
+  background: white !important;
+  border: 1px solid #dee2e6 !important;
+  color: #333 !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+}
+
+#scenariosModal select {
+  background: white !important;
+  border: 1px solid #dee2e6 !important;
+  color: #333 !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+}
+
+#scenariosModal .scenario-item {
+  background: #f8f9fa !important;
+  border: 1px solid #dee2e6 !important;
+  color: #333 !important;
+}
+
+#scenariosModal .scenario-name {
+  color: #333 !important;
+}
+
+#scenariosModal .scenario-meta {
+  color: #666 !important;
 }
 
 /* Make horizontal scrolling more obvious on mobile */
@@ -1949,6 +2083,9 @@ input[type="checkbox"] {
   z-index: 1000;
   min-width: 280px;
   max-width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--gap);
 }
 

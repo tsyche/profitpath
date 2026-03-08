@@ -290,7 +290,13 @@ class AnalyticsCollector {
 }
 
 // Initialize global analytics instance
-window.profitPathAnalytics = new AnalyticsCollector();
+if (!window.profitPathAnalytics) {
+  Object.defineProperty(window, 'profitPathAnalytics', {
+    value: new AnalyticsCollector(),
+    writable: true,
+    configurable: true
+  });
+}
 
 // Auto-end session on page unload
 window.addEventListener('beforeunload', () => {

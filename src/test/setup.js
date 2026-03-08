@@ -17,12 +17,29 @@ global.$$ = (selector) => Array.from(document.querySelectorAll(selector))
 
 // Mock localStorage
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: vi.fn((key) => {
+    const store = localStorageMock._store || {};
+    return store[key] !== undefined ? store[key] : null;
+  }),
+  setItem: vi.fn((key, value) => {
+    if (!localStorageMock._store) localStorageMock._store = {};
+    localStorageMock._store[key] = value;
+  }),
+  removeItem: vi.fn((key) => {
+    if (localStorageMock._store) {
+      delete localStorageMock._store[key];
+    }
+  }),
+  clear: vi.fn(() => {
+    localStorageMock._store = {};
+  }),
+  _store: {},
 }
-global.localStorage = localStorageMock
+Object.defineProperty(global, 'localStorage', {
+  value: localStorageMock,
+  writable: true,
+  configurable: true
+})
 
 // Mock URL APIs
 global.URL = class URL {

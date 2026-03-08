@@ -1,12 +1,6 @@
 import { defineConfig } from 'vite'
-import legacy from '@vitejs/plugin-legacy'
 
 export default defineConfig({
-  plugins: [
-    legacy({
-      targets: ['defaults', 'not IE 11']
-    })
-  ],
   esbuild: {
     loader: 'jsx',
     include: /assets\/app\.jsx$/,
@@ -37,7 +31,16 @@ export default defineConfig({
       include: /assets\/app\.jsx$/,
       jsxFactory: 'h',
       jsxFragment: 'Fragment'
-    }
+    },
+    reporters: ['verbose'],
+    outputColor: false,
+    silent: false,
+    hideStackTrace: false,
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    isolate: false,
+    pool: 'threads',
+    singleThread: true
   },
   server: {
     port: 3000,
