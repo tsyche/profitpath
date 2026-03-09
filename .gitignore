@@ -87,3 +87,6 @@ temp/
 .eslintrc.js
 test/
 vitest.config.js
+
+# Local Node.js installations (use asdf instead)
+node-*/

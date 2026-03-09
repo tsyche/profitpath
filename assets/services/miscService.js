@@ -1328,7 +1328,7 @@ export function loadIndustryTemplate(templateKey) {
         const inputs = document.querySelectorAll('input, select');
         inputs.forEach(input => {
           const name = input.name;
-          if (name && template.settings[name] !== undefined) {
+          if (name && template.settings && template.settings[name] !== undefined) {
             if (input.type === 'checkbox') {
               input.checked = template.settings[name];
             } else {
