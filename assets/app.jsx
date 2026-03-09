@@ -113,6 +113,11 @@ const setExperienceLevel = (...args) => (misc && typeof misc.setExperienceLevel 
 const updateSetting = (...args) => (misc && typeof misc.updateSetting === 'function') ? misc.updateSetting(...args) : undefined;
 const loadIndustryTemplate = (...args) => (misc && typeof misc.loadIndustryTemplate === 'function') ? misc.loadIndustryTemplate(...args) : undefined;
 const exportAsCSV = (...args) => (misc && typeof misc.exportAsCSV === 'function') ? misc.exportAsCSV(...args) : undefined;
+const exportAsExcel = (...args) => (misc && typeof misc.exportAsExcel === 'function') ? misc.exportAsExcel(...args) : undefined;
+const exportAsPDF = (...args) => (misc && typeof misc.exportAsPDF === 'function') ? misc.exportAsPDF(...args) : undefined;
+const exportAsHTML = (...args) => (misc && typeof misc.exportAsHTML === 'function') ? misc.exportAsHTML(...args) : undefined;
+const shareViaEmail = (...args) => (misc && typeof misc.shareViaEmail === 'function') ? misc.shareViaEmail(...args) : undefined;
+const showEmbedCode = (...args) => (misc && typeof misc.showEmbedCode === 'function') ? misc.showEmbedCode(...args) : undefined;
 const showScheduleDialog = (...args) => (misc && typeof misc.showScheduleDialog === 'function') ? misc.showScheduleDialog(...args) : undefined;
 const shareScenario = (...args) => (misc && typeof misc.shareScenario === 'function') ? misc.shareScenario(...args) : undefined;
 const loadTestScenarios = (...args) => (misc && typeof misc.loadTestScenarios === 'function') ? misc.loadTestScenarios(...args) : undefined;
@@ -868,27 +873,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Export format handlers
-// Stub functions for export features not yet implemented
-function exportAsExcel() {
-  showNotification('Excel export coming soon!', 'info');
-}
-
-function exportAsPDF() {
-  showNotification('PDF export coming soon!', 'info');
-}
-
-function exportAsHTML() {
-  showNotification('HTML export coming soon!', 'info');
-}
-
-function shareViaEmail() {
-  showNotification('Email sharing coming soon!', 'info');
-}
-
-function showEmbedCode() {
-  showNotification('Embed code coming soon!', 'info');
-}
+// Export format handlers are now implemented in miscService.js
 
 document.querySelectorAll('.export-option').forEach(option => {
   option.addEventListener('click', (e) => {
@@ -2612,6 +2597,7 @@ function initializeScenarios() {
   }
 
   // Delegate events for load and delete buttons
+  // Delegate events for load and delete buttons
   const scenariosList = document.getElementById('scenariosList');
   if (scenariosList) {
     scenariosList.addEventListener('click', (e) => {
@@ -2621,80 +2607,11 @@ function initializeScenarios() {
       if (target.classList.contains('load-btn') && scenarioId) {
         loadScenario(scenarioId);
       } else if (target.classList.contains('delete-btn') && scenarioId) {
-        // Use custom confirmation modal instead of native confirm
-        showDeleteConfirmation(scenarioId, () => {
-          deleteScenario(scenarioId);
-          renderScenariosList();
-        });
+        // Directly call deleteScenario - it handles its own confirmation
+        deleteScenario(scenarioId);
       }
     });
   }
-}
-
-// Custom confirmation dialog for scenario deletion
-function showDeleteConfirmation(_scenarioId, _onConfirm) {
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.style.cssText = 'position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(0, 0, 0, 0.6);display: flex;align-items: center;justify-content: center;z-index: 10001;';
-
-  const content = document.createElement('div');
-  content.className = 'modal-content';
-  content.style.cssText = 'background: white;padding: 24px;border-radius: 8px;max-width: 400px;text-align: center;';
-  content.innerHTML = '<div class="modal-header"><h3>Confirm Delete</h3><button class="modal-close" onclick="this.closest(\'modal-overlay\').remove()">&times;</button></div><div class="modal-body"><p>Are you sure you want to delete this scenario? This action cannot be undone.</p></div><div class="modal-footer"><button class="btn secondary" onclick="this.closest(\'modal-overlay\').remove()">Cancel</button><button class="btn danger" onclick="this.closest(\'modal-overlay\').remove(); setTimeout(() => { onConfirm(); }, 100)">Delete</button></div>';
-
-  modal.appendChild(content);
-  document.body.appendChild(modal);
-
-  // Auto-close on overlay click
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.remove();
-    }
-  });
-}
-
-// Delegate events for load and delete buttons
-const scenariosList = document.getElementById('scenariosList');
-if (scenariosList) {
-  scenariosList.addEventListener('click', (e) => {
-    const target = e.target;
-    const scenarioId = target.dataset.scenarioId;
-
-    if (target.classList.contains('load-btn') && scenarioId) {
-      loadScenario(scenarioId);
-    } else if (target.classList.contains('delete-btn') && scenarioId) {
-      // Use custom confirmation modal instead of native confirm
-      showDeleteConfirmation(scenarioId, () => {
-        deleteScenario(scenarioId);
-        renderScenariosList();
-
-        const settings = loadSettings ? loadSettings() : {};
-        const userLevel = settings.experienceLevel || 'beginner';
-        const advancedElements = document.querySelectorAll('.advanced-feature');
-        const expertElements = document.querySelectorAll('.expert-feature');
-
-        if (userLevel === 'beginner') {
-          advancedElements.forEach(el => el.style.display = 'none');
-          expertElements.forEach(el => el.style.display = 'none');
-        } else if (userLevel === 'intermediate') {
-          expertElements.forEach(el => el.style.display = 'none');
-        }
-
-        // Always show all export options regardless of user level
-        document.querySelectorAll('.export-option.advanced-feature, .export-option.expert-feature, .mobile-submenu-btn.expert-feature').forEach(el => {
-          el.style.display = 'block';
-        });
-
-        // Special handling for debug panel-show if user has enabled it regardless of level
-        const showDebugPanel = localStorage.getItem('showDebugPanel') === 'true';
-        if (showDebugPanel) {
-          document.querySelectorAll('.debug-wrapper.expert-feature').forEach(el => {
-            el.style.display = 'block';
-          });
-        }
-      });
-    }
-  });
 }
 
 // Initialize scenarios when DOM is ready
