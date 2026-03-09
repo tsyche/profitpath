@@ -1,5 +1,10 @@
 // Miscellaneous Helpers and UI Logic
-import { validateAndSanitizeLoadedState } from './stateManager';
+import { safeParseNumber } from '../utils/helpers';
+
+// Utility function to clamp values between min and max
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
 
 export function escapeHtml(str) {
   return String(str)
@@ -96,27 +101,31 @@ export function onTableInput(e) {
   if (k === 'name') {
     o.name = el.value;
   } else if (k === 'mixPct' && state.mode === 'forecast' && state.lockMix) {
-    rebalanceMix(i, value);
+    if (typeof rebalanceMix === 'function') rebalanceMix(i, value);
   } else {
     o[k] = value;
   }
 
   // Update state and outputs in-place without re-rendering the entire table to preserve focus.
   try {
-    persistState();
+    if (typeof persistState === 'function') persistState();
   } catch (e) {
     console.warn('Failed to persist state on input:', e);
   }
+
+  // Refresh outputs to reflect the change
   try {
-    const metrics = calc();
-    updateOutputs(metrics);
-    updateValidationDisplay(); // Update validation messages after calculations
+    if (typeof calc === 'function') {
+      const metrics = calc();
+      if (typeof updateOutputs === 'function') updateOutputs(metrics);
+      if (typeof updateValidationDisplay === 'function') updateValidationDisplay(); // Update validation messages after calculations
+    }
   } catch (e) {
     console.warn('Failed to refresh outputs on input:', e);
   }
   // If changing mix in locked forecast mode, re-render to update other mix inputs
   if (k === 'mixPct' && state.mode === 'forecast' && state.lockMix) {
-    render();
+    if (typeof render === 'function') render();
   }
 }
 
@@ -131,8 +140,12 @@ export function onTableClick(e) {
     const i = Number(btn.dataset.i);
     if (Number.isFinite(i)) {
       state.offerings.splice(i, 1);
-      if (state.offerings.length === 0) state.offerings = defaultOfferings();
-      render();
+      if (state.offerings.length === 0) {
+        if (typeof defaultOfferings === 'function') {
+          state.offerings = defaultOfferings();
+        }
+      }
+      if (typeof render === 'function') render();
     }
   }
 }
@@ -148,19 +161,19 @@ export function addOffering() {
     mixPct: 0,
     currentClients: 0,
   });
-  render();
+  if (typeof render === 'function') render();
 }
 
 export function resetDefaults() {
-  state.offerings = defaultOfferings();
+  state.offerings = typeof defaultOfferings === 'function' ? defaultOfferings() : [];
   state.employees = 1;
   state.employeePay = 60000;
-  state.monthlyCosts = 250;
+  state.monthlyCosts = 10000;
   state.productiveUtilizationPct = 80;
   state.targetUtilizationPct = 75;
   state.mode = 'forecast';
   localStorage.removeItem('profitpath-state');
-  render();
+  if (typeof render === 'function') render();
 }
 
 export function exportAsCSV() {
@@ -798,6 +811,82 @@ export function closeScenarioModal() {
   $('#scenariosModal').style.display = 'none';
 }
 
+// Utility functions to replace native dialogs with styled modals
+export function showAlert(message, title = 'Notice') {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>${title}</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>${message.replace(/\n/g, '<br>')}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn primary">OK</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Add event listeners
+  const closeBtn = modal.querySelector('.modal-close');
+  const okBtn = modal.querySelector('.btn.primary');
+
+  const closeModal = () => modal.remove();
+
+  closeBtn.addEventListener('click', closeModal);
+  okBtn.addEventListener('click', closeModal);
+}
+
+export function showConfirm(message, title = 'Confirm', onConfirm = null, onCancel = null) {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>${title}</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>${message.replace(/\n/g, '<br>')}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn secondary">Cancel</button>
+        <button class="btn primary">Confirm</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Add event listeners
+  const closeBtn = modal.querySelector('.modal-close');
+  const cancelBtn = modal.querySelector('.btn.secondary');
+  const confirmBtn = modal.querySelector('.btn.primary');
+
+  const closeModal = () => {
+    modal.remove();
+    if (onCancel && typeof onCancel === 'function') {
+      onCancel();
+    }
+  };
+
+  const handleConfirm = () => {
+    modal.remove();
+    if (onConfirm && typeof onConfirm === 'function') {
+      onConfirm();
+    }
+  };
+
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  confirmBtn.addEventListener('click', handleConfirm);
+}
+
 export function encodeScenarioToURL(state) {
   try {
     // Create a clean copy of the state for sharing (exclude internal properties)
@@ -1181,44 +1270,56 @@ export function loadIndustryTemplate(templateKey) {
 
   if (!templates) {
     console.error('INDUSTRY_TEMPLATES not available');
-    alert('Error: Industry templates not loaded. Please refresh the page.');
+    showAlert('Error: Industry templates not loaded. Please refresh the page.', 'Error');
     return;
   }
 
   const template = templates[templateKey];
   if (!template) {
-    alert('Template not found');
+    showAlert('Template not found', 'Error');
     return;
   }
 
-  if (!confirm('Load ' + template.name + ' template ? This will replace your current configuration.')) {
-    return;
-  }
+  showConfirm(
+    'Load ' + template.name + ' template? This will replace your current configuration.',
+    'Confirm Template Load',
+    () => {
+      try {
+        // Get global state and render
+        const currentState = window.state;
+        if (!currentState) {
+          console.error('State not available');
+          showAlert('Error: Application state not loaded. Please refresh the page.', 'Error');
+          return;
+        }
+        // Apply template settings
+        Object.assign(currentState, template.settings);
 
-  try {
-    // Get global state and render
-    const currentState = globalThis.state || window.state;
-    const renderFn = globalThis.render || window.render;
+        // Update UI to reflect new state
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => {
+          const name = input.name;
+          if (name && template.settings[name] !== undefined) {
+            if (input.type === 'checkbox') {
+              input.checked = template.settings[name];
+            } else {
+              input.value = template.settings[name];
+            }
+          }
+        });
 
-    if (!currentState) {
-      console.error('State not available');
-      alert('Error: Application state not loaded. Please refresh the page.');
-      return;
+        // Re-render calculations
+        const renderFn = window.render;
+        if (renderFn) renderFn();
+
+        // Show success message
+        showAlert('✅ Loaded ' + template.name + ' template!\n\nThis provides typical pricing and configuration for ' + template.description.toLowerCase() + '. Adjust the values as needed for your specific business.', 'Template Loaded');
+      } catch (e) {
+        console.error('Error loading template:', e);
+        showAlert('Error loading template. Please try again.', 'Error');
+      }
     }
-
-    // Load the template configuration
-    Object.assign(currentState, template.config);
-    validateAndSanitizeLoadedState();
-
-    // Update the UI
-    if (renderFn) renderFn();
-
-    // Show success message
-    alert('✅ Loaded ' + template.name + ' template!\n\nThis provides typical pricing and configuration for ' + template.description.toLowerCase() + '. Adjust the values as needed for your specific business.');
-  } catch (e) {
-    console.error('Error loading template:', e);
-    alert('Error loading template. Please try again.');
-  }
+  );
 }
 
 export function loadTestScenarios() {
