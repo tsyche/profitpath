@@ -161,6 +161,8 @@ function performLoad(scenario) {
       return;
     }
 
+    const currentState = window.state;
+
     // Restore state from scenario
     window.state.mode = scenarioData.mode ?? window.state.mode;
     window.state.offerings = scenarioData.offerings ?? window.state.offerings;
