@@ -1,6 +1,23 @@
 // Miscellaneous Helpers and UI Logic
 import { safeParseNumber } from '../utils/helpers';
 
+// Utility functions for export functionality
+const DEFAULT_CURRENCY = 'USD';
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
+const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
+const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
+
 // Utility function to clamp values between min and max
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
