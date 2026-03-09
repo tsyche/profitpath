@@ -67,7 +67,7 @@ function performSave(name) {
   try {
     const scenarios = getAllScenarios();
     const timestamp = new Date().toLocaleString();
-    const currentState = globalThis.state || window.state;
+    const currentState = window.state;
     const scenario = {
       id: uuid(),
       name: name,
@@ -161,22 +161,18 @@ function performLoad(scenario) {
       return;
     }
 
-    // Get global state
-    const currentState = globalThis.state || window.state;
-    const renderFn = globalThis.render || window.render;
-
     // Restore state from scenario
-    currentState.mode = scenarioData.mode ?? currentState.mode;
-    currentState.offerings = scenarioData.offerings ?? currentState.offerings;
-    currentState.employees = scenarioData.employees ?? currentState.employees;
-    currentState.employeePay = scenarioData.employeePay ?? currentState.employeePay;
-    currentState.monthlyCosts = scenarioData.monthlyCosts ?? currentState.monthlyCosts;
-    currentState.productiveUtilizationPct = scenarioData.productiveUtilizationPct ?? currentState.productiveUtilizationPct;
-    currentState.targetUtilizationPct = scenarioData.targetUtilizationPct ?? currentState.targetUtilizationPct;
-    currentState.lockMix = scenarioData.lockMix ?? currentState.lockMix;
+    window.state.mode = scenarioData.mode ?? window.state.mode;
+    window.state.offerings = scenarioData.offerings ?? window.state.offerings;
+    window.state.employees = scenarioData.employees ?? window.state.employees;
+    window.state.employeePay = scenarioData.employeePay ?? window.state.employeePay;
+    window.state.monthlyCosts = scenarioData.monthlyCosts ?? window.state.monthlyCosts;
+    window.state.productiveUtilizationPct = scenarioData.productiveUtilizationPct ?? window.state.productiveUtilizationPct;
+    window.state.targetUtilizationPct = scenarioData.targetUtilizationPct ?? window.state.targetUtilizationPct;
+    window.state.lockMix = scenarioData.lockMix ?? window.state.lockMix;
 
     persistState(); // Save loaded scenario as current state
-    if (renderFn) renderFn();
+    window.render();
     closeScenarioModal();
 
     // Show success notification
