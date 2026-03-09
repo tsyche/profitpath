@@ -561,25 +561,54 @@ export async function exportAsExcel() {
 }
 
 export async function exportAsPDF() {
-  // Lazy load PDF and canvas libraries
-  if (!window.jspdf) {
+  // Check if libraries are already loaded
+  let librariesLoaded = false;
+  if (window.jspdf && window.html2canvas) {
+    librariesLoaded = true;
+  } else {
+    // Try to load libraries with better error handling and fallbacks
     try {
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      if (!window.jspdf) {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      }
+      if (!window.html2canvas) {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+      }
+      librariesLoaded = true;
     } catch (e) {
-      console.error('Failed to load jsPDF library:', e);
-      alert('Error: Could not load PDF export library. Please try again.');
-      return;
+      console.error('Failed to load PDF export libraries from primary CDN:', e);
+      // Try fallback CDN
+      try {
+        if (!window.jspdf) {
+          await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+        }
+        if (!window.html2canvas) {
+          await loadScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
+        }
+        librariesLoaded = true;
+      } catch (fallbackError) {
+        console.error('Failed to load PDF export libraries from fallback CDN:', fallbackError);
+        // Last resort - try alternative CDN
+        try {
+          if (!window.jspdf) {
+            await loadScript('https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js');
+          }
+          if (!window.html2canvas) {
+            await loadScript('https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js');
+          }
+          librariesLoaded = true;
+        } catch (finalError) {
+          console.error('All PDF export library loading attempts failed:', finalError);
+          showNotification('PDF export is temporarily unavailable due to network issues. Please try again later or use CSV/Excel export.', 'error');
+          return;
+        }
+      }
     }
   }
 
-  if (!window.html2canvas) {
-    try {
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    } catch (e) {
-      console.error('Failed to load html2canvas library:', e);
-      alert('Error: Could not load chart capture library. Please try again.');
-      return;
-    }
+  if (!librariesLoaded || !window.jspdf) {
+    showNotification('Error: Could not load PDF export library. Please try again.', 'error');
+    return;
   }
 
   const { jsPDF } = window.jspdf;
@@ -1293,7 +1322,7 @@ export function loadIndustryTemplate(templateKey) {
           return;
         }
         // Apply template settings
-        Object.assign(currentState, template.settings);
+        Object.assign(currentState, template.config);
 
         // Update UI to reflect new state
         const inputs = document.querySelectorAll('input, select');

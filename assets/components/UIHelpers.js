@@ -56,9 +56,6 @@ export function openScenarioModal() {
       const btn = e.target.closest('.load-btn, .delete-btn');
       if (!btn) return;
 
-      e.preventDefault();
-      e.stopPropagation();
-
       const scenarioId = btn.dataset.scenarioId;
       if (!scenarioId) return;
 

@@ -1,8 +1,11 @@
 import { persistState, loadState } from "../services/stateManager";
-import { getAllScenarios, showNotification, closeScenarioModal } from "./miscService";
+import { getAllScenarios, showNotification, closeScenarioModal, populateComparisonDropdowns } from "./miscService";
 import { uuid } from "../utils/helpers";
 import { renderScenariosList } from "../components/UIHelpers";
 // Scenario Management
+
+// Global flag to prevent re-entrant deletion calls
+let isDeletingScenario = false;
 
 export function saveScenario(name) {
   if (!name || !name.trim()) {
@@ -86,6 +89,7 @@ function performSave(name) {
     // Clear input and re-render list
     $('#scenarioNameInput').value = '';
     renderScenariosList();
+    populateComparisonDropdowns();
 
     // Show success notification
     showNotification('Scenario saved successfully!', 'success');
@@ -101,6 +105,9 @@ export function loadScenario(scenarioId) {
     const scenario = scenarios.find((s) => s.id === scenarioId);
     if (!scenario) return;
 
+    // Check if confirmation modal is already open
+    if (document.getElementById('loadConfirmModal')) return;
+
     // Bypass confirmation in test mode
     if (globalThis.__TEST_MODE__ || window.__TEST_MODE__) {
       performLoad(scenario);
@@ -109,38 +116,28 @@ export function loadScenario(scenarioId) {
 
     // Show confirmation dialog
     const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Confirm Load</h3>
-          <button class="modal-close">&times;</button>
-        </div>
-        <div class="modal-body">
-          <p>Load scenario "<strong>${scenario.name || 'Unnamed'}</strong>"?</p>
-          <p style="font-size: 12px; color: #666; margin-top: 8px;">This will replace your current calculations and settings.</p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn secondary">Cancel</button>
-          <button class="btn primary">Load</button>
-        </div>
-      </div>
-    `;
+    modal.innerHTML = '<div id="loadConfirmModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;"><div style="background:white;padding:20px;border-radius:8px;max-width:400px;width:90%;text-align:center;"><p style="margin:0 0 20px 0;color:#374151;">Load scenario "<strong>' + scenario.name + '</strong>"?</p><p style="font-size: 12px; color: #666; margin-top: -15px; margin-bottom: 20px;">This will replace your current calculations and settings.</p><div style="display:flex;gap:10px;justify-content:center;"><button id="loadConfirmYes" style="padding:8px 16px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;">Load</button><button id="loadConfirmNo" style="padding:8px 16px;background:#6b7280;color:white;border:none;border-radius:4px;cursor:pointer;">Cancel</button></div></div></div>';
 
     document.body.appendChild(modal);
 
     // Add event listeners
-    const closeBtn = modal.querySelector('.modal-close');
-    const cancelBtn = modal.querySelector('.btn.secondary');
-    const loadBtn = modal.querySelector('.btn.primary');
+    const cancelBtn = modal.querySelector('#loadConfirmNo');
+    const loadBtn = modal.querySelector('#loadConfirmYes');
 
     const closeModal = () => modal.remove();
 
-    closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
     loadBtn.addEventListener('click', () => {
-      closeModal();
-      performLoad(scenario);
+      try {
+        closeModal(); // Close confirmation modal
+        performLoad(scenario); // Load scenario and close scenarios modal
+      } catch (e) {
+        console.error('Error during scenario loading:', e);
+        // Ensure modals are closed even if there's an error
+        try { closeModal(); } catch (e2) { /* ignore */ }
+        try { closeScenarioModal(); } catch (e2) { /* ignore */ }
+        alert('Error loading scenario');
+      }
     });
 
     // Auto-close on overlay click
@@ -238,7 +235,15 @@ export function deleteScenario(scenarioId) {
         }
 
         // Defer rendering to next tick to avoid blocking
-        setTimeout(() => renderScenariosList(), 0);
+        setTimeout(() => {
+          renderScenariosList();
+          populateComparisonDropdowns();
+          // Close the scenarios modal after successful deletion
+          closeScenarioModal();
+        }, 0);
+
+        // Show success notification
+        showNotification('Scenario deleted successfully!', 'success');
       }
     } catch (e) {
       console.error('Failed to delete scenario:', e);
@@ -285,22 +290,15 @@ export function initializeScenarios() {
     });
   }
 
-  // Delegate events for load and delete buttons
+  // Delegate events for load buttons (delete handled by UIHelpers)
   const scenariosList = document.getElementById('scenariosList');
   if (scenariosList) {
     scenariosList.addEventListener('click', (e) => {
       const target = e.target;
       const scenarioId = target.dataset.scenarioId;
 
-      if (target.classList.contains('load-btn') && scenarioId) {
-        loadScenario(scenarioId);
-      } else if (target.classList.contains('delete-btn') && scenarioId) {
-        // Use custom confirmation modal instead of native confirm
-        showDeleteConfirmation(scenarioId, () => {
-          deleteScenario(scenarioId);
-          renderScenariosList();
-        });
-      }
+      // Load button handling removed - now handled by UIHelpers.js
+      // Delete button handling removed - now handled by UIHelpers.js
     });
   }
 }
