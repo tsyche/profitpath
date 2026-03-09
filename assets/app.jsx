@@ -191,6 +191,11 @@ if (typeof window !== 'undefined') {
   window.calc = calc;
   window.state = state;
   window.render = render;
+  window.updateOutputs = updateOutputs;
+  window.updateValidationDisplay = updateValidationDisplay;
+  window.rebalanceMix = rebalanceMix;
+  window.defaultOfferings = businessLogic.defaultOfferings;
+  window.persistState = persistState;
 }
 
 // Persist state to localStorage (global helper so other modules can call it)
