@@ -152,7 +152,7 @@ export function loadScenario(scenarioId) {
   }
 }
 
-function performLoad(scenario) {
+export function performLoad(scenario) {
   try {
     // Handle both old format (scenario.state) and new format (scenario.data)
     const scenarioData = scenario.state || scenario.data;
@@ -198,60 +198,40 @@ export function deleteScenario(scenarioId) {
   if (isDeletingScenario) return;
   isDeletingScenario = true;
 
-  // Create custom confirmation dialog to avoid native confirm issues
-  const modal = document.createElement('div');
-  modal.innerHTML = '<div id="confirmModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;"><div style="background:white;padding:20px;border-radius:8px;max-width:400px;width:90%;text-align:center;"><p style="margin:0 0 20px 0;color:#374151;">Delete this scenario?</p><div style="display:flex;gap:10px;justify-content:center;"><button id="confirmYes" style="padding:8px 16px;background:#dc2626;color:white;border:none;border-radius:4px;cursor:pointer;">Delete</button><button id="confirmNo" style="padding:8px 16px;background:#6b7280;color:white;border:none;border-radius:4px;cursor:pointer;">Cancel</button></div></div></div>';
+  try {
+    // Get scenarios once and filter
+    let scenarios = getAllScenarios();
+    const initialLength = scenarios.length;
+    scenarios = scenarios.filter((s) => s.id !== scenarioId);
 
-  document.body.appendChild(modal);
+    // Only update if we actually removed something
+    if (scenarios.length < initialLength) {
+      localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
 
-  function cleanup() {
-    if (modal.parentNode) {
-      document.body.removeChild(modal);
-    }
-    isDeletingScenario = false;
-  }
-
-  document.getElementById('confirmYes').onclick = () => {
-    cleanup();
-
-    try {
-      // Get scenarios once and filter
-      let scenarios = getAllScenarios();
-      const initialLength = scenarios.length;
-      scenarios = scenarios.filter((s) => s.id !== scenarioId);
-
-      // Only update if we actually removed something
-      if (scenarios.length < initialLength) {
-        localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
-
-        // Track scenario deletion
-        if (window.profitPathAnalytics) {
-          window.profitPathAnalytics.trackScenarioAction('delete', {
-            scenarioId: scenarioId,
-            remainingScenarios: scenarios.length
-          });
-        }
-
-        // Defer rendering to next tick to avoid blocking
-        setTimeout(() => {
-          renderScenariosList();
-          populateComparisonDropdowns();
-          // Close the scenarios modal after successful deletion
-          closeScenarioModal();
-        }, 0);
-
-        // Show success notification
-        showNotification('Scenario deleted successfully!', 'success');
+      // Track scenario deletion
+      if (window.profitPathAnalytics) {
+        window.profitPathAnalytics.trackScenarioAction('delete', {
+          scenarioId: scenarioId,
+          remainingScenarios: scenarios.length
+        });
       }
-    } catch (e) {
-      console.error('Failed to delete scenario:', e);
-      alert('Error deleting scenario');
-    }
-  };
 
-  document.getElementById('confirmNo').onclick = () => {
-    cleanup();
-  };
+      // Defer rendering to next tick to avoid blocking
+      setTimeout(() => {
+        renderScenariosList();
+        populateComparisonDropdowns();
+        // Close the scenarios modal after successful deletion
+        closeScenarioModal();
+      }, 0);
+
+      // Show success notification
+      showNotification('Scenario deleted successfully!', 'success');
+    }
+  } catch (e) {
+    console.error('Failed to delete scenario:', e);
+    alert('Error deleting scenario');
+  }
+  isDeletingScenario = false;
 }
 
 export function initializeScenarios() {

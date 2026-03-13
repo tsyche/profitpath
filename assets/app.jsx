@@ -2610,7 +2610,7 @@ if (typeof closeScenarioModal === 'function') window.closeScenarioModal = closeS
 if (typeof encodeScenarioToURL === 'function') window.encodeScenarioToURL = encodeScenarioToURL;
 if (typeof decodeScenarioFromURL === 'function') window.decodeScenarioFromURL = decodeScenarioFromURL;
 if (typeof loadScenarioFromURL === 'function') window.loadScenarioFromURL = loadScenarioFromURL;
-function initializeScenarios() {
+function _initializeScenarios() {
   // Set up scenarios button
   const scenariosBtn = document.getElementById('scenariosBtn');
   if (scenariosBtn) {
@@ -2662,8 +2662,8 @@ function initializeScenarios() {
   }
 }
 
-// Initialize scenarios when DOM is ready
-initializeScenarios();
+// Initialize scenarios when DOM is ready - REMOVED to prevent conflicts with new modal system
+// initializeScenarios();
 
 initializeProgressiveDisclosure();
 
