@@ -29,7 +29,7 @@ export function createModal({ title, content, buttons = [], size = 'medium' }) {
   };
 
   modal.style.cssText = `
-    background: var(--panel);
+    background: white;
     border-radius: 12px;
     padding: 24px;
     width: 90%;
@@ -56,10 +56,10 @@ export function createModal({ title, content, buttons = [], size = 'medium' }) {
   // Modal HTML structure
   modal.innerHTML = `
     <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <h3 style="margin: 0; color: #333; font-size: 20px;">${title}</h3>
-      <button class="modal-close" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">&times;</button>
+      <h3 style="margin: 0; color: black !important; font-size: 20px;">${title}</h3>
+      <button class="modal-close" style="background: none; border: none; font-size: 24px; cursor: pointer; color: black !important; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
-    <div class="modal-body" style="color: #666; line-height: 1.5;">
+    <div class="modal-body" style="color: black !important; line-height: 1.5;">
       ${content}
     </div>
     ${buttons.length > 0 ? `
@@ -70,7 +70,7 @@ export function createModal({ title, content, buttons = [], size = 'medium' }) {
             border: ${btn.primary ? 'none' : '1px solid #ddd'};
             border-radius: 6px;
             background: ${btn.primary ? '#007bff' : 'white'};
-            color: ${btn.primary ? 'white' : '#333'};
+            color: ${btn.primary ? 'white' : 'black'} !important;
             cursor: pointer;
             font-weight: ${btn.primary ? 'bold' : 'normal'};
           ">${btn.text}</button>
@@ -134,5 +134,10 @@ export function closeScenarioModal() {
   const modal = document.getElementById('scenariosModal');
   if (modal) {
     modal.classList.add('hidden');
+  }
+  // Also close any overlay modals
+  const overlay = document.querySelector('.modal-overlay');
+  if (overlay) {
+    overlay.remove();
   }
 }

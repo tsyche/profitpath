@@ -2042,13 +2042,13 @@ input[type="checkbox"] {
 .scenario-item-name {
   flex: 1;
   font-size: 13px;
-  color: var(--text);
+  color: black !important;
   word-break: break-word;
 }
 
 .scenario-item-meta {
   font-size: 11px;
-  color: var(--muted);
+  color: #666 !important;
   margin-top: 2px;
 }
 
