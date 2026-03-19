@@ -210,9 +210,10 @@ Available test scenarios:
 - `break-even-test` - Break-even analysis
 
 ### Test Suite
-- **111 tests passing** (110 business logic + 1 syntax validation)
+- **159 tests passing** (comprehensive test suite covering business logic, UI components, and integration)
 - **Syntax Test**: Validates `assets/app.jsx` can be parsed without errors
 - **Business Logic Tests**: Comprehensive calculation engine validation
+- **Integration Tests**: UI components and user workflow testing
 - **Test Command**: `npm run test:run`
 - **Test Environment**: Vitest with jsdom
 

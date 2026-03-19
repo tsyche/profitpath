@@ -5,8 +5,10 @@ import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
 import * as misc from './services/miscService';
 import * as businessLogic from './services/businessLogic';
 import { saveScenario, loadScenario, deleteScenario } from './services/scenarioService';
-import { closeScenarioModal, getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL } from './services/miscService';
+import { closeScenarioModal } from './components/Modal.js';
+import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL } from './services/miscService';
 import { uuid } from './utils/helpers';
+import { showConfirmationModal, showToast } from './services/modalService.js';
 
 // Test scenarios for development
 const TEST_SCENARIOS = {
@@ -1344,15 +1346,68 @@ $('#offeringsBody').addEventListener('click', onTableClick);
 $('#offeringsBody').addEventListener('input', persistState);
 $('#offeringsBody').addEventListener('click', () => setTimeout(persistState, 0));
 
-// Scenario modal wiring
+// Scenario modal wiring - use new modal system
 {
   const scenariosBtnEl = $('#scenariosBtn');
-  if (scenariosBtnEl && typeof openScenarioModal === 'function') {
-    scenariosBtnEl.addEventListener('click', openScenarioModal);
+  if (scenariosBtnEl) {
+    scenariosBtnEl.addEventListener('click', () => {
+      openScenarioModal();
+    });
   }
+
+  // Set up close button for scenarios modal
   const scenariosCloseBtnEl = $('#scenariosCloseBtn');
-  if (scenariosCloseBtnEl && typeof closeScenarioModal === 'function') {
-    scenariosCloseBtnEl.addEventListener('click', closeScenarioModal);
+  if (scenariosCloseBtnEl) {
+    scenariosCloseBtnEl.addEventListener('click', () => {
+      closeScenarioModal();
+    });
+  }
+
+  // Set up save button with confirmation
+  const saveBtn = $('#saveScenarioBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      const input = $('#scenarioNameInput');
+      if (!input || !input.value.trim()) {
+        showToast('Please enter a scenario name', 'error');
+        return;
+      }
+
+      const result = await showConfirmationModal(
+        'Save Scenario',
+        'Save current configuration as "' + input.value.trim() + '"?',
+        'This will overwrite any existing scenario with the same name.'
+      );
+
+      if (result) {
+        saveScenario(input.value.trim());
+        showToast('Scenario saved successfully', 'success');
+      }
+    });
+  }
+
+  // Set up input enter key
+  const input = $('#scenarioNameInput');
+  if (input) {
+    input.addEventListener('keypress', async (e) => {
+      if (e.key === 'Enter') {
+        if (!input.value.trim()) {
+          showToast('Please enter a scenario name', 'error');
+          return;
+        }
+
+        const result = await showConfirmationModal(
+          'Save Scenario',
+          'Save current configuration as "' + input.value.trim() + '"?',
+          'This will overwrite any existing scenario with the same name.'
+        );
+
+        if (result) {
+          saveScenario(input.value.trim());
+          showToast('Scenario saved successfully', 'success');
+        }
+      }
+    });
   }
 }
 
@@ -1573,6 +1628,16 @@ if (scenariosModal) {
         }
       }
     }
+
+        // Ensure the app renders once the DOM is ready so KPIs are populated
+        if (typeof window !== 'undefined') {
+          if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            // Defer to next tick to ensure all elements are present
+            setTimeout(() => { try { render(); } catch (e) { console.warn('Initial render failed:', e); } }, 0);
+          } else {
+            window.addEventListener('DOMContentLoaded', () => { try { render(); } catch (e) { console.warn('Initial render failed:', e); } });
+          }
+        }
   });
   observer.observe(scenariosModal, { attributes: true, attributeFilter: ['class'] });
 

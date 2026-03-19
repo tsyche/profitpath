@@ -1,7 +1,10 @@
 import { persistState, loadState } from "../services/stateManager";
-import { getAllScenarios, showNotification, closeScenarioModal, populateComparisonDropdowns } from "./miscService";
+import { getAllScenarios, showNotification, populateComparisonDropdowns } from "./miscService";
+import { closeScenarioModal } from "../components/Modal";
 import { uuid } from "../utils/helpers";
 import { renderScenariosList } from "../components/UIHelpers";
+import { showConfirmationModal, showToast } from "./modalService";
+
 // Scenario Management
 
 // Global flag to prevent re-entrant deletion calls
@@ -9,7 +12,7 @@ let isDeletingScenario = false;
 
 export function saveScenario(name) {
   if (!name || !name.trim()) {
-    showNotification('Please enter a scenario name', 'error');
+    showToast('Please enter a scenario name', 'error');
     return;
   }
 
@@ -19,59 +22,30 @@ export function saveScenario(name) {
     return;
   }
 
-  // Show confirmation dialog
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Confirm Save</h3>
-        <button class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>Save scenario as "<strong>${name.trim()}</strong>"?</p>
-        <p style="font-size: 12px; color: #666; margin-top: 8px;">This will save your current calculations and settings.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn secondary">Cancel</button>
-        <button class="btn primary">Save</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  // Add event listeners
-  const closeBtn = modal.querySelector('.modal-close');
-  const cancelBtn = modal.querySelector('.btn.secondary');
-  const saveBtn = modal.querySelector('.btn.primary');
-
-  const closeModal = () => modal.remove();
-
-  closeBtn.addEventListener('click', closeModal);
-  cancelBtn.addEventListener('click', closeModal);
-  saveBtn.addEventListener('click', () => {
-    closeModal();
-    performSave(name.trim());
-  });
-
-  // Auto-close on overlay click
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      closeModal();
+  // Show confirmation dialog using new modal system
+  showConfirmationModal(
+    'Confirm Save',
+    `Save scenario as "${name.trim()}"? This will save your current calculations and settings.`,
+    () => {
+      performSave(name.trim());
+    },
+    () => {
+      // User cancelled - do nothing
     }
-  });
+  );
 }
 
 function performSave(name) {
   try {
     const scenarios = getAllScenarios();
     const timestamp = new Date().toLocaleString();
+    const createdAt = new Date().toISOString();
     const currentState = window.state;
     const scenario = {
       id: uuid(),
       name: name,
       timestamp,
+      createdAt,
       state: JSON.parse(JSON.stringify(currentState)), // Deep copy
     };
 
@@ -86,16 +60,16 @@ function performSave(name) {
       });
     }
 
-    // Clear input and re-render list
-    $('#scenarioNameInput').value = '';
+    // Clear input(s) and re-render list in any open modal
+    document.querySelectorAll('#scenarioNameInput').forEach(i => i.value = '');
     renderScenariosList();
     populateComparisonDropdowns();
 
     // Show success notification
-    showNotification('Scenario saved successfully!', 'success');
+    showToast('Scenario saved successfully!', 'success');
   } catch (e) {
     console.error('Failed to save scenario:', e);
-    showNotification('Failed to save scenario', 'error');
+    showToast('Failed to save scenario', 'error');
   }
 }
 
@@ -105,50 +79,31 @@ export function loadScenario(scenarioId) {
     const scenario = scenarios.find((s) => s.id === scenarioId);
     if (!scenario) return;
 
-    // Check if confirmation modal is already open
-    if (document.getElementById('loadConfirmModal')) return;
-
     // Bypass confirmation in test mode
     if (globalThis.__TEST_MODE__ || window.__TEST_MODE__) {
       performLoad(scenario);
       return;
     }
 
-    // Show confirmation dialog
-    const modal = document.createElement('div');
-    modal.innerHTML = '<div id="loadConfirmModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;"><div style="background:white;padding:20px;border-radius:8px;max-width:400px;width:90%;text-align:center;"><p style="margin:0 0 20px 0;color:#374151;">Load scenario "<strong>' + scenario.name + '</strong>"?</p><p style="font-size: 12px; color: #666; margin-top: -15px; margin-bottom: 20px;">This will replace your current calculations and settings.</p><div style="display:flex;gap:10px;justify-content:center;"><button id="loadConfirmYes" style="padding:8px 16px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;">Load</button><button id="loadConfirmNo" style="padding:8px 16px;background:#6b7280;color:white;border:none;border-radius:4px;cursor:pointer;">Cancel</button></div></div></div>';
-
-    document.body.appendChild(modal);
-
-    // Add event listeners
-    const cancelBtn = modal.querySelector('#loadConfirmNo');
-    const loadBtn = modal.querySelector('#loadConfirmYes');
-
-    const closeModal = () => modal.remove();
-
-    cancelBtn.addEventListener('click', closeModal);
-    loadBtn.addEventListener('click', () => {
-      try {
-        closeModal(); // Close confirmation modal
-        performLoad(scenario); // Load scenario and close scenarios modal
-      } catch (e) {
-        console.error('Error during scenario loading:', e);
-        // Ensure modals are closed even if there's an error
-        try { closeModal(); } catch (e2) { /* ignore */ }
-        try { closeScenarioModal(); } catch (e2) { /* ignore */ }
-        alert('Error loading scenario');
+    // Show confirmation dialog using new modal system
+    showConfirmationModal(
+      'Confirm Load',
+      `Load scenario "${scenario.name}"? This will replace your current calculations and settings.`,
+      () => {
+        performLoad(scenario);
+        // Update the scenarios modal UI in real time
+        setTimeout(() => {
+          renderScenariosList();
+          populateComparisonDropdowns();
+        }, 100);
+      },
+      () => {
+        // User cancelled - do nothing
       }
-    });
-
-    // Auto-close on overlay click
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        closeModal();
-      }
-    });
+    );
   } catch (e) {
     console.error('Failed to load scenario:', e);
-    alert('Error loading scenario');
+    showToast('Error loading scenario', 'error');
   }
 }
 
@@ -178,7 +133,7 @@ export function performLoad(scenario) {
     closeScenarioModal();
 
     // Show success notification
-    showNotification('Scenario "' + (scenario.name || 'Unnamed') + '" loaded successfully!', 'success');
+    showToast('Scenario "' + (scenario.name || 'Unnamed') + '" loaded successfully!', 'success');
 
     // Track scenario load
     if (window.profitPathAnalytics) {
@@ -238,13 +193,24 @@ export function initializeScenarios() {
   // Set up scenarios button
   const scenariosBtn = document.getElementById('scenariosBtn');
   if (scenariosBtn) {
-    scenariosBtn.addEventListener('click', openScenarioModal);
+    scenariosBtn.addEventListener('click', () => {
+      // Open scenarios modal - this will be handled by the app.jsx
+      const modal = document.getElementById('scenariosModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+    });
   }
 
   // Set up modal close button
   const modalCloseBtn = document.querySelector('#scenariosModal .btn-close');
   if (modalCloseBtn) {
-    modalCloseBtn.addEventListener('click', closeScenarioModal);
+    modalCloseBtn.addEventListener('click', () => {
+      const modal = document.getElementById('scenariosModal');
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    });
   }
 
   // Set up save button

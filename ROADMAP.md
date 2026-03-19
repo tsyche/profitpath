@@ -10,26 +10,29 @@ See README.md for setup and development instructions.
 
 Based on user impact and technical foundation:
 
-1. **Simple Visualizations & Enhanced UX**
+1. **Enhanced Visualizations & Dashboard**
 
    - Add utilization gauge and profit waterfall charts to main interface
-   - Implement richer chart interactions and animations
-   - Enhance mobile responsiveness and touch interactions
+   - Implement richer chart interactions and animations with hover tooltips
+   - Enhance mobile responsiveness and touch-friendly data visualization
+   - Add real-time capacity visualization with color-coded indicators
    - ~4-6 hours effort
 
-2. **Scenario Comparison System**
+2. **Advanced Analytics & Sensitivity Analysis**
 
-   - Side-by-side scenario comparison with diff highlighting
-   - Key metrics comparison table
-   - Scenario blending and weighted averages
-   - ~3-4 hours effort
+   - Add "what-if" sliders for key variables (pricing, costs, utilization, employee count)
+   - Implement tornado charts showing impact of variable changes on profitability
+   - Add basic Monte Carlo simulation for risk assessment and probability modeling
+   - Include sensitivity analysis dashboard with interactive parameter adjustment
+   - ~6-8 hours effort
 
-3. **Advanced Testing Infrastructure**
+3. **Industry Benchmarking & Intelligence**
 
-   - Add integration tests for UI components and user workflows
-   - Implement visual regression testing for charts and reports
-   - Add performance testing for calculation engine
-   - ~4-5 hours effort
+   - Add industry-specific templates with benchmark data and performance standards
+   - Implement performance comparison against industry averages and best practices
+   - Add regional pricing variations and geographic market data integration
+   - Include competitive analysis tools and market positioning insights
+   - ~4-6 hours effort
 
 ---
 

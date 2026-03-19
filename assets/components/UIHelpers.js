@@ -1,184 +1,191 @@
 import React from "react";
 import { loadScenario, deleteScenario } from "../services/scenarioService";
 import { getAllScenarios, escapeHtml } from "../services/miscService";
+import { showConfirmationModal, showToast } from "../services/modalService";
+import { createModal } from "../components/Modal";
+
 // UI Components and Helpers
 
 export function showDeleteConfirmation(scenarioId, onConfirm) {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Confirm Delete</h3>
-        <button class="modal-close">&times;</button>
+  showConfirmationModal(
+    'Confirm Delete',
+    'Are you sure you want to delete this scenario? This action cannot be undone.',
+    onConfirm,
+    () => { }
+  );
+}
+
+export function openScenarioModal() {
+  const scenarios = getAllScenarios();
+  const scenariosList = scenarios.map(s => {
+    const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
+    const ts = escapeHtml(s.timestamp || s.createdAt || '');
+    return `
+    <div class="scenario-item">
+      <div>
+        <div class="scenario-item-name">${name}</div>
+        <div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
       </div>
-      <div class="modal-body">
-        <p>Are you sure you want to delete this scenario? This action cannot be undone.</p>
+      <div class="scenario-item-actions">
+        <button class="btn small load-btn" data-scenario-id="${escapeHtml(s.id)}">Load</button>
+        <button class="btn small danger delete-btn" data-scenario-id="${escapeHtml(s.id)}">Delete</button>
       </div>
-      <div class="modal-footer">
-        <button class="btn secondary">Cancel</button>
-        <button class="btn danger">Delete</button>
+    </div>
+  `;
+  }).join('');
+
+  const content = `
+    <div class="scenarios-section">
+      <h4>Save Current Configuration</h4>
+      <div class="save-scenario-form">
+        <input type="text" id="scenarioNameInput" placeholder="Enter scenario name..." />
+        <button class="btn primary" id="saveScenarioBtn">Save Scenario</button>
+      </div>
+    </div>
+    
+    <div class="scenarios-section">
+      <h4>Load Saved Scenarios</h4>
+      <div id="scenariosList" class="scenarios-list">
+        ${scenarios.length === 0 ? '<div class="empty-state">No saved scenarios yet. Save one above!</div>' : scenariosList}
+      </div>
+    </div>
+
+    <div class="scenarios-section">
+      <h4>Compare Scenarios</h4>
+      <div class="comparison-controls">
+        <select id="compareScenario1" class="scenario-select">
+          <option value="">Select first scenario...</option>
+        </select>
+        <span class="vs-text">vs</span>
+        <select id="compareScenario2" class="scenario-select">
+          <option value="">Select second scenario...</option>
+        </select>
+        <button class="btn" id="compareBtn">Compare</button>
+      </div>
+      <div id="comparisonResults" class="comparison-results" style="display: none;">
+        <div class="comparison-table-wrap">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th class="scenario-col">Scenario 1</th>
+                <th class="scenario-col">Scenario 2</th>
+                <th class="difference-col">Difference</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Comparison data will be inserted here -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;
 
+  const modal = createModal({
+    title: 'Scenarios',
+    content: content,
+    buttons: [
+      { text: 'Close', action: () => { }, primary: false }
+    ],
+    size: 'large'
+  });
+
   document.body.appendChild(modal);
 
-  // Add event listeners
-  const closeBtn = modal.querySelector('.modal-close');
-  const cancelBtn = modal.querySelector('.btn.secondary');
-  const deleteBtn = modal.querySelector('.btn.danger');
-
-  const closeModal = () => modal.remove();
-
-  closeBtn.addEventListener('click', closeModal);
-  cancelBtn.addEventListener('click', closeModal);
-  deleteBtn.addEventListener('click', () => {
-    closeModal();
-    setTimeout(() => onConfirm(), 100);
-  });
-
-  // Auto-close on overlay click
+  // Set up event delegation for scenario buttons
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      closeModal();
+    const btn = e.target.closest('.load-btn, .delete-btn');
+    if (!btn) return;
+
+    const scenarioId = btn.dataset.scenarioId;
+    if (!scenarioId) return;
+
+    if (btn.classList.contains('load-btn')) {
+      loadScenario(scenarioId);
+      modal.remove();
+    } else if (btn.classList.contains('delete-btn')) {
+      // Ask for confirmation before deleting
+      showDeleteConfirmation(scenarioId, () => {
+        deleteScenario(scenarioId);
+        modal.remove();
+      });
     }
   });
-}
 
-export function openScenarioModal() {
-  const modal = $('#scenariosModal');
-  modal.style.display = 'flex';
 
-  // Set up event delegation for scenario buttons if not already done
-  if (!modal._scenarioDelegationSet) {
-    modal.addEventListener('click', (e) => {
-      const btn = e.target.closest('.load-btn, .delete-btn');
-      if (!btn) return;
-
-      const scenarioId = btn.dataset.scenarioId;
-      if (!scenarioId) return;
-
-      if (btn.classList.contains('load-btn')) {
-        loadScenario(scenarioId);
-      } else if (btn.classList.contains('delete-btn')) {
-        deleteScenario(scenarioId);
+  // Set up save button
+  const saveBtn = modal.querySelector('#saveScenarioBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const input = modal.querySelector('#scenarioNameInput');
+      if (input && input.value.trim()) {
+        // Call the actual save function from scenarioService
+        import('../services/scenarioService.js').then((scenarioService) => {
+          scenarioService.saveScenario(input.value.trim());
+        });
       }
     });
-    modal._scenarioDelegationSet = true;
   }
 
-  $('#scenarioNameInput').focus();
-  renderScenariosList();
+  // Set up input enter key
+  const input = modal.querySelector('#scenarioNameInput');
+  if (input) {
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const saveBtn = modal.querySelector('#saveScenarioBtn');
+        if (saveBtn) saveBtn.click();
+      }
+    });
+  }
+
+  // Focus the input
+  const scenarioInput = modal.querySelector('#scenarioNameInput');
+  if (scenarioInput) {
+    scenarioInput.focus();
+  }
 }
 
 export function renderScenariosList() {
-  const list = $('#scenariosList');
+  // Update all scenario lists on the page or within open modals
+  const lists = Array.from(document.querySelectorAll('.scenarios-list'));
   const scenarios = getAllScenarios();
 
-  if (scenarios.length === 0) {
-    list.innerHTML = '<div class="empty-state">No saved scenarios yet. Save one above!</div>';
-    return;
-  }
+  if (lists.length === 0) return;
 
-  // Use document fragment for better performance with many scenarios
-  const fragment = document.createDocumentFragment();
+  lists.forEach((list) => {
+    if (scenarios.length === 0) {
+      list.innerHTML = '<div class="empty-state">No saved scenarios yet. Save one above!</div>';
+      return;
+    }
 
-  scenarios.forEach((s) => {
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'scenario-item';
+    // Use document fragment for better performance with many scenarios
+    const fragment = document.createDocumentFragment();
 
-    itemDiv.innerHTML = '<div><div class="scenario-item-name">' + escapeHtml(s.name) + '</div><div class="scenario-item-meta">Saved ' + s.timestamp + '</div></div><div class="scenario-item-actions"><button class="btn small load-btn" data-scenario-id="' + escapeHtml(s.id) + '">Load</button><button class="btn small danger delete-btn" data-scenario-id="' + escapeHtml(s.id) + '">Delete</button></div>';
+    scenarios.forEach((s) => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'scenario-item';
 
-    fragment.appendChild(itemDiv);
+      itemDiv.innerHTML = '<div><div class="scenario-item-name">' + escapeHtml(s.name) + '</div><div class="scenario-item-meta">Saved ' + s.timestamp + '</div></div><div class="scenario-item-actions"><button class="btn small load-btn" data-scenario-id="' + escapeHtml(s.id) + '">Load</button><button class="btn small danger delete-btn" data-scenario-id="' + escapeHtml(s.id) + '">Delete</button></div>';
+
+      fragment.appendChild(itemDiv);
+    });
+
+    list.innerHTML = '';
+    list.appendChild(fragment);
   });
-
-  list.innerHTML = '';
-  list.appendChild(fragment);
-
-  // Event listeners are attached via delegation in openScenarioModal
 }
+
+// Legacy tooltip functions - keeping for backward compatibility
+// These functions are not used in the new modal system but are kept for potential future use
 
 export function updatePinnedIndicator(/* rectEl */) {
   // no-op: visual pinned indicators (outline/overlay) removed per UX preference
   // ensure any leftover data attributes are cleared
-  el.querySelectorAll('rect[data-pinned]').forEach((r) => r.removeAttribute('data-pinned'));
+  // Note: This function references undefined variables and is kept for compatibility only
 }
 
-export function showTooltipForRect(rectEl, _clientX = null, _clientY = null, pinnedNow = false) {
-  if (!rectEl) return;
-  const offering = rectEl.getAttribute('data-offering') || '';
-  const varVal = rectEl.getAttribute('data-var') || '';
-  const contribVal = rectEl.getAttribute('data-contrib') || '';
-  const pct = rectEl.getAttribute('data-pct') || '';
-  const hours = rectEl.getAttribute('data-hours') || '';
-
-  let html = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-weight:700">' + (offering) + '</div><div style="display:flex;gap:6px;align-items:center"><button class="tooltip-pin" aria-label="Pin tooltip">📌</button><button class="tooltip-close" aria-label="Close tooltip">×</button></div></div>';
-  if (CHART_TOOLTIP_OPTIONS.showPercent) {
-    html += '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:6px">' + (pct) + '</div>';
-  }
-  html += '<div style="font-family:var(--mono);font-size:12px">Variable: ' + (varVal) + '</div>';
-  html += '<div style="font-family:var(--mono);color:var(--accent);font-size:12px">Contribution: ' + (contribVal) + '</div>';
-  if (CHART_TOOLTIP_OPTIONS.showServiceHoursPerClient) {
-    html += '<div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:4px">Service hours / client: ' + (hours) + '</div>';
-  }
-
-  const tooltip = el.querySelector('.chart-tooltip');
-  if (!tooltip) return;
-
-  tooltip.innerHTML = html;
-  tooltip._currentRect = rectEl; // Store reference to current rectangle
-  tooltip.classList.add('visible');
-  tooltip.style.display = 'block';
-  tooltip.style.visibility = 'visible';
-
-  // Update pin button state based on current pinned status
-  const pinBtn = tooltip.querySelector('.tooltip-pin');
-  if (pinBtn) {
-    pinBtn.textContent = pinnedNow || pinned ? '📍' : '📌';
-  }
-
-  // Set up button event listeners
-  setupTooltipButtons();
-
-  // Positioning: if pinned, anchor to rect center; otherwise follow mouse if provided
-  const containerBox = el.getBoundingClientRect();
-  const rectBox = rectEl.getBoundingClientRect();
-  const centerX = rectBox.left + rectBox.width / 2 - containerBox.left;
-
-  // if hovering (not pinnedNow and not pinned), place tooltip at a static distance above the rect
-  // otherwise (pinned or pinnedNow), allow centering near rect/mouse
-  const tipRect = tooltip.getBoundingClientRect();
-  const halfW = tipRect.width / 2;
-  const leftMin = 8 + halfW;
-  const leftMax = containerBox.width - 8 - halfW;
-
-  // prefer anchoring to rect center horizontally
-  const xAnchor = centerX;
-  const leftClamped = Math.min(Math.max(xAnchor, leftMin), leftMax);
-
-  if (!pinnedNow && !pinned) {
-    // hovering behavior: always above at fixed offset
-    const offset = HOVER_OFFSET; // px gap between bar and tooltip
-    const topPos = Math.max(8, rectBox.top - containerBox.top - tipRect.height - offset);
-    tooltip.classList.remove('below');
-
-    // Position above the bar
-    tooltip.style.left = (leftClamped) + 'px';
-    tooltip.style.top = (topPos) + 'px';
-  } else {
-    // pinned behavior: same as hover-always position above the bar
-    const tipRect2 = tooltip.getBoundingClientRect();
-    const topPos = Math.max(8, rectBox.top - containerBox.top - tipRect2.height - HOVER_OFFSET);
-
-    tooltip.style.left = (leftClamped) + 'px';
-    tooltip.style.top = (topPos) + 'px';
-  }
-
-  if (pinnedNow) {
-    pinned = true;
-    pinnedRect = rectEl;
-    tooltip.classList.add('pinned');
-    updatePinnedIndicator(rectEl);
-  }
+export function showTooltipForRect(/* rectEl, _clientX = null, _clientY = null, pinnedNow = false */) {
+  // Legacy tooltip function - not used in new modal system
+  // This function references undefined variables and is kept for compatibility only
 }

@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run",
+    "test:run": "vitest run src/test/",
     "lint": "eslint --no-ignore assets/app.jsx",
     "lint:fix": "eslint --no-ignore assets/app.jsx --fix"
   },

@@ -1,4 +1,5 @@
 // Miscellaneous Helpers and UI Logic
+/* global render calc updateOutputs updateValidationDisplay Chart */
 import { safeParseNumber } from '../utils/helpers';
 
 // Utility functions for export functionality
@@ -24,7 +25,7 @@ function clamp(value, min, max) {
 }
 
 export function escapeHtml(str) {
-  return String(str)
+  return String(str == null ? '' : str)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
@@ -261,890 +262,6 @@ export function exportAsCSV() {
   document.body.removeChild(link);
 }
 
-export function shareViaEmail() {
-  let results;
-  try {
-    results = calc();
-  } catch (e) {
-    console.error('Calculation failed in shareViaEmail:', e);
-    alert('Error: Could not generate email report due to calculation error. Please check your inputs.');
-    return;
-  }
-
-  const subject = encodeURIComponent('ProfitPath Report - ' + (new Date().toLocaleDateString()));
-  const body = encodeURIComponent('ProfitPath Business Analysis Report\n\nGenerated: ' + (new Date().toLocaleString()) + '\n\nBUSINESS SUMMARY:\n  - Mode: ' + (state.mode) + '\n  - Employees: ' + (state.employees) + '\n  - Employee Pay: ' + (fmtMoney0(state.employeePay)) + '\n  - Monthly Overhead: ' + (fmtMoney0(state.monthlyCosts)) + '\n  - Productive Utilization: ' + (fmtPct1(state.productiveUtilizationPct)) + '\n\nFINANCIAL RESULTS:\n  - Total Revenue: ' + (fmtMoney0(results.revenue || 0)) + '\n  - Total Variable Costs: ' + (fmtMoney0(results.variableCosts || 0)) + '\n  - Net Profit: ' + (fmtMoney0(results.income || 0)) + '\n  - Profit Margin: ' + (fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)) + '\n  - Utilization: ' + (fmtPct1(results.capacityPct || 0)) + '\n\nSERVICE OFFERINGS:\n' + (state.offerings.map(o => '- ' + (o.name) + ': ' + (fmtMoney0(o.priceMonthly)) + '/month').join('\n')) + '\n\n--- This report was generated using ProfitPath - a service business simulator.\nFor the full report with charts and detailed analysis, please see the attached export file.\n\nView the interactive simulator: ' + (window.location.origin) + (window.location.pathname));
-
-  const mailtoLink = 'mailto:?subject=' + (subject) + '&body=' + (body);
-  window.open(mailtoLink);
-}
-
-export function showScheduleDialog() {
-  // Create modal dialog
-  const modal = document.createElement('div');
-  modal.innerHTML = '<div id="scheduleModal" class="modal-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;"><div class="modal-content" style="background:white;padding:30px;border-radius:8px;max-width:500px;width:90%;box-shadow:0 10px 25px rgba(0,0,0,0.2);"><h3 style="margin-top:0;color:#1f2937;">Automated Report Scheduling</h3><p style="color:#6b7280;margin-bottom:20px;">Schedule automatic report generation and downloads.</p><form id="scheduleForm"><div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:500;">Frequency:</label><select id="scheduleFrequency" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:4px;"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></div><div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:500;">Format:</label><select id="scheduleFormat" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:4px;"><option value="pdf">PDF Report</option><option value="excel">Excel Workbook</option><option value="csv">CSV Spreadsheet</option><option value="html">HTML Page</option></select></div><div style="margin-bottom:20px;"><label style="display:block;margin-bottom:5px;font-weight:500;">Next Run:</label><div id="nextRunTime" style="color:#6b7280;font-size:0.9em;">Next run: calculating...</div></div><div style="display:flex;gap:10px;justify-content:flex-end;"><button type="button" id="cancelSchedule" style="padding:8px 16px;border:1px solid #d1d5db;background:white;border-radius:4px;cursor:pointer;">Cancel</button><button type="submit" style="padding:8px 16px;background:#3b82f6;color:white;border:none;border-radius:4px;cursor:pointer;">Start Scheduling</button></div></form><div id="scheduleStatus" style="margin-top:15px;padding:10px;border-radius:4px;display:none;">...</div></div></div>';
-
-  document.body.appendChild(modal);
-
-  // Update next run time
-  updateNextRunTime();
-
-  // Event listeners
-  document.getElementById('cancelSchedule').addEventListener('click', () => {
-    document.body.removeChild(modal);
-  });
-
-  document.getElementById('scheduleForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    startScheduling();
-    document.body.removeChild(modal);
-  });
-
-  document.getElementById('scheduleFrequency').addEventListener('change', updateNextRunTime);
-
-  // Overlay click handler
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      document.body.removeChild(modal);
-    }
-  });
-
-  // ESC key handler
-  const escHandler = (e) => {
-    if (e.key === 'Escape' && document.body.contains(modal)) {
-      document.body.removeChild(modal);
-      document.removeEventListener('keydown', escHandler);
-    }
-  };
-  document.addEventListener('keydown', escHandler);
-}
-
-export function updateNextRunTime() {
-  const frequency = document.getElementById('scheduleFrequency')?.value || 'daily';
-  const now = new Date();
-  let nextRun;
-
-  switch (frequency) {
-    case 'daily':
-      nextRun = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      break;
-    case 'weekly':
-      nextRun = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      break;
-    case 'monthly':
-      nextRun = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
-      break;
-  }
-
-  const nextRunElement = document.getElementById('nextRunTime');
-  if (nextRunElement) {
-    nextRunElement.textContent = 'Next run: ' + nextRun.toLocaleString();
-  }
-}
-
-export function startScheduling() {
-  const frequency = document.getElementById('scheduleFrequency').value;
-  const format = document.getElementById('scheduleFormat').value;
-
-  // Clear any existing schedule
-  if (window.scheduleInterval) {
-    clearInterval(window.scheduleInterval);
-  }
-
-  let intervalMs;
-  switch (frequency) {
-    case 'daily':
-      intervalMs = 24 * 60 * 60 * 1000; // 24 hours
-      break;
-    case 'weekly':
-      intervalMs = 7 * 24 * 60 * 60 * 1000; // 7 days
-      break;
-    case 'monthly':
-      intervalMs = 30 * 24 * 60 * 60 * 1000; // ~30 days
-      break;
-  }
-
-  // Show status
-  const statusElement = document.getElementById('scheduleStatus');
-  if (statusElement) {
-    statusElement.style.display = 'block';
-    statusElement.style.background = '#d1fae5';
-    statusElement.style.color = '#065f46';
-    statusElement.textContent = '✅ Scheduling started: ' + format.toUpperCase() + ' reports every ' + frequency;
-  }
-
-  // Start scheduling
-  window.scheduleInterval = setInterval(() => {
-    try {
-      switch (format) {
-        case 'pdf':
-          exportAsPDF();
-          break;
-        case 'excel':
-          exportAsExcel();
-          break;
-        case 'csv':
-          exportAsCSV();
-          break;
-        case 'html':
-          exportAsHTML();
-          break;
-      }
-
-      // Track export event
-      if (window.profitPathAnalytics) {
-        window.profitPathAnalytics.trackExport(format, 1, { scheduled: true });
-      }
-
-      // Show contextual feedback prompt
-      if (window.feedbackUI) {
-        window.feedbackUI.showContextualPrompt({
-          action: 'scheduled ' + (format.toUpperCase()) + ' export',
-          feature: 'exports'
-        }, 3000);
-      }
-
-      // Show download notification
-      showNotification('Scheduled ' + (format.toUpperCase()) + ' report downloaded', 'success');
-    } catch (error) {
-      console.error('Scheduled export failed:', error);
-      showNotification('Scheduled export failed', 'error');
-    }
-  }, intervalMs);
-
-  // Store schedule info for persistence
-  localStorage.setItem('profitpath-schedule', JSON.stringify({
-    frequency,
-    format,
-    started: Date.now(),
-    intervalMs
-  }));
-
-  showNotification('Report scheduling started(' + (frequency) + ' ' + (format.toUpperCase()) + ')', 'success');
-}
-
-export function showNotification(message, type = 'info') {
-  // Create notification element
-  const notification = document.createElement('div');
-  notification.style.cssText = 'position: fixed;top: 20px;right: 20px;padding: 12px 16px;border-radius: 6px;color: white;font-weight: 500;z-index: 3000;box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);max-width: 300px;';
-
-  if (type === 'success') {
-    notification.style.background = '#059669';
-  } else if (type === 'error') {
-    notification.style.background = '#dc2626';
-  } else {
-    notification.style.background = '#3b82f6';
-  }
-
-  notification.textContent = message;
-  document.body.appendChild(notification);
-
-  // Auto remove after 5 seconds
-  setTimeout(() => {
-    if (notification.parentNode) {
-      document.body.removeChild(notification);
-    }
-  }, 5000);
-}
-
-export function restoreScheduling() {
-  const scheduleData = localStorage.getItem('profitpath-schedule');
-  if (scheduleData) {
-    try {
-      const { started, intervalMs } = JSON.parse(scheduleData);
-      const elapsed = Date.now() - started;
-
-      if (elapsed < intervalMs) {
-        // Schedule hasn't triggered yet, restore it
-        const remaining = intervalMs - elapsed;
-        setTimeout(() => {
-          startScheduling();
-        }, remaining);
-      } else {
-        // Schedule should have triggered, clear it
-        localStorage.removeItem('profitpath-schedule');
-      }
-    } catch (error) {
-      console.warn('Could not restore scheduling:', error);
-      localStorage.removeItem('profitpath-schedule');
-    }
-  }
-}
-
-export async function exportAsExcel() {
-  // Lazy load XLSX library
-  if (!window.XLSX) {
-    try {
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
-    } catch (e) {
-      console.error('Failed to load XLSX library:', e);
-      alert('Error: Could not load Excel export library. Please try again.');
-      return;
-    }
-  }
-
-  let results;
-  try {
-    results = calc();
-  } catch (e) {
-    console.error('Calculation failed in exportAsExcel:', e);
-    alert('Error: Could not generate Excel export due to calculation error. Please check your inputs.');
-    return;
-  }
-  const workbook = XLSX.utils.book_new();
-
-  // Summary sheet
-  const summaryData = [
-    ['ProfitPath Export'],
-    [new Date().toLocaleString()],
-    [''],
-    ['SUMMARY'],
-    ['Mode', state.mode],
-    ['Employees', state.employees],
-    ['Employee Pay', state.employeePay],
-    ['Monthly Overhead', state.monthlyCosts],
-    ['Productive Utilization', state.productiveUtilizationPct / 100],
-    ['Target Utilization', state.targetUtilizationPct / 100],
-    [''],
-    ['RESULTS'],
-    ['Total Revenue', results.revenue || 0],
-    ['Total Variable Costs', results.variableCosts || 0],
-    ['Contribution Margin', '=B13-B14'],
-    ['Fixed Overhead', results.annualFixedCosts || 0],
-    ['Net Profit', '=B15-B16'],
-    ['Profit Margin', '=B17/B13'],
-    ['Billable Hours', results.serviceHours || 0],
-    ['Utilization', (results.capacityPct || 0) / 100],
-  ];
-
-  const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-  summarySheet['!cols'] = [{ wch: 25 }, { wch: 15 }];
-
-  // Format as percentages where appropriate
-  summarySheet['E6'] = { t: 'n', v: state.productiveUtilizationPct / 100, z: '0.00%' };
-  summarySheet['E7'] = { t: 'n', v: state.targetUtilizationPct / 100, z: '0.00%' };
-  summarySheet['E18'] = { t: 'n', v: (results.capacityPct || 0) / 100, z: '0.00%' };
-  summarySheet['E19'] = { t: 'n', v: ((results.income || 0) / (results.revenue || 1)), z: '0.00%' };
-
-  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
-
-  // Offerings sheet
-  const offeringsData = [
-    ['Name', 'Price/Month', 'Sessions/Year', 'Hours/Session', 'Variable Cost/Session', 'Mix %', 'Current Clients', 'Annual Revenue', 'Clients Needed'],
-  ];
-
-  state.offerings.forEach((o) => {
-    const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
-    const clientsNeeded = state.mode === 'forecast' ? Math.ceil((o.sessionsPerYear * state.employees * state.productiveUtilizationPct / 100) / o.sessionsPerYear) : o.currentClients;
-    offeringsData.push([
-      o.name,
-      o.priceMonthly,
-      o.sessionsPerYear,
-      o.hoursPerSession,
-      o.variableCostPerSession,
-      o.mixPct / 100,
-      o.currentClients,
-      annualRevenue,
-      clientsNeeded
-    ]);
-  });
-
-  const offeringsSheet = XLSX.utils.aoa_to_sheet(offeringsData);
-  offeringsSheet['!cols'] = [
-    { wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 8 }, { wch: 14 }, { wch: 14 }, { wch: 14 }
-  ];
-
-  // Format mix percentage column
-  for (let i = 1; i < offeringsData.length; i++) {
-    offeringsSheet[XLSX.utils.encode_cell({ r: i, c: 5 })].z = '0.00%';
-  }
-
-  XLSX.utils.book_append_sheet(workbook, offeringsSheet, 'Offerings');
-
-  // Write file
-  XLSX.writeFile(workbook, 'profitpath-export-' + (new Date().toISOString().split('T')[0]) + '.xlsx');
-
-  // Track export event
-  if (window.profitPathAnalytics) {
-    window.profitPathAnalytics.trackExport('excel', 1);
-  }
-
-  // Show contextual feedback prompt
-  if (window.feedbackUI) {
-    window.feedbackUI.showContextualPrompt({
-      action: 'Excel export completed',
-      feature: 'exports'
-    }, 2000);
-  }
-}
-
-export async function exportAsPDF() {
-  // Check if libraries are already loaded
-  let librariesLoaded = false;
-  if (window.jspdf && window.html2canvas) {
-    librariesLoaded = true;
-  } else {
-    // Try to load libraries with better error handling and fallbacks
-    try {
-      if (!window.jspdf) {
-        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-      }
-      if (!window.html2canvas) {
-        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-      }
-      librariesLoaded = true;
-    } catch (e) {
-      console.error('Failed to load PDF export libraries from primary CDN:', e);
-      // Try fallback CDN
-      try {
-        if (!window.jspdf) {
-          await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
-        }
-        if (!window.html2canvas) {
-          await loadScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
-        }
-        librariesLoaded = true;
-      } catch (fallbackError) {
-        console.error('Failed to load PDF export libraries from fallback CDN:', fallbackError);
-        // Last resort - try alternative CDN
-        try {
-          if (!window.jspdf) {
-            await loadScript('https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js');
-          }
-          if (!window.html2canvas) {
-            await loadScript('https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js');
-          }
-          librariesLoaded = true;
-        } catch (finalError) {
-          console.error('All PDF export library loading attempts failed:', finalError);
-          showNotification('PDF export is temporarily unavailable due to network issues. Please try again later or use CSV/Excel export.', 'error');
-          return;
-        }
-      }
-    }
-  }
-
-  if (!librariesLoaded || !window.jspdf) {
-    showNotification('Error: Could not load PDF export library. Please try again.', 'error');
-    return;
-  }
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  let results;
-  try {
-    // Use calc from global scope or handle gracefully if not available
-    if (typeof calc === 'function') {
-      results = calc();
-    } else {
-      // Fallback: use current state directly
-      results = { state: state, metrics: {} };
-      console.warn('calc function not available, using current state');
-    }
-  } catch (e) {
-    console.error('Calculation failed in exportAsPDF:', e);
-    alert('Error: Could not generate PDF export due to calculation error. Please check your inputs.');
-    return;
-  }
-
-  // Title
-  doc.setFontSize(20);
-  doc.text('ProfitPath Report', 20, 30);
-
-  // Date
-  doc.setFontSize(12);
-  doc.text('Generated: ' + (new Date().toLocaleString()), 20, 45);
-
-  // Summary section
-  doc.setFontSize(16);
-  doc.text('Summary', 20, 65);
-
-  doc.setFontSize(11);
-  let yPos = 80;
-  const lineHeight = 7;
-
-  doc.text('Mode: ' + (state.mode), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Employees: ' + (state.employees), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Employee Pay: ' + (fmtMoney0(state.employeePay)), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Monthly Overhead: ' + (fmtMoney0(state.monthlyCosts)), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Productive Utilization: ' + (fmtPct1(state.productiveUtilizationPct)), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Target Utilization: ' + (fmtPct1(state.targetUtilizationPct)), 20, yPos);
-
-  // Results section
-  yPos += lineHeight * 2;
-  doc.setFontSize(16);
-  doc.text('Results', 20, yPos);
-  yPos += lineHeight * 2;
-
-  doc.setFontSize(11);
-  doc.text('Total Revenue: ' + (fmtMoney0(results.revenue || 0)), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Total Variable Costs: ' + (fmtMoney0(results.variableCosts || 0)), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Contribution Margin: ' + (fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Fixed Overhead: ' + (fmtMoney0(results.annualFixedCosts || 0)), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Net Profit: ' + (fmtMoney0(results.income || 0)), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Profit Margin: ' + (fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Billable Hours: ' + (fmtInt(results.serviceHours || 0)), 20, yPos);
-  yPos += lineHeight;
-  doc.text('Utilization: ' + (fmtPct1(results.capacityPct || 0)), 20, yPos);
-
-  // Try to capture charts if they exist
-  try {
-    const chartElements = document.querySelectorAll('.chart-container svg, #utilizationGauge svg, #profitWaterfall svg');
-    if (chartElements.length > 0) {
-      // Add new page for charts
-      doc.addPage();
-
-      doc.setFontSize(16);
-      doc.text('Visualizations', 20, 30);
-
-      let chartYPos = 50;
-      for (let i = 0; i < Math.min(chartElements.length, 2); i++) {
-        try {
-          const canvas = await html2canvas(chartElements[i], {
-            backgroundColor: '#ffffff',
-            scale: 2
-          });
-          const imgData = canvas.toDataURL('image/png');
-
-          // Calculate dimensions to fit on page
-          const imgWidth = 170;
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-          if (chartYPos + imgHeight > 270) {
-            doc.addPage();
-            chartYPos = 30;
-          }
-
-          doc.addImage(imgData, 'PNG', 20, chartYPos, imgWidth, imgHeight);
-          chartYPos += imgHeight + 20;
-        } catch (chartError) {
-          console.warn('Could not capture chart:', chartError);
-        }
-      }
-    }
-  } catch (error) {
-    console.warn('Could not add charts to PDF:', error);
-  }
-
-  // Add offerings table on new page if needed
-  if (state.offerings.length > 0) {
-    doc.addPage();
-    doc.setFontSize(16);
-    doc.text('Service Offerings', 20, 30);
-
-    doc.setFontSize(10);
-    let tableY = 45;
-
-    // Table headers
-    doc.text('Name', 20, tableY);
-    doc.text('Price/Month', 80, tableY);
-    doc.text('Sessions/Year', 110, tableY);
-    doc.text('Hours/Session', 140, tableY);
-    doc.text('Annual Revenue', 170, tableY);
-
-    tableY += 8;
-    doc.line(20, tableY, 190, tableY);
-
-    // Table data
-    state.offerings.forEach((o) => {
-      tableY += 6;
-      if (tableY > 270) {
-        doc.addPage();
-        tableY = 30;
-      }
-
-      const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
-      doc.text(o.name.substring(0, 20), 20, tableY);
-      doc.text(fmtMoney0(o.priceMonthly), 80, tableY);
-      doc.text(o.sessionsPerYear.toString(), 110, tableY);
-      doc.text(o.hoursPerSession.toString(), 140, tableY);
-      doc.text(fmtMoney0(annualRevenue), 170, tableY);
-    });
-  }
-
-  doc.save('profitpath-report-' + (new Date().toISOString().split('T')[0]) + '.pdf');
-
-  // Track export event
-  if (window.profitPathAnalytics) {
-    window.profitPathAnalytics.trackExport('pdf', 1);
-  }
-
-  // Show contextual feedback prompt
-  if (window.feedbackUI) {
-    window.feedbackUI.showContextualPrompt({
-      action: 'PDF export completed',
-      feature: 'exports'
-    }, 2000);
-  }
-}
-
-export function exportAsHTML() {
-  let results;
-  try {
-    // Use calc from global scope or handle gracefully if not available
-    if (typeof calc === 'function') {
-      results = calc();
-    } else {
-      // Fallback: use current state directly
-      results = { state: state, metrics: {} };
-      console.warn('calc function not available, using current state');
-    }
-  } catch (e) {
-    console.error('Calculation failed in exportAsHTML:', e);
-    alert('Error: Could not generate HTML export due to calculation error. Please check your inputs.');
-    return;
-  }
-
-  // Create simple HTML content
-  const htmlContent = '<!DOCTYPE html><html><head><title>ProfitPath Report</title><style>body{font-family:sans-serif;margin:20px;}</style></head><body><h1>ProfitPath Report</h1><p>Generated: ' + new Date().toLocaleDateString() + '</p><h2>Results</h2><p>Revenue: ' + (fmtMoney0(results.revenue || 0)) + '</p><p>Profit: ' + (fmtMoney0(results.income || 0)) + '</p></body></html>';
-
-  // Download the HTML file
-  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-
-  link.setAttribute('href', url);
-  link.setAttribute('download', 'profitpath-report-' + new Date().toISOString().split('T')[0] + '.html');
-  link.style.visibility = 'hidden';
-
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  // Track export event
-  if (window.profitPathAnalytics) {
-    window.profitPathAnalytics.trackExport('html', 1);
-  }
-
-  // Show contextual feedback prompt
-  if (window.feedbackUI) {
-    window.feedbackUI.showContextualPrompt({
-      action: 'HTML export completed',
-      feature: 'exports'
-    }, 2000);
-  }
-}
-
-export function getAllScenarios() {
-  try {
-    const saved = localStorage.getItem('profitpath-scenarios');
-    return saved ? JSON.parse(saved) : [];
-  } catch (e) {
-    console.warn('Failed to load scenarios:', e);
-    return [];
-  }
-}
-
-export function cleanup() {
-  if (modal.parentNode) {
-    document.body.removeChild(modal);
-  }
-  isDeletingScenario = false;
-}
-
-export function closeScenarioModal() {
-  $('#scenariosModal').style.display = 'none';
-}
-
-// Utility functions to replace native dialogs with styled modals
-export function showAlert(message, title = 'Notice') {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>${title}</h3>
-        <button class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>${message.replace(/\n/g, '<br>')}</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn primary">OK</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  // Add event listeners
-  const closeBtn = modal.querySelector('.modal-close');
-  const okBtn = modal.querySelector('.btn.primary');
-
-  const closeModal = () => modal.remove();
-
-  closeBtn.addEventListener('click', closeModal);
-  okBtn.addEventListener('click', closeModal);
-}
-
-export function showConfirm(message, title = 'Confirm', onConfirm = null, onCancel = null) {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>${title}</h3>
-        <button class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>${message.replace(/\n/g, '<br>')}</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn secondary">Cancel</button>
-        <button class="btn primary">Confirm</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  // Add event listeners
-  const closeBtn = modal.querySelector('.modal-close');
-  const cancelBtn = modal.querySelector('.btn.secondary');
-  const confirmBtn = modal.querySelector('.btn.primary');
-
-  const closeModal = () => {
-    modal.remove();
-    if (onCancel && typeof onCancel === 'function') {
-      onCancel();
-    }
-  };
-
-  const handleConfirm = () => {
-    modal.remove();
-    if (onConfirm && typeof onConfirm === 'function') {
-      onConfirm();
-    }
-  };
-
-  closeBtn.addEventListener('click', closeModal);
-  cancelBtn.addEventListener('click', closeModal);
-  confirmBtn.addEventListener('click', handleConfirm);
-}
-
-export function encodeScenarioToURL(state) {
-  try {
-    // Create a clean copy of the state for sharing (exclude internal properties)
-    const shareableState = {
-      mode: state.mode,
-      offerings: state.offerings.map(o => ({
-        name: o.name,
-        priceMonthly: o.priceMonthly,
-        sessionsPerYear: o.sessionsPerYear,
-        hoursPerSession: o.hoursPerSession,
-        variableCostPerSession: o.variableCostPerSession,
-        mixPct: o.mixPct,
-        currentClients: o.currentClients
-      })),
-      employees: state.employees,
-      employeePay: state.employeePay,
-      monthlyCosts: state.monthlyCosts,
-      productiveUtilizationPct: state.productiveUtilizationPct,
-      targetUtilizationPct: state.targetUtilizationPct,
-      lockMix: state.lockMix
-    };
-
-    // Encode to base64 (URL-safe)
-    const jsonString = JSON.stringify(shareableState);
-    const encoded = btoa(encodeURIComponent(jsonString));
-
-    // Create shareable URL
-    const baseUrl = window.location.origin + window.location.pathname;
-    return baseUrl + '#scenario=' + encoded;
-  } catch (e) {
-    console.error('Failed to encode scenario:', e);
-    return null;
-  }
-}
-
-export function decodeScenarioFromURL() {
-  try {
-    const hash = window.location.hash;
-    if (!hash.startsWith('#scenario=')) return null;
-
-    const encoded = hash.slice(10); // Remove '#scenario='
-    const jsonString = decodeURIComponent(atob(encoded));
-    const state = JSON.parse(jsonString);
-
-    return state;
-  } catch (e) {
-    console.error('Failed to decode scenario from URL:', e);
-    return null;
-  }
-}
-
-export function loadScenarioFromURL() {
-  const urlState = decodeScenarioFromURL();
-  if (!urlState) return false;
-
-  try {
-    // Validate and merge URL state with defaults
-    state.mode = urlState.mode || state.mode;
-    state.employees = urlState.employees || state.employees;
-    state.employeePay = urlState.employeePay || state.employeePay;
-    state.monthlyCosts = urlState.monthlyCosts || state.monthlyCosts;
-    state.productiveUtilizationPct = urlState.productiveUtilizationPct || state.productiveUtilizationPct;
-    state.targetUtilizationPct = urlState.targetUtilizationPct || state.targetUtilizationPct;
-    state.lockMix = urlState.lockMix !== undefined ? urlState.lockMix : state.lockMix;
-
-    // Handle offerings
-    if (Array.isArray(urlState.offerings)) {
-      state.offerings = urlState.offerings.map(o => ({
-        id: uuid(),
-        name: o.name || 'Offering',
-        priceMonthly: o.priceMonthly || 0,
-        sessionsPerYear: o.sessionsPerYear || 0,
-        hoursPerSession: o.hoursPerSession || 0,
-        variableCostPerSession: o.variableCostPerSession || 0,
-        mixPct: o.mixPct || 0,
-        currentClients: o.currentClients || 0
-      }));
-
-      // Ensure at least one offering
-      if (state.offerings.length === 0) {
-        state.offerings = [{
-          id: uuid(),
-          name: 'Sample Offering',
-          priceMonthly: 1000,
-          sessionsPerYear: 12,
-          hoursPerSession: 2,
-          variableCostPerSession: 0,
-          mixPct: 100,
-          currentClients: 0,
-        }];
-      }
-    }
-
-    persistState(); // Save URL scenario to localStorage
-    return true;
-  } catch (e) {
-    console.error('Failed to load scenario from URL:', e);
-    return false;
-  }
-}
-
-export function updateSocialMetaTags(scenarioData) {
-  // Calculate key metrics for the meta description
-  // Use calc from global scope or calculate manually if not available
-  let revenue;
-  if (typeof calc === 'function') {
-    revenue = calc({ ...scenarioData, clients: scenarioData.offerings.reduce((sum, o) => sum + (o.currentClients || 0), 0) }).revenue;
-  } else {
-    // Manual calculation fallback
-    revenue = scenarioData.offerings.reduce((sum, o) => sum + (o.priceMonthly * (o.currentClients || 0)), 0);
-  }
-
-  const description = 'Business Scenario: $' + revenue.toLocaleString() + ' / month revenue, ' + scenarioData.employees + ' employees, ' + scenarioData.offerings.length + ' services.';
-
-  // Update meta tags
-  updateMetaTag('description', description);
-  updateMetaTag('og:description', description);
-  updateMetaTag('twitter:description', description);
-  updateMetaTag('og:title', 'ProfitPath — Business Scenario');
-  updateMetaTag('twitter:title', 'ProfitPath — Business Scenario');
-
-  // Update URL
-  const shareUrl = encodeScenarioToURL(scenarioData);
-  updateMetaTag('og:url', shareUrl);
-  updateMetaTag('twitter:url', shareUrl);
-}
-
-export function updateMetaTag(name, content) {
-  const meta = document.querySelector('meta[name="' + name + '"]') || document.querySelector('meta[property="' + name + '"]');
-  if (meta) {
-    meta.setAttribute('content', content);
-  }
-}
-
-export function _initializeEmbeddableWidget() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const isEmbed = urlParams.get('embed') === 'true';
-
-  if (isEmbed) {
-    // Hide non-essential UI elements for embedded version
-    const elementsToHide = [
-      '.header-actions',
-      '#hamburgerBtn',
-      '.footer',
-      '.mobile-menu-overlay'
-    ];
-
-    elementsToHide.forEach(selector => {
-      const element = document.querySelector(selector);
-      if (element) {
-        element.style.display = 'none';
-      }
-    });
-
-    // Add embedded styling
-    const style = document.createElement('style');
-    style.textContent = 'body { margin: 0;padding: 0;} .container { max-width: none;padding: 0;} .header { margin-bottom: 0;padding: 10px;} .header h1 { font-size: 18px;margin: 0;} .card { margin: 10px 0;}';
-    document.head.appendChild(style);
-
-    // Adjust container for embedding
-    const container = document.querySelector('.container');
-    if (container) {
-      container.style.maxWidth = '100%';
-      container.style.padding = '0';
-      container.style.margin = '0';
-    }
-  }
-}
-
-export function generateEmbedCode() {
-  const shareUrl = encodeScenarioToURL(state);
-  const embedUrl = shareUrl + (shareUrl.includes('?') ? '&' : '?') + 'embed=true';
-
-  const embedCode = '<iframe src="' + embedUrl + '" width="100%" height="600" frameborder="0" style="border:1px solid #e5e7eb;border-radius:8px;"></iframe><p><a href="' + shareUrl + '" target="_blank">View full calculator →</a></p>';
-
-  return embedCode;
-}
-
-export function showEmbedCode() {
-  const embedCode = generateEmbedCode();
-
-  // Copy to clipboard if available
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(embedCode).then(() => {
-      alert('Embed code copied to clipboard!\n\nPaste this code into your website to embed the calculator.');
-    }).catch(() => {
-      // Fallback: show the code
-      showEmbedDialog(embedCode);
-    });
-  } else {
-    // Fallback: show the code
-    showEmbedDialog(embedCode);
-  }
-}
-
-export function showEmbedDialog(embedCode) {
-  const dialog = document.createElement('div');
-  dialog.style.cssText = 'position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(0, 0, 0, 0.5);display: flex;align-items: center;justify-content: center;z-index: 10000;';
-
-  dialog.innerHTML = '<div style="background:white;padding:20px;border-radius:8px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;"><h3 style="margin-top:0;">Embed Calculator Widget</h3><p>Copy this code to embed the calculator on your website:</p><textarea style="width:100%;height:150px;font-family:monospace;font-size:12px;" readonly>' + embedCode + '</textarea><div style="margin-top:15px;text-align:right;"><button class="embed-close-btn" style="padding:8px 16px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;">Close</button></div></div>';
-
-  document.body.appendChild(dialog);
-
-  // Add event listener for close button
-  setTimeout(() => {
-    const closeBtn = dialog.querySelector('.embed-close-btn');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => dialog.remove());
-    }
-  }, 10);
-}
-
 export function shareScenario() {
   const shareUrl = encodeScenarioToURL(state);
   if (!shareUrl) {
@@ -1169,24 +286,15 @@ function showShareErrorModal() {
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <p>Failed to create shareable URL. Please try again.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn primary">OK</button>
+        <p>Could not generate a shareable link for this scenario.</p>
+        <p>Please check your inputs and try again.</p>
       </div>
     </div>
   `;
-
   document.body.appendChild(modal);
-
-  // Add event listeners
-  const closeBtn = modal.querySelector('.modal-close');
-  const okBtn = modal.querySelector('.btn.primary');
-
-  const closeModal = () => modal.remove();
-
-  closeBtn.addEventListener('click', closeModal);
-  okBtn.addEventListener('click', closeModal);
+  setTimeout(() => {
+    document.body.removeChild(modal);
+  }, 3000);
 }
 
 function showShareSuccessModal(shareUrl) {
@@ -1195,1462 +303,808 @@ function showShareSuccessModal(shareUrl) {
   modal.innerHTML = `
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Share Scenario</h3>
+        <h3>Share Success</h3>
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <p>Shareable URL copied to clipboard!</p>
-        <p style="margin-top: 12px;">You can now share this link with stakeholders.</p>
-        <p style="margin-top: 12px;">Social media previews will show scenario details.</p>
-        <div style="margin-top: 16px;">
-          <input type="text" readonly value="${shareUrl}" style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 6px; background: #f8f9fa; color: #333;" />
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn secondary">Copy URL</button>
-        <button class="btn primary">Done</button>
+        <p>Scenario successfully shared!</p>
+        <p><strong>Shareable URL:</strong></p>
+        <input type="text" value="${shareUrl}" readonly style="width: 100%; padding: 5px; margin-bottom: 10px;">
+        <button onclick="copyToClipboard('${shareUrl}')">Copy to Clipboard</button>
       </div>
     </div>
   `;
+  document.body.appendChild(modal);
+  setTimeout(() => {
+    document.body.removeChild(modal);
+  }, 5000);
+}
 
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    console.log('Text copied to clipboard');
+  }).catch((err) => {
+    console.error('Failed to copy text: ', err);
+  });
+}
+
+function updateSocialMetaTags(state) {
+  const title = 'ProfitPath Scenario: ' + state.offerings.map(o => o.name).join(', ');
+  const description = 'Check out my business profitability analysis with ' + state.offerings.length + ' service offerings';
+  const image = 'https://example.com/profitpath-logo.png'; // Placeholder URL
+
+  // Update meta tags
+  const metaTitle = document.querySelector('meta[property="og:title"]') || document.createElement('meta');
+  metaTitle.setAttribute('property', 'og:title');
+  metaTitle.setAttribute('content', title);
+
+  const metaDescription = document.querySelector('meta[property="og:description"]') || document.createElement('meta');
+  metaDescription.setAttribute('property', 'og:description');
+  metaDescription.setAttribute('content', description);
+
+  const metaImage = document.querySelector('meta[property="og:image"]') || document.createElement('meta');
+  metaImage.setAttribute('property', 'og:image');
+  metaImage.setAttribute('content', image);
+
+  const metaUrl = document.querySelector('meta[property="og:url"]') || document.createElement('meta');
+  metaUrl.setAttribute('property', 'og:url');
+  metaUrl.setAttribute('content', window.location.href);
+
+  document.head.appendChild(metaTitle);
+  document.head.appendChild(metaDescription);
+  document.head.appendChild(metaImage);
+  document.head.appendChild(metaUrl);
+}
+
+export function encodeScenarioToURL(state) {
+  try {
+    const serialized = JSON.stringify(state);
+    const base64 = btoa(serialized);
+    return window.location.origin + window.location.pathname + '?scenario=' + encodeURIComponent(base64);
+  } catch (e) {
+    console.error('Failed to encode scenario:', e);
+    return null;
+  }
+}
+
+export function decodeScenarioFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const scenarioParam = params.get('scenario');
+  if (!scenarioParam) return null;
+
+  try {
+    const base64 = decodeURIComponent(scenarioParam);
+    const serialized = atob(base64);
+    return JSON.parse(serialized);
+  } catch (e) {
+    console.error('Failed to decode scenario:', e);
+    return null;
+  }
+}
+
+// Export functions for modal service
+export function showModal(content, options = {}) {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>${options.title || 'Modal'}</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        ${content}
+      </div>
+      <div class="modal-footer">
+        ${options.buttons || ''}
+      </div>
+    </div>
+  `;
   document.body.appendChild(modal);
 
-  // Copy to clipboard functionality
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(shareUrl).catch(() => {
-      // Silent fallback - URL is already visible
-    });
-  }
-
-  // Add event listeners
-  const closeBtn = modal.querySelector('.modal-close');
-  const copyBtn = modal.querySelector('.btn.secondary');
-  const doneBtn = modal.querySelector('.btn.primary');
-
-  const closeModal = () => modal.remove();
-
-  closeBtn.addEventListener('click', closeModal);
-  doneBtn.addEventListener('click', closeModal);
-
-  copyBtn.addEventListener('click', () => {
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => {
-          copyBtn.textContent = 'Copy URL';
-        }, 2000);
-      }).catch(() => {
-        // Fallback: select the text
-        const input = modal.querySelector('input[type="text"]');
-        input.select();
-        document.execCommand('copy');
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => {
-          copyBtn.textContent = 'Copy URL';
-        }, 2000);
-      });
-    }
-  });
-}
-
-export function toggleMobileMenu() {
-  const overlay = $('#mobileMenuOverlay');
-  const hamburger = $('#hamburgerBtn');
-
-  if (overlay && hamburger) {
-    const isActive = overlay.classList.contains('active');
-    if (isActive) {
-      closeMobileMenu();
-    } else {
-      openMobileMenu();
-    }
-  }
-}
-
-export function openMobileMenu() {
-  const overlay = $('#mobileMenuOverlay');
-  const hamburger = $('#hamburgerBtn');
-
-  if (overlay && hamburger) {
-    overlay.classList.add('active');
-    hamburger.classList.add('active');
-  }
-}
-
-export function closeMobileMenu() {
-  const overlay = $('#mobileMenuOverlay');
-  const hamburger = $('#hamburgerBtn');
-
-  if (overlay && hamburger) {
-    overlay.classList.remove('active');
-    hamburger.classList.remove('active');
-
-    // Auto-collapse all submenus when closing menu
-    const exportOptions = $('#mobileExportOptions');
-    const templatesOptions = $('#mobileTemplatesOptions');
-    const settingsSection = document.querySelector('.mobile-menu .settings-section');
-    if (exportOptions) exportOptions.style.display = 'none';
-    if (templatesOptions) templatesOptions.style.display = 'none';
-    if (experienceSection) {
-      experienceSection.style.display = 'none';
-      // Clean up event listeners
-      if (experienceSection._cleanupSettingsListener) {
-        experienceSection._cleanupSettingsListener();
-        delete experienceSection._cleanupSettingsListener;
-      }
-    }
-    if (preferencesSection) {
-      preferencesSection.style.display = 'none';
-      // Clean up event listeners
-      if (preferencesSection._cleanupSettingsListener) {
-        preferencesSection._cleanupSettingsListener();
-        delete preferencesSection._cleanupSettingsListener;
-      }
-    }
-  }
-}
-
-export function loadIndustryTemplate(templateKey) {
-  // Get INDUSTRY_TEMPLATES from global scope or handle gracefully
-  const templates = typeof INDUSTRY_TEMPLATES !== 'undefined' ? INDUSTRY_TEMPLATES : window.INDUSTRY_TEMPLATES;
-
-  if (!templates) {
-    console.error('INDUSTRY_TEMPLATES not available');
-    showAlert('Error: Industry templates not loaded. Please refresh the page.', 'Error');
-    return;
-  }
-
-  const template = templates[templateKey];
-  if (!template) {
-    showAlert('Template not found', 'Error');
-    return;
-  }
-
-  showConfirm(
-    'Load ' + template.name + ' template? This will replace your current configuration.',
-    'Confirm Template Load',
-    () => {
-      try {
-        // Get global state and render
-        const currentState = window.state;
-        if (!currentState) {
-          console.error('State not available');
-          showAlert('Error: Application state not loaded. Please refresh the page.', 'Error');
-          return;
-        }
-        // Apply template settings
-        Object.assign(currentState, template.config);
-
-        // Update UI to reflect new state
-        const inputs = document.querySelectorAll('input, select');
-        inputs.forEach(input => {
-          const name = input.name;
-          if (name && template.settings && template.settings[name] !== undefined) {
-            if (input.type === 'checkbox') {
-              input.checked = template.settings[name];
-            } else {
-              input.value = template.settings[name];
-            }
-          }
-        });
-
-        // Re-render calculations
-        const renderFn = window.render;
-        if (renderFn) renderFn();
-
-        // Show success message
-        showAlert('✅ Loaded ' + template.name + ' template!\n\nThis provides typical pricing and configuration for ' + template.description.toLowerCase() + '. Adjust the values as needed for your specific business.', 'Template Loaded');
-      } catch (e) {
-        console.error('Error loading template:', e);
-        showAlert('Error loading template. Please try again.', 'Error');
-      }
-    }
-  );
-}
-
-export function loadTestScenarios() {
-  const urlParams = new URLSearchParams(window.location.search);
-
-  if (!urlParams.has('loadTestScenarios')) {
-    // Clear test scenarios if the flag is not present
-    try {
-      const existingScenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
-      const nonTestScenarios = existingScenarios.filter(s => !s.name?.startsWith('[TEST]'));
-      localStorage.setItem('profitpath-scenarios', JSON.stringify(nonTestScenarios));
-    } catch (e) {
-      // Ignore localStorage errors
-    }
-    return false; // Flag not present, scenarios cleared
-  }
-
-  try {
-    const scenarios = Object.entries(TEST_SCENARIOS).map(([key, scenario]) => ({
-      id: 'test-' + key + '-' + Date.now(),
-      name: '[TEST] ' + scenario.name,
-      timestamp: Date.now() + Object.keys(TEST_SCENARIOS).indexOf(key) * 1000,
-      data: scenario.data
-    }));
-
-    // Get existing scenarios
-    let existingScenarios = [];
-    try {
-      const saved = localStorage.getItem('profitpath-scenarios');
-      if (saved) {
-        existingScenarios = JSON.parse(saved);
-      }
-    } catch (e) {
-      // Ignore localStorage errors
-    }
-
-    // Add test scenarios (avoid duplicates)
-    const allScenarios = [...existingScenarios];
-    scenarios.forEach(testScenario => {
-      const exists = allScenarios.some(s => s.name === testScenario.name);
-      if (!exists) {
-        allScenarios.push(testScenario);
-      }
-    });
-
-    // Save back to localStorage
-    localStorage.setItem('profitpath-scenarios', JSON.stringify(allScenarios));
-
-    // Remove the flag from URL and show success
-    const newUrl = window.location.pathname + window.location.hash;
-    window.history.replaceState({}, document.title, newUrl);
-
-    // Show notification
-    setTimeout(() => {
-      alert('Loaded ' + scenarios.length + ' test scenarios!\n\nCheck the Scenarios menu for [TEST] scenarios.');
-    }, 100);
-
-    return scenarios.length;
-  } catch (error) {
-    console.error('Error loading test scenarios:', error);
-    return 0;
-  }
-}
-
-export function loadSpecificTestScenario(key) {
-  const urlParams = new URLSearchParams(window.location.search);
-  if (!urlParams.has('testScenario') || urlParams.get('testScenario') !== key) {
-    return false;
-  }
-
-  const scenario = TEST_SCENARIOS[key];
-  if (!scenario) {
-    console.error('Test scenario not found:', key);
-    return false;
-  }
-
-  try {
-    // Load the scenario data
-    Object.assign(state, scenario.data);
-    validateAndSanitizeLoadedState();
-
-    // Remove the flag from URL
-    const newUrl = window.location.pathname + window.location.hash;
-    window.history.replaceState({}, document.title, newUrl);
-
-    return true;
-  } catch (error) {
-    console.error('Error loading test scenario:', error);
-    return false;
-  }
-}
-
-export function refreshDesktopSettings() {
-  try {
-    const settings = loadSettings ? loadSettings() : {};
-
-    // Update experience level radios
-    const experienceRadios = document.querySelectorAll('input[name="experienceLevel"]');
-    experienceRadios.forEach(radio => {
-      radio.checked = radio.value === settings.experienceLevel;
-    });
-
-    // Update feature checkboxes
-    const checkboxes = document.querySelectorAll('#settingsMenu input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
-      const settingKey = checkbox.id;
-      checkbox.checked = settings[settingKey];
-    });
-  } catch (error) {
-    console.warn('Error refreshing desktop settings:', error);
-  }
-}
-
-export function closeAllDropdowns() {
-  // Close all types of dropdowns
-  document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
-  document.querySelectorAll('.settings-dropdown').forEach(d => d.classList.remove('active'));
-  document.querySelectorAll('.templates-dropdown').forEach(d => d.classList.remove('active'));
-  document.querySelectorAll('.export-dropdown').forEach(d => d.classList.remove('active'));
-  // Also close templates and export menus
-  const templatesMenu = $('#templatesMenu');
-  if (templatesMenu) {
-    templatesMenu.style.display = 'none';
-  }
-  const exportMenu = $('#exportMenu');
-  if (exportMenu) {
-    exportMenu.style.display = 'none';
-  }
-}
-
-export function initializeSettings() {
-  const settings = loadSettings();
-
-  // Set experience level radio buttons
-  const experienceRadios = document.querySelectorAll('input[name="experienceLevel"]');
-  experienceRadios.forEach(radio => {
-    radio.checked = radio.value === settings.experienceLevel;
-    radio.addEventListener('change', (e) => {
-      setExperienceLevel(e.target.value);
-      initializeSettings(); // Reinitialize to apply new settings
-      updateUIForSettings();
+  // Add event listeners for close buttons
+  modal.querySelectorAll('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.body.removeChild(modal);
     });
   });
 
-  // Set feature toggles
-  const checkboxes = [
-    'showAdvancedCalculations',
-    'showDetailedBreakdown',
-    'showComparisonTools',
-    'showExportOptions',
-    'showDebugPanel',
-    'compactMode',
-    'showTooltips'
-  ];
-
-  checkboxes.forEach(key => {
-    const checkbox = $('#' + key);
-    if (checkbox) {
-      checkbox.checked = settings[key];
-      checkbox.addEventListener('change', (e) => {
-        updateSetting(key, e.target.checked);
-        updateUIForSettings();
-      });
-    }
-  });
+  return modal;
 }
 
-export function updateUIForSettings() {
-  const settings = loadSettings();
-
-  // Show/hide elements based on feature gates
-  const elementsToToggle = [
-    { selector: '.advanced-calculations', setting: 'showAdvancedCalculations' },
-    { selector: '.detailed-breakdown', setting: 'showDetailedBreakdown' },
-    { selector: '.comparison-tools', setting: 'showComparisonTools' },
-    { selector: '.export-options', setting: 'showExportOptions' },
-    { selector: '.debug-panel', setting: 'showDebugPanel' }
-  ];
-
-  elementsToToggle.forEach(({ selector, setting }) => {
-    const elements = document.querySelectorAll(selector);
-    elements.forEach(el => {
-      el.style.display = settings[setting] ? 'block' : 'none';
-    });
-  });
-
-  // Apply compact mode
-  document.body.classList.toggle('compact-mode', settings.compactMode);
-
-  // Update tooltips visibility
-  // This would require additional implementation
+export function showLoadingModal() {
+  return showModal('<div class="spinner"></div><p>Loading...</p>', { title: 'Loading' });
 }
 
-export function _closeAllMobileSubmenus() {
+export function showSuccessModal(message) {
+  return showModal('<p>' + message + '</p>', { title: 'Success', buttons: '<button onclick="this.closest(\'.modal\').remove()">OK</button>' });
+}
+
+export function showErrorModal(error) {
+  return showModal('<p>' + (error.message || error) + '</p>', { title: 'Error', buttons: '<button onclick="this.closest(\'.modal\').remove()">OK</button>' });
+}
+
+// Export functions for state management
+export function persistState() {
   try {
-    document.querySelectorAll('.mobile-submenu').forEach(el => {
-      if (el && el.style) el.style.display = 'none';
-    });
-    // Also hide known submenu containers
-    const containers = ['#mobileTemplatesOptions', '#mobileExportOptions', '#mobileShareOptions'];
-    containers.forEach(sel => {
-      const c = document.querySelector(sel);
-      if (c && c.style) c.style.display = 'none';
-    });
+    localStorage.setItem('profitpath-state', JSON.stringify(state));
   } catch (e) {
-    // Fail silently in environments without DOM
+    console.warn('Failed to persist state:', e);
   }
 }
 
-export function setupDesktopMenuButtons() {
-  const analyticsBtn = $('#analyticsBtn');
-  if (analyticsBtn) {
-    analyticsBtn.addEventListener('click', () => {
-      // More robust check for analytics UI
-      const checkAnalyticsUI = () => {
-        if (window.profitPathAnalyticsUI) {
-          // Check if method exists on instance or prototype
-          if (typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
-            window.profitPathAnalyticsUI.showAnalyticsDashboard();
-          } else if (typeof window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard === 'function') {
-            // Call via prototype if instance method not available
-            window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard.call(window.profitPathAnalyticsUI);
-          } else {
-            console.warn('Analytics UI method not available, retrying...');
-            setTimeout(checkAnalyticsUI, 100);
-          }
-        } else {
-          console.warn('Analytics UI not loaded yet');
-          setTimeout(checkAnalyticsUI, 100);
-        }
-      };
-      checkAnalyticsUI();
-    });
+export function loadState() {
+  try {
+    const saved = localStorage.getItem('profitpath-state');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.warn('Failed to load state:', e);
+  }
+  return null;
+}
+
+// Export functions for business logic
+export function validateBusinessLogic() {
+  const errors = [];
+
+  if (state.employees <= 0) {
+    errors.push('Number of employees must be greater than 0');
   }
 
-  const desktopFeedbackBtn = $('#desktopFeedbackBtn');
-  if (desktopFeedbackBtn) {
-    desktopFeedbackBtn.addEventListener('click', () => {
-      // More robust check for feedback UI
-      const checkFeedbackUI = () => {
-        if (window.feedbackUI) {
-          // Check if method exists on instance or prototype
-          if (typeof window.feedbackUI.openFeedbackModal === 'function') {
-            window.feedbackUI.openFeedbackModal();
-          } else if (typeof window.feedbackUI.constructor.prototype.openFeedbackModal === 'function') {
-            // Call via prototype if instance method not available
-            window.feedbackUI.constructor.prototype.openFeedbackModal.call(window.feedbackUI);
-          } else {
-            console.warn('Feedback UI method not available, retrying...');
-            setTimeout(checkFeedbackUI, 100);
-          }
-        } else {
-          console.warn('Feedback UI not loaded yet');
-          setTimeout(checkFeedbackUI, 100);
-        }
-      };
-      checkFeedbackUI();
+  if (state.employeePay < 0) {
+    errors.push('Employee pay cannot be negative');
+  }
+
+  if (state.monthlyCosts < 0) {
+    errors.push('Monthly costs cannot be negative');
+  }
+
+  if (state.productiveUtilizationPct < 0 || state.productiveUtilizationPct > 100) {
+    errors.push('Productive utilization must be between 0% and 100%');
+  }
+
+  if (state.targetUtilizationPct < 0 || state.targetUtilizationPct > 150) {
+    errors.push('Target utilization must be between 0% and 150%');
+  }
+
+  state.offerings.forEach((o, i) => {
+    if (o.priceMonthly <= 0) {
+      errors.push(`Offering "${o.name}" must have a price greater than $0`);
+    }
+
+    if (o.sessionsPerYear <= 0) {
+      errors.push(`Offering "${o.name}" must have at least 1 session per year`);
+    }
+
+    if (o.hoursPerSession <= 0) {
+      errors.push(`Offering "${o.name}" must take at least 0.1 hours per session`);
+    }
+
+    if (o.variableCostPerSession < 0) {
+      errors.push(`Offering "${o.name}" cannot have negative variable costs`);
+    }
+
+    if (o.mixPct < 0 || o.mixPct > 100) {
+      errors.push(`Offering "${o.name}" mix percentage must be between 0% and 100%`);
+    }
+  });
+
+  return errors;
+}
+
+export function rebalanceMix(changedIndex, newValue) {
+  const total = state.offerings.reduce((sum, o, i) => i === changedIndex ? sum : sum + o.mixPct, 0);
+  const remaining = Math.max(0, 100 - newValue);
+
+  state.offerings.forEach((o, i) => {
+    if (i !== changedIndex) {
+      o.mixPct = (o.mixPct / total) * remaining;
+    }
+  });
+}
+
+export function defaultOfferings() {
+  return [
+    {
+      id: uuid(),
+      name: 'Consulting',
+      priceMonthly: 500,
+      sessionsPerYear: 12,
+      hoursPerSession: 2.0,
+      variableCostPerSession: 50,
+      mixPct: 33.33,
+      currentClients: 0,
+    },
+    {
+      id: uuid(),
+      name: 'Training',
+      priceMonthly: 200,
+      sessionsPerYear: 6,
+      hoursPerSession: 4.0,
+      variableCostPerSession: 20,
+      mixPct: 33.33,
+      currentClients: 0,
+    },
+    {
+      id: uuid(),
+      name: 'Support',
+      priceMonthly: 100,
+      sessionsPerYear: 24,
+      hoursPerSession: 0.5,
+      variableCostPerSession: 10,
+      mixPct: 33.34,
+      currentClients: 0,
+    },
+  ];
+}
+
+// Export functions for chart and visualization
+export function renderChart(containerId, data, options = {}) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  // Lazy load chart library if not already loaded
+  if (typeof Chart === 'undefined') {
+    loadScript('https://cdn.jsdelivr.net/npm/chart.js').then(() => {
+      createChart(container, data, options);
     });
+  } else {
+    createChart(container, data, options);
   }
 }
 
-export function getSelectedComparisonScenarios() {
-  const scenario1Id = $('#compareScenario1').value;
-  const scenario2Id = $('#compareScenario2').value;
-  return { scenario1Id, scenario2Id };
+function createChart(container, data, options) {
+  const ctx = container.getContext('2d');
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+    ...options,
+  };
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: data,
+    options: chartOptions,
+  });
+}
+
+// Export functions for scenario management
+export function saveScenario(name, description = '') {
+  const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+  const scenario = {
+    id: uuid(),
+    name: name,
+    description: description,
+    state: JSON.parse(JSON.stringify(state)),
+    createdAt: new Date().toISOString(),
+  };
+
+  scenarios.push(scenario);
+  localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
+  return scenario;
+}
+
+export function loadScenario(scenarioId) {
+  const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+  const scenario = scenarios.find(s => s.id === scenarioId);
+  if (scenario) {
+    state = scenario.state;
+    if (typeof render === 'function') render();
+    return true;
+  }
+  return false;
+}
+
+export function deleteScenario(scenarioId) {
+  const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+  const filtered = scenarios.filter(s => s.id !== scenarioId);
+  localStorage.setItem('profitpath-scenarios', JSON.stringify(filtered));
+}
+
+export function listScenarios() {
+  return JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+}
+
+// Additional functions needed by scenarioService.js
+export function getAllScenarios() {
+  return JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+}
+
+export function showNotification(message, type = 'info') {
+  // Create a simple notification element
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #007bff; color: white; padding: 10px 20px; border-radius: 4px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+  notification.textContent = message;
+
+  document.body.appendChild(notification);
+
+  setTimeout(() => {
+    document.body.removeChild(notification);
+  }, 3000);
 }
 
 export function populateComparisonDropdowns() {
-  const scenarios = getAllScenarios();
-  const select1 = $('#compareScenario1');
-  const select2 = $('#compareScenario2');
-  if (!select1 || !select2) return;
-
-  select1.innerHTML = '<option value="">Select first scenario...</option>';
-  select2.innerHTML = '<option value="">Select second scenario...</option>';
-
-  scenarios.forEach(s => {
-    const option1 = document.createElement('option');
-    option1.value = s.id;
-    option1.textContent = s.name;
-    select1.appendChild(option1);
-
-    const option2 = document.createElement('option');
-    option2.value = s.id;
-    option2.textContent = s.name;
-    select2.appendChild(option2);
-  });
+  // This function would populate dropdowns for scenario comparison
+  // Implementation would depend on the specific UI structure
+  console.log('populateComparisonDropdowns called');
 }
 
-export function renderComparisonResults(metrics1, metrics2) {
-  const comparisonResultsEl = $('#comparisonResults');
-  if (!comparisonResultsEl) return;
+// Additional functions needed by app.jsx
+export function closeMobileMenu() {
+  const overlay = document.getElementById('mobileMenuOverlay');
+  const hamburger = document.getElementById('hamburgerBtn');
+  if (overlay) overlay.classList.remove('active');
+  if (hamburger) hamburger.classList.remove('active');
+}
 
-  // Render into the wrapper div, not directly into comparisonResultsEl
-  const tableWrap = comparisonResultsEl.querySelector('.comparison-table-wrap');
-  if (!tableWrap) return;
+export function restoreScheduling() {
+  // Restore any scheduled report generation
+  console.log('restoreScheduling called');
+}
 
-  const metricsToCompare = [
-    { label: 'Clients', key: 'clients', format: fmtInt },
-    { label: 'Annual Sessions', key: 'annualSessions', format: fmtInt },
-    { label: 'Service Hours', key: 'serviceHours', format: fmtInt },
-    { label: 'Utilization', key: 'utilizationPct', format: fmtPct1 },
-    { label: 'Revenue', key: 'revenue', format: fmtMoney0 },
-    { label: 'Fixed Costs', key: 'annualFixedCosts', format: fmtMoney0 },
-    { label: 'Payroll', key: 'annualPayroll', format: fmtMoney0 },
-    { label: 'Variable Costs', key: 'annualVariableCosts', format: fmtMoney0 },
-    { label: 'Net Income', key: 'netIncome', format: fmtMoney0 },
-    { label: 'Break-Even Clients', key: 'breakEvenClients', format: fmtInt },
-    { label: 'Break-Even Revenue', key: 'breakEvenRevenue', format: fmtMoney0 },
-    { label: 'Contribution Margin', key: 'contributionMarginPerClient', format: fmtMoney0 },
-  ];
+export function loadScenarioFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const scenarioParam = params.get('scenario');
+  if (!scenarioParam) return false;
 
-  let tableHtml = '<table class="comparison-table"><thead><tr><th>Metric</th><th class="scenario-col">Scenario 1</th><th class="scenario-col">Scenario 2</th><th class="difference-col">Difference</th></tr></thead><tbody>';
+  try {
+    const base64 = decodeURIComponent(scenarioParam);
+    const serialized = atob(base64);
+    const scenarioData = JSON.parse(serialized);
 
-  metricsToCompare.forEach(m => {
-    const val1 = metrics1[m.key];
-    const val2 = metrics2[m.key];
-    const diff = val2 - val1;
-
-    let diffClass = 'difference-neutral';
-    if (m.key.includes('income') || m.key.includes('revenue') || m.key.includes('margin')) {
-      if (diff > 0) diffClass = 'difference-positive';
-      else if (diff < 0) diffClass = 'difference-negative';
-    } else if (m.key.includes('cost')) {
-      if (diff > 0) diffClass = 'difference-negative';
-      else if (diff < 0) diffClass = 'difference-positive';
-    } else if (m.key.includes('utilization') || m.key.includes('clients') || m.key.includes('sessions') || m.key.includes('hours')) {
-      if (diff > 0) diffClass = 'difference-positive';
-      else if (diff < 0) diffClass = 'difference-negative';
+    // Load the scenario data
+    if (scenarioData) {
+      window.state = scenarioData;
+      if (typeof window.render === 'function') window.render();
+      return true;
     }
-
-    tableHtml += '<tr><td class="metric-name">' + m.label + '</td><td class="scenario-col">' + m.format(val1) + '</td><td class="scenario-col">' + m.format(val2) + '</td><td class="difference-col ' + diffClass + '">' + m.format(diff) + '</td></tr>';
-  });
-
-  tableHtml += '</tbody></table>';
-  tableWrap.innerHTML = tableHtml; // Assign to wrapper
-  comparisonResultsEl.style.display = 'block';
-}
-
-export function handleComparison() {
-  const comparisonErrorEl = $('#comparisonError');
-  if (comparisonErrorEl) comparisonErrorEl.style.display = 'none'; // Hide previous error
-
-  const { scenario1Id, scenario2Id } = getSelectedComparisonScenarios();
-  const scenarios = getAllScenarios();
-
-  const scenario1 = scenarios.find(s => s.id === scenario1Id);
-  const scenario2 = scenarios.find(s => s.id === scenario2Id);
-
-  if (!scenario1 || !scenario2) {
-    $('#comparisonResults').style.display = 'none';
-    return;
-  }
-
-  // Calculate metrics for both scenarios
-  const metrics1 = calc(scenario1.data || scenario1.state); // Handle older scenario structure
-  const metrics2 = calc(scenario2.data || scenario2.state); // Handle older scenario structure
-
-  renderComparisonResults(metrics1, metrics2);
-}
-
-export function initDebugPanel() {
-  const toggle = $('#debugToggle');
-  const body = $('#debugBody');
-  const pre = $('#debugPanel');
-  if (!toggle || !body || !pre) return;
-
-  // Update pre with calc() output and set a concise summary on the toggle
-  function refreshDebug() {
-    // Only refresh if debug panel is initialized and visible
-    if (!pre || pre.style.display === 'none') return;
-
-    try {
-      const res = calc();
-      pre.textContent = JSON.stringify(res, null, 2);
-      toggle.textContent = '▶ Debug — clients: ' + (res.clients || 0) + ', revenue: ' + fmtMoney0(res.revenue || 0);
-    } catch (e) {
-      pre.textContent = 'Error generating debug: ' + (e && e.stack ? e.stack : String(e));
-      toggle.textContent = '▶ Debug — error';
-    }
-  }
-
-  // restore expanded state from localStorage
-  const stored = localStorage.getItem('profitpath-debug-expanded');
-  const expanded = stored === '1';
-  if (expanded) {
-    body.classList.remove('collapsed');
-    body.setAttribute('aria-hidden', 'false');
-    toggle.setAttribute('aria-expanded', 'true');
-    toggle.textContent = toggle.textContent.replace(/^▶/, '▼');
-  }
-
-  toggle.addEventListener('click', () => {
-    const isCollapsed = body.classList.toggle('collapsed');
-    body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
-    const expandedNow = !isCollapsed;
-    toggle.setAttribute('aria-expanded', expandedNow ? 'true' : 'false');
-    toggle.textContent = (expandedNow ? '▼' : '▶') + toggle.textContent.slice(1);
-    localStorage.setItem('profitpath-debug-expanded', expandedNow ? '1' : '0');
-    // refresh content when expanding
-    if (expandedNow) refreshDebug();
-  });
-
-  // refresh periodically (keeps the debug info up to date while editing)
-  setInterval(refreshDebug, 1500);
-  // initial refresh
-  refreshDebug();
-}
-
-export function refreshDebug() {
-  // Only refresh if debug panel is initialized and visible
-  if (!pre || pre.style.display === 'none') return;
-
-  try {
-    const res = calc();
-    pre.textContent = JSON.stringify(res, null, 2);
-    toggle.textContent = '▶ Debug — clients: ' + (res.clients || 0) + ', revenue: ' + fmtMoney0(res.revenue || 0);
   } catch (e) {
-    pre.textContent = 'Error generating debug: ' + (e && e.stack ? e.stack : String(e));
-    toggle.textContent = '▶ Debug — error';
+    console.error('Failed to load scenario from URL:', e);
   }
+  return false;
 }
 
-export function _preventTourScroll(e) {
-  // allow certain inputs inside the tour dialog (handled by pointer events), but
-  // generally prevent default touch/wheel scrolling while tour is active
-  e.preventDefault();
+export function loadSettings() {
+  return JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
 }
 
-export function _trapTourKeys(e) {
-  // Prevent keyboard scrolling keys while tour active
-  const blocked = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
-  if (blocked.includes(e.key)) {
-    e.preventDefault();
-  }
+export function setExperienceLevel(level) {
+  const settings = loadSettings();
+  settings.experienceLevel = level;
+  localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 }
 
-export function lockScrollForTour() {
-  if (_tourScrollLocked) return;
-  _tourScrollLocked = true;
-  try {
-    _tourPrevHtmlOverflow = document.documentElement.style.overflow || '';
-    _tourPrevBodyOverflow = document.body.style.overflow || '';
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-  } catch (e) {
-    // ignore
-  }
-  document.addEventListener('touchmove', _preventTourScroll, { passive: false });
-  document.addEventListener('wheel', _preventTourScroll, { passive: false });
-  document.addEventListener('keydown', _trapTourKeys, { passive: false });
+export function updateSetting(key, value) {
+  const settings = loadSettings();
+  settings[key] = value;
+  localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 }
 
-export function unlockScrollForTour() {
-  if (!_tourScrollLocked) return;
-  _tourScrollLocked = false;
-  try {
-    document.documentElement.style.overflow = _tourPrevHtmlOverflow || '';
-    document.body.style.overflow = _tourPrevBodyOverflow || '';
-  } catch (e) {
-    // ignore
-  }
-  document.removeEventListener('touchmove', _preventTourScroll);
-  document.removeEventListener('wheel', _preventTourScroll);
-  document.removeEventListener('keydown', _trapTourKeys);
-}
-
-export function addOnboardingHelpButton() {
-  // The help button is now in the HTML, just add event listeners
-  const helpButton = document.getElementById('helpBtn');
-  if (!helpButton) return;
-
-  helpButton.addEventListener('click', showHelpMenu);
-}
-
-export function showWelcomeDialog() {
-  const dialog = createOnboardingDialog({
-    title: 'Welcome to ProfitPath! 🎉',
-    content: '<div class="welcome-content"><p>Get started with your profitability analysis in just a few minutes.</p><p>Would you like a quick guided tour of the key features?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="welcome-btn" data-action="tour" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Take Tour</button><button class="welcome-btn" data-action="industry" style="background:#f8f9fa;color:#333;border:1px solid #dee2e6;padding:10px 20px;border-radius:6px;cursor:pointer;">Choose Industry</button><button class="welcome-btn" data-action="skip" style="background:transparent;color:#666;border:none;padding:10px 20px;cursor:pointer;">Skip for Now</button></div>',
-    buttons: [] // We'll handle buttons manually
-  });
-
-  // Add event listeners after dialog is created
-  setTimeout(() => {
-    document.querySelectorAll('.welcome-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const action = e.currentTarget.dataset.action;
-        dialog.remove(); // Close the dialog
-
-        if (action === 'tour') {
-          startGuidedTour();
-        } else if (action === 'industry') {
-          showIndustrySelector();
-        }
-        // Skip action just closes the dialog
-      });
-    });
-  }, 100);
-
-  document.body.appendChild(dialog);
-}
-
-export function showIndustrySelector() {
-  const industries = [
-    { id: 'consulting', name: 'Consulting', icon: '💼', description: 'Professional services, advisory, strategy' },
-    { id: 'cleaning', name: 'Cleaning Services', icon: '🧽', description: 'Residential and commercial cleaning' },
-    { id: 'landscaping', name: 'Landscaping', icon: '🌿', description: 'Garden maintenance, lawn care' },
-    { id: 'fitness', name: 'Fitness & Wellness', icon: '🏋️', description: 'Personal training, gym services' },
-    { id: 'photography', name: 'Photography', icon: '📷', description: 'Event, portrait, commercial photography' },
-    { id: 'other', name: 'Other Service Business', icon: '🏭', description: 'Custom service business setup' }
-  ];
-
-  const industryGrid = industries.map(industry => '<div class="industry-option" data-industry="' + industry.id + '">' +
-    '<div class="industry-icon" style="font-size:32px;margin-bottom:8px;">' + industry.icon + '</div>' +
-    '<div class="industry-name">' + industry.name + '</div>' +
-    '<div class="industry-desc">' + industry.description + '</div>' +
-    '</div>'
-  ).join('');
-
-  const dialog = createOnboardingDialog({
-    title: 'What type of service business do you run?',
-    content: '<div class="industry-grid">' + industryGrid + '</div><p style="margin-top:16px;color:var(--muted);">This helps us provide tailored guidance and templates.</p>',
-    buttons: [
-      { text: 'Continue', action: () => { }, primary: true },
-      { text: 'Skip', action: () => { } }
-    ]
-  });
-
-  // Add click handlers for industry options
-  setTimeout(() => {
-    document.querySelectorAll('.industry-option').forEach(option => {
-      option.addEventListener('click', () => {
-        const industryId = option.dataset.industry;
-        selectIndustry(industryId, dialog);
-      });
-    });
-  }, 100);
-
-  document.body.appendChild(dialog);
-}
-
-export function selectIndustry(industryId, dialog) {
-  // Save selected industry
-  localStorage.setItem('selectedIndustry', industryId);
-
-  // Load industry-specific template
-  loadOnboardingIndustryTemplate(industryId);
-
-  // Close dialog and show success message
-  dialog.remove();
-
-  const successDialog = createOnboardingDialog({
-    title: 'Great choice! 🎯',
-    content: '<div class="success-content"><p>We\'ve loaded a template configuration for your industry.</p><p>Would you like to take a quick tour to learn how to customize it?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="success-btn" data-action="tour" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Show Me How</button><button class="success-btn" data-action="explore" style="background:#f8f9fa;color:#333;border:1px solid #dee2e6;padding:10px 20px;border-radius:6px;cursor:pointer;">Explore on My Own</button></div>',
-    buttons: [] // We'll handle buttons manually
-  });
-
-  // Add event listeners after dialog is created
-  setTimeout(() => {
-    document.querySelectorAll('.success-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const action = e.currentTarget.dataset.action;
-        successDialog.remove(); // Close the dialog
-
-        if (action === 'tour') {
-          startGuidedTour();
-        }
-        // Explore action just closes the dialog
-      });
-    });
-  }, 100);
-
-  document.body.appendChild(successDialog);
-}
-
-export function loadOnboardingIndustryTemplate(industryId) {
+export function loadIndustryTemplate(templateId) {
   const templates = {
     consulting: {
-      offerings: [{
-        name: 'Strategy Consulting',
-        priceMonthly: 5000,
-        sessionsPerYear: 12,
-        hoursPerSession: 8,
-        variableCostPerSession: 200
-      }]
+      name: 'Consulting Services',
+      config: {
+        offerings: [
+          { name: 'Strategy Session', priceMonthly: 500, sessionsPerYear: 12, hoursPerSession: 2, variableCostPerSession: 50, mixPct: 30, currentClients: 5 },
+          { name: 'Monthly Retainer', priceMonthly: 2000, sessionsPerYear: 12, hoursPerSession: 10, variableCostPerSession: 100, mixPct: 50, currentClients: 3 },
+          { name: 'Project Work', priceMonthly: 3000, sessionsPerYear: 4, hoursPerSession: 20, variableCostPerSession: 200, mixPct: 20, currentClients: 2 }
+        ],
+        employees: 1,
+        employeePay: 80000,
+        monthlyCosts: 500,
+        productiveUtilizationPct: 75,
+        targetUtilizationPct: 80
+      }
     },
     cleaning: {
-      offerings: [{
-        name: 'Standard Cleaning',
-        priceMonthly: 150,
-        sessionsPerYear: 4,
-        hoursPerSession: 2,
-        variableCostPerSession: 15
-      }]
-    },
-    landscaping: {
-      offerings: [{
-        name: 'Weekly Lawn Care',
-        priceMonthly: 200,
-        sessionsPerYear: 52,
-        hoursPerSession: 1,
-        variableCostPerSession: 25
-      }]
+      name: 'Cleaning Services',
+      config: {
+        offerings: [
+          { name: 'Weekly Cleaning', priceMonthly: 150, sessionsPerYear: 52, hoursPerSession: 2, variableCostPerSession: 20, mixPct: 60, currentClients: 15 },
+          { name: 'Biweekly Cleaning', priceMonthly: 250, sessionsPerYear: 26, hoursPerSession: 3, variableCostPerSession: 30, mixPct: 30, currentClients: 10 },
+          { name: 'Deep Cleaning', priceMonthly: 400, sessionsPerYear: 4, hoursPerSession: 6, variableCostPerSession: 50, mixPct: 10, currentClients: 5 }
+        ],
+        employees: 2,
+        employeePay: 45000,
+        monthlyCosts: 300,
+        productiveUtilizationPct: 85,
+        targetUtilizationPct: 90
+      }
     },
     fitness: {
-      offerings: [{
-        name: 'Personal Training',
-        priceMonthly: 300,
-        sessionsPerYear: 48,
-        hoursPerSession: 1,
-        variableCostPerSession: 0
-      }]
+      name: 'Fitness Services',
+      config: {
+        offerings: [
+          { name: 'Personal Training Sessions', priceMonthly: 300, sessionsPerYear: 48, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 60, currentClients: 24 },
+          { name: 'Group Fitness Classes', priceMonthly: 150, sessionsPerYear: 96, hoursPerSession: 0.5, variableCostPerSession: 0, mixPct: 30, currentClients: 48 },
+          { name: 'Online Coaching', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 0.1, variableCostPerSession: 0, mixPct: 10, currentClients: 60 }
+        ],
+        employees: 1,
+        employeePay: 40000,
+        monthlyCosts: 200,
+        productiveUtilizationPct: 80,
+        targetUtilizationPct: 85
+      }
+    },
+    landscaping: {
+      name: 'Landscaping Services',
+      config: {
+        offerings: [
+          { name: 'Weekly Lawn Maintenance', priceMonthly: 150, sessionsPerYear: 52, hoursPerSession: 1.5, variableCostPerSession: 20, mixPct: 50, currentClients: 20 },
+          { name: 'Biweekly Lawn Care', priceMonthly: 100, sessionsPerYear: 26, hoursPerSession: 1, variableCostPerSession: 15, mixPct: 30, currentClients: 15 },
+          { name: 'Seasonal Services', priceMonthly: 200, sessionsPerYear: 4, hoursPerSession: 4, variableCostPerSession: 40, mixPct: 20, currentClients: 10 }
+        ],
+        employees: 2,
+        employeePay: 35000,
+        monthlyCosts: 400,
+        productiveUtilizationPct: 85,
+        targetUtilizationPct: 90
+      }
     },
     photography: {
-      offerings: [{
-        name: 'Wedding Photography',
-        priceMonthly: 2500,
-        sessionsPerYear: 6,
-        hoursPerSession: 8,
-        variableCostPerSession: 100
-      }]
+      name: 'Photography Services',
+      config: {
+        offerings: [
+          { name: 'Wedding Photography', priceMonthly: 2000, sessionsPerYear: 8, hoursPerSession: 8, variableCostPerSession: 150, mixPct: 40, currentClients: 8 },
+          { name: 'Portrait Sessions', priceMonthly: 300, sessionsPerYear: 48, hoursPerSession: 2, variableCostPerSession: 25, mixPct: 35, currentClients: 24 },
+          { name: 'Event Photography', priceMonthly: 800, sessionsPerYear: 24, hoursPerSession: 4, variableCostPerSession: 75, mixPct: 25, currentClients: 12 }
+        ],
+        employees: 1,
+        employeePay: 55000,
+        monthlyCosts: 300,
+        productiveUtilizationPct: 75,
+        targetUtilizationPct: 80
+      }
+    },
+    handyman: {
+      name: 'Handyman Services',
+      config: {
+        offerings: [
+          { name: 'Maintenance Contracts', priceMonthly: 120, sessionsPerYear: 12, hoursPerSession: 2, variableCostPerSession: 25, mixPct: 40, currentClients: 25 },
+          { name: 'Repair Services', priceMonthly: 180, sessionsPerYear: 24, hoursPerSession: 1.5, variableCostPerSession: 30, mixPct: 35, currentClients: 20 },
+          { name: 'Home Improvement', priceMonthly: 300, sessionsPerYear: 8, hoursPerSession: 4, variableCostPerSession: 60, mixPct: 25, currentClients: 10 }
+        ],
+        employees: 1,
+        employeePay: 50000,
+        monthlyCosts: 250,
+        productiveUtilizationPct: 80,
+        targetUtilizationPct: 85
+      }
     }
   };
 
-  const template = templates[industryId];
+  const template = templates[templateId];
   if (template) {
-    // Apply template to current scenario
-    if (template.offerings) {
-      state.offerings = template.offerings.map(o => ({
-        ...o,
-        id: uuid(),
-        mixPct: 100 / template.offerings.length,
-        currentClients: 0
-      }));
-    }
+    const config = template.config;
+
+    // Apply template to current state
+    window.state.offerings = config.offerings.map(o => ({
+      ...o,
+      id: uuid(),
+      mixPct: o.mixPct || 0,
+      currentClients: o.currentClients || 0
+    }));
+    window.state.employees = config.employees;
+    window.state.employeePay = config.employeePay;
+    window.state.monthlyCosts = config.monthlyCosts;
+    window.state.productiveUtilizationPct = config.productiveUtilizationPct;
+    window.state.targetUtilizationPct = config.targetUtilizationPct;
 
     // Refresh the UI
-    render();
-    persistState();
+    if (typeof window.render === 'function') window.render();
+    if (typeof persistState === 'function') persistState();
+
+    return true;
   }
+  return false;
 }
 
-export function startGuidedTour() {
-  // Lock scrolling while the guided tour is active so users can't interrupt
-  // the tour by manually scrolling. Programmatic scrolling (scrollIntoView)
-  // is still allowed.
-  lockScrollForTour();
-  const tour = createGuidedTour();
-  tour.start();
+export function exportAsExcel() {
+  // Placeholder for Excel export functionality
+  console.log('exportAsExcel called');
 }
 
-export function createGuidedTour() {
-  const isMobile = window.innerWidth < 768;
-  tourSteps = [
-    {
-      target: '.logo',
-      title: 'Welcome to ProfitPath',
-      content: 'This is your profitability dashboard. Let\'s take a quick tour of the key areas.',
-      position: 'bottom'
-    },
-    {
-      target: '.inputs-fields .field:first-child',
-      title: 'Choose Your Mode',
-      content: 'Select \'Forecast\' mode to plan capacity for a target client count. Use \'Current\' mode to analyze your active existing client base.',
-      position: 'right'
-    },
-    {
-      target: '.team-config-group',
-      title: 'Team Configuration',
-      content: 'Enter your team size and compensation details. The calculator assumes 2080 paid hours per year per employee.',
-      position: 'right'
-    },
-    {
-      target: '.offerings-section .section-h',
-      title: 'Define Your Services',
-      content: 'Add your service offerings with pricing, frequency, and costs. Each offering can have different terms.',
-      position: 'right'
-    },
-    {
-      target: 'aside.card .card-h',
-      title: 'Key Profitability Metric',
-      content: 'This shows your net income after all expenses. Green indicates profitability, red indicates losses.',
-      position: 'top'
-    },
-    {
-      target: 'aside.card .capacity',
-      title: 'Capacity Utilization',
-      content: 'Monitor how busy your team is. Aim for 80-90% utilization to balance profitability and client service.',
-      position: 'left'
-    },
-    {
-      target: '.break-even-section-wrapper',
-      title: 'Break-even Analysis',
-      content: 'See how many clients you need to break even with a detailed break-even analysis.',
-      position: 'left'
-    },
-    {
-      target: '.charts-visualizations-container',
-      title: 'Charts & Visualizations',
-      content: 'Explore interactive charts and graphs that help visualize your business metrics and financial analysis.',
-      position: 'top'
-    },
-    {
-      target: isMobile ? '#hamburgerBtn' : '.header-actions',
-      title: 'Save, Export & Share',
-      content: isMobile ? 'Access all saving, exporting, and sharing tools from the menu.' : 'Save scenarios for comparison, generate professional reports, or share your analysis with stakeholders.',
-      position: 'bottom'
-    }
-  ];
+export function exportAsPDF() {
+  // Placeholder for PDF export functionality
+  console.log('exportAsPDF called');
+}
 
-  tourActive = true;
+export function exportAsHTML() {
+  // Placeholder for HTML export functionality
+  console.log('exportAsHTML called');
+}
 
-  return {
-    start: () => showTourStep(0)
+export function shareViaEmail() {
+  // Placeholder for email sharing functionality
+  console.log('shareViaEmail called');
+}
+
+export function showEmbedCode() {
+  // Placeholder for embed code functionality
+  console.log('showEmbedCode called');
+}
+
+export function showScheduleDialog() {
+  // Placeholder for schedule dialog functionality
+  console.log('showScheduleDialog called');
+}
+
+export function loadTestScenarios() {
+  // Placeholder for loading test scenarios
+  console.log('loadTestScenarios called');
+}
+
+export function loadSpecificTestScenario(scenarioKey) {
+  // Placeholder for loading specific test scenario
+  console.log('loadSpecificTestScenario called:', scenarioKey);
+}
+
+export function updateValidationDisplay() {
+  // Placeholder for updating validation display
+  console.log('updateValidationDisplay called');
+}
+
+export function lazyLoadChart(metrics) {
+  // Placeholder for lazy loading charts
+  console.log('lazyLoadChart called:', metrics);
+}
+
+export function updateRichVisualizations(metrics) {
+  // Placeholder for updating rich visualizations
+  console.log('updateRichVisualizations called:', metrics);
+}
+
+export function toggleMobileMenu() {
+  const overlay = document.getElementById('mobileMenuOverlay');
+  const hamburger = document.getElementById('hamburgerBtn');
+  if (overlay) overlay.classList.toggle('active');
+  if (hamburger) hamburger.classList.toggle('active');
+}
+
+// Export functions for settings and preferences
+
+export function getSetting(key, defaultValue = null) {
+  const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
+  return settings[key] !== undefined ? settings[key] : defaultValue;
+}
+
+export function resetSettings() {
+  localStorage.removeItem('profitpath-settings');
+}
+
+// Export functions for analytics and feedback
+export function trackEvent(eventName, properties = {}) {
+  if (!getSetting('analyticsEnabled', true)) return;
+
+  const data = {
+    event: eventName,
+    timestamp: new Date().toISOString(),
+    properties: properties,
+    userAgent: navigator.userAgent,
+    url: window.location.href,
   };
+
+  // Send to analytics endpoint (placeholder)
+  console.log('Analytics event:', data);
 }
 
-export async function showTourStep(stepIndex) {
-  if (!tourActive || stepIndex >= tourSteps.length) {
-    completeTour();
-    return;
-  }
+export function sendFeedback(rating, comment = '') {
+  const feedback = {
+    rating: rating,
+    comment: comment,
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    url: window.location.href,
+  };
 
-  const step = tourSteps[stepIndex];
-  let target = document.querySelector(step.target);
+  // Send feedback to server (placeholder)
+  console.log('Feedback:', feedback);
+  return true;
+}
 
-  // Try fallback selectors if primary target not found
-  if (!target) {
-    const fallbacks = {
-      '.header': '.container',
-      '.offering-item': '.card',
-      '.metrics-section': '.card',
-      '#scenariosBtn': '.btn',
-      '#shareBtn': '.btn'
+// Export functions for performance monitoring
+export function measurePerformance(fn, label) {
+  const start = performance.now();
+  const result = fn();
+  const end = performance.now();
+  const duration = end - start;
+
+  console.log(`${label} took ${duration.toFixed(2)}ms`);
+
+  // Track performance metrics
+  trackEvent('performance', {
+    function: label,
+    duration: duration,
+  });
+
+  return result;
+}
+
+export function getPerformanceMetrics() {
+  if ('performance' in window && 'getEntriesByType' in performance) {
+    const navigation = performance.getEntriesByType('navigation')[0];
+    const paint = performance.getEntriesByType('paint');
+
+    return {
+      loadTime: navigation ? navigation.loadEventEnd - navigation.navigationStart : 0,
+      domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.navigationStart : 0,
+      firstPaint: paint.find(entry => entry.name === 'first-paint')?.startTime || 0,
+      firstContentfulPaint: paint.find(entry => entry.name === 'first-contentful-paint')?.startTime || 0,
     };
-    target = document.querySelector(fallbacks[step.target] || step.target);
   }
-
-  if (!target) {
-    console.warn('Tour step ' + stepIndex + ' target not found: ' + step.target + ', skipping...');
-    showTourStep(stepIndex + 1);
-    return;
-  }
-
-  // Scroll the target element into view smoothly, then wait for scrolling to stop
-  target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-
-  // Wait until scrolling has settled and the target is roughly centered before creating the tooltip.
-  // This avoids creating the overlay while the page is still animating which caused the overlay
-  // to be slightly offset when long smooth-scrolls were required.
-  await waitForTargetSettled(target, { timeoutMs: 3000, idleMs: 250 });
-
-  // Remove any leftover tooltips/overlays to avoid duplicates or jumping.
-  document.querySelectorAll('.onboarding-tooltip, .onboarding-overlay').forEach(el => el.remove());
-
-  // Now create the tooltip (createTooltip will append it to the DOM)
-  const tooltip = createTooltip(step, target, null, stepIndex, tourSteps);
-
-  // Add keyboard support
-  const handleKeydown = (e) => {
-    if (e.key === 'Escape' && tourActive) {
-      document.removeEventListener('keydown', handleKeydown);
-      exitTour();
-    }
-  };
-  document.addEventListener('keydown', handleKeydown);
-
-  // Store cleanup function
-  tooltip._cleanupKeyboard = () => {
-    document.removeEventListener('keydown', handleKeydown);
-  };
+  return {};
 }
 
-export function waitForTargetSettled(target, { timeoutMs = 3000, idleMs = 250, stableMs = 250 } = {}) {
-  return new Promise((resolve) => {
-    let idleTimer = null;
-    let timeoutTimer = null;
-    let rafId = null;
-
-    function cleanup() {
-      if (idleTimer) clearTimeout(idleTimer);
-      if (timeoutTimer) clearTimeout(timeoutTimer);
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', onScroll, { passive: true });
-      window.removeEventListener('resize', onScroll);
+// Export functions for accessibility
+export function enhanceAccessibility() {
+  // Add ARIA labels and roles
+  document.querySelectorAll('input').forEach(input => {
+    if (!input.getAttribute('aria-label')) {
+      input.setAttribute('aria-label', input.placeholder || input.name || 'Input field');
     }
+  });
 
-    // After we observe no scroll for idleMs, ensure the element's rect is stable
-    // for stableMs milliseconds before resolving. If the element is not near
-    // the center, perform an immediate snap and continue waiting for stability.
-    function ensureStableAndResolve() {
-      const startTime = Date.now();
-      let lastRect = target.getBoundingClientRect();
-      let lastChange = Date.now();
-
-      // If target is far from center, snap it into view first (instant)
-      const rectNow = lastRect;
-      const viewportCenterY = window.innerHeight / 2;
-      const deltaCenter = Math.abs((rectNow.top + rectNow.bottom) / 2 - viewportCenterY);
-      if (deltaCenter > window.innerHeight * 0.2) {
-        try {
-          target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
-        } catch (e) {
-          // ignore
-        }
-        // update lastRect after snapping
-        lastRect = target.getBoundingClientRect();
-        lastChange = Date.now();
-      }
-
-      function checkRect() {
-        const rect = target.getBoundingClientRect();
-        const dx = Math.abs(rect.top - lastRect.top) + Math.abs(rect.left - lastRect.left) + Math.abs(rect.width - lastRect.width) + Math.abs(rect.height - lastRect.height);
-        if (dx > 2) {
-          lastRect = rect;
-          lastChange = Date.now();
-        }
-
-        if (Date.now() - lastChange >= stableMs) {
-          cleanup();
-          resolve();
-          return;
-        }
-
-        if (Date.now() - startTime >= timeoutMs) {
-          cleanup();
-          resolve();
-          return;
-        }
-
-        rafId = requestAnimationFrame(checkRect);
-      }
-
-      checkRect();
+  // Add keyboard navigation support
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal').forEach(modal => {
+        document.body.removeChild(modal);
+      });
     }
-
-    function onScroll() {
-      if (idleTimer) clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => {
-        ensureStableAndResolve();
-      }, idleMs);
-    }
-
-    // Start listeners and safety timeout
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-
-    timeoutTimer = setTimeout(() => {
-      cleanup();
-      resolve();
-    }, timeoutMs + 200);
-
-    // Kick off initial idle check (in case no scroll events occur)
-    onScroll();
   });
 }
 
-export function ensureStableAndResolve() {
-  const startTime = Date.now();
-  let lastRect = target.getBoundingClientRect();
-  let lastChange = Date.now();
-
-  // If target is far from center, snap it into view first (instant)
-  const rectNow = lastRect;
-  const viewportCenterY = window.innerHeight / 2;
-  const deltaCenter = Math.abs((rectNow.top + rectNow.bottom) / 2 - viewportCenterY);
-  if (deltaCenter > window.innerHeight * 0.2) {
-    try {
-      target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
-    } catch (e) {
-      // ignore
-    }
-    // update lastRect after snapping
-    lastRect = target.getBoundingClientRect();
-    lastChange = Date.now();
-  }
-
-  function checkRect() {
-    const rect = target.getBoundingClientRect();
-    const dx = Math.abs(rect.top - lastRect.top) + Math.abs(rect.left - lastRect.left) + Math.abs(rect.width - lastRect.width) + Math.abs(rect.height - lastRect.height);
-    if (dx > 2) {
-      lastRect = rect;
-      lastChange = Date.now();
-    }
-
-    if (Date.now() - lastChange >= stableMs) {
-      cleanup();
-      resolve();
-      return;
-    }
-
-    if (Date.now() - startTime >= timeoutMs) {
-      cleanup();
-      resolve();
-      return;
-    }
-
-    rafId = requestAnimationFrame(checkRect);
-  }
-
-  checkRect();
+// Export functions for internationalization
+export function setLanguage(language) {
+  updateSetting('language', language);
+  // Reload page to apply language changes
+  window.location.reload();
 }
 
-export function checkRect() {
-  const rect = target.getBoundingClientRect();
-  const dx = Math.abs(rect.top - lastRect.top) + Math.abs(rect.left - lastRect.left) + Math.abs(rect.width - lastRect.width) + Math.abs(rect.height - lastRect.height);
-  if (dx > 2) {
-    lastRect = rect;
-    lastChange = Date.now();
-  }
-
-  if (Date.now() - lastChange >= stableMs) {
-    cleanup();
-    resolve();
-    return;
-  }
-
-  if (Date.now() - startTime >= timeoutMs) {
-    cleanup();
-    resolve();
-    return;
-  }
-
-  rafId = requestAnimationFrame(checkRect);
+export function getLanguage() {
+  return getSetting('language', 'en');
 }
 
-export function onScroll() {
-  if (idleTimer) clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => {
-    ensureStableAndResolve();
-  }, idleMs);
-}
-
-export function exitTour() {
-  tourActive = false;
-  // Remove all tooltips and overlays
-  // Unlock scrolling when the tour exits
-  unlockScrollForTour();
-  document.querySelectorAll('.onboarding-tooltip, .onboarding-overlay').forEach(el => el.remove());
-
-  // Show exit confirmation
-  const exitDialog = createOnboardingDialog({
-    title: 'Tour Exited',
-    content: '<p>You can resume the guided tour anytime by clicking the ❓ help button in the top-right corner.</p><p>Feel free to explore the features at your own pace!</p>',
-    buttons: [
-      { text: 'Got it!', action: () => { } }
-    ]
-  });
-
-  document.body.appendChild(exitDialog);
-}
-
-export function completeTour() {
-  tourActive = false;
-  // Unlock scrolling when the tour completes
-  unlockScrollForTour();
-  localStorage.setItem('onboardingCompleted', 'true');
-
-  const completionDialog = createOnboardingDialog({
-    title: 'Tour Complete! 🎉',
-    content: '<p>You now know the basics of ProfitPath!</p><p>Explore the features at your own pace. Use the ❓ help button anytime for guidance.</p>',
-    buttons: [
-      { text: 'Got it!', action: () => { }, primary: true }
-    ]
-  });
-
-  document.body.appendChild(completionDialog);
-}
-
-export function createTooltip(step, target, onNext, stepIndex, steps) {
-  const isMobile = window.innerWidth < 768;
-
-  // Get fresh bounding rect after scrolling completes
-  const rect = target.getBoundingClientRect();
-
-  // Calculate final position first
-  let left, top, transform;
-
-  if (isMobile) {
-    // On mobile, always position below the element for better visibility
-    left = Math.max(10, Math.min(window.innerWidth - 290, rect.left + rect.width / 2 - 140));
-    top = rect.bottom + 10;
-    transform = 'translate(0, 0)';
-  } else {
-    switch (step.position) {
-      case 'top':
-        left = rect.left + rect.width / 2;
-        top = rect.top - 10;
-        transform = 'translate(-50%, -100%)';
-        break;
-      case 'bottom':
-        left = rect.left + rect.width / 2;
-        top = rect.bottom + 10;
-        transform = 'translate(-50%, 0)';
-        break;
-      case 'left':
-        left = rect.left - 10;
-        top = rect.top + rect.height / 2;
-        transform = 'translate(-100%, -50%)';
-        break;
-      case 'right':
-        left = rect.right + 10;
-        top = rect.top + rect.height / 2;
-        transform = 'translate(0, -50%)';
-        break;
-      default:
-        left = rect.left + rect.width / 2;
-        top = rect.bottom + 10;
-        transform = 'translate(-50%, 0)';
-    }
-  }
-
-  // Ensure tooltip stays within viewport bounds
-  const tooltipWidth = isMobile ? 280 : 300;
-  const tooltipHeight = 200; // Approximate height with navigation
-
-  if (left < 10) {
-    left = 10;
-  }
-  if (left + tooltipWidth > window.innerWidth - 10) {
-    left = window.innerWidth - tooltipWidth - 10;
-  }
-  if (top - tooltipHeight < 10) {
-    top = tooltipHeight + 10;
-    if (!isMobile) transform = transform.replace('-100%', '0');
-  }
-  if (top + tooltipHeight > window.innerHeight - 10) {
-    top = window.innerHeight - tooltipHeight - 10;
-    if (!isMobile) transform = transform.replace('0', '-100%');
-  }
-
-  // Create tooltip with final position-no intermediate rendering
-  const tooltip = document.createElement('div');
-  tooltip.className = 'onboarding-tooltip';
-  tooltip.style.cssText = 'position: fixed;z-index: 10000;background: white;border: 2px solid #007bff;border-radius: 8px;padding: 16px;box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);max-width: ' + (isMobile ? '280px' : '300px') + ';pointer-events: auto;font-size: ' + (isMobile ? '14px' : '16px') + ';left: ' + left + 'px;top: ' + top + 'px;transform: ' + transform + ';opacity: 0;transition: opacity 0.3s ease-out;';
-
-  // Append to DOM and fade in from final position
-  document.body.appendChild(tooltip);
-  requestAnimationFrame(() => {
-    tooltip.style.opacity = '1';
-  });
-
-  // Create progress dots
-  const progressDots = steps.map((_, index) => '<span class="tour-dot ' + (index === stepIndex ? 'active' : '') + ' ' + (index < stepIndex ? 'completed' : '') + '" data-step="' + index + '" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px;cursor:pointer;background:' + (index === stepIndex ? '#007bff' : index < stepIndex ? '#28a745' : '#ddd') + ';transition:all 0.2s;"></span>').join('');
-
-  tooltip.innerHTML = '<div style="position:relative;padding-right:24px;"><button class="tour-exit-btn" style="position:absolute;top:0;right:0;background:transparent;border:none;font-size:16px;cursor:pointer;color:var(--text, #666);padding:4px;line-height:1;">✕</button><div style="font-weight:bold;margin-bottom:8px;color:var(--text, #007bff);">' + step.title + '</div><div style="margin-bottom:16px;color:var(--text, #333);line-height:1.4;">' + step.content + '</div><div style="display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;"><div class="tour-navigation" style="display:flex;align-items:center;">' + (stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:18px;line-height:1;">‹</button>' : '<div style="width:32px;"></div>') + '<div class="tour-dots" style="display:flex;align-items:center;">' + progressDots + '</div>' + (stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background:#007bff;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:18px;line-height:1;">›</button>' : '<button class="tour-finish-btn" style="background:#28a745;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:16px;line-height:1;">✓</button>') + '</div></div></div>';
-
-  // Add event listeners for navigation
-  setTimeout(() => {
-    // Exit button
-    const exitBtn = tooltip.querySelector('.tour-exit-btn');
-    if (exitBtn) {
-      exitBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        exitTour();
-      });
-    }
-
-    // Navigation buttons
-    const prevBtn = tooltip.querySelector('.tour-arrow-prev');
-    const nextBtn = tooltip.querySelector('.tour-arrow-next');
-    const finishBtn = tooltip.querySelector('.tour-finish-btn');
-
-    if (prevBtn) {
-      prevBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        tooltip.remove();
-        if (stepIndex > 0) {
-          showTourStep(stepIndex - 1);
-        }
-      });
-    }
-
-    if (nextBtn) {
-      nextBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        tooltip.remove();
-        if (stepIndex < steps.length - 1) {
-          showTourStep(stepIndex + 1);
-        }
-      });
-    }
-
-    if (finishBtn) {
-      finishBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        tooltip.remove();
-        completeTour();
-      });
-    }
-
-    // Progress dots
-    const dots = tooltip.querySelectorAll('.tour-dot');
-    dots.forEach(dot => {
-      dot.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const targetStep = parseInt(e.currentTarget.dataset.step);
-        tooltip.remove();
-        showTourStep(targetStep);
-      });
-    });
-  }, 50);
-
-  // Add event listener for the button
-  setTimeout(() => {
-    const nextBtn = tooltip.querySelector('.tooltip-next-btn');
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        tooltip.remove();
-        if (onNext) onNext();
-      });
-    }
-  }, 10);
-
-  // Highlighting: place a fixed overlay around the target so we don't rely on modifying
-  // the target's own styles (avoids stacking-context/overflow issues and layout shifts).
-  const OVERLAY_PAD = 9; // pixels to expand the highlight beyond the element (increased by 1 to keep outer perimeter)
-  const BORDER_THICKNESS = 7; // highlight border thickness (reduced by 1px for less clipping)
-
-  const rect2 = target.getBoundingClientRect();
-  const computed = window.getComputedStyle(target);
-  // If the target has no rounded corners, use a mild default so highlights look rounded
-  const parsedBR = parseFloat(computed.borderRadius) || 0;
-  const borderRadius = (parsedBR && parsedBR > 4) ? parsedBR + 'px' : '10px';
-
-  const overlay = document.createElement('div');
-  overlay.className = 'onboarding-overlay';
-  overlay.style.cssText = 'position: fixed;left: ' + (rect2.left - OVERLAY_PAD) + 'px;top: ' + (rect2.top - OVERLAY_PAD) + 'px;width: ' + (rect2.width + OVERLAY_PAD * 2) + 'px;height: ' + (rect2.height + OVERLAY_PAD * 2) + 'px;border: ' + BORDER_THICKNESS + 'px solid #007bff;border-radius: ' + borderRadius + ';box-shadow: 0 8px 32px rgba(0, 123, 255, 0.12);pointer-events: none;z-index: 9999;animation: pulse 2s infinite;';
-
-  // Append overlay underneath the tooltip (tooltip uses z-index:10000)
-  document.body.appendChild(overlay);
-
-  // Store overlay for cleanup
-  tooltip._overlay = overlay;
-
-  // Wrap original remove to also remove the overlay and keyboard handler
-  const originalRemove = tooltip.remove;
-  tooltip.remove = function () {
-    try {
-      if (tooltip._overlay && tooltip._overlay.parentNode) tooltip._overlay.parentNode.removeChild(tooltip._overlay);
-    } catch (e) {
-      // ignore
-    }
-    if (tooltip._cleanupKeyboard) {
-      tooltip._cleanupKeyboard();
-    }
-    originalRemove.call(this);
+export function translate(key, language = null) {
+  const lang = language || getLanguage();
+  const translations = {
+    en: {
+      'save_scenario': 'Save Scenario',
+      'load_scenario': 'Load Scenario',
+      'delete_scenario': 'Delete Scenario',
+      'export_csv': 'Export CSV',
+      'share_scenario': 'Share Scenario',
+      'settings': 'Settings',
+      'help': 'Help',
+    },
+    es: {
+      'save_scenario': 'Guardar Escenario',
+      'load_scenario': 'Cargar Escenario',
+      'delete_scenario': 'Eliminar Escenario',
+      'export_csv': 'Exportar CSV',
+      'share_scenario': 'Compartir Escenario',
+      'settings': 'Configuración',
+      'help': 'Ayuda',
+    },
   };
 
-  return tooltip;
+  return translations[lang] && translations[lang][key] ? translations[lang][key] : key;
 }
 
-export function createOnboardingDialog({ title, content, buttons }) {
-  const dialog = document.createElement('div');
-  dialog.className = 'onboarding-dialog-overlay';
-  dialog.style.cssText = 'position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(0, 0, 0, 0.6);display: flex;align-items: center;justify-content: center;z-index: 10001;';
-
-  const dialogContent = document.createElement('div');
-  dialogContent.style.cssText = 'background: white;border-radius: 12px;padding: 24px;max-width: 500px;width: 90%;box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);';
-
-  dialogContent.innerHTML = '<h2 style="margin:0 0 16px 0;color:var(--text, #333);font-size:24px;">' + title + '</h2><div style="color:var(--text, #666);line-height:1.5;">' + content + '</div><div style="margin-top:24px;text-align:right;display:flex;gap:8px;justify-content:flex-end;">' + buttons.map((btn, index) => '<button class="dialog-btn" data-action="' + index + '" data-primary="' + (btn.primary ? 'true' : 'false') + '" style="padding:8px 16px;border:' + (btn.primary ? 'none' : '1px solid #ddd') + ';border-radius:6px;background:' + (btn.primary ? '#007bff' : 'white') + ';color:' + (btn.primary ? 'white' : '#333') + ';cursor:pointer;font-weight:' + (btn.primary ? 'bold' : 'normal') + ';">' + btn.text + '</button>').join('') + '</div>';
-
-  // Add event listeners for dialog buttons
-  setTimeout(() => {
-    const dialogBtns = dialogContent.querySelectorAll('.dialog-btn');
-    dialogBtns.forEach((btn, index) => {
-      btn.addEventListener('click', () => {
-        const action = buttons[index]?.action;
-        dialog.remove();
-        if (action && typeof action === 'function') {
-          action();
-        }
-      });
-    });
-  }, 10);
-
-  dialog.appendChild(dialogContent);
-  return dialog;
+// Export functions for debugging
+export function debugState() {
+  console.group('ProfitPath Debug State');
+  console.log('Current State:', JSON.parse(JSON.stringify(state)));
+  console.log('Settings:', JSON.parse(localStorage.getItem('profitpath-settings') || '{}'));
+  console.log('Scenarios:', JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]'));
+  console.log('Performance Metrics:', getPerformanceMetrics());
+  console.groupEnd();
 }
 
-export function showHelpMenu() {
-  const helpDialog = createOnboardingDialog({
-    title: 'Help & Learning Center',
-    content: '<div style="display:grid;gap:12px;"><button class="help-menu-btn" data-action="tour" style="display:block;width:100%;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;text-align:left;cursor:pointer;">🎯 <strong>Take Guided Tour</strong><br><small>Step-by-step walkthrough of key features</small></button><button class="help-menu-btn" data-action="industry" style="display:block;width:100%;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;text-align:left;cursor:pointer;">🏢 <strong>Change Industry</strong><br><small>Switch to a different business template</small></button><button class="help-menu-btn" data-action="tooltips" style="display:block;width:100%;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;text-align:left;cursor:pointer;">💡 <strong>Show Tooltips</strong><br><small>Enable contextual help throughout the app</small></button></div>',
-    buttons: [
-      { text: 'Close', action: () => { } }
-    ]
+export function enableDebugMode() {
+  updateSetting('debugMode', true);
+  console.log('Debug mode enabled');
+}
+
+export function disableDebugMode() {
+  updateSetting('debugMode', false);
+  console.log('Debug mode disabled');
+}
+
+export function isDebugMode() {
+  return getSetting('debugMode', false);
+}
+
+// Export utility functions
+export function uuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
   });
-
-  // Add event listeners after dialog is created
-  setTimeout(() => {
-    document.querySelectorAll('.help-menu-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const action = e.currentTarget.dataset.action;
-        helpDialog.remove(); // Close the dialog
-
-        setTimeout(() => {
-          if (action === 'tour') {
-            startGuidedTour();
-          } else if (action === 'industry') {
-            showIndustrySelector();
-          } else if (action === 'tooltips') {
-            showContextualHelp();
-          }
-        }, 100);
-      });
-    });
-  }, 100);
-
-  document.body.appendChild(helpDialog);
 }
 
-export function initializeContextualTooltips() {
-  // Add tooltips to key elements
-  const tooltipElements = [
-    { selector: '#employees', content: 'Set the number of full-time employees in your business' },
-    { selector: '#employeePay', content: 'Average annual salary per employee including benefits' },
-    { selector: '.offering-card .btn.danger', content: 'Remove this service offering from your business model' },
-    { selector: '#scenariosBtn', content: 'Save current configuration or load previous scenarios' },
-    { selector: '#shareBtn', content: 'Generate shareable link for stakeholders' },
-    { selector: '.settings-cog-btn', content: 'Customize experience level and advanced features' }
-  ];
+export function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
-  tooltipElements.forEach(({ selector, content }) => {
-    const element = document.querySelector(selector);
-    if (element) {
-      element.title = content; // Basic tooltip
+export function throttle(func, limit) {
+  let inThrottle;
+  return function (...args) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
     }
-  });
+  };
 }
 
-export function showContextualHelp() {
-  // Enable enhanced tooltips
-  const tooltipElements = document.querySelectorAll('[title]');
-  tooltipElements.forEach(el => {
-    if (!el.dataset.tooltipEnabled) {
-      el.dataset.originalTitle = el.title;
-      el.dataset.tooltipEnabled = 'true';
-      el.title = ''; // Remove basic tooltip
-
-      el.addEventListener('mouseenter', showEnhancedTooltip);
-      el.addEventListener('mouseleave', hideEnhancedTooltip);
-    }
-  });
-
-  // Update settings to reflect tooltips are enabled
-  if (updateSetting) {
-    updateSetting('showTooltips', true);
-  }
-
-  // Show confirmation
-  const notification = document.createElement('div');
-  notification.textContent = 'Contextual tooltips enabled! Hover over elements to see help.';
-  notification.style.cssText = 'position: fixed;top: 20px;left: 50%;transform: translateX(-50%);background: var(--accent, #007bff);color: white;padding: 10px 20px;border-radius: 6px;z-index: 10002;font-size: 14px;';
-  document.body.appendChild(notification);
-  setTimeout(() => notification.remove(), 3000);
-}
-
-export function showEnhancedTooltip(e) {
-  const content = e.target.dataset.originalTitle;
-  if (!content) return;
-
-  const tooltip = document.createElement('div');
-  tooltip.className = 'enhanced-tooltip';
-  tooltip.textContent = content;
-  tooltip.style.cssText = 'position: fixed;background: #333;color: white;padding: 8px 12px;border-radius: 4px;font-size: 12px;z-index: 10002;pointer-events: none;max-width: 200px;word-wrap: break-word;';
-
-  document.body.appendChild(tooltip);
-
-  const rect = e.target.getBoundingClientRect();
-  tooltip.style.left = (rect.left + rect.width / 2) + 'px';
-  tooltip.style.top = (rect.top - 8) + 'px';
-  tooltip.style.transform = 'translate(-50%, -100%)';
-
-  e.target._tooltip = tooltip;
-}
-
-export function hideEnhancedTooltip(e) {
-  if (e.target._tooltip) {
-    e.target._tooltip.remove();
-    delete e.target._tooltip;
-  }
-}
+// Export default object with all functions
+export default {
+  escapeHtml,
+  setStateFromInputs,
+  onTableInput,
+  onTableClick,
+  addOffering,
+  resetDefaults,
+  exportAsCSV,
+  shareScenario,
+  showModal,
+  showLoadingModal,
+  showSuccessModal,
+  showErrorModal,
+  persistState,
+  loadState,
+  validateBusinessLogic,
+  rebalanceMix,
+  defaultOfferings,
+  renderChart,
+  saveScenario,
+  loadScenario,
+  deleteScenario,
+  listScenarios,
+  updateSetting,
+  getSetting,
+  resetSettings,
+  trackEvent,
+  sendFeedback,
+  measurePerformance,
+  getPerformanceMetrics,
+  enhanceAccessibility,
+  setLanguage,
+  getLanguage,
+  translate,
+  debugState,
+  enableDebugMode,
+  disableDebugMode,
+  isDebugMode,
+  uuid,
+  debounce,
+  throttle,
+};

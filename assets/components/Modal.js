@@ -9,8 +9,7 @@ export function createModal({ title, content, buttons = [], size = 'medium' }) {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(5px);
+    background: rgba(11,18,32,0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -20,7 +19,7 @@ export function createModal({ title, content, buttons = [], size = 'medium' }) {
   // Create modal content
   const modal = document.createElement('div');
   modal.className = 'modal-content';
-  
+
   // Size variations
   const sizeStyles = {
     small: 'max-width: 400px;',
@@ -30,15 +29,29 @@ export function createModal({ title, content, buttons = [], size = 'medium' }) {
   };
 
   modal.style.cssText = `
-    background: white;
+    background: var(--panel);
     border-radius: 12px;
     padding: 24px;
     width: 90%;
-    ${sizeStyles[size]}
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     max-height: 80vh;
     overflow-y: auto;
+    position: relative;
   `;
+
+  // Ensure text inside modal matches theme
+  modal.style.color = 'var(--text)';
+
+  // Set maxWidth based on size
+  const sizeWidths = {
+    small: '400px',
+    medium: '500px',
+    large: '700px',
+    full: '90%'
+  };
+  if (sizeWidths[size]) {
+    modal.style.maxWidth = sizeWidths[size];
+  }
 
   // Modal HTML structure
   modal.innerHTML = `
@@ -107,4 +120,19 @@ export function createModal({ title, content, buttons = [], size = 'medium' }) {
   document.addEventListener('keydown', handleEsc);
 
   return overlay;
+}
+
+// Legacy modal functions for backward compatibility
+export function openScenarioModal() {
+  const modal = document.getElementById('scenariosModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+  }
+}
+
+export function closeScenarioModal() {
+  const modal = document.getElementById('scenariosModal');
+  if (modal) {
+    modal.classList.add('hidden');
+  }
 }
