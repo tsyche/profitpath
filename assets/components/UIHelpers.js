@@ -36,7 +36,7 @@ export function openScenarioModal() {
 
   const content = `
     <div class="scenarios-section">
-      <h4>Save Current Configuration</h4>
+      <h4 style="color: black !important;">Save Current Configuration</h4>
       <div class="save-scenario-form">
         <input type="text" id="scenarioNameInput" placeholder="Enter scenario name..." />
         <button class="btn primary" id="saveScenarioBtn">Save Scenario</button>
@@ -44,14 +44,14 @@ export function openScenarioModal() {
     </div>
     
     <div class="scenarios-section">
-      <h4>Load Saved Scenarios</h4>
+      <h4 style="color: black !important;">Load Saved Scenarios</h4>
       <div id="scenariosList" class="scenarios-list">
         ${scenarios.length === 0 ? '<div class="empty-state">No saved scenarios yet. Save one above!</div>' : scenariosList}
       </div>
     </div>
 
     <div class="scenarios-section">
-      <h4>Compare Scenarios</h4>
+      <h4 style="color: black !important;">Compare Scenarios</h4>
       <div class="comparison-controls">
         <select id="compareScenario1" class="scenario-select">
           <option value="">Select first scenario...</option>
@@ -166,7 +166,7 @@ export function renderScenariosList() {
       const itemDiv = document.createElement('div');
       itemDiv.className = 'scenario-item';
 
-      itemDiv.innerHTML = '<div><div class="scenario-item-name">' + escapeHtml(s.name) + '</div><div class="scenario-item-meta">Saved ' + s.timestamp + '</div></div><div class="scenario-item-actions"><button class="btn small load-btn" data-scenario-id="' + escapeHtml(s.id) + '">Load</button><button class="btn small danger delete-btn" data-scenario-id="' + escapeHtml(s.id) + '">Delete</button></div>';
+      itemDiv.innerHTML = '<div><div class="scenario-item-name" style="color: black !important;">' + escapeHtml(s.name) + '</div><div class="scenario-item-meta" style="color: #666 !important;">Saved ' + s.timestamp + '</div></div><div class="scenario-item-actions"><button class="btn small load-btn" data-scenario-id="' + escapeHtml(s.id) + '">Load</button><button class="btn small danger delete-btn" data-scenario-id="' + escapeHtml(s.id) + '">Delete</button></div>';
 
       fragment.appendChild(itemDiv);
     });
