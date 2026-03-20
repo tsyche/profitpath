@@ -1787,7 +1787,7 @@ input[type="checkbox"] {
   border: 1px solid #ddd;
   border-radius: 6px;
   background: white;
-  color: #333;
+  color: #333 !important;
   cursor: pointer;
   font-weight: normal;
   transition: all 0.2s ease;
@@ -1796,20 +1796,93 @@ input[type="checkbox"] {
 .modal-btn.primary {
   border-color: #007bff;
   background: #007bff;
-  color: white;
+  color: white !important;
   font-weight: bold;
 }
 
 .modal-btn.secondary {
-  border-color: #ddd;
   background: white;
-  color: #333;
+  color: #333 !important;
 }
 
 .modal-btn.danger {
   border-color: #dc3545;
   background: #dc3545;
-  color: white;
+  color: white !important;
+}
+
+/* Scenarios modal buttons */
+.scenarios-list .btn {
+  background: #007bff !important;
+  color: white !important;
+  border: 1px solid #007bff !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  border-radius: 4px !important;
+}
+
+.scenarios-list .btn.danger {
+  background: #dc3545 !important;
+  color: white !important;
+  border: 1px solid #dc3545 !important;
+}
+
+.scenarios-list .btn:hover {
+  opacity: 0.8 !important;
+}
+
+/* Dropdown styling */
+.scenario-select {
+  background: white !important;
+  color: #333 !important;
+  border: 1px solid #ddd !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  min-width: 200px !important;
+  font-size: 14px !important;
+}
+
+.scenario-select option {
+  background: white !important;
+  color: #333 !important;
+  padding: 8px !important;
+}
+
+.scenario-select:focus {
+  border-color: #007bff !important;
+  outline: none !important;
+}
+
+/* Comparison controls */
+.comparison-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.vs-text {
+  color: #666 !important;
+  font-weight: bold;
+}
+
+/* Main scenarios buttons */
+#saveScenarioBtn {
+  background: #007bff !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  font-weight: bold !important;
+}
+
+#compareBtn {
+  background: #28a745 !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  font-weight: bold !important;
 }
 
 /* Remove legacy modal styles that cause background issues */
@@ -1834,32 +1907,7 @@ input[type="checkbox"] {
   border: 1px solid #ddd !important;
 }
 
-.modal-content button {
-  background: white !important;
-  border: 1px solid #ddd !important;
-  color: #333 !important;
-  padding: 8px 12px !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-}
 
-.modal-content button.primary {
-  background: #007bff !important;
-  border-color: #007bff !important;
-  color: white !important;
-}
-
-.modal-content button.secondary {
-  background: white !important;
-  border: 1px solid #ddd !important;
-  color: #333 !important;
-}
-
-.modal-content button.danger {
-  background: #dc3545 !important;
-  border-color: #dc3545 !important;
-  color: white !important;
-}
 
 /* Make scenarios modal wider on desktop to fit comparison table */
 #scenariosModal .modal-content {
@@ -2063,6 +2111,48 @@ input[type="checkbox"] {
   padding: 6px 8px;
   font-size: 11px;
 }
+
+/* Comparison table styles */
+.comparison-results {
+  margin-top: 20px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.comparison-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: black !important;
+}
+
+.comparison-table td {
+  color: black !important;
+}
+
+.comparison-table .positive {
+  color: #28a745 !important;
+  font-weight: 600;
+}
+
+.comparison-table .negative {
+  color: #dc3545 !important;
+  font-weight: 600;
+}
+
 
 .empty-state {
   padding: 20px;

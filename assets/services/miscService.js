@@ -623,7 +623,14 @@ export function listScenarios() {
 
 // Additional functions needed by scenarioService.js
 export function getAllScenarios() {
-  return JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+  const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+  console.log('getAllScenarios returning:', scenarios);
+  return scenarios;
+}
+
+export function clearTestScenarios() {
+  localStorage.removeItem('profitpath-scenarios');
+  console.log('Test scenarios cleared');
 }
 
 export function showNotification(message, type = 'info') {
@@ -641,9 +648,46 @@ export function showNotification(message, type = 'info') {
 }
 
 export function populateComparisonDropdowns() {
-  // This function would populate dropdowns for scenario comparison
-  // Implementation would depend on the specific UI structure
-  console.log('populateComparisonDropdowns called');
+  const scenarios = getAllScenarios();
+  console.log('Found scenarios:', scenarios.length);
+
+  // Find dropdowns with multiple selectors
+  let dropdown1 = document.getElementById('compareScenario1');
+  let dropdown2 = document.getElementById('compareScenario2');
+
+  // Try alternative selectors if not found
+  if (!dropdown1) {
+    dropdown1 = document.querySelector('#compareScenario1');
+  }
+  if (!dropdown2) {
+    dropdown2 = document.querySelector('#compareScenario2');
+  }
+
+  console.log('Dropdown elements found:', { dropdown1: !!dropdown1, dropdown2: !!dropdown2 });
+
+  if (!dropdown1 || !dropdown2) {
+    console.error('Comparison dropdowns not found in DOM');
+    return;
+  }
+
+  // Clear and populate
+  dropdown1.innerHTML = '<option value="">Select first scenario...</option>';
+  dropdown2.innerHTML = '<option value="">Select second scenario...</option>';
+
+  // Add scenarios
+  scenarios.forEach(scenario => {
+    const option1 = document.createElement('option');
+    option1.value = scenario.id;
+    option1.textContent = scenario.name;
+    dropdown1.appendChild(option1);
+
+    const option2 = document.createElement('option');
+    option2.value = scenario.id;
+    option2.textContent = scenario.name;
+    dropdown2.appendChild(option2);
+  });
+
+  console.log('Dropdowns populated. Options:', dropdown1.options.length);
 }
 
 // Additional functions needed by app.jsx

@@ -65,16 +65,8 @@ export function createModal({ title, content, buttons = [], size = 'medium' }) {
     ${buttons.length > 0 ? `
       <div class="modal-footer" style="margin-top: 24px; display: flex; gap: 8px; justify-content: flex-end;">
         ${buttons.map((btn, index) => `
-          <button class="modal-btn" data-index="${index}" style="
-            padding: 8px 16px;
-            border: ${btn.primary ? 'none' : '1px solid #ddd'};
-            border-radius: 6px;
-            background: ${btn.primary ? '#007bff' : 'white'};
-            color: ${btn.primary ? 'white' : 'black'} !important;
-            cursor: pointer;
-            font-weight: ${btn.primary ? 'bold' : 'normal'};
-          ">${btn.text}</button>
-        `).join('')}
+              <button class="modal-btn ${btn.primary ? 'primary' : btn.danger ? 'danger' : 'secondary'}" data-index="${index}">${btn.text}</button>
+            `).join('')}
       </div>
     ` : ''}
   `;
