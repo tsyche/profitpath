@@ -1,6 +1,5 @@
 import { persistState, loadState } from "../services/stateManager";
-import { getAllScenarios, showNotification, populateComparisonDropdowns } from "./miscService";
-import { closeScenarioModal } from "../components/Modal";
+import { getAllScenarios, showNotification } from "./miscService";
 import { uuid } from "../utils/helpers";
 import { renderScenariosList } from "../components/UIHelpers";
 import { showConfirmationModal, showToast } from "./modalService";
@@ -63,7 +62,11 @@ function performSave(name) {
     // Clear input(s) and re-render list in any open modal
     document.querySelectorAll('#scenarioNameInput').forEach(i => i.value = '');
     renderScenariosList();
-    populateComparisonDropdowns();
+
+    // Use dynamic import to avoid circular dependency
+    import('./miscService.js').then(miscService => {
+      miscService.populateComparisonDropdowns();
+    });
 
     // Show success notification
     showToast('Scenario saved successfully!', 'success');
@@ -94,7 +97,9 @@ export function loadScenario(scenarioId) {
         // Update the scenarios modal UI in real time
         setTimeout(() => {
           renderScenariosList();
-          populateComparisonDropdowns();
+          import('./miscService.js').then(miscService => {
+            miscService.populateComparisonDropdowns();
+          });
         }, 100);
       },
       () => {
@@ -130,7 +135,7 @@ export function performLoad(scenario) {
 
     persistState(); // Save loaded scenario as current state
     window.render();
-    closeScenarioModal();
+    // Don't close modal - let user continue working
 
     // Show success notification
     showToast('Scenario "' + (scenario.name || 'Unnamed') + '" loaded successfully!', 'success');
@@ -174,9 +179,10 @@ export function deleteScenario(scenarioId) {
       // Defer rendering to next tick to avoid blocking
       setTimeout(() => {
         renderScenariosList();
-        populateComparisonDropdowns();
-        // Close the scenarios modal after successful deletion
-        closeScenarioModal();
+        import('./miscService.js').then(miscService => {
+          miscService.populateComparisonDropdowns();
+        });
+        // Don't close modal - let user continue working
       }, 0);
 
       // Show success notification
