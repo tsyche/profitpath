@@ -663,6 +663,19 @@ export function populateComparisonDropdowns() {
     dropdown2 = document.querySelector('#compareScenario2');
   }
 
+  // Try finding within modal overlays
+  if (!dropdown1 || !dropdown2) {
+    const modals = document.querySelectorAll('.modal-overlay');
+    modals.forEach(modal => {
+      if (!dropdown1) {
+        dropdown1 = modal.querySelector('#compareScenario1');
+      }
+      if (!dropdown2) {
+        dropdown2 = modal.querySelector('#compareScenario2');
+      }
+    });
+  }
+
   console.log('Dropdown elements found:', { dropdown1: !!dropdown1, dropdown2: !!dropdown2 });
 
   if (!dropdown1 || !dropdown2) {
@@ -687,7 +700,7 @@ export function populateComparisonDropdowns() {
     dropdown2.appendChild(option2);
   });
 
-  console.log('Dropdowns populated. Options:', dropdown1.options.length);
+  console.log('Dropdowns populated. Options:', dropdown1?.options?.length || 0);
 }
 
 // Additional functions needed by app.jsx
