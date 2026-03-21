@@ -7,61 +7,75 @@ import { createModal } from "../components/Modal";
 // UI Components and Helpers
 
 export function showDeleteConfirmation(scenarioId, onConfirm) {
-  // Create a custom confirmation that doesn't close scenarios modal
+  // Create a simple confirmation without blur effect
   const confirmModal = createModal({
     title: 'Confirm Delete',
     content: 'Are you sure you want to delete this scenario? This action cannot be undone.',
     buttons: [
       {
         text: 'Cancel', action: () => {
-          // Clean up confirmation modal properly
-          const confirmOverlay = document.querySelector('.modal-overlay');
-          if (confirmOverlay) {
-            confirmOverlay.remove();
-          }
+          // Only remove the confirmation modal's overlay (highest z-index)
+          const overlays = document.querySelectorAll('.modal-overlay');
+          overlays.forEach(overlay => {
+            if (overlay.style.zIndex === '15000') {
+              overlay.remove();
+            }
+          });
+          // Clear blur from document.body
+          document.body.style.backdropFilter = '';
         }, primary: false
       },
       {
         text: 'Delete', action: () => {
           if (onConfirm) onConfirm();
-          // Clean up confirmation modal properly
-          const confirmOverlay = document.querySelector('.modal-overlay');
-          if (confirmOverlay) {
-            confirmOverlay.remove();
-          }
+          // Only remove the confirmation modal's overlay (highest z-index)
+          const overlays = document.querySelectorAll('.modal-overlay');
+          overlays.forEach(overlay => {
+            if (overlay.style.zIndex === '15000') {
+              overlay.remove();
+            }
+          });
+          // Clear blur from document.body
+          document.body.style.backdropFilter = '';
         }, primary: true
       }
     ],
     size: 'small'
   });
 
+  // Create overlay without blur effect
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 15000; display: flex; align-items: center; justify-content: center;';
   overlay.appendChild(confirmModal);
   document.body.appendChild(overlay);
 
-  // Add close handlers
+  // Add close handler for X button
   const closeBtn = confirmModal.querySelector('.modal-close');
   if (closeBtn) {
     closeBtn.addEventListener('click', () => {
-      const confirmOverlay = document.querySelector('.modal-overlay');
-      if (confirmOverlay) {
-        confirmOverlay.remove();
-      }
+      // Remove blur effect from document.body
+      document.body.style.backdropFilter = '';
+      overlay.remove();
     });
   }
 
   confirmModal.querySelector('.modal-btn[data-index="0"]').addEventListener('click', () => {
-    const confirmOverlay = document.querySelector('.modal-overlay');
-    if (confirmOverlay) {
-      confirmOverlay.remove();
+    // Remove blur effect from document.body
+    document.body.style.backdropFilter = '';
+    const confirmationModal = document.querySelector('.modal-header h3')?.parentElement?.parentElement?.parentElement;
+    if (confirmationModal?.parentElement?.classList.contains('modal-overlay')) {
+      confirmationModal.parentElement.remove();
     }
   });
 
   confirmModal.querySelector('.modal-btn[data-index="1"]').addEventListener('click', () => {
-    const confirmOverlay = document.querySelector('.modal-overlay');
-    if (confirmOverlay) {
-      confirmOverlay.remove();
+    if (onConfirm) onConfirm();
+    // Remove blur effect from document.body
+    document.body.style.backdropFilter = '';
+    const confirmationModal = document.querySelector('.modal-header h3')?.parentElement?.parentElement?.parentElement;
+    if (confirmationModal?.parentElement?.classList.contains('modal-overlay')) {
+      confirmationModal.parentElement.remove();
     }
   });
 }
@@ -174,17 +188,50 @@ export function openScenarioModal() {
 
   // Populate comparison dropdowns after modal is added to DOM
   console.log('Modal added to DOM, populating dropdowns immediately...');
-  import('../services/miscService.js').then((miscService) => {
-    miscService.populateComparisonDropdowns();
-  });
 
-  // Also try again after a longer delay to ensure modal is fully rendered
-  setTimeout(() => {
-    console.log('Retrying dropdown population after 500ms delay...');
-    import('../services/miscService.js').then((miscService) => {
-      miscService.populateComparisonDropdowns();
-    });
-  }, 500);
+  // Try multiple approaches to populate dropdowns
+  const populateDropdowns = () => {
+    const scenarios = getAllScenarios();
+    console.log('Populating with scenarios:', scenarios.length);
+
+    // Find dropdowns in the modal
+    const dropdown1 = modal.querySelector('#compareScenario1');
+    const dropdown2 = modal.querySelector('#compareScenario2');
+
+    console.log('Found dropdowns in modal:', { dropdown1: !!dropdown1, dropdown2: !!dropdown2 });
+
+    if (dropdown1 && dropdown2) {
+      // Clear and populate
+      dropdown1.innerHTML = '<option value="">Select first scenario...</option>';
+      dropdown2.innerHTML = '<option value="">Select second scenario...</option>';
+
+      scenarios.forEach(scenario => {
+        const option1 = document.createElement('option');
+        option1.value = scenario.id;
+        option1.textContent = scenario.name;
+        dropdown1.appendChild(option1);
+
+        const option2 = document.createElement('option');
+        option2.value = scenario.id;
+        option2.textContent = scenario.name;
+        dropdown2.appendChild(option2);
+      });
+
+      console.log('Dropdowns populated successfully!');
+    } else {
+      console.log('Dropdowns not found in modal, trying global search...');
+      import('../services/miscService.js').then((miscService) => {
+        miscService.populateComparisonDropdowns();
+      });
+    }
+  };
+
+  // Try immediately
+  populateDropdowns();
+
+  // And try again after delay
+  setTimeout(populateDropdowns, 100);
+  setTimeout(populateDropdowns, 500);
 
   // Set up event delegation for scenario buttons
   modal.addEventListener('click', (e) => {
@@ -257,34 +304,58 @@ export function openScenarioModal() {
       const dropdown1 = modal.querySelector('#compareScenario1');
       const dropdown2 = modal.querySelector('#compareScenario2');
 
+      console.log('Compare button clicked');
+      console.log('Dropdown1 value:', dropdown1?.value);
+      console.log('Dropdown2 value:', dropdown2?.value);
+      console.log('Dropdown1 options:', Array.from(dropdown1?.options || []).map(opt => ({ value: opt.value, text: opt.textContent })));
+      console.log('Dropdown2 options:', Array.from(dropdown2?.options || []).map(opt => ({ value: opt.value, text: opt.textContent })));
+
       if (dropdown1.value && dropdown2.value) {
         performComparison(dropdown1.value, dropdown2.value);
       } else {
-        import('../services/miscService.js').then((miscService) => {
-          miscService.showToast('Please select two scenarios to compare');
+        import('../services/modalService.js').then((modalService) => {
+          modalService.showToast('Please select two scenarios to compare');
         });
       }
     });
   }
 }
 
-function performComparison(scenarioId1, scenarioId2) {
+export function performComparison(scenarioId1, scenarioId2) {
+  console.log('performComparison called with:', scenarioId1, scenarioId2);
+
   const scenarios = getAllScenarios();
+  console.log('Available scenarios:', scenarios);
+
   const scenario1 = scenarios.find(s => s.id === scenarioId1);
   const scenario2 = scenarios.find(s => s.id === scenarioId2);
 
+  console.log('Found scenarios:', { scenario1: scenario1?.name, scenario2: scenario2?.name });
+
   if (!scenario1 || !scenario2) {
-    import('../services/miscService.js').then((miscService) => {
-      miscService.showToast('One or both scenarios not found');
+    import('../services/modalService.js').then((modalService) => {
+      modalService.showToast('One or both scenarios not found');
     });
     return;
   }
 
-  const resultsDiv = document.querySelector('#comparisonResults');
-  if (!resultsDiv) return;
+  // Find results div within the modal
+  const resultsDiv = document.querySelector('#comparisonResults') ||
+    document.querySelector('.modal-overlay #comparisonResults') ||
+    document.querySelector('#scenariosModal #comparisonResults');
+
+  if (!resultsDiv) {
+    console.error('Comparison results div not found');
+    return;
+  }
 
   const tbody = resultsDiv.querySelector('tbody');
-  if (!tbody) return;
+  if (!tbody) {
+    console.error('Comparison table tbody not found');
+    return;
+  }
+
+  console.log('Performing comparison between scenarios:', scenario1.name, scenario2.name);
 
   // Generate comparison data
   const metrics = [
@@ -335,32 +406,33 @@ function refreshScenariosList(modal) {
   console.log('Refreshing scenarios list...');
 
   // Refresh scenarios list
-  const scenarios = getAllScenarios();
-  const scenariosList = scenarios.map(s => {
+  const allScenarios = getAllScenarios();
+  const scenariosList = allScenarios.map(s => {
     const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
     const ts = escapeHtml(s.timestamp || s.createdAt || '');
     return `
-      <div class="scenario-item" data-scenario-id="${s.id}">
-        <div>
-          <div class="scenario-item-name">${name}</div>
-          <div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
-        </div>
-        <div class="scenario-item-actions">
-          <button class="btn small load-btn" data-scenario-id="${s.id}">Load</button>
-          <button class="btn small danger delete-btn" data-scenario-id="${s.id}">Delete</button>
-        </div>
-      </div>
-    `;
+<div class="scenario-item" data-scenario-id="${s.id}">
+<div>
+<div class="scenario-item-name">${name}</div>
+<div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
+</div>
+<div class="scenario-item-actions">
+<button class="btn small load-btn" data-scenario-id="${s.id}">Load</button>
+<button class="btn small danger delete-btn" data-scenario-id="${s.id}">Delete</button>
+</div>
+</div>
+`;
   }).join('');
 
   const scenariosListContainer = modal.querySelector('#scenariosList');
   if (scenariosListContainer) {
-    scenariosListContainer.innerHTML = scenarios.length === 0 ?
+    scenariosListContainer.innerHTML = allScenarios.length === 0 ?
       '<div class="empty-state">No saved scenarios yet. Save one above!</div>' :
       scenariosList;
   }
 
-  // Refresh dropdowns
+  // Immediately populate comparison dropdowns
+  console.log('Immediately populating comparison dropdowns...');
   import('../services/miscService.js').then((miscService) => {
     miscService.populateComparisonDropdowns();
   });
@@ -368,31 +440,33 @@ function refreshScenariosList(modal) {
 
 export function renderScenariosList() {
   // Update all scenario lists on the page or within open modals
-  const lists = Array.from(document.querySelectorAll('.scenarios-list'));
+  const listElements = Array.from(document.querySelectorAll('.scenarios-list'));
   const scenarios = getAllScenarios();
 
-  if (lists.length === 0) return;
+  if (listElements.length === 0) return;
 
-  lists.forEach((list) => {
+  listElements.forEach((listElement) => {
     if (scenarios.length === 0) {
-      list.innerHTML = '<div class="empty-state">No saved scenarios yet. Save one above!</div>';
+      listElement.innerHTML = '<div class="empty-state">No saved scenarios yet. Save one above!</div>';
       return;
     }
 
-    // Use document fragment for better performance with many scenarios
-    const fragment = document.createDocumentFragment();
-
-    scenarios.forEach((s) => {
-      const itemDiv = document.createElement('div');
-      itemDiv.className = 'scenario-item';
-
-      itemDiv.innerHTML = '<div><div class="scenario-item-name" style="color: black !important;">' + escapeHtml(s.name) + '</div><div class="scenario-item-meta" style="color: #666 !important;">Saved ' + s.timestamp + '</div></div><div class="scenario-item-actions"><button class="btn small load-btn" data-scenario-id="' + escapeHtml(s.id) + '">Load</button><button class="btn small danger delete-btn" data-scenario-id="' + escapeHtml(s.id) + '">Delete</button></div>';
-
-      fragment.appendChild(itemDiv);
-    });
-
-    list.innerHTML = '';
-    list.appendChild(fragment);
+    listElement.innerHTML = scenarios.map(s => {
+      const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
+      const ts = escapeHtml(s.timestamp || s.createdAt || '');
+      return `
+        <div class="scenario-item" data-scenario-id="${s.id}">
+          <div>
+            <div class="scenario-item-name">${name}</div>
+            <div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
+          </div>
+          <div class="scenario-item-actions">
+            <button class="btn small load-btn" data-scenario-id="${s.id}">Load</button>
+            <button class="btn small danger delete-btn" data-scenario-id="${s.id}">Delete</button>
+          </div>
+        </div>
+      `;
+    }).join('');
   });
 }
 
