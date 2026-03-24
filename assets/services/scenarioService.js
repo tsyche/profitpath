@@ -63,10 +63,12 @@ function performSave(name) {
     document.querySelectorAll('#scenarioNameInput').forEach(i => i.value = '');
     renderScenariosList();
 
-    // Use dynamic import to avoid circular dependency
-    import('./miscService.js').then(miscService => {
-      miscService.populateComparisonDropdowns();
-    });
+    // Update dropdowns with delay to match loadScenario pattern
+    setTimeout(() => {
+      import('./miscService.js').then(miscService => {
+        miscService.populateComparisonDropdowns();
+      });
+    }, 100);
 
     // Show success notification
     showToast('Scenario saved successfully!', 'success');
@@ -180,7 +182,9 @@ export function deleteScenario(scenarioId) {
       setTimeout(() => {
         renderScenariosList();
         import('./miscService.js').then(miscService => {
-          miscService.populateComparisonDropdowns();
+          // Find the modal overlay to pass as context
+          const modalOverlay = document.querySelector('.modal-overlay');
+          miscService.populateComparisonDropdowns(modalOverlay);
         });
         // Don't close modal - let user continue working
       }, 0);
