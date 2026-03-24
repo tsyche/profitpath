@@ -247,10 +247,12 @@ export function openScenarioModal() {
       refreshScenariosList(modal);
     } else if (btn.classList.contains('delete-btn')) {
       // Ask for confirmation before deleting
-      showDeleteConfirmation(scenarioId, () => {
-        deleteScenario(scenarioId);
+      showDeleteConfirmation(scenarioId, async () => {
+        await deleteScenario(scenarioId);
         // Refresh scenarios list and dropdowns after deleting
-        refreshScenariosList(modal);
+        setTimeout(() => {
+          refreshScenariosList(modal);
+        }, 50);
       });
       // Don't close modal after delete confirmation
       return;
@@ -261,15 +263,16 @@ export function openScenarioModal() {
   // Set up save button
   const saveBtn = modal.querySelector('#saveScenarioBtn');
   if (saveBtn) {
-    saveBtn.addEventListener('click', () => {
+    saveBtn.addEventListener('click', async () => {
       const input = modal.querySelector('#scenarioNameInput');
       if (input && input.value.trim()) {
         // Call the actual save function from scenarioService
-        import('../services/scenarioService.js').then((scenarioService) => {
-          scenarioService.saveScenario(input.value.trim());
-          // Refresh modal content after saving
-          refreshScenariosList(modal);
-        });
+        const scenarioService = await import('../services/scenarioService.js');
+        await scenarioService.saveScenario(input.value.trim());
+        // Clear input
+        input.value = '';
+        // Refresh modal content after saving (now with updated data)
+        refreshScenariosList(modal);
       }
     });
   }
@@ -291,12 +294,6 @@ export function openScenarioModal() {
     scenarioInput.focus();
   }
 
-  // Populate comparison dropdowns
-  console.log('Opening scenarios modal, populating dropdowns...');
-  import('../services/miscService.js').then((miscService) => {
-    miscService.populateComparisonDropdowns();
-  });
-
   // Set up compare button functionality
   const compareBtn = modal.querySelector('#compareBtn');
   if (compareBtn) {
@@ -304,14 +301,8 @@ export function openScenarioModal() {
       const dropdown1 = modal.querySelector('#compareScenario1');
       const dropdown2 = modal.querySelector('#compareScenario2');
 
-      console.log('Compare button clicked');
-      console.log('Dropdown1 value:', dropdown1?.value);
-      console.log('Dropdown2 value:', dropdown2?.value);
-      console.log('Dropdown1 options:', Array.from(dropdown1?.options || []).map(opt => ({ value: opt.value, text: opt.textContent })));
-      console.log('Dropdown2 options:', Array.from(dropdown2?.options || []).map(opt => ({ value: opt.value, text: opt.textContent })));
-
-      if (dropdown1.value && dropdown2.value) {
-        performComparison(dropdown1.value, dropdown2.value);
+      if (dropdown1?.value && dropdown2?.value) {
+        performComparisonInModal(dropdown1.value, dropdown2.value, modal);
       } else {
         import('../services/modalService.js').then((modalService) => {
           modalService.showToast('Please select two scenarios to compare');
@@ -319,6 +310,166 @@ export function openScenarioModal() {
       }
     });
   }
+
+  // Set up dropdown change listeners for immediate comparison
+  const dropdown1 = modal.querySelector('#compareScenario1');
+  const dropdown2 = modal.querySelector('#compareScenario2');
+
+  if (dropdown1 && dropdown2) {
+    const handleDropdownChange = () => {
+      if (dropdown1.value && dropdown2.value) {
+        performComparisonInModal(dropdown1.value, dropdown2.value, modal);
+      }
+    };
+
+    dropdown1.addEventListener('change', handleDropdownChange);
+    dropdown2.addEventListener('change', handleDropdownChange);
+  }
+
+  // Populate comparison dropdowns
+  console.log('Opening scenarios modal, populating dropdowns...');
+  import('../services/miscService.js').then((miscService) => {
+    miscService.populateComparisonDropdowns();
+  });
+
+  // Find results div within the modal
+  const resultsDiv = document.querySelector('#comparisonResults') ||
+    document.querySelector('.modal-overlay #comparisonResults') ||
+    document.querySelector('#scenariosModal #comparisonResults');
+
+  if (!resultsDiv) {
+    console.error('Comparison results div not found');
+    return;
+  }
+
+  // Show results first
+  resultsDiv.style.display = 'block';
+
+  const tbody = resultsDiv.querySelector('tbody');
+  if (!tbody) {
+    console.error('Comparison table tbody not found');
+    return;
+  }
+
+  console.log('Performing comparison between scenarios:', scenario1.name, scenario2.name);
+
+  // Generate comparison data
+  const metrics = [
+    { label: 'Employees', value1: scenario1.state.employees, value2: scenario2.state.employees, format: 'number' },
+    { label: 'Employee Pay', value1: scenario1.state.employeePay, value2: scenario2.state.employeePay, format: 'currency' },
+    { label: 'Monthly Costs', value1: scenario1.state.monthlyCosts, value2: scenario2.state.monthlyCosts, format: 'currency' },
+    { label: 'Productive Utilization', value1: scenario1.state.productiveUtilizationPct, value2: scenario2.state.productiveUtilizationPct, format: 'percentage' },
+    { label: 'Target Utilization', value1: scenario1.state.targetUtilizationPct, value2: scenario2.state.targetUtilizationPct, format: 'percentage' },
+    { label: 'Total Offerings', value1: scenario1.state.offerings.length, value2: scenario2.state.offerings.length, format: 'number' }
+  ];
+
+  // Build table rows
+  tbody.innerHTML = metrics.map(metric => {
+    const diff = metric.value2 - metric.value1;
+    const diffClass = diff > 0 ? 'positive' : diff < 0 ? 'negative' : '';
+    const diffSymbol = diff > 0 ? '+' : '';
+
+    let formattedValue1 = metric.value1;
+    let formattedValue2 = metric.value2;
+    let formattedDiff = `${diffSymbol}${diff}`;
+
+    if (metric.format === 'currency') {
+      formattedValue1 = `$${metric.value1.toLocaleString()}`;
+      formattedValue2 = `$${metric.value2.toLocaleString()}`;
+      formattedDiff = `${diffSymbol}$${Math.abs(diff).toLocaleString()}`;
+    } else if (metric.format === 'percentage') {
+      formattedValue1 = `${metric.value1}%`;
+      formattedValue2 = `${metric.value2}%`;
+      formattedDiff = `${diffSymbol}${diff}%`;
+    }
+
+    return `
+      <tr>
+        <td>${metric.label}</td>
+        <td>${formattedValue1}</td>
+        <td>${formattedValue2}</td>
+        <td class="${diffClass}">${formattedDiff}</td>
+      </tr>
+    `;
+  }).join('');
+
+  // Show results
+}
+
+// Function to perform comparison within modal context
+export function performComparisonInModal(scenarioId1, scenarioId2, modal) {
+  const scenarios = getAllScenarios();
+
+  // Find scenarios by ID
+  const scenario1 = scenarios.find(s => s.id === scenarioId1);
+  const scenario2 = scenarios.find(s => s.id === scenarioId2);
+
+  if (!scenario1 || !scenario2) {
+    import('../services/modalService.js').then((modalService) => {
+      modalService.showToast('One or both scenarios not found');
+    });
+    return;
+  }
+
+  // Find results div within the modal
+  const resultsDiv = modal.querySelector('#comparisonResults');
+  if (!resultsDiv) {
+    console.error('Comparison results div not found');
+    return;
+  }
+
+  // Show results first
+  resultsDiv.style.display = 'block';
+
+  const tbody = resultsDiv.querySelector('tbody');
+  if (!tbody) {
+    console.error('Comparison table tbody not found');
+    return;
+  }
+
+  console.log('Performing comparison between scenarios:', scenario1.name, scenario2.name);
+
+  // Generate comparison data
+  const metrics = [
+    { label: 'Employees', value1: scenario1.state.employees, value2: scenario2.state.employees, format: 'number' },
+    { label: 'Employee Pay', value1: scenario1.state.employeePay, value2: scenario2.state.employeePay, format: 'currency' },
+    { label: 'Monthly Costs', value1: scenario1.state.monthlyCosts, value2: scenario2.state.monthlyCosts, format: 'currency' },
+    { label: 'Productive Utilization', value1: scenario1.state.productiveUtilizationPct, value2: scenario2.state.productiveUtilizationPct, format: 'percentage' },
+    { label: 'Target Utilization', value1: scenario1.state.targetUtilizationPct, value2: scenario2.state.targetUtilizationPct, format: 'percentage' },
+    { label: 'Total Offerings', value1: scenario1.state.offerings.length, value2: scenario2.state.offerings.length, format: 'number' }
+  ];
+
+  // Build table rows
+  tbody.innerHTML = metrics.map(metric => {
+    const diff = metric.value2 - metric.value1;
+    const diffClass = diff > 0 ? 'positive' : diff < 0 ? 'negative' : '';
+    const diffSymbol = diff > 0 ? '+' : '';
+
+    let formattedValue1 = metric.value1;
+    let formattedValue2 = metric.value2;
+    let formattedDiff = `${diffSymbol}${diff}`;
+
+    if (metric.format === 'currency') {
+      formattedValue1 = `$${metric.value1.toLocaleString()}`;
+      formattedValue2 = `$${metric.value2.toLocaleString()}`;
+      formattedDiff = `${diffSymbol}$${Math.abs(diff).toLocaleString()}`;
+    } else if (metric.format === 'percentage') {
+      formattedValue1 = `${metric.value1}%`;
+      formattedValue2 = `${metric.value2}%`;
+      formattedDiff = `${diffSymbol}${diff}%`;
+    }
+
+    return `
+      <tr>
+        <td>${metric.label}</td>
+        <td>${formattedValue1}</td>
+        <td>${formattedValue2}</td>
+        <td class="${diffClass}">${formattedDiff}</td>
+      </tr>
+    `;
+  }).join('');
+
+  console.log('Comparison table populated successfully');
 }
 
 export function performComparison(scenarioId1, scenarioId2) {
@@ -327,6 +478,7 @@ export function performComparison(scenarioId1, scenarioId2) {
   const scenarios = getAllScenarios();
   console.log('Available scenarios:', scenarios);
 
+  // Find scenarios by ID, not name
   const scenario1 = scenarios.find(s => s.id === scenarioId1);
   const scenario2 = scenarios.find(s => s.id === scenarioId2);
 
@@ -348,6 +500,9 @@ export function performComparison(scenarioId1, scenarioId2) {
     console.error('Comparison results div not found');
     return;
   }
+
+  // Show results first
+  resultsDiv.style.display = 'block';
 
   const tbody = resultsDiv.querySelector('tbody');
   if (!tbody) {
@@ -402,7 +557,7 @@ export function performComparison(scenarioId1, scenarioId2) {
 }
 
 // Function to refresh scenarios list and dropdowns
-function refreshScenariosList(modal) {
+export function refreshScenariosList(modal) {
   console.log('Refreshing scenarios list...');
 
   // Refresh scenarios list
@@ -431,11 +586,27 @@ function refreshScenariosList(modal) {
       scenariosList;
   }
 
-  // Immediately populate comparison dropdowns
+  // Immediately populate comparison dropdowns with modal context
   console.log('Immediately populating comparison dropdowns...');
   import('../services/miscService.js').then((miscService) => {
-    miscService.populateComparisonDropdowns();
+    miscService.populateComparisonDropdowns(modal);
   });
+
+  // Also try after a short delay to ensure DOM is ready
+  setTimeout(() => {
+    console.log('Retrying dropdown population after 100ms...');
+    import('../services/miscService.js').then((miscService) => {
+      miscService.populateComparisonDropdowns(modal);
+    });
+  }, 100);
+
+  // And one more time after a longer delay to ensure localStorage is updated
+  setTimeout(() => {
+    console.log('Final dropdown population after 300ms...');
+    import('../services/miscService.js').then((miscService) => {
+      miscService.populateComparisonDropdowns(modal);
+    });
+  }, 300);
 }
 
 export function renderScenariosList() {

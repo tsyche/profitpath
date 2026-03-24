@@ -263,14 +263,14 @@ export function exportAsCSV() {
 }
 
 export function shareScenario() {
-  const shareUrl = encodeScenarioToURL(state);
+  const shareUrl = encodeScenarioToURL(window.state);
   if (!shareUrl) {
     showShareErrorModal();
     return;
   }
 
   // Update social media meta tags with scenario data
-  updateSocialMetaTags(state);
+  updateSocialMetaTags(window.state);
 
   // Show share success modal
   showShareSuccessModal(shareUrl);
@@ -647,13 +647,27 @@ export function showNotification(message, type = 'info') {
   }, 3000);
 }
 
-export function populateComparisonDropdowns() {
+export function populateComparisonDropdowns(modalContext = null) {
   const scenarios = getAllScenarios();
   console.log('Found scenarios:', scenarios.length);
 
-  // Find dropdowns with multiple selectors
-  let dropdown1 = document.getElementById('compareScenario1');
-  let dropdown2 = document.getElementById('compareScenario2');
+  // Find dropdowns - if modalContext provided, search within it first
+  let dropdown1 = null;
+  let dropdown2 = null;
+
+  if (modalContext) {
+    dropdown1 = modalContext.querySelector('#compareScenario1');
+    dropdown2 = modalContext.querySelector('#compareScenario2');
+    console.log('Searching within modal context:', { dropdown1: !!dropdown1, dropdown2: !!dropdown2 });
+  }
+
+  // Fall back to document search if not found in modal
+  if (!dropdown1) {
+    dropdown1 = document.getElementById('compareScenario1');
+  }
+  if (!dropdown2) {
+    dropdown2 = document.getElementById('compareScenario2');
+  }
 
   // Try alternative selectors if not found
   if (!dropdown1) {
