@@ -63,12 +63,11 @@ function performSave(name) {
     document.querySelectorAll('#scenarioNameInput').forEach(i => i.value = '');
     renderScenariosList();
 
-    // Update dropdowns with delay to match loadScenario pattern
-    setTimeout(() => {
-      import('./miscService.js').then(miscService => {
-        miscService.populateComparisonDropdowns();
-      });
-    }, 100);
+    // Update dropdowns immediately after localStorage is updated
+    const modalOverlay = document.querySelector('.modal-overlay');
+    import('./miscService.js').then(miscService => {
+      miscService.populateComparisonDropdowns(modalOverlay);
+    });
 
     // Show success notification
     showToast('Scenario saved successfully!', 'success');
@@ -190,7 +189,7 @@ export function deleteScenario(scenarioId) {
       }, 0);
 
       // Show success notification
-      showNotification('Scenario deleted successfully!', 'success');
+      showToast('Scenario deleted successfully!', 'success');
     }
   } catch (e) {
     console.error('Failed to delete scenario:', e);
