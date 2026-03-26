@@ -1,6 +1,7 @@
 // Miscellaneous Helpers and UI Logic
 /* global render calc updateOutputs updateValidationDisplay Chart */
 import { safeParseNumber } from '../utils/helpers';
+import { showToast } from './modalService.js';
 
 // Utility functions for export functionality
 const DEFAULT_CURRENCY = 'USD';
@@ -265,15 +266,21 @@ export function exportAsCSV() {
 export function shareScenario() {
   const shareUrl = encodeScenarioToURL(window.state);
   if (!shareUrl) {
-    showShareErrorModal();
+    showToast('Failed to generate share link', 'error');
     return;
   }
 
   // Update social media meta tags with scenario data
   updateSocialMetaTags(window.state);
 
-  // Show share success modal
-  showShareSuccessModal(shareUrl);
+  // Copy to clipboard and show toast
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    console.log('[SHARE] Clipboard success, calling showToast...');
+    showToast('Share link copied to clipboard!', 'success');
+    console.log('[SHARE] showToast called');
+  }).catch(() => {
+    showToast('Share link: ' + shareUrl, 'info');
+  });
 }
 
 function showShareErrorModal() {
@@ -298,6 +305,13 @@ function showShareErrorModal() {
 }
 
 function showShareSuccessModal(shareUrl) {
+  // Auto-copy to clipboard immediately
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    showNotification('Direct share link copied to clipboard!', 'success');
+  }).catch(() => {
+    // Silent fail - user can manually copy
+  });
+
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.innerHTML = `
@@ -307,26 +321,33 @@ function showShareSuccessModal(shareUrl) {
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <p>Scenario successfully shared!</p>
+        <p>Direct share link with unique UUID copied to clipboard!</p>
         <p><strong>Shareable URL:</strong></p>
-        <input type="text" value="${shareUrl}" readonly style="width: 100%; padding: 5px; margin-bottom: 10px;">
-        <button onclick="copyToClipboard('${shareUrl}')">Copy to Clipboard</button>
+        <input type="text" id="shareUrlInput" value="${shareUrl}" readonly style="width: 100%; padding: 5px; margin-bottom: 10px;">
+        <button onclick="copyToClipboard(document.getElementById('shareUrlInput').value); showNotification('Link copied!', 'success');">Copy to Clipboard</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
-  setTimeout(() => {
+
+  // Add close button handler
+  modal.querySelector('.modal-close').addEventListener('click', () => {
     document.body.removeChild(modal);
-  }, 5000);
+  });
 }
 
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
-    console.log('Text copied to clipboard');
+    showNotification('Link copied to clipboard!', 'success');
   }).catch((err) => {
     console.error('Failed to copy text: ', err);
+    showNotification('Failed to copy link', 'error');
   });
 }
+
+// Expose to window for onclick handlers
+window.copyToClipboard = copyToClipboard;
+window.showNotification = showNotification;
 
 function updateSocialMetaTags(state) {
   const title = 'ProfitPath Scenario: ' + state.offerings.map(o => o.name).join(', ');
@@ -637,7 +658,7 @@ export function showNotification(message, type = 'info') {
   // Create a simple notification element
   const notification = document.createElement('div');
   notification.className = 'notification';
-  notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #007bff; color: white; padding: 10px 20px; border-radius: 4px; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+  notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #007bff; color: white; padding: 10px 20px; border-radius: 4px; z-index: 15000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
   notification.textContent = message;
 
   document.body.appendChild(notification);
@@ -648,7 +669,8 @@ export function showNotification(message, type = 'info') {
 }
 
 export function populateComparisonDropdowns(modalContext = null) {
-  const scenarios = getAllScenarios();
+  // Sort scenarios with natural sort (so "2" comes before "10")
+  const scenarios = getAllScenarios().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
   console.log('Found scenarios:', scenarios.length);
 
   // Find dropdowns - if modalContext provided, search within it first
@@ -889,33 +911,309 @@ export function loadIndustryTemplate(templateId) {
 }
 
 export function exportAsExcel() {
-  // Placeholder for Excel export functionality
-  console.log('exportAsExcel called');
+  const state = window.state;
+  const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
+  const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString();
+  const fmtPct = (n) => n.toFixed(1) + '%';
+  const fmtNum = (n) => (Math.round(n * 100) / 100).toLocaleString();
+
+  let lines = [
+    'ProfitPath Analysis Report',
+    'Generated: ' + new Date().toLocaleString(),
+    '',
+    'BUSINESS OVERVIEW',
+    'Metric,Value',
+    'Employees,' + state.employees,
+    'Employee Pay,' + fmtMoney0(state.employeePay),
+    'Monthly Costs,' + fmtMoney0(state.monthlyCosts),
+    'Productive Utilization,' + fmtPct(state.productiveUtilizationPct),
+    'Target Utilization,' + fmtPct(state.targetUtilizationPct),
+    '',
+    'SERVICE OFFERINGS',
+    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients'
+  ];
+
+  state.offerings.forEach((o) => {
+    lines.push(
+      `"${o.name}",${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients}`
+    );
+  });
+
+  const csv = lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'profitpath-export-' + new Date().toISOString().split('T')[0] + '.csv');
+  link.style.visibility = 'hidden';
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showNotification('Excel export downloaded!', 'success');
 }
 
 export function exportAsPDF() {
-  // Placeholder for PDF export functionality
-  console.log('exportAsPDF called');
+  // Create a printable HTML version and open print dialog
+  const state = window.state;
+  const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
+  const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString();
+  const fmtPct = (n) => n.toFixed(1) + '%';
+
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    showNotification('Please allow popups to print PDF', 'error');
+    return;
+  }
+
+  let offeringsHtml = state.offerings.map(o => `
+    <tr>
+      <td>${o.name}</td>
+      <td>${fmtMoney0(o.priceMonthly)}</td>
+      <td>${o.sessionsPerYear}</td>
+      <td>${o.hoursPerSession}</td>
+      <td>${fmtMoney0(o.variableCostPerSession)}</td>
+      <td>${fmtPct(o.mixPct)}</td>
+      <td>${o.currentClients}</td>
+    </tr>
+  `).join('');
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>ProfitPath Analysis Report</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .section { margin: 20px 0; }
+        .label { font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <h1>ProfitPath Analysis Report</h1>
+      <p>Generated: ${new Date().toLocaleString()}</p>
+      
+      <div class="section">
+        <h2>Business Overview</h2>
+        <p><span class="label">Employees:</span> ${state.employees}</p>
+        <p><span class="label">Employee Pay:</span> ${fmtMoney0(state.employeePay)}</p>
+        <p><span class="label">Monthly Costs:</span> ${fmtMoney0(state.monthlyCosts)}</p>
+        <p><span class="label">Productive Utilization:</span> ${fmtPct(state.productiveUtilizationPct)}</p>
+        <p><span class="label">Target Utilization:</span> ${fmtPct(state.targetUtilizationPct)}</p>
+      </div>
+      
+      <div class="section">
+        <h2>Service Offerings</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Service Name</th>
+              <th>Monthly Price</th>
+              <th>Sessions/Year</th>
+              <th>Hours/Session</th>
+              <th>Variable Cost</th>
+              <th>Mix %</th>
+              <th>Current Clients</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${offeringsHtml}
+          </tbody>
+        </table>
+      </div>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+  }, 500);
+  showNotification('PDF print dialog opened!', 'success');
 }
 
 export function exportAsHTML() {
-  // Placeholder for HTML export functionality
-  console.log('exportAsHTML called');
+  const state = window.state;
+  const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
+  const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString();
+  const fmtPct = (n) => n.toFixed(1) + '%';
+
+  let offeringsHtml = state.offerings.map(o => `
+    <tr>
+      <td>${o.name}</td>
+      <td>${fmtMoney0(o.priceMonthly)}</td>
+      <td>${o.sessionsPerYear}</td>
+      <td>${o.hoursPerSession}</td>
+      <td>${fmtMoney0(o.variableCostPerSession)}</td>
+      <td>${fmtPct(o.mixPct)}</td>
+      <td>${o.currentClients}</td>
+    </tr>
+  `).join('');
+
+  const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <title>ProfitPath Analysis Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+    h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+    h2 { color: #555; margin-top: 30px; }
+    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    th { background-color: #007bff; color: white; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    .section { margin: 30px 0; padding: 20px; background: #f5f5f5; border-radius: 8px; }
+    .metric { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd; }
+    .label { font-weight: bold; color: #333; }
+    .value { color: #007bff; }
+  </style>
+</head>
+<body>
+  <h1>ProfitPath Analysis Report</h1>
+  <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+  
+  <div class="section">
+    <h2>Business Overview</h2>
+    <div class="metric"><span class="label">Employees:</span> <span class="value">${state.employees}</span></div>
+    <div class="metric"><span class="label">Employee Pay:</span> <span class="value">${fmtMoney0(state.employeePay)}</span></div>
+    <div class="metric"><span class="label">Monthly Costs:</span> <span class="value">${fmtMoney0(state.monthlyCosts)}</span></div>
+    <div class="metric"><span class="label">Productive Utilization:</span> <span class="value">${fmtPct(state.productiveUtilizationPct)}</span></div>
+    <div class="metric"><span class="label">Target Utilization:</span> <span class="value">${fmtPct(state.targetUtilizationPct)}</span></div>
+  </div>
+  
+  <div class="section">
+    <h2>Service Offerings</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Service Name</th>
+          <th>Monthly Price</th>
+          <th>Sessions/Year</th>
+          <th>Hours/Session</th>
+          <th>Variable Cost</th>
+          <th>Mix %</th>
+          <th>Current Clients</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${offeringsHtml}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>`;
+
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'profitpath-report-' + new Date().toISOString().split('T')[0] + '.html');
+  link.style.visibility = 'hidden';
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showNotification('HTML report downloaded!', 'success');
 }
 
 export function shareViaEmail() {
-  // Placeholder for email sharing functionality
-  console.log('shareViaEmail called');
+  const state = window.state;
+  const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
+  const fmtPct = (n) => n.toFixed(1) + '%';
+
+  let offeringsText = state.offerings.map(o =>
+    `- ${o.name}: ${fmtMoney0(o.priceMonthly)}/month, ${o.sessionsPerYear} sessions/year, ${fmtPct(o.mixPct)} mix`
+  ).join('\n');
+
+  const subject = encodeURIComponent('ProfitPath Analysis Report');
+  const body = encodeURIComponent(
+    `Check out my ProfitPath analysis:\n\n` +
+    `Business Overview:\n` +
+    `- Employees: ${state.employees}\n` +
+    `- Employee Pay: ${fmtMoney0(state.employeePay)}\n` +
+    `- Monthly Costs: ${fmtMoney0(state.monthlyCosts)}\n` +
+    `- Productive Utilization: ${fmtPct(state.productiveUtilizationPct)}\n` +
+    `- Target Utilization: ${fmtPct(state.targetUtilizationPct)}\n\n` +
+    `Service Offerings:\n${offeringsText}\n\n` +
+    `View full analysis at: ${window.location.href}`
+  );
+
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  showNotification('Email client opened!', 'success');
 }
 
 export function showEmbedCode() {
-  // Placeholder for embed code functionality
-  console.log('showEmbedCode called');
+  const embedCode = `<iframe src="${window.location.href}" width="100%" height="600" frameborder="0"></iframe>`;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Embed Code</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Copy this code to embed ProfitPath on your website:</p>
+        <textarea id="embedCodeText" readonly style="width: 100%; height: 100px; padding: 10px; margin: 10px 0; font-family: monospace;">${embedCode}</textarea>
+        <button onclick="copyToClipboard(document.getElementById('embedCodeText').value); showNotification('Embed code copied!', 'success');">Copy to Clipboard</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  modal.querySelector('.modal-close').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
 }
 
 export function showScheduleDialog() {
-  // Placeholder for schedule dialog functionality
-  console.log('showScheduleDialog called');
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Schedule Report</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Schedule automatic report generation and delivery.</p>
+        <form id="scheduleForm">
+          <div style="margin: 10px 0;">
+            <label>Frequency:</label>
+            <select style="width: 100%; padding: 5px;">
+              <option>Daily</option>
+              <option>Weekly</option>
+              <option>Monthly</option>
+            </select>
+          </div>
+          <div style="margin: 10px 0;">
+            <label>Email:</label>
+            <input type="email" placeholder="your@email.com" style="width: 100%; padding: 5px;">
+          </div>
+          <button type="submit" style="margin-top: 10px;">Schedule</button>
+        </form>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  modal.querySelector('.modal-close').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+
+  modal.querySelector('#scheduleForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    showNotification('Report scheduled! (Feature coming soon)', 'success');
+    document.body.removeChild(modal);
+  });
 }
 
 export function loadTestScenarios() {

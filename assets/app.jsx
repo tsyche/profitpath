@@ -1202,7 +1202,7 @@ const mobileShareBtn = $('#mobileShareBtn');
 
 if (mobileShareBtn) {
   mobileShareBtn.addEventListener('click', () => {
-    shareScenario();
+    misc.shareScenario();
     closeMobileMenu();
   });
 }
@@ -1629,15 +1629,15 @@ if (scenariosModal) {
       }
     }
 
-        // Ensure the app renders once the DOM is ready so KPIs are populated
-        if (typeof window !== 'undefined') {
-          if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            // Defer to next tick to ensure all elements are present
-            setTimeout(() => { try { render(); } catch (e) { console.warn('Initial render failed:', e); } }, 0);
-          } else {
-            window.addEventListener('DOMContentLoaded', () => { try { render(); } catch (e) { console.warn('Initial render failed:', e); } });
-          }
-        }
+    // Ensure the app renders once the DOM is ready so KPIs are populated
+    if (typeof window !== 'undefined') {
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        // Defer to next tick to ensure all elements are present
+        setTimeout(() => { try { render(); } catch (e) { console.warn('Initial render failed:', e); } }, 0);
+      } else {
+        window.addEventListener('DOMContentLoaded', () => { try { render(); } catch (e) { console.warn('Initial render failed:', e); } });
+      }
+    }
   });
   observer.observe(scenariosModal, { attributes: true, attributeFilter: ['class'] });
 

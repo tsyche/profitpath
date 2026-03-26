@@ -560,8 +560,8 @@ export function performComparison(scenarioId1, scenarioId2) {
 export function refreshScenariosList(modal) {
   console.log('Refreshing scenarios list...');
 
-  // Refresh scenarios list
-  const allScenarios = getAllScenarios();
+  // Refresh scenarios list - sorted naturally (so "2" comes before "10")
+  const allScenarios = getAllScenarios().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
   const scenariosList = allScenarios.map(s => {
     const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
     const ts = escapeHtml(s.timestamp || s.createdAt || '');
@@ -612,7 +612,7 @@ export function refreshScenariosList(modal) {
 export function renderScenariosList() {
   // Update all scenario lists on the page or within open modals
   const listElements = Array.from(document.querySelectorAll('.scenarios-list'));
-  const scenarios = getAllScenarios();
+  const scenarios = getAllScenarios().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
 
   if (listElements.length === 0) return;
 
