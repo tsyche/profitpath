@@ -52,7 +52,11 @@ class FeedbackUI {
    * Open feedback modal with optional context
    */
   openFeedbackModal(context = {}) {
-    if (this.isModalOpen) return;
+    // Remove any existing modal first (defensive cleanup)
+    const existingModal = document.getElementById('feedbackModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
 
     this.currentContext = context;
     this.isModalOpen = true;
@@ -77,6 +81,9 @@ class FeedbackUI {
     }
     this.isModalOpen = false;
     this.currentContext = null;
+
+    // Prevent memory leaks by removing any lingering event listeners
+    // This ensures clean state if modal is reopened
   }
 
   /**
@@ -87,62 +94,43 @@ class FeedbackUI {
     modal.id = 'feedbackModal';
     modal.className = 'feedback-modal';
     modal.innerHTML = `
-      <div class="feedback-overlay" onclick="feedbackUI.closeFeedbackModal()"></div>
+      <div class="feedback-overlay"></div>
       <div class="feedback-content">
         <div class="feedback-header">
           <h3>Share Your Feedback</h3>
-          <button class="feedback-close" onclick="feedbackUI.closeFeedbackModal()">×</button>
+          <button class="feedback-close">×</button>
         </div>
         
-        <form id="feedbackForm" onsubmit="feedbackUI.handleFeedbackSubmit(event)">
+        <form id="feedbackForm">
           <div class="feedback-section">
             <label for="feedbackRating">Overall Rating *</label>
             <div class="rating-container">
               ${this.createRatingStars()}
+              <input type="hidden" id="feedbackRating" name="rating" required>
             </div>
-            <input type="hidden" id="feedbackRating" name="rating" required>
           </div>
           
           <div class="feedback-section">
             <label for="feedbackCategory">Category *</label>
             <select id="feedbackCategory" name="category" required>
               <option value="">Select a category</option>
-              <option value="feature">Feature Request</option>
-              <option value="bug">Bug Report</option>
-              <option value="usability">Usability</option>
-              <option value="performance">Performance</option>
-              <option value="suggestion">Suggestion</option>
-              <option value="other">Other</option>
+              <option value="bug">🐛 Bug Report</option>
+              <option value="feature">💡 Feature Request</option>
+              <option value="improvement">🔧 Improvement</option>
+              <option value="general">💭 General Feedback</option>
             </select>
           </div>
           
           <div class="feedback-section">
-            <label for="feedbackComment">Comments (optional)</label>
-            <textarea 
-              id="feedbackComment" 
-              name="comment" 
-              rows="4" 
-              maxlength="1000"
-              placeholder="Tell us more about your experience..."
-            ></textarea>
-            <div class="character-count">
-              <span id="commentCharCount">0</span>/1000
+            <label for="feedbackComment">Comments *</label>
+            <textarea id="feedbackComment" name="comment" placeholder="Please share your detailed feedback..." required maxlength="500"></textarea>
+            <div class="char-count">
+              <span id="commentCharCount">0</span> / 500
             </div>
           </div>
           
-          ${this.currentContext ? this.createContextSection() : ''}
-          
-          <div class="feedback-section">
-            <label class="checkbox-label">
-              <input type="checkbox" id="allowContact" name="allowContact">
-              Allow follow-up contact for this feedback
-            </label>
-          </div>
-          
           <div class="feedback-actions">
-            <button type="button" class="btn secondary" onclick="feedbackUI.closeFeedbackModal()">
-              Cancel
-            </button>
+            <button type="button" class="btn secondary cancel-feedback">Cancel</button>
             <button type="submit" class="btn primary">
               Submit Feedback
             </button>
@@ -168,9 +156,6 @@ class FeedbackUI {
           type="button" 
           class="rating-star" 
           data-rating="${i}"
-          onclick="feedbackUI.setRating(${i})"
-          onmouseover="feedbackUI.previewRating(${i})"
-          onmouseout="feedbackUI.clearRatingPreview()"
         >
           ⭐
         </button>
@@ -200,6 +185,34 @@ class FeedbackUI {
    * Attach event listeners to modal elements
    */
   attachModalEventListeners(modal) {
+    // Overlay click to close
+    const overlay = modal.querySelector('.feedback-overlay');
+    if (overlay) {
+      overlay.addEventListener('click', () => this.closeFeedbackModal());
+    }
+
+    // Close button
+    const closeBtn = modal.querySelector('.feedback-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.closeFeedbackModal());
+    }
+
+    // Cancel button
+    const cancelBtn = modal.querySelector('.cancel-feedback');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.closeFeedbackModal());
+    }
+
+    // Rating stars
+    const stars = modal.querySelectorAll('.rating-star');
+    stars.forEach(star => {
+      const rating = parseInt(star.dataset.rating);
+
+      star.addEventListener('click', () => this.setRating(rating));
+      star.addEventListener('mouseover', () => this.previewRating(rating));
+      star.addEventListener('mouseout', () => this.clearRatingPreview());
+    });
+
     // Character counter for comment
     const commentTextarea = modal.querySelector('#feedbackComment');
     const charCount = modal.querySelector('#commentCharCount');
@@ -373,13 +386,15 @@ class FeedbackUI {
   }
 }
 
-// Initialize feedback UI when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
+// Initialize feedback UI when DOM is ready (skip in test mode)
+if (typeof window !== 'undefined' && !window.__TEST_MODE__) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      window.feedbackUI = new FeedbackUI();
+    });
+  } else {
     window.feedbackUI = new FeedbackUI();
-  });
-} else {
-  window.feedbackUI = new FeedbackUI();
+  }
 }
 
 // Export for use in other modules

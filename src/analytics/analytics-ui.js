@@ -123,11 +123,114 @@ class AnalyticsUI {
   }
 
   showAnalyticsDashboard() {
+    console.log('[DEBUG analytics-ui] showAnalyticsDashboard called');
     const summary = this.analytics.getAnalyticsSummary();
     const events = this.analytics.getAllEvents();
+    console.log('[DEBUG analytics-ui] summary:', summary);
+    console.log('[DEBUG analytics-ui] events length:', events.length);
 
-    const modal = this.createModal('Analytics Dashboard', this.renderDashboard(summary, events));
-    document.body.appendChild(modal);
+    // Create modal with proper structure
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'modal-overlay';
+    modalOverlay.id = 'analyticsModal';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-content';
+    modal.innerHTML = `
+      <div class="modal-header" style="background-color: white !important; border-bottom: 1px solid #e5e7eb !important;">
+        <h3 style="color: #000000 !important; font-weight: 600 !important; margin: 0 !important; font-size: 18px !important;">Analytics Dashboard</h3>
+        <button class="btn-close" style="color: #000000 !important; background: none !important; border: none !important; font-size: 24px !important; cursor: pointer !important; padding: 0 !important;">&times;</button>
+      </div>
+      <div class="modal-body" style="color: #000000 !important;">
+        ${this.renderDashboard(summary, events)}
+      </div>
+    `;
+
+    modalOverlay.appendChild(modal);
+    console.log('[DEBUG analytics-ui] modal created:', modalOverlay);
+    document.body.appendChild(modalOverlay);
+    console.log('[DEBUG analytics-ui] modal appended to body');
+
+    // Show the modal
+    modalOverlay.classList.remove('hidden');
+
+    // Close handlers
+    const closeBtn = modal.querySelector('.btn-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        modalOverlay.classList.add('hidden');
+        setTimeout(() => {
+          document.body.removeChild(modalOverlay);
+        }, 300);
+      });
+    }
+
+    // Analytics button handlers
+    const enableBtn = modal.querySelector('#enableAnalyticsBtn');
+    if (enableBtn) {
+      enableBtn.addEventListener('click', () => {
+        this.analytics.saveSettings({ enabled: true, trackUsage: true, trackFeatures: true, trackExports: true, trackTemplates: true });
+        // Refresh the modal to show enabled state
+        modalOverlay.remove();
+        this.showAnalyticsDashboard();
+      });
+    }
+
+    const closeAnalyticsBtn = modal.querySelector('#closeAnalyticsBtn');
+    if (closeAnalyticsBtn) {
+      closeAnalyticsBtn.addEventListener('click', () => {
+        modalOverlay.classList.add('hidden');
+        setTimeout(() => {
+          document.body.removeChild(modalOverlay);
+        }, 300);
+      });
+    }
+
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        modalOverlay.classList.add('hidden');
+        setTimeout(() => {
+          document.body.removeChild(modalOverlay);
+        }, 300);
+      }
+    });
+
+    // ESC key handler
+    const escHandler = (e) => {
+      if (e.key === 'Escape' && !modalOverlay.classList.contains('hidden')) {
+        modalOverlay.classList.add('hidden');
+        setTimeout(() => {
+          document.body.removeChild(modalOverlay);
+        }, 300);
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    // Analytics enabled state button handlers
+    const exportBtn = modal.querySelector('#exportAnalyticsBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        this.exportAnalytics();
+      });
+    }
+
+    const clearBtn = modal.querySelector('#clearAnalyticsBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.clearAnalytics();
+        // Refresh the modal to show updated state
+        modalOverlay.remove();
+        this.showAnalyticsDashboard();
+      });
+    }
+
+    const advancedBtn = modal.querySelector('#advancedDashboardBtn');
+    if (advancedBtn) {
+      advancedBtn.addEventListener('click', () => {
+        this.showAdvancedDashboard();
+      });
+    }
   }
 
   renderDashboard(summary, events) {
@@ -138,16 +241,16 @@ class AnalyticsUI {
       return `
         <div class="analytics-empty">
           <div style="text-align: center; padding: 40px 20px;">
-            <h3 style="color: var(--muted); margin-bottom: 20px;">📊 Analytics is Disabled</h3>
-            <p style="color: var(--muted); margin-bottom: 30px; line-height: 1.5;">
+            <h3 style="color: #374151; margin-bottom: 20px;">📊 Analytics is Disabled</h3>
+            <p style="color: #6b7280; margin-bottom: 30px; line-height: 1.5;">
               Enable analytics to track your usage patterns and gain insights into your business performance.
             </p>
             <div style="margin-bottom: 20px;">
-              <button id="enableAnalyticsBtn" class="btn btn-primary" style="margin-right: 10px;">
+              <button id="enableAnalyticsBtn" class="btn btn-primary" style="margin-right: 10px; color: black !important; background-color: white !important; border: 1px solid black !important;">
                 📊 Enable Analytics
               </button>
-              <button id="closeAnalyticsBtn" class="btn btn-secondary">
-                Close
+              <button id="closeAnalyticsBtn" class="btn btn-secondary" style="color: black !important; background-color: white !important; border: 1px solid black !important;">
+                ❌ Close
               </button>
             </div>
           </div>
@@ -158,9 +261,9 @@ class AnalyticsUI {
     return `
       <div class="analytics-dashboard">
         <div class="analytics-actions">
-          <button id="exportAnalyticsBtn" class="btn btn-secondary">Export Data</button>
-          <button id="clearAnalyticsBtn" class="btn btn-danger">Clear Data</button>
-          <button id="advancedDashboardBtn" class="btn btn-primary">Advanced Dashboard</button>
+          <button id="exportAnalyticsBtn" class="btn btn-secondary" style="color: black !important; background-color: white !important; border: 1px solid black !important;">Export Data</button>
+          <button id="clearAnalyticsBtn" class="btn btn-danger" style="color: black !important; background-color: white !important; border: 1px solid black !important;">Clear Data</button>
+          <button id="advancedDashboardBtn" class="btn btn-primary" style="color: black !important; background-color: white !important; border: 1px solid black !important;">Advanced Dashboard</button>
         </div>
         
         <div class="analytics-summary">
@@ -388,12 +491,6 @@ class AnalyticsUI {
 
   clearAnalyticsData() {
     try {
-      // Ask for confirmation before clearing
-      const confirmed = confirm('Are you sure you want to delete all analytics data? This cannot be undone.');
-      if (!confirmed) {
-        return;
-      }
-
       this.analytics.clearAllData();
       this.showNotification('Analytics data cleared successfully');
       this.analytics.trackFeatureUsage('analytics_cleared');
@@ -411,14 +508,221 @@ class AnalyticsUI {
       this.showNotification('Failed to clear analytics data', 'error');
     }
   }
+
+  exportAnalytics() {
+    try {
+      const exportData = this.analytics.exportData();
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(dataBlob);
+      link.download = `profitpath-analytics-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+
+      this.showNotification('Analytics data exported successfully');
+      this.analytics.trackFeatureUsage('analytics_exported');
+    } catch (error) {
+      console.error('Failed to export analytics data:', error);
+      this.showNotification('Failed to export analytics data', 'error');
+    }
+  }
+
+  clearAnalytics() {
+    // Show confirmation modal first
+    this.showClearAnalyticsConfirmation();
+  }
+
+  showClearAnalyticsConfirmation() {
+    // Create confirmation modal
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'clearAnalyticsConfirmModal';
+    modal.style.cssText = 'z-index: 10000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center;';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 500px; z-index: 10001; position: relative;">
+        <div class="modal-header" style="background-color: white !important; border-bottom: 1px solid #e5e7eb !important;">
+          <h3 style="color: #000000 !important; font-weight: 600 !important;">Clear Analytics Data</h3>
+          <button class="btn-close" style="color: #000000 !important;">&times;</button>
+        </div>
+        <div class="modal-body" style="color: #000000 !important; padding: 20px;">
+          <p style="margin-bottom: 20px;">Are you sure you want to clear all analytics data? This action cannot be undone.</p>
+          <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 6px; padding: 12px; margin-bottom: 20px;">
+            <strong style="color: #92400e;">⚠️ Warning:</strong>
+            <p style="color: #92400e; margin: 8px 0 0 0;">This will permanently delete all usage tracking data, session history, and feedback records.</p>
+          </div>
+          <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn btn-secondary" id="cancelClearBtn" style="color: black !important; background-color: white !important; border: 1px solid black !important;">Cancel</button>
+            <button class="btn btn-danger" id="confirmClearBtn" style="color: white !important; background-color: #dc2634 !important; border: 1px solid #dc2634 !important;">Clear All Data</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Add event listeners
+    const closeBtn = modal.querySelector('.btn-close');
+    const cancelBtn = modal.querySelector('#cancelClearBtn');
+    const confirmBtn = modal.querySelector('#confirmClearBtn');
+
+    const closeModal = () => modal.remove();
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      this.clearAnalyticsData();
+      modal.remove();
+
+      // Refresh the dashboard
+      const analyticsModal = document.getElementById('analyticsModal');
+      if (analyticsModal) {
+        analyticsModal.remove();
+        this.showAnalyticsDashboard();
+      }
+
+      this.showNotification('Analytics data cleared successfully', 'success');
+    });
+  }
+
+  showAdvancedDashboard() {
+    // Close current modal
+    const currentModal = document.getElementById('analyticsModal');
+    if (currentModal) {
+      currentModal.remove();
+    }
+
+    // Create advanced dashboard modal
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'advancedDashboardModal';
+
+    const summary = this.analytics.getSummaryStats ? this.analytics.getSummaryStats() : {};
+    const events = this.analytics.getAllEvents ? this.analytics.getAllEvents() : [];
+
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header" style="background-color: white !important; border-bottom: 1px solid #e5e7eb !important;">
+          <h3 style="color: #000000 !important; font-weight: 600 !important;">Advanced Analytics Dashboard</h3>
+          <button class="btn-close" style="color: #000000 !important;">&times;</button>
+        </div>
+        <div class="modal-body" style="color: #000000 !important; padding: 20px; max-height: 70vh; overflow-y: auto;">
+          <div class="analytics-section" style="margin-bottom: 30px;">
+            <h4 style="color: #000000 !important; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">📊 Detailed Statistics</h4>
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+              <div class="stat-card" style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Total Events</div>
+                <div style="color: #000; font-size: 24px; font-weight: bold;">${summary.totalEvents || 0}</div>
+              </div>
+              <div class="stat-card" style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Total Sessions</div>
+                <div style="color: #000; font-size: 24px; font-weight: bold;">${summary.totalSessions || 0}</div>
+              </div>
+              <div class="stat-card" style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Avg Events/Session</div>
+                <div style="color: #000; font-size: 24px; font-weight: bold;">${summary.totalSessions ? Math.round(summary.totalEvents / summary.totalSessions) : 0}</div>
+              </div>
+              <div class="stat-card" style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Data Range</div>
+                <div style="color: #000; font-size: 14px; font-weight: bold;">${summary.dateRange?.start ? new Date(summary.dateRange.start).toLocaleDateString() : 'No data'} - ${summary.dateRange?.end ? new Date(summary.dateRange.end).toLocaleDateString() : ''}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="analytics-section" style="margin-bottom: 30px;">
+            <h4 style="color: #000000 !important; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">🎯 Feature Usage</h4>
+            <div class="feature-list" style="background: #f9fafb; padding: 15px; border-radius: 8px;">
+              ${this.renderFeatureUsage(events)}
+            </div>
+          </div>
+          
+          <div class="analytics-section">
+            <h4 style="color: #000000 !important; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">📈 Recent Activity</h4>
+            <div class="activity-list" style="background: #f9fafb; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto;">
+              ${this.renderRecentActivity(events)}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="padding: 15px; border-top: 1px solid #e5e7eb; text-align: right;">
+          <button class="btn btn-secondary" id="backToBasicBtn" style="color: black !important; background-color: white !important; border: 1px solid black !important;">Back to Basic View</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Add event listeners
+    const closeBtn = modal.querySelector('.btn-close');
+    const backBtn = modal.querySelector('#backToBasicBtn');
+
+    const closeAdvanced = () => {
+      modal.remove();
+      this.showAnalyticsDashboard();
+    };
+
+    closeBtn.addEventListener('click', closeAdvanced);
+    backBtn.addEventListener('click', closeAdvanced);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeAdvanced();
+    });
+
+    this.analytics.trackFeatureUsage('advanced_dashboard_opened');
+  }
+
+  renderFeatureUsage(events) {
+    const featureCounts = {};
+    events.forEach(event => {
+      if (event.type === 'feature_used') {
+        featureCounts[event.feature] = (featureCounts[event.feature] || 0) + 1;
+      }
+    });
+
+    const sorted = Object.entries(featureCounts).sort((a, b) => b[1] - a[1]);
+
+    if (sorted.length === 0) {
+      return '<p style="color: #6b7280; text-align: center;">No feature usage data yet</p>';
+    }
+
+    return sorted.map(([feature, count]) => `
+      <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+        <span style="color: #374151;">${feature}</span>
+        <span style="color: #000; font-weight: bold;">${count}</span>
+      </div>
+    `).join('');
+  }
+
+  renderRecentActivity(events) {
+    const recent = events.slice(-20).reverse();
+
+    if (recent.length === 0) {
+      return '<p style="color: #6b7280; text-align: center;">No recent activity</p>';
+    }
+
+    return recent.map(event => `
+      <div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-size: 13px;">
+        <div style="color: #374151;">${event.type || event.action || 'Action'}</div>
+        <div style="color: #6b7280; font-size: 11px;">${new Date(event.timestamp).toLocaleString()}</div>
+      </div>
+    `).join('');
+  }
 }
 
 // Initialize analytics UI when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('[DEBUG analytics-ui] DOMContentLoaded, checking window.profitPathAnalytics:', window.profitPathAnalytics);
+
   // Wait a bit for analytics to initialize
   setTimeout(() => {
     if (window.profitPathAnalytics) {
+      console.log('[DEBUG analytics-ui] Initializing AnalyticsUI');
       window.profitPathAnalyticsUI = new AnalyticsUI();
+      console.log('[DEBUG analytics-ui] window.profitPathAnalyticsUI set:', window.profitPathAnalyticsUI);
+    } else {
+      console.error('[DEBUG analytics-ui] window.profitPathAnalytics not found, cannot initialize UI');
     }
   }, 100);
 });

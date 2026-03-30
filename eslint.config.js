@@ -1,0 +1,96 @@
+export default [
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        '$': 'readonly',
+        '$$': 'readonly',
+        'state': 'writable',
+        'vi': 'readonly',
+        'describe': 'readonly',
+        'it': 'readonly',
+        'expect': 'readonly',
+        'beforeEach': 'readonly',
+        'afterEach': 'readonly',
+        'beforeAll': 'readonly',
+        'afterAll': 'readonly',
+        // External libraries loaded dynamically
+        'XLSX': 'readonly',
+        'html2canvas': 'readonly',
+        // Browser globals
+        'document': 'readonly',
+        'window': 'readonly',
+        'console': 'readonly',
+        'setTimeout': 'readonly',
+        'setInterval': 'readonly',
+        'clearTimeout': 'readonly',
+        'clearInterval': 'readonly',
+        'localStorage': 'readonly',
+        'sessionStorage': 'readonly',
+        'navigator': 'readonly',
+        'location': 'readonly',
+        'history': 'readonly',
+        'fetch': 'readonly',
+        'URL': 'readonly',
+        'Blob': 'readonly',
+        'FileReader': 'readonly',
+        'FormData': 'readonly',
+        'HTMLElement': 'readonly',
+        'Element': 'readonly',
+        'Node': 'readonly',
+        'NodeList': 'readonly',
+        'HTMLCollection': 'readonly',
+        'Event': 'readonly',
+        'CustomEvent': 'readonly',
+        'DOMParser': 'readonly',
+        'XMLHttpRequest': 'readonly',
+        'WebSocket': 'readonly',
+        'Worker': 'readonly',
+        'ServiceWorker': 'readonly',
+        'Cache': 'readonly',
+        'caches': 'readonly'
+      }
+    },
+    rules: {
+      'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
+      'no-console': ['warn', { 'allow': ['warn', 'error'] }],
+      'no-debugger': 'error',
+      'prefer-const': 'error',
+      'no-var': 'error',
+      // Recommended rules from eslint:recommended
+      'no-duplicate-imports': 'error',
+      'no-useless-catch': 'error',
+      'no-constant-condition': 'warn',
+      'no-empty': 'warn',
+      'no-extra-boolean-cast': 'warn',
+      'no-extra-semi': 'error',
+      'no-inner-declarations': 'error',
+      'no-invalid-regexp': 'error',
+      'no-irregular-whitespace': 'error',
+      'no-loss-of-precision': 'error',
+      'no-mixed-spaces-and-tabs': 'error',
+      'no-obj-calls': 'error',
+      'no-redeclare': 'error',
+      'no-regex-spaces': 'error',
+      'no-sparse-arrays': 'warn',
+      'no-unexpected-multiline': 'error',
+      'no-unsafe-finally': 'error',
+      'no-unsafe-negation': 'error',
+      'use-isnan': 'error',
+      'valid-typeof': 'error'
+    }
+  },
+  {
+    ignores: [
+      'dist/',
+      'node_modules/',
+      '*.config.js',
+      'coverage/',
+      '.nyc_output/',
+      'tmp/',
+      'temp/'
+    ]
+  }
+];

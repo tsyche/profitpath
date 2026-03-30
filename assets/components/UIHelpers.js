@@ -9,11 +9,11 @@ import { createModal } from "../components/Modal";
 export function showDeleteConfirmation(scenarioId, onConfirm) {
   // Create a simple confirmation without blur effect
   const confirmModal = createModal({
-    title: 'Confirm Delete',
+    title: '🗑️ Confirm Delete',
     content: 'Are you sure you want to delete this scenario? This action cannot be undone.',
     buttons: [
       {
-        text: 'Cancel', action: () => {
+        text: '❌ Cancel', action: () => {
           // Only remove the confirmation modal's overlay (highest z-index)
           const overlays = document.querySelectorAll('.modal-overlay');
           overlays.forEach(overlay => {
@@ -26,7 +26,7 @@ export function showDeleteConfirmation(scenarioId, onConfirm) {
         }, primary: false
       },
       {
-        text: 'Delete', action: () => {
+        text: '🗑️ Delete', action: () => {
           if (onConfirm) onConfirm();
           // Only remove the confirmation modal's overlay (highest z-index)
           const overlays = document.querySelectorAll('.modal-overlay');
@@ -105,8 +105,8 @@ export function openScenarioModal() {
         <div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
       </div>
       <div class="scenario-item-actions">
-        <button class="btn small load-btn" data-scenario-id="${escapeHtml(s.id)}">Load</button>
-        <button class="btn small danger delete-btn" data-scenario-id="${escapeHtml(s.id)}">Delete</button>
+        <button class="btn small load-btn" data-scenario-id="${escapeHtml(s.id)}">📂 Load</button>
+        <button class="btn small danger delete-btn" data-scenario-id="${escapeHtml(s.id)}">🗑️ Delete</button>
       </div>
     </div>
   `;
@@ -117,7 +117,7 @@ export function openScenarioModal() {
       <h4 style="color: black !important;">Save Current Configuration</h4>
       <div class="save-scenario-form">
         <input type="text" id="scenarioNameInput" placeholder="Enter scenario name..." />
-        <button class="btn primary" id="saveScenarioBtn">Save Scenario</button>
+        <button class="btn primary" id="saveScenarioBtn">💾 Save Scenario</button>
       </div>
     </div>
     
@@ -138,7 +138,7 @@ export function openScenarioModal() {
         <select id="compareScenario2" class="scenario-select">
           <option value="">Select second scenario...</option>
         </select>
-        <button class="btn" id="compareBtn">Compare</button>
+        <button class="btn" id="compareBtn">⚖️ Compare</button>
       </div>
       <div id="comparisonResults" class="comparison-results" style="display: none;">
         <div class="comparison-table-wrap">
@@ -242,9 +242,51 @@ export function openScenarioModal() {
     if (!scenarioId) return;
 
     if (btn.classList.contains('load-btn')) {
-      loadScenario(scenarioId);
-      // Refresh scenarios list and dropdowns after loading
-      refreshScenariosList(modal);
+      // Show load confirmation modal
+      const scenario = scenarios.find(s => s.id === scenarioId);
+      const scenarioName = scenario?.name || scenario?.description || 'Unknown scenario';
+
+      const confirmModal = createModal({
+        title: '📂 Confirm Load',
+        content: `Are you sure you want to load "${scenarioName}"? This will replace your current configuration with the saved scenario.`,
+        buttons: [
+          {
+            text: '❌ Cancel', action: () => {
+              // Only remove the confirmation modal's overlay (highest z-index)
+              const overlays = document.querySelectorAll('.modal-overlay');
+              overlays.forEach(overlay => {
+                if (overlay.style.zIndex === '15000') {
+                  overlay.remove();
+                }
+              });
+              // Clear blur from document.body
+              document.body.style.backdropFilter = '';
+            }, primary: false
+          },
+          {
+            text: '📂 Load', action: async () => {
+              // Call the scenario service directly (it will bypass confirmation now)
+              const scenarioService = await import('../services/scenarioService.js');
+              await scenarioService.loadScenario(scenarioId);
+              // Refresh scenarios list and dropdowns after loading
+              refreshScenariosList(modal);
+              // Only remove the confirmation modal's overlay (highest z-index)
+              const overlays = document.querySelectorAll('.modal-overlay');
+              overlays.forEach(overlay => {
+                if (overlay.style.zIndex === '15000') {
+                  overlay.remove();
+                }
+              });
+              // Clear blur from document.body
+              document.body.style.backdropFilter = '';
+            }, primary: true
+          }
+        ]
+      });
+      confirmModal.style.zIndex = '15000';
+      document.body.appendChild(confirmModal);
+      // Add blur effect
+      document.body.style.backdropFilter = 'blur(4px)';
     } else if (btn.classList.contains('delete-btn')) {
       // Ask for confirmation before deleting
       showDeleteConfirmation(scenarioId, async () => {
@@ -266,13 +308,52 @@ export function openScenarioModal() {
     saveBtn.addEventListener('click', async () => {
       const input = modal.querySelector('#scenarioNameInput');
       if (input && input.value.trim()) {
-        // Call the actual save function from scenarioService
-        const scenarioService = await import('../services/scenarioService.js');
-        await scenarioService.saveScenario(input.value.trim());
-        // Clear input
-        input.value = '';
-        // Refresh modal content after saving (now with updated data)
-        refreshScenariosList(modal);
+        const scenarioName = input.value.trim();
+
+        // Show save confirmation modal
+        const confirmModal = createModal({
+          title: '💾 Confirm Save',
+          content: `Save current configuration as "${scenarioName}"? This will save your current calculations and settings.`,
+          buttons: [
+            {
+              text: '❌ Cancel', action: () => {
+                // Only remove the confirmation modal's overlay (highest z-index)
+                const overlays = document.querySelectorAll('.modal-overlay');
+                overlays.forEach(overlay => {
+                  if (overlay.style.zIndex === '15000') {
+                    overlay.remove();
+                  }
+                });
+                // Clear blur from document.body
+                document.body.style.backdropFilter = '';
+              }, primary: false
+            },
+            {
+              text: '💾 Save', action: async () => {
+                // Call the scenario service directly (it will bypass confirmation now)
+                const scenarioService = await import('../services/scenarioService.js');
+                await scenarioService.saveScenario(scenarioName);
+                // Clear input
+                input.value = '';
+                // Refresh modal content after saving (now with updated data)
+                refreshScenariosList(modal);
+                // Only remove the confirmation modal's overlay (highest z-index)
+                const overlays = document.querySelectorAll('.modal-overlay');
+                overlays.forEach(overlay => {
+                  if (overlay.style.zIndex === '15000') {
+                    overlay.remove();
+                  }
+                });
+                // Clear blur from document.body
+                document.body.style.backdropFilter = '';
+              }, primary: true
+            }
+          ]
+        });
+        confirmModal.style.zIndex = '15000';
+        document.body.appendChild(confirmModal);
+        // Add blur effect
+        document.body.style.backdropFilter = 'blur(4px)';
       }
     });
   }
@@ -632,8 +713,8 @@ export function renderScenariosList() {
             <div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
           </div>
           <div class="scenario-item-actions">
-            <button class="btn small load-btn" data-scenario-id="${s.id}">Load</button>
-            <button class="btn small danger delete-btn" data-scenario-id="${s.id}">Delete</button>
+            <button class="btn small load-btn" data-scenario-id="${s.id}">📂 Load</button>
+            <button class="btn small danger delete-btn" data-scenario-id="${s.id}">🗑️ Delete</button>
           </div>
         </div>
       `;
