@@ -21,17 +21,8 @@ export function saveScenario(name) {
     return;
   }
 
-  // Show confirmation dialog using new modal system
-  showConfirmationModal(
-    'Confirm Save',
-    `Save scenario as "${name.trim()}"? This will save your current calculations and settings.`,
-    () => {
-      performSave(name.trim());
-    },
-    () => {
-      // User cancelled - do nothing
-    }
-  );
+  // Bypass confirmation and directly save
+  performSave(name.trim());
 }
 
 function performSave(name) {
@@ -89,24 +80,15 @@ export function loadScenario(scenarioId) {
       return;
     }
 
-    // Show confirmation dialog using new modal system
-    showConfirmationModal(
-      'Confirm Load',
-      `Load scenario "${scenario.name}"? This will replace your current calculations and settings.`,
-      () => {
-        performLoad(scenario);
-        // Update the scenarios modal UI in real time
-        setTimeout(() => {
-          renderScenariosList();
-          import('./miscService.js').then(miscService => {
-            miscService.populateComparisonDropdowns();
-          });
-        }, 100);
-      },
-      () => {
-        // User cancelled - do nothing
-      }
-    );
+    // Bypass confirmation and directly load
+    performLoad(scenario);
+    // Update the scenarios modal UI in real time
+    setTimeout(() => {
+      renderScenariosList();
+      import('./miscService.js').then(miscService => {
+        miscService.populateComparisonDropdowns();
+      });
+    }, 100);
   } catch (e) {
     console.error('Failed to load scenario:', e);
     showToast('Error loading scenario', 'error');

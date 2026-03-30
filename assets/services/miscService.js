@@ -2,6 +2,7 @@
 /* global render calc updateOutputs updateValidationDisplay Chart */
 import { safeParseNumber } from '../utils/helpers';
 import { showToast } from './modalService.js';
+import { persistState } from './stateManager.js';
 
 // Utility functions for export functionality
 const DEFAULT_CURRENCY = 'USD';
@@ -443,15 +444,6 @@ export function showSuccessModal(message) {
 
 export function showErrorModal(error) {
   return showModal('<p>' + (error.message || error) + '</p>', { title: 'Error', buttons: '<button onclick="this.closest(\'.modal\').remove()">OK</button>' });
-}
-
-// Export functions for state management
-export function persistState() {
-  try {
-    localStorage.setItem('profitpath-state', JSON.stringify(state));
-  } catch (e) {
-    console.warn('Failed to persist state:', e);
-  }
 }
 
 export function loadState() {
@@ -903,7 +895,7 @@ export function loadIndustryTemplate(templateId) {
 
     // Refresh the UI
     if (typeof window.render === 'function') window.render();
-    if (typeof persistState === 'function') persistState();
+    persistState();
 
     return true;
   }

@@ -1198,13 +1198,22 @@ const _mobileExportEmbed = $('#mobileExportEmbed');
   }
 }
 
-const mobileShareBtn = $('#mobileShareBtn');
+// Mobile share button - wrap in DOM ready check
+function setupMobileShareButton() {
+  const mobileShareBtn = $('#mobileShareBtn');
+  if (mobileShareBtn) {
+    mobileShareBtn.addEventListener('click', () => {
+      misc.shareScenario();
+      closeMobileMenu();
+    });
+  }
+}
 
-if (mobileShareBtn) {
-  mobileShareBtn.addEventListener('click', () => {
-    misc.shareScenario();
-    closeMobileMenu();
-  });
+// Setup after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupMobileShareButton);
+} else {
+  setupMobileShareButton();
 }
 
 const mobileTemplatesBtn = $('#mobileTemplatesBtn');
@@ -1230,7 +1239,7 @@ function _closeAllMobileSubmenus() {
       const c = document.querySelector(sel);
       if (c && c.style) c.style.display = 'none';
     });
-  } catch (e) {
+  } catch {
     // Fail silently in environments without DOM
   }
 }
@@ -1261,30 +1270,39 @@ if (mobileScenariosBtn) {
   });
 }
 
-const mobileAnalyticsBtn = $('#mobileAnalyticsBtn');
-if (mobileAnalyticsBtn) {
-  mobileAnalyticsBtn.addEventListener('click', () => {
-    // More robust check for analytics UI
-    const checkAnalyticsUI = () => {
-      if (window.profitPathAnalyticsUI) {
-        // Check if method exists on instance or prototype
-        if (typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
-          window.profitPathAnalyticsUI.showAnalyticsDashboard();
-        } else if (typeof window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard === 'function') {
-          // Call via prototype if instance method not available
-          window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard.call(window.profitPathAnalyticsUI);
+// Mobile analytics button - use event delegation since button is inside hidden menu initially
+function setupMobileAnalyticsButton() {
+  // Use event delegation on document body
+  document.body.addEventListener('click', (e) => {
+    const btn = e.target.closest('#mobileAnalyticsBtn');
+    if (btn) {
+      // More robust check for analytics UI
+      const checkAnalyticsUI = () => {
+        if (window.profitPathAnalyticsUI) {
+          // Check if method exists on instance or prototype
+          if (typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
+            window.profitPathAnalyticsUI.showAnalyticsDashboard();
+          } else if (typeof window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard === 'function') {
+            // Call via prototype if instance method not available
+            window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard.call(window.profitPathAnalyticsUI);
+          } else {
+            setTimeout(checkAnalyticsUI, 100);
+          }
         } else {
-          console.warn('Mobile Analytics UI method not available, retrying...');
           setTimeout(checkAnalyticsUI, 100);
         }
-      } else {
-        console.warn('Mobile Analytics UI not loaded yet');
-        setTimeout(checkAnalyticsUI, 100);
-      }
-    };
-    checkAnalyticsUI();
-    closeMobileMenu();
+      };
+      checkAnalyticsUI();
+      closeMobileMenu();
+    }
   });
+}
+
+// Setup after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupMobileAnalyticsButton);
+} else {
+  setupMobileAnalyticsButton();
 }
 
 const mobileFeedbackBtn = $('#mobileFeedbackBtn');
@@ -1300,11 +1318,9 @@ if (mobileFeedbackBtn) {
           // Call via prototype if instance method not available
           window.feedbackUI.constructor.prototype.openFeedbackModal.call(window.feedbackUI);
         } else {
-          console.warn('Mobile Feedback UI method not available, retrying...');
           setTimeout(checkFeedbackUI, 100);
         }
       } else {
-        console.warn('Mobile Feedback UI not loaded yet');
         setTimeout(checkFeedbackUI, 100);
       }
     };
@@ -1319,8 +1335,6 @@ if (mobileHelpBtn) {
     // Call the same help menu function as desktop
     if (typeof showHelpMenu === 'function') {
       showHelpMenu();
-    } else {
-      console.warn('showHelpMenu function not available');
     }
     closeMobileMenu();
   });
@@ -1421,16 +1435,17 @@ function setupDesktopMenuButtons() {
         if (window.profitPathAnalyticsUI) {
           // Check if method exists on instance or prototype
           if (typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
+            // Debug: Desktop calling showAnalyticsDashboard
             window.profitPathAnalyticsUI.showAnalyticsDashboard();
           } else if (typeof window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard === 'function') {
             // Call via prototype if instance method not available
             window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard.call(window.profitPathAnalyticsUI);
           } else {
-            console.warn('Analytics UI method not available, retrying...');
+            // Debug: Analytics UI method not available, retrying
             setTimeout(checkAnalyticsUI, 100);
           }
         } else {
-          console.warn('Analytics UI not loaded yet');
+          // Debug: Analytics UI not loaded yet
           setTimeout(checkAnalyticsUI, 100);
         }
       };
@@ -1761,7 +1776,7 @@ function initDebugPanel() {
 // Initialize debug panel after DOM is ready
 try {
   initDebugPanel();
-} catch (e) {
+} catch {
   try {
     persistState();
   } catch (e) {
@@ -1773,7 +1788,7 @@ try {
 try {
   localStorage.setItem('profitpath-logo', 'final');
   document.documentElement.setAttribute('data-logo', 'final');
-} catch (e) {
+} catch {
   // non-fatal
 }
 
@@ -1864,7 +1879,7 @@ function lockScrollForTour() {
     _tourPrevBodyOverflow = document.body.style.overflow || '';
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
-  } catch (e) {
+  } catch {
     // ignore
   }
   document.addEventListener('touchmove', _preventTourScroll, { passive: false });
@@ -1878,7 +1893,7 @@ function unlockScrollForTour() {
   try {
     document.documentElement.style.overflow = _tourPrevHtmlOverflow || '';
     document.body.style.overflow = _tourPrevBodyOverflow || '';
-  } catch (e) {
+  } catch {
     // ignore
   }
   document.removeEventListener('touchmove', _preventTourScroll);
@@ -2226,7 +2241,7 @@ function waitForTargetSettled(target, { timeoutMs = 3000, idleMs = 250, stableMs
       if (deltaCenter > window.innerHeight * 0.2) {
         try {
           target.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
-        } catch (e) {
+        } catch {
           // ignore
         }
         // update lastRect after snapping
@@ -2493,7 +2508,7 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   tooltip.remove = function () {
     try {
       if (tooltip._overlay && tooltip._overlay.parentNode) tooltip._overlay.parentNode.removeChild(tooltip._overlay);
-    } catch (e) {
+    } catch {
       // ignore
     }
     if (tooltip._cleanupKeyboard) {

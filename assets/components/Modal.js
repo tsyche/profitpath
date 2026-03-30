@@ -93,11 +93,11 @@ export function createModal({ title, content, buttons = [], size = 'medium' }) {
 
   // Footer buttons
   modal.querySelectorAll('.modal-btn').forEach((btn, index) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const action = buttons[index]?.action;
       closeModal();
       if (action && typeof action === 'function') {
-        action();
+        await action();
       }
     });
   });
