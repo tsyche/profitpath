@@ -1142,6 +1142,7 @@ export function shareViaEmail() {
 }
 
 export function showEmbedCode() {
+  console.log('showEmbedCode called');
   const embedCode = `<iframe src="${window.location.href}" width="100%" height="600" frameborder="0"></iframe>`;
 
   const modal = document.createElement('div');
@@ -1167,16 +1168,17 @@ export function showEmbedCode() {
 }
 
 export function showScheduleDialog() {
+  console.log('showScheduleDialog called');
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.innerHTML = `
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Schedule Report</h3>
+        <h3>Schedule Reports</h3>
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <p>Schedule automatic report generation and delivery.</p>
+        <p>Set up automatic report delivery:</p>
         <form id="scheduleForm">
           <div style="margin: 10px 0;">
             <label>Frequency:</label>

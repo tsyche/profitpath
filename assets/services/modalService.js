@@ -344,6 +344,9 @@ export function showToast(message, type = 'info', duration = 3000) {
             }
         }, 300);
     }, duration);
+
+    // Return false to prevent async response issues
+    return false;
 }
 
 // Export constants for external use
