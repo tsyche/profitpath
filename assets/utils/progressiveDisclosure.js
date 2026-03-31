@@ -18,7 +18,7 @@ export function initializeProgressiveDisclosure() {
     el.style.display = 'block';
   });
 
-  // Special handling for debug panel-show if user has enabled it regardless of level
+  // Special handling for debug panel - show if user has enabled it regardless of level
   const showDebugPanel = localStorage.getItem('showDebugPanel') === 'true';
   if (showDebugPanel) {
     document.querySelectorAll('.debug-wrapper.expert-feature').forEach(el => {

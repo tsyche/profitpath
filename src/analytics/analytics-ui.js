@@ -124,6 +124,14 @@ class AnalyticsUI {
 
   showAnalyticsDashboard() {
     console.log('[DEBUG analytics-ui] showAnalyticsDashboard called');
+
+    // Remove any existing analytics modal first
+    const existingModal = document.getElementById('analyticsModal');
+    if (existingModal) {
+      console.log('[DEBUG analytics-ui] removing existing modal');
+      existingModal.remove();
+    }
+
     const summary = this.analytics.getAnalyticsSummary();
     const events = this.analytics.getAllEvents();
     console.log('[DEBUG analytics-ui] summary:', summary);
