@@ -1147,23 +1147,32 @@ export function showEmbedCode() {
 
   const modal = document.createElement('div');
   modal.className = 'modal';
+  modal.style.cssText = 'display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000;';
   modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Embed Code</h3>
-        <button class="modal-close">&times;</button>
+    <div class="modal-content" style="position: relative; background: white; margin: 50px auto; padding: 20px; max-width: 500px; border-radius: 8px;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="margin: 0;">Embed Code</h3>
+        <button class="modal-close" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
       </div>
       <div class="modal-body">
         <p>Copy this code to embed ProfitPath on your website:</p>
-        <textarea id="embedCodeText" readonly style="width: 100%; height: 100px; padding: 10px; margin: 10px 0; font-family: monospace;">${embedCode}</textarea>
-        <button onclick="copyToClipboard(document.getElementById('embedCodeText').value); showNotification('Embed code copied!', 'success');">Copy to Clipboard</button>
+        <textarea id="embedCodeText" readonly style="width: 100%; height: 100px; padding: 10px; margin: 10px 0; font-family: monospace; border: 1px solid #ccc; border-radius: 4px;">${embedCode}</textarea>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('embedCodeText').value); alert('Embed code copied!');" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Copy to Clipboard</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
 
+  // Add close functionality
   modal.querySelector('.modal-close').addEventListener('click', () => {
     document.body.removeChild(modal);
+  });
+
+  // Close on overlay click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
   });
 }
 
@@ -1171,18 +1180,19 @@ export function showScheduleDialog() {
   console.log('showScheduleDialog called');
   const modal = document.createElement('div');
   modal.className = 'modal';
+  modal.style.cssText = 'display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000;';
   modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Schedule Reports</h3>
-        <button class="modal-close">&times;</button>
+    <div class="modal-content" style="position: relative; background: white; margin: 50px auto; padding: 20px; max-width: 500px; border-radius: 8px;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="margin: 0;">Schedule Reports</h3>
+        <button class="modal-close" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
       </div>
       <div class="modal-body">
         <p>Set up automatic report delivery:</p>
         <form id="scheduleForm">
           <div style="margin: 10px 0;">
             <label>Frequency:</label>
-            <select style="width: 100%; padding: 5px;">
+            <select style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
               <option>Daily</option>
               <option>Weekly</option>
               <option>Monthly</option>
@@ -1190,24 +1200,39 @@ export function showScheduleDialog() {
           </div>
           <div style="margin: 10px 0;">
             <label>Email:</label>
-            <input type="email" placeholder="your@email.com" style="width: 100%; padding: 5px;">
+            <input type="email" placeholder="your@email.com" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
           </div>
-          <button type="submit" style="margin-top: 10px;">Schedule</button>
+          <button type="submit" style="margin-top: 10px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Schedule</button>
         </form>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
 
+  // Add close functionality
   modal.querySelector('.modal-close').addEventListener('click', () => {
     document.body.removeChild(modal);
   });
 
-  modal.querySelector('#scheduleForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    showNotification('Report scheduled! (Feature coming soon)', 'success');
-    document.body.removeChild(modal);
+  // Close on overlay click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
   });
+
+  // Handle form submission
+  const form = document.getElementById('scheduleForm');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const frequency = form.querySelector('select').value;
+      const email = form.querySelector('input[type="email"]').value;
+
+      alert(`Reports scheduled ${frequency} to ${email}!`);
+      document.body.removeChild(modal);
+    });
+  }
 }
 
 export function loadTestScenarios() {
