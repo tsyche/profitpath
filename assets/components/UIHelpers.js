@@ -426,7 +426,10 @@ export function openScenarioModal() {
   // Show results first
   resultsDiv.style.display = 'block';
 
-  const tbody = resultsDiv.querySelector('tbody');
+  // Look for tbody in the table wrapper
+  const tableWrap = resultsDiv.querySelector('.comparison-table-wrap');
+  const tbody = tableWrap ? tableWrap.querySelector('tbody') : null;
+
   if (!tbody) {
     console.error('Comparison table tbody not found');
     return;
@@ -502,7 +505,10 @@ export function performComparisonInModal(scenarioId1, scenarioId2, modal) {
   // Show results first
   resultsDiv.style.display = 'block';
 
-  const tbody = resultsDiv.querySelector('tbody');
+  // Look for tbody in the table wrapper
+  const tableWrap = resultsDiv.querySelector('.comparison-table-wrap');
+  const tbody = tableWrap ? tableWrap.querySelector('tbody') : null;
+
   if (!tbody) {
     console.error('Comparison table tbody not found');
     return;
@@ -585,7 +591,10 @@ export function performComparison(scenarioId1, scenarioId2) {
   // Show results first
   resultsDiv.style.display = 'block';
 
-  const tbody = resultsDiv.querySelector('tbody');
+  // Look for tbody in the table wrapper
+  const tableWrap = resultsDiv.querySelector('.comparison-table-wrap');
+  const tbody = tableWrap ? tableWrap.querySelector('tbody') : null;
+
   if (!tbody) {
     console.error('Comparison table tbody not found');
     return;
