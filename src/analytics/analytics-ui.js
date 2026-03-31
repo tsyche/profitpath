@@ -538,9 +538,9 @@ class AnalyticsUI {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.id = 'clearAnalyticsConfirmModal';
-    modal.style.cssText = 'z-index: 10000; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center;';
+    modal.style.cssText = 'z-index: 10002; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center;';
     modal.innerHTML = `
-      <div class="modal-content" style="max-width: 500px; z-index: 10001; position: relative;">
+      <div class="modal-content" style="max-width: 500px; z-index: 10003; position: relative;">
         <div class="modal-header" style="background-color: white !important; border-bottom: 1px solid #e5e7eb !important;">
           <h3 style="color: #000000 !important; font-weight: 600 !important;">Clear Analytics Data</h3>
           <button class="btn-close" style="color: #000000 !important;">&times;</button>
