@@ -840,7 +840,7 @@ function updateUIForSettings() {
     { selector: '.detailed-breakdown', setting: 'showDetailedBreakdown' },
     { selector: '.comparison-tools', setting: 'showComparisonTools' },
     { selector: '.export-options', setting: 'showExportOptions' },
-    { selector: '.debug-panel', setting: 'showDebugPanel' }
+    { selector: '.debug-wrapper', setting: 'showDebugPanel' }
   ];
 
   elementsToToggle.forEach(({ selector, setting }) => {
@@ -854,7 +854,11 @@ function updateUIForSettings() {
   document.body.classList.toggle('compact-mode', settings.compactMode);
 
   // Update tooltips visibility
-  // This would require additional implementation
+  if (settings.showTooltips) {
+    showContextualHelp();
+  } else {
+    hideContextualHelp();
+  }
 }
 
 // Initialize settings on app load
