@@ -1,0 +1,79 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('ProfitPath App', () => {
+  test('should load the homepage', async ({ page }) => {
+    await page.goto('/');
+
+    // Check page title
+    await expect(page).toHaveTitle(/ProfitPath/);
+
+    // Check main header exists
+    await expect(page.locator('.header')).toBeVisible();
+
+    // Check that the logo is present
+    await expect(page.locator('.logo-final')).toBeVisible();
+  });
+
+  test('should render the main controls and outputs sections', async ({ page }) => {
+    await page.goto('/');
+
+    // Check Inputs section exists
+    await expect(page.locator('#controls')).toBeVisible();
+    await expect(page.locator('#controls h2')).toContainText('Inputs');
+
+    // Check Outputs section exists
+    const outputs = page.locator('aside.card h2');
+    await expect(outputs.first()).toContainText('Outputs');
+  });
+
+  test('should allow basic user interaction - add offering', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for the page to be fully loaded
+    await page.waitForLoadState('networkidle');
+
+    // Click "Add offering" button
+    const addOfferingBtn = page.locator('#addOfferingBtn');
+    await expect(addOfferingBtn).toBeVisible();
+    await addOfferingBtn.click();
+
+    // Check that a new row was added to the offerings table
+    const offeringsTable = page.locator('#offeringsTable tbody tr');
+    const count = await offeringsTable.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('should display KPI values in the outputs section', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for calculations to complete
+    await page.waitForLoadState('networkidle');
+
+    // Check that KPI elements are rendered
+    await expect(page.locator('#kpiIncome')).toBeVisible();
+    await expect(page.locator('#kpiClients')).toBeVisible();
+    await expect(page.locator('#kpiRevenue')).toBeVisible();
+
+    // All should contain some text content
+    const income = await page.locator('#kpiIncome').textContent();
+    const clients = await page.locator('#kpiClients').textContent();
+    const revenue = await page.locator('#kpiRevenue').textContent();
+
+    expect(income).toBeTruthy();
+    expect(clients).toBeTruthy();
+    expect(revenue).toBeTruthy();
+  });
+
+  test('should toggle settings menu', async ({ page }) => {
+    await page.goto('/');
+
+    // Click settings button
+    const settingsCogBtn = page.locator('#settingsCogBtn');
+    await expect(settingsCogBtn).toBeVisible();
+    await settingsCogBtn.click();
+
+    // Check that settings menu appears
+    const settingsMenu = page.locator('.settings-menu');
+    await expect(settingsMenu).toBeVisible();
+  });
+});
