@@ -1149,10 +1149,10 @@ export function showEmbedCode() {
   modal.className = 'modal';
   modal.style.cssText = 'display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000;';
   modal.innerHTML = `
-    <div class="modal-content" style="position: relative; background: white; margin: 50px auto; padding: 20px; max-width: 500px; border-radius: 8px;">
-      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3 style="margin: 0;">Embed Code</h3>
-        <button class="modal-close" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+    <div class="modal-content" style="position: relative; background: white; margin: 50px auto; padding: 20px; max-width: 500px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px 20px; background: #f8f9fa; border-radius: 8px 8px 0 0;">
+        <h3 style="margin: 0; font-size: 24px; font-weight: 600; color: #333;">📋 Embed Code</h3>
+        <button class="modal-close" style="background: #dc3545; color: white; border: none; font-size: 28px; cursor: pointer; padding: 8px; border-radius: 4px; width: 40px; height: 40px;">&times;</button>
       </div>
       <div class="modal-body">
         <p>Copy this code to embed ProfitPath on your website:</p>
@@ -1180,12 +1180,12 @@ export function showScheduleDialog() {
   console.log('showScheduleDialog called');
   const modal = document.createElement('div');
   modal.className = 'modal';
-  modal.style.cssText = 'display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000;';
+  modal.style.cssText = 'display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; outline: none;';
   modal.innerHTML = `
-    <div class="modal-content" style="position: relative; background: white; margin: 50px auto; padding: 20px; max-width: 500px; border-radius: 8px;">
-      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3 style="margin: 0;">Schedule Reports</h3>
-        <button class="modal-close" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+    <div class="modal-content" style="position: relative; background: white; margin: 50px auto; padding: 20px; max-width: 500px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px 20px; background: #f8f9fa; border-radius: 8px 8px 0 0;">
+        <h3 style="margin: 0; font-size: 24px; font-weight: 600; color: #333;">📅 Schedule Reports</h3>
+        <button class="modal-close" style="background: #dc3545; color: white; border: none; font-size: 28px; cursor: pointer; padding: 8px; border-radius: 4px; width: 40px; height: 40px;">&times;</button>
       </div>
       <div class="modal-body">
         <p>Set up automatic report delivery:</p>
@@ -1202,7 +1202,7 @@ export function showScheduleDialog() {
             <label>Email:</label>
             <input type="email" placeholder="your@email.com" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
           </div>
-          <button type="submit" style="margin-top: 10px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Schedule</button>
+          <button type="submit" style="margin-top: 10px; padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Set Schedule</button>
         </form>
       </div>
     </div>

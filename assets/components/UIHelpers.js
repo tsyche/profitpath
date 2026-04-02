@@ -412,72 +412,6 @@ export function openScenarioModal() {
   import('../services/miscService.js').then((miscService) => {
     miscService.populateComparisonDropdowns();
   });
-
-  // Find results div within the modal
-  const resultsDiv = document.querySelector('#comparisonResults') ||
-    document.querySelector('.modal-overlay #comparisonResults') ||
-    document.querySelector('#scenariosModal #comparisonResults');
-
-  if (!resultsDiv) {
-    console.error('Comparison results div not found');
-    return;
-  }
-
-  // Show results first
-  resultsDiv.style.display = 'block';
-
-  // Look for tbody in the table wrapper
-  const tableWrap = resultsDiv.querySelector('.comparison-table-wrap');
-  const tbody = tableWrap ? tableWrap.querySelector('tbody') : null;
-
-  if (!tbody) {
-    console.error('Comparison table tbody not found');
-    return;
-  }
-
-  console.log('Performing comparison between scenarios:', scenario1.name, scenario2.name);
-
-  // Generate comparison data
-  const metrics = [
-    { label: 'Employees', value1: scenario1.state.employees, value2: scenario2.state.employees, format: 'number' },
-    { label: 'Employee Pay', value1: scenario1.state.employeePay, value2: scenario2.state.employeePay, format: 'currency' },
-    { label: 'Monthly Costs', value1: scenario1.state.monthlyCosts, value2: scenario2.state.monthlyCosts, format: 'currency' },
-    { label: 'Productive Utilization', value1: scenario1.state.productiveUtilizationPct, value2: scenario2.state.productiveUtilizationPct, format: 'percentage' },
-    { label: 'Target Utilization', value1: scenario1.state.targetUtilizationPct, value2: scenario2.state.targetUtilizationPct, format: 'percentage' },
-    { label: 'Total Offerings', value1: scenario1.state.offerings.length, value2: scenario2.state.offerings.length, format: 'number' }
-  ];
-
-  // Build table rows
-  tbody.innerHTML = metrics.map(metric => {
-    const diff = metric.value2 - metric.value1;
-    const diffClass = diff > 0 ? 'positive' : diff < 0 ? 'negative' : '';
-    const diffSymbol = diff > 0 ? '+' : '';
-
-    let formattedValue1 = metric.value1;
-    let formattedValue2 = metric.value2;
-    let formattedDiff = `${diffSymbol}${diff}`;
-
-    if (metric.format === 'currency') {
-      formattedValue1 = `$${metric.value1.toLocaleString()}`;
-      formattedValue2 = `$${metric.value2.toLocaleString()}`;
-      formattedDiff = `${diffSymbol}$${Math.abs(diff).toLocaleString()}`;
-    } else if (metric.format === 'percentage') {
-      formattedValue1 = `${metric.value1}%`;
-      formattedValue2 = `${metric.value2}%`;
-      formattedDiff = `${diffSymbol}${diff}%`;
-    }
-
-    return `
-      <tr>
-        <td>${metric.label}</td>
-        <td>${formattedValue1}</td>
-        <td>${formattedValue2}</td>
-        <td class="${diffClass}">${formattedDiff}</td>
-      </tr>
-    `;
-  }).join('');
-
-  // Show results
 }
 
 // Function to perform comparison within modal context
@@ -489,28 +423,41 @@ export function performComparisonInModal(scenarioId1, scenarioId2, modal) {
   const scenario2 = scenarios.find(s => s.id === scenarioId2);
 
   if (!scenario1 || !scenario2) {
-    import('../services/modalService.js').then((modalService) => {
-      modalService.showToast('One or both scenarios not found');
-    });
+    console.error('One or both scenarios not found');
     return;
   }
 
   // Find results div within the modal
-  const resultsDiv = modal.querySelector('#comparisonResults');
+  const resultsDiv = modal.querySelector('#comparisonResults') ||
+    modal.querySelector('.comparison-results');
+
   if (!resultsDiv) {
-    console.error('Comparison results div not found');
+    console.error('Comparison results div not found in modal');
     return;
   }
 
   // Show results first
   resultsDiv.style.display = 'block';
 
-  // Look for tbody in the table wrapper
+  // Look for tbody in the table wrapper or create it if missing
+  let tbody = null;
   const tableWrap = resultsDiv.querySelector('.comparison-table-wrap');
-  const tbody = tableWrap ? tableWrap.querySelector('tbody') : null;
+
+  if (tableWrap) {
+    tbody = tableWrap.querySelector('tbody');
+    if (!tbody) {
+      // Create tbody if it doesn't exist
+      const table = tableWrap.querySelector('table');
+      if (table) {
+        tbody = document.createElement('tbody');
+        table.appendChild(tbody);
+        console.log('Created missing tbody for comparison table');
+      }
+    }
+  }
 
   if (!tbody) {
-    console.error('Comparison table tbody not found');
+    console.error('Comparison table tbody not found and could not be created');
     return;
   }
 
