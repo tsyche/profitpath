@@ -793,6 +793,49 @@ function closeAllDropdowns() {
   }
 }
 
+// Level description panel
+function updateLevelDescription(level) {
+  const descriptions = {
+    beginner: {
+      enabled: ['Basic calculations', 'Simple exports', 'Tooltips', 'Scenario management'],
+      locked: ['Advanced calculations', 'Detailed breakdowns', 'Scenario comparison', 'Full export suite', 'Debug panel']
+    },
+    intermediate: {
+      enabled: ['Basic calculations', 'Advanced calculations', 'Detailed breakdowns', 'Scenario comparison', 'Tooltips', 'Simple exports'],
+      locked: ['Full export suite (Excel, PDF, Email)', 'Debug panel']
+    },
+    advanced: {
+      enabled: ['All features', 'Full export suite', 'Debug panel', 'Performance metrics'],
+      locked: []
+    }
+  };
+
+  const desc = descriptions[level] || descriptions.beginner;
+  const container = document.getElementById('levelDescription');
+  if (!container) return;
+
+  let html = '<div style="font-size: 12px;">';
+
+  if (desc.enabled.length > 0) {
+    html += '<div style="margin-bottom: 6px;"><div style="font-weight: 500; color: #16a34a; margin-bottom: 2px;">✓ Enabled:</div>';
+    desc.enabled.forEach(feature => {
+      html += `<div style="color: #374151; margin-left: 18px; line-height: 1.4;">${feature}</div>`;
+    });
+    html += '</div>';
+  }
+
+  if (desc.locked.length > 0) {
+    html += '<div><div style="font-weight: 500; color: #888; margin-bottom: 2px;">🔒 Locked:</div>';
+    desc.locked.forEach(feature => {
+      html += `<div style="color: #888; margin-left: 18px; line-height: 1.4; font-size: 11px;">${feature}</div>`;
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
 // Settings management
 function initializeSettings() {
   const settings = typeof loadSettings === 'function' ? loadSettings() : {};
@@ -802,7 +845,21 @@ function initializeSettings() {
   experienceRadios.forEach(radio => {
     radio.checked = radio.value === settings.experienceLevel;
     radio.addEventListener('change', (e) => {
-      setExperienceLevel(e.target.value);
+      const level = e.target.value;
+      setExperienceLevel(level);
+
+      // Show toast notification for level change
+      const labels = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' };
+      const hints = {
+        beginner: 'Core features active.',
+        intermediate: 'Advanced calculations and scenario tools unlocked.',
+        advanced: 'All features enabled, including export suite and debug panel.'
+      };
+      showToast(`${labels[level]} mode — ${hints[level]}`, 'info', 4000);
+
+      // Update level description panel
+      updateLevelDescription(level);
+
       initializeSettings(); // Reinitialize to apply new settings
       updateUIForSettings();
     });
@@ -829,6 +886,9 @@ function initializeSettings() {
       });
     }
   });
+
+  // Update level description panel on initialization
+  updateLevelDescription(settings.experienceLevel || 'beginner');
 }
 
 function updateUIForSettings() {
