@@ -88,5 +88,12 @@ temp/
 test/
 vitest.config.js
 
+# Test artifacts
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+.nyc_output/
+
 # Local Node.js installations (use asdf instead)
 node-*/

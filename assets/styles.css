@@ -2268,7 +2268,7 @@ input[type="checkbox"] {
   margin: 0 0 calc(var(--gap) * 0.5) 0;
   font-size: 14px;
   font-weight: 600;
-  color: var(--text, #333);
+  color: #111;
 }
 
 .analytics-settings .settings-options {
@@ -2297,7 +2297,7 @@ input[type="checkbox"] {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #333;
+  color: #111;
   cursor: pointer;
   padding: 6px 8px;
   border-radius: 6px;
@@ -2313,6 +2313,27 @@ input[type="checkbox"] {
   margin: 0;
   accent-color: #007bff;
   transform: scale(1.1);
+}
+
+/* Settings Level Description Panel */
+.settings-level-description {
+  font-size: 12px;
+  color: #374151;
+}
+
+.settings-level-description .level-feature-item {
+  margin-left: 18px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.settings-level-description .level-feature-item.enabled {
+  color: #16a34a;
+}
+
+.settings-level-description .level-feature-item.locked {
+  color: #888;
+  font-size: 11px;
 }
 
 /* Desktop Settings Cog Button */
