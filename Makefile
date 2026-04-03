@@ -1,4 +1,4 @@
-.PHONY: help dev build preview test test-unit test-e2e lint lint-fix clean fresh install
+.PHONY: help dev build preview test test-unit test-e2e test-e2e-headed lint lintfix clean fresh install
 
 # Colors for output
 BLUE := \033[0;34m
@@ -17,15 +17,16 @@ help:
 	@echo "  make test             Run all tests (unit + e2e with green result check)"
 	@echo "  make test-unit        Run Vitest unit tests only"
 	@echo "  make test-e2e         Run Playwright e2e tests only"
+	@echo "  make test-e2e-headed  Run Playwright e2e tests with visible browser"
 	@echo ""
 	@echo "$(GREEN)Linting:$(NC)"
 	@echo "  make lint             Lint check (ESLint)"
-	@echo "  make lint-fix         Auto-fix linting issues"
+	@echo "  make lintfix          Auto-fix linting issues"
 	@echo ""
 	@echo "$(GREEN)Maintenance:$(NC)"
 	@echo "  make clean            Remove node_modules/.vite cache"
 	@echo "  make install          Install dependencies (npm ci)"
-	@echo "  make fresh            Full reset: clean + install + test + lint-fix + dev"
+	@echo "  make fresh            Full reset: clean + install + test + lintfix + dev"
 	@echo ""
 
 dev:
@@ -46,10 +47,13 @@ test-unit:
 test-e2e:
 	npm run test:e2e
 
+test-e2e-headed:
+	npm run test:e2e:headed
+
 lint:
 	npm run lint
 
-lint-fix:
+lintfix:
 	npm run lint:fix
 
 clean:
@@ -58,5 +62,5 @@ clean:
 install:
 	npm ci
 
-fresh: clean install test lint-fix dev
-	@echo "$(GREEN)✓ Fresh start complete: clean + install + test + lint-fix + dev$(NC)"
+fresh: clean install test lintfix dev
+	@echo "$(GREEN)✓ Fresh start complete: clean + install + test + lintfix + dev$(NC)"

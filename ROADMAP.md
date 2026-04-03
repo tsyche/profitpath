@@ -6,213 +6,168 @@ See README.md for setup and development instructions.
 
 ---
 
-## Top 3 Suggested Tasks
+## Recently Completed ✅
 
-Based on user impact and technical foundation:
-
-1. **Enhanced Visualizations & Dashboard**
-
-   - Add utilization gauge and profit waterfall charts to main interface
-   - Implement richer chart interactions and animations with hover tooltips
-   - Enhance mobile responsiveness and touch-friendly data visualization
-   - Add real-time capacity visualization with color-coded indicators
-   - ~4-6 hours effort
-
-2. **Advanced Analytics & Sensitivity Analysis**
-
-   - Add "what-if" sliders for key variables (pricing, costs, utilization, employee count)
-   - Implement tornado charts showing impact of variable changes on profitability
-   - Add basic Monte Carlo simulation for risk assessment and probability modeling
-   - Include sensitivity analysis dashboard with interactive parameter adjustment
-   - ~6-8 hours effort
-
-3. **Industry Benchmarking & Intelligence**
-
-   - Add industry-specific templates with benchmark data and performance standards
-   - Implement performance comparison against industry averages and best practices
-   - Add regional pricing variations and geographic market data integration
-   - Include competitive analysis tools and market positioning insights
-   - ~4-6 hours effort
+- Experience Level Explanation Panel (shows feature availability by level)
+- Level Change Toast Notifications (brief feedback on level changes)
+- Feature Restriction Badges (visual indicators for locked features)
+- Documentation consolidation and CLAUDE.md integration
 
 ---
 
-### Recently Completed (Latest Updates)
+## Top 3 Recommended Next Tasks
 
-### Critical UI/UX Bug Fixes ✅ **COMPLETED**
-- **Fixed mobile hamburger menu scrolling and icon placement** - All icons properly positioned in mobile menu ✅
-- **Implemented functional help system and tour tutorial** - Help buttons working, tour auto-starts ✅
-- **Fixed modal functionality** - Scenarios, templates, and export modals all working properly ✅
-- **Added feedback modal with submission** - Feedback system fully implemented ✅
-- **~6-8 hours effort completed** ✅
+1. **Simple Visualizations: Utilization Gauge & Profit Waterfall**
+   - Add visual indicators to dashboard showing utilization % and profit breakdown
+   - Quick visual impact with strong user value
+   - Foundation for advanced analytics features
+   - ~4-6 hours effort
 
-### Analytics System Refactor ✅ **COMPLETED**
-- **Converted analytics to admin-only tracking feature** - Analytics now admin-only with opt-out ✅
-- **Default enabled with quiet background tracking** - Background tracking implemented ✅
-- **Simple user opt-out toggle in settings** - User can opt-out of analytics ✅
-- **~3-4 hours effort completed** ✅
+2. **Interactive Scenario Comparison (Side-by-Side Diff)**
+   - Highlight changes between scenarios with key metric comparison
+   - Scenario blending and correlation analysis
+   - Major UX improvement for what-if workflows
+   - ~5-6 hours effort
 
-### Syntax Integrity & Test Coverage ✅ **COMPLETED**
-- **Fixed all unterminated string literals** in `assets/app.jsx`
-- **Resolved template literal parsing issues** with backticks
-- **Created syntax validation test** (`assets/app-syntax.test.js`)
-- **159 tests now passing** (comprehensive test suite with full coverage)
-- **Dev server starts without errors** on http://localhost:3000
-- **Tests are meaningful and accurate** - green results mean app runs without issues
-
-### Technical Foundation Improvements ✅ **COMPLETED**
-- **Modern build system** with Vite v7.3.1 for development and production
-- **Comprehensive test suite** with Vitest v4.0.18 and jsdom environment
-- **Code quality tools** with ESLint configuration
-- **Syntax validation** to prevent regression of parsing errors
-- **File structure updates** (`.js` → `.jsx` for better JSX support)
-- **Vitest compatibility fixes** - all mocks updated for v4.0.18
-
-### Repository Cleanup ✅ **COMPLETED**
-- **Removed 50+ unnecessary files** including fix scripts, IDE history, and outdated build files
-- **Clean repository** with only essential files
-- **All documentation updated** with accurate file references
-- **Modern development workflow** established
-
-### Critical UI/UX Issues ✅ **COMPLETED**
-- **Mobile Navigation & Menu System** - Settings and help icons inside hamburger menu ✅
-- **Help System & Tour Tutorial** - Functional help buttons and auto-start tour ✅
-- **Modal Functionality Fixes** - Scenarios modal blur resolved, templates/export menus working ✅
-- **Feedback System Implementation** - Feedback modal with text input and submission ✅
-- **Analytics System Refactor** - Analytics converted to admin-only tracking feature ✅
-
-### Documentation Audit ✅ **COMPLETED**
-- **All documentation files updated** with accurate file references
-- **README.md** - Updated for JSX, Vite, and current development workflow
-- **DEVELOPER.md** - Updated with current file structure and test status
-- **FEATURES.md** - Updated with JSX support and test count
-- **package.json** - Updated file references and scripts
+3. **Data Import: Bootstrap from CSV/Excel**
+   - Allow users to import client lists, pricing, cost structures from spreadsheets
+   - Dramatically reduces setup friction and improves competitive positioning
+   - ~3-4 hours effort
 
 ---
 
 ## Fully Prioritized Backlog (high → low)
 
-**High priority**
+**Immediate Next (Quick Wins + Foundation)**
 
 1. Simple visualizations: utilization gauge and profit waterfall charts in main interface.
 2. Scenario comparison system with side-by-side diff view and key metrics comparison.
 
-Technical Foundation & Quality (Foundation Layer)
+**Quick Wins (2-4 Hour Tasks)**
 
-3. Advanced Formatting & Localization
-   - Multiple currency support beyond USD
-   - Localized number formatting
-   - Configurable decimal precision per metric
-   - Effort: ~2 hours
+3. Undo/Redo Workflow Support
+   - Stack-based undo for input changes and scenario edits
+   - Increases experimentation confidence
+   - Effort: ~2-3 hours
 
-Business Intelligence & Analytics (Core Enhancement)
+4. Performance Monitoring & Optimization Dashboard
+   - Real-time metrics: cache hit rate, computation time, memory usage
+   - Helps identify bottlenecks proactively
+   - Effort: ~3-4 hours
 
-4. Sensitivity Analysis & What-If Scenarios
+**Core Analytics & Business Intelligence (4-8 Hour Tasks)**
 
-    - "What if" sliders for key variables (pricing, costs, utilization)
-    - Tornado charts showing impact of variable changes
-    - Monte Carlo simulation for risk assessment
-    - Effort: ~6-8 hours
+5. Data Import: CSV/Excel Bootstrap
+   - Import client lists, pricing, and cost structures from spreadsheets
+   - Reduces setup friction and onboarding time
+   - Effort: ~3-4 hours
 
-5. Tax & Financial Calculations
+6. Sensitivity Analysis & What-If Scenarios
+   - Interactive sliders for pricing, costs, utilization, employee count
+   - Tornado charts showing impact ranking of variable changes
+   - Monte Carlo simulation for risk assessment
+   - Effort: ~6-8 hours
 
-    - Self-employment tax calculations
-    - Quarterly tax estimates
-    - Depreciation tracking
-    - Profit sharing calculations
-    - Effort: ~4-5 hours
+7. Tax & Financial Calculations
+   - Self-employment tax calculations
+   - Quarterly tax estimates
+   - Depreciation tracking
+   - Profit sharing calculations
+   - Effort: ~4-5 hours
 
-6. Customer Acquisition & Growth Modeling
-    - Customer acquisition cost (CAC) tracking
-    - Customer lifetime value (LTV) calculations
-    - Churn rate modeling
-    - Growth rate projections
-    - Effort: ~4-6 hours
+8. Customer Acquisition & Growth Modeling
+   - Customer acquisition cost (CAC) tracking
+   - Customer lifetime value (LTV) calculations
+   - Churn rate modeling
+   - Growth rate projections
+   - Effort: ~4-6 hours
 
-Enhanced User Experience (UX Layer)
+**UX & Accessibility (3-4 Hour Tasks)**
 
-7. Accessibility & Mobile Experience
-    - Full keyboard navigation
-    - Screen reader optimization
-    - Mobile-responsive design improvements
-    - Touch gesture support
-    - Effort: ~3-4 hours
+9. Accessibility & Mobile Experience
+   - Full keyboard navigation and screen reader optimization
+   - Mobile-responsive design improvements
+   - Touch gesture support
+   - Effort: ~3-4 hours
 
-Advanced Visualizations (Presentation Layer)
+**Advanced Visualizations & Analytics (4-6 Hour Tasks)**
 
-8. Interactive Scenario Comparison
-
-    - Side-by-side scenario comparison
-    - Diff highlighting for changes
-    - Scenario blending (weighted averages)
-    - Correlation analysis between variables
-    - Effort: ~5-6 hours
-
-9. Advanced Chart Types
-    - Heat maps for multi-variable sensitivity
-    - Radar charts for balanced scorecard
+10. Advanced Chart Types
+    - Heat maps for multi-variable sensitivity analysis
+    - Radar charts for balanced scorecard views
     - Funnel charts for customer journey
     - Geographic pricing maps
     - Effort: ~4-6 hours
 
-Industry Intelligence & Templates (Domain Layer)
+**Technical Foundation & Internationalization (2 Hour Tasks)**
 
-10. Industry Presets & Benchmarks
+11. Advanced Formatting & Localization
+    - Multi-currency support (EUR, GBP, CAD, AUD)
+    - Localized number formatting (1,000 vs 1.000 vs 1000)
+    - Configurable decimal precision per metric
+    - Effort: ~2 hours
 
-    - Curated templates for common service businesses
-    - Industry benchmark comparisons
-    - Regional pricing data
-    - Success metric tracking
+**Industry Intelligence & Competitive Positioning (6-8 Hour Tasks)**
+
+12. Industry Presets & Benchmarks
+    - Curated templates for common service businesses (consulting, cleaning, landscaping, fitness, photography, handyman)
+    - Industry benchmark comparisons and regional pricing data
+    - Success metric tracking and performance standards
     - Effort: ~6-8 hours
 
-11. Seasonal & Market Adjustments
-    - Seasonal demand modeling
-    - Geographic pricing variations
-    - Market rate comparisons
+13. Seasonal & Market Adjustments
+    - Seasonal demand modeling with monthly/quarterly variations
+    - Geographic pricing variations by region
+    - Market rate comparisons and competitive pricing
     - Economic indicator integration
     - Effort: ~4-5 hours
 
-Enterprise Features (Scale Layer)
+**Enterprise Features (Scale Layer — Deferred)**
 
-12. Advanced Scenario Management
-
-    - Scenario versioning and history
+14. Advanced Scenario Management
+    - Scenario versioning and history tracking
     - Bulk import/export operations
     - Scenario templates and inheritance
-    - Team sharing and permissions
+    - Team sharing and permissions (requires backend infrastructure)
     - Effort: ~8-10 hours
 
-13. Integration & Automation
-
+15. Integration & Automation
     - API for third-party integrations
     - Webhook notifications for key metrics
-    - Automated data syncing
+    - Automated data syncing with external services
     - CRM/ERP system connections
+    - **Note**: Requires backend infrastructure
     - Effort: ~10-12 hours
 
-14. Multi-Year Strategic Planning
-
+16. Multi-Year Strategic Planning
     - 3-5 year financial projections
     - Hiring and scaling recommendations
     - Investment payback analysis
     - Strategic milestone tracking
     - Effort: ~8-10 hours
 
-15. Optimizer Mode & AI Insights
-    - Automated optimization suggestions
+17. Optimizer Mode & AI Insights
+    - Automated optimization suggestions based on business data
     - Machine learning price optimization
-    - Predictive analytics
+    - Predictive analytics for business outcomes
     - Competitive analysis tools
+    - **Note**: Significant scope, may require ML infrastructure
     - Effort: ~12-15 hours
 
 ---
 
-Notes
+## Status & Notes
 
-- The repo contains a stable, production-ready profitability simulator with comprehensive error handling, performance optimizations, PWA capabilities, and extensive export functionality.
-- **Current status**: Application is fully functional with all tests passing (159/159), dev server running without errors, comprehensive test coverage that prevents regressions, and all critical UI/UX issues resolved.
-- **All major issues resolved**: All syntax issues resolved, comprehensive test coverage (159 tests passing), modern Vite build system, Vitest compatibility, repository cleanup, all critical UI/UX issues fixed, analytics refactor completed, documentation audited and updated.
-- **Next priorities**: Simple visualizations, scenario comparison, then advanced features like sensitivity analysis and tax calculations.
-- **Enterprise features represent significant scope expansion and may require backend infrastructure changes**.
+- **Current status**: Application is fully functional with all tests passing (159 tests), dev server stable, comprehensive test coverage preventing regressions, and all critical UI/UX issues resolved.
+- **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating.
+- **Latest milestone**: Experience level UX improvements completed (explanation panel, toast notifications, feature badges).
+- **Next priorities**: 
+  1. Simple visualizations (utilization gauge & profit waterfall) — high impact, enables advanced analytics
+  2. Interactive scenario comparison (side-by-side diff view)
+  3. Data import feature (CSV/Excel bootstrap) — strong competitive advantage
+- **Strategic positioning**: Data import and industry benchmarks are notable gaps vs. competitors and should be prioritized for market differentiation.
+- **Quick wins available**: Undo/redo (2-3 hrs) and performance dashboard (3-4 hrs) have outsized UX impact.
+- **Enterprise features (items 14-17) are deferred**: Represent significant scope expansion and require backend infrastructure. Validate market demand before investing.
 
 ### Test Coverage Status
 - **159 tests passing** (comprehensive test suite)
