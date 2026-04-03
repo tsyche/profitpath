@@ -767,6 +767,26 @@ html {
   color: rgba(255, 255, 255, 0.55)
 }
 
+/* Team configuration group: display full-time and part-time employee fields side by side */
+.team-config-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gap);
+  width: 100%;
+}
+
+.team-config-group .field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Stack on smaller screens */
+@media (max-width: 640px) {
+  .team-config-group {
+    grid-template-columns: 1fr;
+  }
+}
+
 input[type="number"],
 input[type="text"],
 select {
