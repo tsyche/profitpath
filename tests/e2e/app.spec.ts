@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { waitForPageReady } from './helpers';
 
 test.describe('ProfitPath App', () => {
   test('should load the homepage', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     // Check page title
     await expect(page).toHaveTitle(/ProfitPath/);
@@ -16,6 +18,7 @@ test.describe('ProfitPath App', () => {
 
   test('should render the main controls and outputs sections', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     // Check Inputs section exists
     await expect(page.locator('#controls')).toBeVisible();
@@ -28,9 +31,7 @@ test.describe('ProfitPath App', () => {
 
   test('should allow basic user interaction - add offering', async ({ page }) => {
     await page.goto('/');
-
-    // Wait for the page to be fully loaded
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
 
     // Click "Add offering" button
     const addOfferingBtn = page.locator('#addOfferingBtn');
@@ -45,9 +46,7 @@ test.describe('ProfitPath App', () => {
 
   test('should display KPI values in the outputs section', async ({ page }) => {
     await page.goto('/');
-
-    // Wait for calculations to complete
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
 
     // Check that KPI elements are rendered
     await expect(page.locator('#kpiIncome')).toBeVisible();
@@ -66,6 +65,7 @@ test.describe('ProfitPath App', () => {
 
   test('should toggle settings menu', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     // Click settings button
     const settingsCogBtn = page.locator('#settingsCogBtn');

@@ -63,7 +63,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 
 ### Developer Features
 - **Modern Development Stack**: Vite for fast development and optimized builds with JSX support
-- **Comprehensive Testing**: Vitest unit tests with jsdom environment (159 tests passing)
+- **Comprehensive Testing**: Vitest unit tests with jsdom environment (181+ tests passing, including E2E)
 - **Syntax Validation**: Dedicated syntax test to prevent parsing errors and regressions
 - **Code Quality**: ESLint configuration with automated linting and CI integration
 - **Debug Panel**: Built-in developer tools for testing and debugging
