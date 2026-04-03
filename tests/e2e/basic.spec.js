@@ -12,18 +12,18 @@ test.describe('ProfitPath Basic Tests', () => {
 
   test('main form elements exist', async ({ page }) => {
     // Check key form elements are present
-    await expect(page.locator('#employees')).toBeVisible();
-    await expect(page.locator('#employeePay')).toBeVisible();
+    await expect(page.locator('#fullTimeEmployees')).toBeVisible();
+    await expect(page.locator('#fullTimeEmployeePay')).toBeVisible();
     await expect(page.locator('#monthlyCosts')).toBeVisible();
   });
 
   test('can input values in form', async ({ page }) => {
     // Test basic input functionality
-    await page.fill('#employees', '3');
-    await expect(page.locator('#employees')).toHaveValue('3');
+    await page.fill('#fullTimeEmployees', '3');
+    await expect(page.locator('#fullTimeEmployees')).toHaveValue('3');
 
-    await page.fill('#employeePay', '75000');
-    await expect(page.locator('#employeePay')).toHaveValue('75000');
+    await page.fill('#fullTimeEmployeePay', '75000');
+    await expect(page.locator('#fullTimeEmployeePay')).toHaveValue('75000');
   });
 
   test('add offering button exists', async ({ page }) => {
