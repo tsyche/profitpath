@@ -1,4 +1,3 @@
-import React from "react";
 import { loadScenario, deleteScenario } from "../services/scenarioService";
 import { getAllScenarios, escapeHtml } from "../services/miscService";
 import { showConfirmationModal, showToast } from "../services/modalService";

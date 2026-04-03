@@ -1,15 +1,9 @@
 // Test setup file
-import { expect, afterEach, vi } from 'vitest'
-import { cleanup } from '@testing-library/react'
+import { expect, vi } from 'vitest'
 import * as matchers from '@testing-library/jest-dom/matchers'
 
-// extends Vitest's expect method with methods from react-testing-library
+// extends Vitest's expect method with methods from jest-dom
 expect.extend(matchers)
-
-// runs a cleanup after each test case (e.g. clearing jsdom)
-afterEach(() => {
-  cleanup()
-})
 
 // Mock browser APIs that might not be available in test environment
 global.$ = (selector) => document.querySelector(selector)
