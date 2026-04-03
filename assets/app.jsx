@@ -2,6 +2,7 @@ import { calc } from '../src/calculations/index.js';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
+import { initTooltips, setTooltipsEnabled } from './utils/tooltipManager.js';
 import * as misc from './services/miscService';
 import * as businessLogic from './services/businessLogic';
 import { saveScenario, loadScenario, deleteScenario } from './services/scenarioService';
@@ -230,10 +231,12 @@ const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 const state = {
   mode: 'forecast', // 'forecast' | 'current'
   offerings: businessLogic.defaultOfferings(),
-  employees: 1,
-  employeePay: 60000,
+  fullTimeEmployees: 1, // 40 hours/week
+  partTimeEmployees: 0, // 20 hours/week
+  fullTimeEmployeePay: 60000,
+  partTimeEmployeePay: 30000,
   monthlyCosts: 250,
-  productiveUtilizationPct: 80, // percent of HOURS_PER_YEAR available for service delivery
+  productiveUtilizationPct: 80, // percent of hours available for service delivery
   targetUtilizationPct: 75, // forecasting target
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings
 };
@@ -265,9 +268,12 @@ function persistState() {
 function setStateFromInputs() {
   state.mode = $('#modeSelect').value;
 
-  // Validate and sanitize inputs
-  state.employees = Math.max(1, Math.floor(safeParseNumber($('#employees').value, 1)));
-  state.employeePay = Math.max(0, safeParseNumber($('#employeePay').value, 0));
+  // Validate and sanitize inputs for full-time and part-time employees
+  state.fullTimeEmployees = Math.max(0, Math.floor(safeParseNumber($('#fullTimeEmployees').value, 1)));
+  state.partTimeEmployees = Math.max(0, Math.floor(safeParseNumber($('#partTimeEmployees').value, 0)));
+  state.fullTimeEmployeePay = Math.max(0, safeParseNumber($('#fullTimeEmployeePay').value, 0));
+  state.partTimeEmployeePay = Math.max(0, safeParseNumber($('#partTimeEmployeePay').value, 0));
+
   state.monthlyCosts = Math.max(0, safeParseNumber($('#monthlyCosts').value, 0));
   state.productiveUtilizationPct = clamp(safeParseNumber($('#productiveUtilizationPct').value, 80), 0, 100);
   state.targetUtilizationPct = clamp(safeParseNumber($('#targetUtilizationPct').value, 75), 0, 150);
@@ -453,10 +459,16 @@ function render() {
     const el = $('#modeSelect'); if (el) el.value = state.mode;
   }
   {
-    const el = $('#employees'); if (el) el.value = state.employees;
+    const el = $('#fullTimeEmployees'); if (el) el.value = state.fullTimeEmployees;
   }
   {
-    const el = $('#employeePay'); if (el) el.value = state.employeePay;
+    const el = $('#partTimeEmployees'); if (el) el.value = state.partTimeEmployees;
+  }
+  {
+    const el = $('#fullTimeEmployeePay'); if (el) el.value = state.fullTimeEmployeePay;
+  }
+  {
+    const el = $('#partTimeEmployeePay'); if (el) el.value = state.partTimeEmployeePay;
   }
   {
     const el = $('#monthlyCosts'); if (el) el.value = state.monthlyCosts;
@@ -872,7 +884,6 @@ function initializeSettings() {
     'showComparisonTools',
     'showExportOptions',
     'showDebugPanel',
-    'compactMode',
     'showTooltips'
   ];
 
@@ -909,9 +920,6 @@ function updateUIForSettings() {
       el.style.display = settings[setting] ? 'block' : 'none';
     });
   });
-
-  // Apply compact mode
-  document.body.classList.toggle('compact-mode', settings.compactMode);
 
   // Update tooltips visibility
   if (settings.showTooltips) {
@@ -1117,30 +1125,21 @@ function setupMobileMenuHandlers() {
 }
 
 function toggleMobileSettings() {
-  // Toggle inline settings section
-  let experienceSection = document.querySelector('.mobile-menu .settings-section:nth-of-type(1)');
-  let preferencesSection = document.querySelector('.mobile-menu .settings-section:nth-of-type(2)');
-  const mobileSettingsBtn = $('#mobileSettingsBtn');
+  // Toggle existing mobile settings sections
+  const settingsSections = document.querySelectorAll('.mobile-settings-section');
+  const isCurrentlyHidden = settingsSections[0]?.style.display === 'none';
 
-  if (experienceSection) {
-    experienceSection.style.display = experienceSection.style.display === 'none' ? 'block' : 'none';
-  } else {
-    experienceSection = document.createElement('div');
-    experienceSection.className = 'settings-section';
-    experienceSection.style.cssText = 'margin-top: 12px;padding: 12px;background: rgba(255, 255, 255, 0.05);border-radius: 8px;border: 1px solid rgba(255, 255, 255, 0.1);';
-    experienceSection.innerHTML = '<div style="margin-bottom:12px;font-size:14px;font-weight:600;color:var(--text);">Experience Level</div><div style="display:flex;flex-direction:column;gap:6px;"><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="radio" name="mobileExperienceLevel" value="beginner" style="accent-color:#007bff;">Beginner</label><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="radio" name="mobileExperienceLevel" value="intermediate" style="accent-color:#007bff;">Intermediate</label><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="radio" name="mobileExperienceLevel" value="advanced" style="accent-color:#007bff;">Advanced</label></div>';
-    mobileSettingsBtn.parentNode.insertBefore(experienceSection, mobileSettingsBtn.nextSibling);
+  settingsSections.forEach(section => {
+    section.style.display = isCurrentlyHidden ? 'block' : 'none';
+  });
+
+  if (!isCurrentlyHidden) {
+    return; // Sections are being hidden, no need to update radios
   }
 
-  if (preferencesSection) {
-    preferencesSection.style.display = preferencesSection.style.display === 'none' ? 'block' : 'none';
-  } else {
-    preferencesSection = document.createElement('div');
-    preferencesSection.className = 'settings-section';
-    preferencesSection.style.cssText = 'margin-top: 12px;padding: 12px;background: rgba(255, 255, 255, 0.05);border-radius: 8px;border: 1px solid rgba(255, 255, 255, 0.1);';
-    preferencesSection.innerHTML = '<div style="margin-bottom:12px;font-size:14px;font-weight:600;color:var(--text);">Preferences</div><div style="display:flex;flex-direction:column;gap:6px;"><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="checkbox" id="mobileCompactMode"> Compact mode</label><label style="display:flex;align-items:center;gap:8px;color:var(--text);cursor:pointer;"><input type="checkbox" id="mobileShowTooltips"> Show tooltips</label></div>';
-    mobileSettingsBtn.parentNode.insertBefore(preferencesSection, mobileSettingsBtn.nextSibling);
-  }
+  // Update settings when opening
+  const experienceSection = settingsSections[0];
+  const preferencesSection = settingsSections[1];
 
   // Initialize settings after a short delay to ensure DOM is ready
   const currentSettings = loadSettings ? loadSettings() : {};
@@ -2678,6 +2677,7 @@ function hideContextualHelp() {
   });
 
   // Update settings to reflect tooltips are disabled
+  setTooltipsEnabled(false);
   if (updateSetting) {
     updateSetting('showTooltips', false);
   }
@@ -2705,6 +2705,7 @@ function showContextualHelp() {
   });
 
   // Update settings to reflect tooltips are enabled
+  setTooltipsEnabled(true);
   if (updateSetting) {
     updateSetting('showTooltips', true);
   }
@@ -2810,6 +2811,7 @@ function _initializeScenarios() {
 // initializeScenarios();
 
 initializeProgressiveDisclosure();
+initTooltips();
 
 // Initialize the app
 if (typeof document !== 'undefined') {
