@@ -94,6 +94,7 @@ playwright-report/
 blob-report/
 .playwright/
 .nyc_output/
+test-audit-summary.md
 
 # Local Node.js installations (use asdf instead)
 node-*/
