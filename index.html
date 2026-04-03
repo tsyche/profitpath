@@ -163,35 +163,6 @@
           <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
         </div>
       </div>
-      <div class="settings-section analytics-settings">
-        <h4>Analytics & Feedback</h4>
-        <div class="settings-options">
-          <button class="btn btn-secondary" onclick="handleAnalyticsButtonClick()" style="color: #000000;">📊 <span
-              style="color: #000000;">View Analytics Dashboard</span></button>
-          <script>
-            function handleAnalyticsButtonClick() {
-              setTimeout(() => {
-                try {
-                  if (window.profitPathAnalytics && typeof window.profitPathAnalytics.showAnalyticsDashboard === 'function') {
-                    window.profitPathAnalytics.showAnalyticsDashboard();
-                  } else if (window.profitPathAnalyticsUI && typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
-                    window.profitPathAnalyticsUI.showAnalyticsDashboard();
-                  } else {
-                    console.log('Analytics not available yet, showing placeholder...');
-                    alert('Analytics dashboard will be available in the next update!');
-                  }
-                } catch (error) {
-                  console.error('Analytics button error:', error);
-                  alert('Analytics feature is loading...');
-                }
-              }, 100);
-            }
-          </script>
-          <label><input type="checkbox" id="trackExports"> Track export activity</label>
-          <label><input type="checkbox" id="trackTemplates"> Track template usage</label>
-        </div>
-      </div>
-      Clear</button>
     </div>
   </div>
   </div>

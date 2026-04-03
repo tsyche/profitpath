@@ -134,8 +134,8 @@ test.describe('Scenario Workflows - E2E', () => {
 
     test('should persist user inputs across navigation', async ({ page }) => {
       // Set some values
-      await page.fill('#employees', '5');
-      await page.fill('#employeePay', '70000');
+      await page.fill('#fullTimeEmployees', '5');
+      await page.fill('#fullTimeEmployeePay', '70000');
 
       // Navigate using modal
       const scenariosBtn = page.locator('#scenariosBtn');
@@ -151,7 +151,7 @@ test.describe('Scenario Workflows - E2E', () => {
       await page.waitForTimeout(300);
 
       // Values should still be there
-      const employees = await page.locator('#employees').inputValue();
+      const employees = await page.locator('#fullTimeEmployees').inputValue();
       expect(employees).toBe('5');
     });
   });

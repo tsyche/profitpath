@@ -7,8 +7,8 @@ test.describe('Export Functionality - E2E', () => {
     await waitForPageReady(page);
 
     // Set some realistic data for exports
-    await page.fill('#employees', '3');
-    await page.fill('#employeePay', '65000');
+    await page.fill('#fullTimeEmployees', '3');
+    await page.fill('#fullTimeEmployeePay', '65000');
     await page.fill('#monthlyCosts', '1500');
     await page.fill('#productiveUtilizationPct', '80');
   });
