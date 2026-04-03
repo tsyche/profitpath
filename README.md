@@ -21,7 +21,7 @@ Quick status
 - **Collaboration**: Shareable URLs for sharing scenarios with stakeholders, automatic URL loading on page load.
 - **Templates**: Industry-specific templates for consulting, cleaning, landscaping, handyman, fitness, and photography services.
 - **UI/UX**: Responsive design, mobile-optimized layout, collapsible debug panel, utilization gauge, profit waterfall charts, polished visual design.
-- **Syntax Integrity**: All template literals and backticks resolved, comprehensive test coverage (159 tests passing).
+- **Syntax Integrity**: All template literals and backticks resolved, comprehensive test coverage (181+ tests passing).
 
 Run locally
 1. Install dependencies and start development server:
@@ -45,7 +45,7 @@ npm install
 # Start development server (with hot reload)
 npm run dev
 
-# Run tests (159 tests passing)
+# Run tests (181+ tests passing)
 npm run test:run
 
 # Run linting
@@ -60,7 +60,7 @@ npm run preview
 
 Documentation & roadmap
 - For the complete roadmap with completed features and future plans, see `ROADMAP.md`.
-- For developer documentation, API reference, and contribution guidelines, see `DEVELOPER.md`.
+- For developer documentation, architecture details, and contribution guidelines, see `CLAUDE.md`.
 - For an explanation of Experience Levels and which features are gated per level, see `docs/experience-levels.md`.
 
 ## Guided Tour
