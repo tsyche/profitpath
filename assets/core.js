@@ -1789,61 +1789,49 @@ export function wire(skipLocalStorageLoading = false) {
 
             // Get fresh bounding rect after scrolling completes
             const rect = target.getBoundingClientRect();
+            const tooltipWidth = isMobile ? 280 : 300;
+            const tooltipHeight = 220; // Increased height estimate for safety
+            const padding = 8;
 
-            // Calculate final position first
-            let left, top, transform;
+            // Calculate element center
+            const elementCenterX = rect.left + rect.width / 2;
+            const elementCenterY = rect.top + rect.height / 2;
 
-            if (isMobile) {
-              // On mobile, always position below the element for better visibility
-              left = Math.max(10, Math.min(window.innerWidth - 290, rect.left + rect.width / 2 - 140));
-              top = rect.bottom + 10;
-              transform = 'translate(0, 0)';
-            } else {
-              switch (step.position) {
-                case 'top':
-                  left = rect.left + rect.width / 2;
-                  top = rect.top - 10;
-                  transform = 'translate(-50%, -100%)';
-                  break;
-                case 'bottom':
-                  left = rect.left + rect.width / 2;
-                  top = rect.bottom + 10;
-                  transform = 'translate(-50%, 0)';
-                  break;
-                case 'left':
-                  left = rect.left - 10;
-                  top = rect.top + rect.height / 2;
-                  transform = 'translate(-100%, -50%)';
-                  break;
-                case 'right':
-                  left = rect.right + 10;
-                  top = rect.top + rect.height / 2;
-                  transform = 'translate(0, -50%)';
-                  break;
-                default:
-                  left = rect.left + rect.width / 2;
-                  top = rect.bottom + 10;
-                  transform = 'translate(-50%, 0)';
+            // Start with bottom-center positioning (preferred)
+            let left = elementCenterX - tooltipWidth / 2;
+            let top = rect.bottom + 10;
+            let transform = 'translate(0, 0)';
+
+            // Check if tooltip goes off right edge
+            if (left + tooltipWidth > window.innerWidth - padding) {
+              left = window.innerWidth - tooltipWidth - padding;
+            }
+            // Check if tooltip goes off left edge
+            if (left < padding) {
+              left = padding;
+            }
+
+            // Check if tooltip goes below viewport - prefer top positioning
+            if (top + tooltipHeight > window.innerHeight - padding) {
+              // Try positioning above the element
+              const topPosition = rect.top - tooltipHeight - 10;
+              if (topPosition >= padding) {
+                // Above positioning fits
+                top = topPosition;
+              } else {
+                // Both top and bottom don't fit - position at top of viewport with max height
+                top = padding;
               }
             }
 
-            // Ensure tooltip stays within viewport bounds
-            const tooltipWidth = isMobile ? 280 : 300;
-            const tooltipHeight = 200; // Approximate height with navigation
+            // Ensure top doesn't go above viewport
+            if (top < padding) {
+              top = padding;
+            }
 
-            if (left < 10) {
-              left = 10;
-            }
-            if (left + tooltipWidth > window.innerWidth - 10) {
-              left = window.innerWidth - tooltipWidth - 10;
-            }
-            if (top - tooltipHeight < 10) {
-              top = tooltipHeight + 10;
-              if (!isMobile) transform = transform.replace('-100%', '0');
-            }
-            if (top + tooltipHeight > window.innerHeight - 10) {
-              top = window.innerHeight - tooltipHeight - 10;
-              if (!isMobile) transform = transform.replace('0', '-100%');
+            // Ensure bottom doesn't go below viewport - scroll the viewport if needed
+            if (top + tooltipHeight > window.innerHeight - padding) {
+              top = window.innerHeight - tooltipHeight - padding;
             }
 
             // Create tooltip with final position-no intermediate rendering

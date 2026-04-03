@@ -160,7 +160,6 @@
       <div class="settings-section">
         <h4>Preferences</h4>
         <div class="settings-options">
-          <label><input type="checkbox" id="compactMode"> Compact mode</label>
           <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
         </div>
       </div>
@@ -210,12 +209,8 @@
         <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
       </div>
       <div class="mobile-menu-content" style="max-height: 70vh; overflow-y: auto;">
-        <button class="btn mobile-menu-btn" id="mobileSettingsBtn">⚙️ Settings</button>
-        <button class="btn mobile-menu-btn" id="mobileHelpBtn">❓ Help & Tour</button>
-        <button class="btn mobile-menu-btn" id="mobileAnalyticsBtn">� Analytics</button>
-        <button class="btn mobile-menu-btn" id="mobileFeedbackBtn">✉️ Give Feedback</button>
         <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
-        <button class="btn mobile-menu-btn" id="mobileShareBtn">� Share Scenario</button>
+        <button class="btn mobile-menu-btn" id="mobileShareBtn">🔗 Share Scenario</button>
         <div class="mobile-templates-section">
           <button class="btn mobile-menu-btn" id="mobileTemplatesBtn">🏢 Templates</button>
           <div class="mobile-templates-options" id="mobileTemplatesOptions"
@@ -247,7 +242,7 @@
             <button class="btn mobile-submenu-btn" id="mobileExportSchedule">⏰ Auto Schedule</button>
           </div>
         </div>
-        <button class="btn mobile-menu-btn" id="mobileTourBtn">🎯 Take Tour</button>
+        <button class="btn mobile-menu-btn" id="mobileFeedbackBtn">✉️ Give Feedback</button>
         <button class="btn mobile-menu-btn" id="mobileSettingsBtn">⚙️ Settings</button>
         <div class="mobile-settings-section" style="display: none; padding: 8px; max-height: 60vh; overflow-y: auto;">
           <h4 style="margin: 0 0 8px 0; font-size: 14px;">Experience Level</h4>
@@ -263,10 +258,10 @@
         <div class="mobile-settings-section" style="display: none; padding: 8px; max-height: 60vh; overflow-y: auto;">
           <h4 style="margin: 0 0 8px 0; font-size: 14px;">Preferences</h4>
           <div class="settings-options" style="display: flex; flex-direction: column; gap: 8px;">
-            <label style="font-size: 13px;"><input type="checkbox" id="mobileCompactMode"> Compact mode</label>
             <label style="font-size: 13px;"><input type="checkbox" id="mobileShowTooltips"> Show tooltips</label>
           </div>
         </div>
+        <button class="btn mobile-menu-btn" id="mobileHelpBtn">❓ Help & Tour</button>
       </div>
     </div>
   </div>
@@ -373,8 +368,8 @@
         <div class="section-box inputs-fields">
           <div class="row">
             <div class="field" style="min-width: 210px;">
-              <label>Mode</label>
-              <select id="modeSelect">
+              <label title="Choose how to analyze your business">Mode</label>
+              <select id="modeSelect" title="Choose how to analyze your business">
                 <option value="forecast">Forecasting (capacity → customers)</option>
                 <option value="current">Current active service (customers → capacity)</option>
               </select>
@@ -382,42 +377,54 @@
             </div>
 
             <div class="field" id="lockMixField" style="min-width: 210px;">
-              <label>Mix lock (forecast)</label>
-              <label class="hint" style="display:flex; gap:8px; align-items:center; user-select:none;">
-                <input id="lockMix" type="checkbox" />
+              <label title="Automatically adjust service mix percentages to equal 100%">Mix lock (forecast)</label>
+              <label class="hint" style="display:flex; gap:8px; align-items:center; user-select:none;" title="Automatically adjust service mix percentages to equal 100%">
+                <input id="lockMix" type="checkbox" title="Automatically adjust service mix percentages to equal 100%" />
                 Auto-balance Mix % to 100%
               </label>
             </div>
 
             <div class="team-config-group">
               <div class="field">
-                <label>Employees</label>
-                <input id="employees" type="number" min="1" step="1" value="1" />
-                <div class="hint">Assumes 2080 paid hours/year per employee.</div>
+                <label title="Number of full-time team members (40 hrs/week)">Full-time employees</label>
+                <input id="fullTimeEmployees" type="number" min="0" step="1" value="1" title="Number of full-time team members" />
+                <div class="hint">Full-time staff (40 hours per week).</div>
               </div>
 
               <div class="field">
-                <label>Annual pay per employee</label>
-                <input id="employeePay" type="number" min="0" step="1000" value="60000" />
-                <div class="hint">Payroll = (employees − 1) × pay ("you" excluded).</div>
+                <label title="Number of part-time team members (20 hrs/week)">Part-time employees</label>
+                <input id="partTimeEmployees" type="number" min="0" step="1" value="0" title="Number of part-time team members" />
+                <div class="hint">Part-time staff (20 hours per week).</div>
+              </div>
+
+              <div class="field">
+                <label title="Total salary cost per full-time employee">Full-time annual pay</label>
+                <input id="fullTimeEmployeePay" type="number" min="0" step="1000" value="60000" title="Total salary cost per full-time employee" />
+                <div class="hint">Payroll for full-time staff ("you" excluded).</div>
+              </div>
+
+              <div class="field">
+                <label title="Total salary cost per part-time employee">Part-time annual pay</label>
+                <input id="partTimeEmployeePay" type="number" min="0" step="1000" value="30000" title="Total salary cost per part-time employee" />
+                <div class="hint">Payroll for part-time staff ("you" excluded).</div>
               </div>
             </div>
 
             <div class="field">
-              <label>Overhead (monthly)</label>
-              <input id="monthlyCosts" type="number" min="0" step="10" value="250" />
+              <label title="Fixed monthly costs like rent, insurance, utilities">Overhead (monthly)</label>
+              <input id="monthlyCosts" type="number" min="0" step="10" value="250" title="Fixed monthly costs like rent, insurance, utilities" />
               <div class="hint">Converted to annual fixed costs.</div>
             </div>
 
             <div class="field">
-              <label>Productive utilization</label>
-              <input id="productiveUtilizationPct" type="number" min="0" max="100" step="1" value="80" />
+              <label title="Percentage of paid hours available for billable work">Productive utilization</label>
+              <input id="productiveUtilizationPct" type="number" min="0" max="100" step="1" value="80" title="Percentage of paid hours available for billable work" />
               <div class="hint">% of paid hours actually available for delivering sessions.</div>
             </div>
 
             <div class="field">
-              <label>Target utilization (forecasting)</label>
-              <input id="targetUtilizationPct" type="number" min="0" max="150" step="1" value="75" />
+              <label title="Target capacity goal you're planning towards">Target utilization (forecasting)</label>
+              <input id="targetUtilizationPct" type="number" min="0" max="150" step="1" value="75" title="Target capacity goal you're planning towards" />
               <div class="hint">Used only in Forecasting mode.</div>
             </div>
           </div>
@@ -427,7 +434,7 @@
           <div class="section-h">
             <h3>Service Offerings</h3>
             <div class="section-actions">
-              <button class="btn primary" id="addOfferingBtn" type="button">Add offering</button>
+              <button class="btn primary" id="addOfferingBtn" type="button" title="Add a new service offering to your business">Add offering</button>
             </div>
           </div>
 
@@ -437,15 +444,15 @@
             <table class="table" id="offeringsTable" aria-label="Offerings">
               <thead>
                 <tr>
-                  <th>Offering</th>
-                  <th>Price / mo</th>
-                  <th>Sessions / yr</th>
-                  <th>Hours / session</th>
-                  <th>Var $ / session</th>
-                  <th>Mix % (forecast)</th>
-                  <th>Clients (current)</th>
-                  <th>Est. clients</th>
-                  <th>Est. sessions</th>
+                  <th title="Service offering name">Offering</th>
+                  <th title="Monthly price charged to clients">Price / mo</th>
+                  <th title="Number of sessions per year per client">Sessions / yr</th>
+                  <th title="Hours required per session">Hours / session</th>
+                  <th title="Variable costs per session">Var $ / session</th>
+                  <th title="Percentage of total client mix (forecast mode)">Mix % (forecast)</th>
+                  <th title="Number of current active clients">Clients (current)</th>
+                  <th title="Estimated clients needed">Est. clients</th>
+                  <th title="Estimated total sessions per year">Est. sessions</th>
                   <th></th>
                 </tr>
               </thead>
@@ -470,12 +477,12 @@
         </div>
       </div>
       <div class="card-b">
-        <div class="capacity">
+        <div class="capacity" title="Current team utilization: how much of available billable hours are being used">
           <div style="min-width: 190px;">
             <div class="muted" style="font-size: 12px;">Capacity</div>
-            <div id="capacityLabel" style="font-weight: 650; margin-top: 4px;">Utilization: 0.0%</div>
+            <div id="capacityLabel" style="font-weight: 650; margin-top: 4px;" title="Current team utilization: how much of available billable hours are being used">Utilization: 0.0%</div>
           </div>
-          <div class="meter" aria-hidden="true">
+          <div class="meter" aria-hidden="true" title="Current team utilization: how much of available billable hours are being used">
             <div id="capacityBar"></div>
           </div>
         </div>
@@ -483,49 +490,49 @@
         <div style="height: 10px;"></div>
 
         <div class="kpi-grid">
-          <div class="kpi">
+          <div class="kpi" title="Total number of clients across all service offerings">
             <div class="k">Clients</div>
             <div class="v" id="kpiClients">0</div>
             <div class="sub">Across all offerings</div>
           </div>
-          <div class="kpi">
+          <div class="kpi" title="Total number of service sessions delivered per year">
             <div class="k">Annual sessions</div>
             <div class="v" id="kpiSessions">0</div>
             <div class="sub">Total sessions across offerings</div>
           </div>
-          <div class="kpi">
+          <div class="kpi" title="Total hours required to deliver all sessions">
             <div class="k">Service hours</div>
             <div class="v" id="kpiServiceHours">0</div>
             <div class="sub">Hours required to deliver sessions</div>
           </div>
-          <div class="kpi">
+          <div class="kpi" title="Percentage of available hours being utilized for billable work">
             <div class="k">Utilization</div>
             <div class="v" id="kpiCapacity">0.0%</div>
             <div class="sub">Relative to productive hours</div>
           </div>
 
-          <div class="kpi">
+          <div class="kpi" title="Total annual revenue from all services">
             <div class="k">Revenue</div>
             <div class="v" id="kpiRevenue">$0</div>
             <div class="sub">Annual (gross)</div>
           </div>
-          <div class="kpi">
+          <div class="kpi" title="Annual overhead costs (rent, insurance, utilities, etc.)">
             <div class="k">Fixed costs</div>
             <div class="v" id="kpiFixedCosts">$0</div>
             <div class="sub">Annual overhead</div>
           </div>
-          <div class="kpi">
+          <div class="kpi" title="Total annual salary for all team members">
             <div class="k">Payroll</div>
             <div class="v" id="kpiPayroll">$0</div>
             <div class="sub">Annual employee wages</div>
           </div>
-          <div class="kpi">
+          <div class="kpi" title="Costs that vary with each session delivered">
             <div class="k">Variable costs</div>
             <div class="v" id="kpiVariableCosts">$0</div>
             <div class="sub">Per-session costs</div>
           </div>
 
-          <div class="kpi">
+          <div class="kpi" title="Revenue minus variable costs per client — how much each client contributes to covering overhead">
             <div class="k">Contribution margin</div>
             <div class="v" id="kpiContributionMargin">$0</div>
             <div class="sub">Per client (revenue - variables)</div>
@@ -539,12 +546,12 @@
         <!-- Dedicated Break-even Section -->
         <div class="break-even-section-wrapper" style="margin-top: 20px;">
           <div class="break-even-kpis">
-            <div class="kpi">
+            <div class="kpi" title="Minimum number of clients needed to cover all costs">
               <div class="k">Break-even clients</div>
               <div class="v" id="kpiBreakEvenClients">∞</div>
               <div class="sub">Clients needed to break even</div>
             </div>
-            <div class="kpi">
+            <div class="kpi" title="Minimum annual revenue needed to cover all costs">
               <div class="k">Break-even revenue</div>
               <div class="v" id="kpiBreakEvenRevenue">$∞</div>
               <div class="sub">Annual revenue needed</div>
