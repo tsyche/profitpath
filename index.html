@@ -163,6 +163,12 @@
           <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
         </div>
       </div>
+      <div class="settings-section">
+        <h4>Analytics</h4>
+        <div class="settings-options">
+          <button class="btn btn-secondary" onclick="if(window.profitPathAnalyticsUI) window.profitPathAnalyticsUI.showAnalyticsDashboard()" style="color: #000000;">📊 View Analytics</button>
+        </div>
+      </div>
     </div>
   </div>
   </div>
@@ -363,15 +369,15 @@
               </div>
 
               <div class="field">
-                <label title="Number of part-time team members (20 hrs/week)">Part-time employees</label>
-                <input id="partTimeEmployees" type="number" min="0" step="1" value="0" title="Number of part-time team members" />
-                <div class="hint">Part-time staff (20 hours per week).</div>
-              </div>
-
-              <div class="field">
                 <label title="Total salary cost per full-time employee">Full-time annual pay</label>
                 <input id="fullTimeEmployeePay" type="number" min="0" step="1000" value="60000" title="Total salary cost per full-time employee" />
                 <div class="hint">Payroll for full-time staff ("you" excluded).</div>
+              </div>
+
+              <div class="field">
+                <label title="Number of part-time team members (20 hrs/week)">Part-time employees</label>
+                <input id="partTimeEmployees" type="number" min="0" step="1" value="0" title="Number of part-time team members" />
+                <div class="hint">Part-time staff (20 hours per week).</div>
               </div>
 
               <div class="field">
