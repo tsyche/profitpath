@@ -897,6 +897,13 @@ export function loadIndustryTemplate(templateId) {
     if (typeof window.render === 'function') window.render();
     persistState();
 
+    // Show success notification
+    const notification = document.createElement('div');
+    notification.textContent = template.name + ' template loaded successfully.';
+    notification.style.cssText = 'position: fixed;top: 20px;left: 50%;transform: translateX(-50%);background: #22c55e;color: white;padding: 12px 20px;border-radius: 6px;z-index: 10002;font-size: 14px;box-shadow: 0 2px 8px rgba(0,0,0,0.15);';
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+
     return true;
   }
   return false;
