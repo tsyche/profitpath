@@ -546,12 +546,12 @@ class AnalyticsUI {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.id = 'clearAnalyticsConfirmModal';
-    modal.style.cssText = 'z-index: 10002; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center;';
+    modal.style.cssText = 'z-index: 10002; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; pointer-events: auto;';
     modal.innerHTML = `
-      <div class="modal-content" style="max-width: 500px; z-index: 10003; position: relative;">
-        <div class="modal-header" style="background-color: white !important; border-bottom: 1px solid #e5e7eb !important;">
-          <h3 style="color: #000000 !important; font-weight: 600 !important;">Clear Analytics Data</h3>
-          <button class="btn-close" style="color: #000000 !important;">&times;</button>
+      <div class="modal-content" style="max-width: 500px; z-index: 10003; position: relative; pointer-events: auto;">
+        <div class="modal-header" style="background-color: white !important; border-bottom: 1px solid #e5e7eb !important; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
+          <h3 style="color: #000000 !important; font-weight: 600 !important; margin: 0;">Clear Analytics Data</h3>
+          <button class="btn-close" style="color: #000000 !important; background: none !important; border: none !important; font-size: 24px !important; cursor: pointer !important; padding: 0 !important; pointer-events: auto !important;">&times;</button>
         </div>
         <div class="modal-body" style="color: #000000 !important; padding: 20px;">
           <p style="margin-bottom: 20px;">Are you sure you want to clear all analytics data? This action cannot be undone.</p>
@@ -560,8 +560,8 @@ class AnalyticsUI {
             <p style="color: #92400e; margin: 8px 0 0 0;">This will permanently delete all usage tracking data, session history, and feedback records.</p>
           </div>
           <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button class="btn btn-secondary" id="cancelClearBtn" style="color: black !important; background-color: white !important; border: 1px solid black !important;">Cancel</button>
-            <button class="btn btn-danger" id="confirmClearBtn" style="color: white !important; background-color: #dc2634 !important; border: 1px solid #dc2634 !important;">Clear All Data</button>
+            <button class="btn btn-secondary" id="cancelClearBtn" style="color: black !important; background-color: white !important; border: 1px solid black !important; cursor: pointer !important; pointer-events: auto !important;">Cancel</button>
+            <button class="btn btn-danger" id="confirmClearBtn" style="color: white !important; background-color: #dc2634 !important; border: 1px solid #dc2634 !important; cursor: pointer !important; pointer-events: auto !important;">Clear All Data</button>
           </div>
         </div>
       </div>
@@ -569,32 +569,58 @@ class AnalyticsUI {
 
     document.body.appendChild(modal);
 
-    // Add event listeners
+    const self = this;
     const closeBtn = modal.querySelector('.btn-close');
     const cancelBtn = modal.querySelector('#cancelClearBtn');
     const confirmBtn = modal.querySelector('#confirmClearBtn');
 
-    const closeModal = () => modal.remove();
-
-    closeBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
-
-    confirmBtn.addEventListener('click', () => {
-      this.clearAnalyticsData();
-      modal.remove();
-
-      // Refresh the dashboard
-      const analyticsModal = document.getElementById('analyticsModal');
-      if (analyticsModal) {
-        analyticsModal.remove();
-        this.showAnalyticsDashboard();
+    const closeModal = () => {
+      if (modal && modal.parentNode) {
+        modal.remove();
       }
+    };
 
-      this.showNotification('Analytics data cleared successfully', 'success');
+    // Attach event listeners immediately (synchronously)
+    if (closeBtn) {
+      closeBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        closeModal();
+        return false;
+      };
+    }
+
+    if (cancelBtn) {
+      cancelBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        closeModal();
+        return false;
+      };
+    }
+
+    // Click on overlay background to close
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
     });
+
+    if (confirmBtn) {
+      confirmBtn.onclick = () => {
+        self.clearAnalyticsData();
+        closeModal();
+
+        // Refresh the dashboard
+        const analyticsModal = document.getElementById('analyticsModal');
+        if (analyticsModal) {
+          analyticsModal.remove();
+          self.showAnalyticsDashboard();
+        }
+
+        self.showNotification('Analytics data cleared successfully', 'success');
+      };
+    }
   }
 
   showAdvancedDashboard() {

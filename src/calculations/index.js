@@ -25,10 +25,21 @@ export function clearCalculationCache() {
  */
 function generateCacheKey(state) {
   // Create a deterministic string key from the state
+  // Handle both new and old formats
+  const employeeKey = 'fullTimeEmployees' in state ? {
+    fullTimeEmployees: state.fullTimeEmployees,
+    partTimeEmployees: state.partTimeEmployees,
+    fullTimeEmployeePay: state.fullTimeEmployeePay,
+    partTimeEmployeePay: state.partTimeEmployeePay
+  } : {
+    employees: state.employees,
+    hoursPerWeek: state.hoursPerWeek,
+    employeePay: state.employeePay
+  };
+
   return JSON.stringify({
     mode: state.mode,
-    employees: state.employees,
-    employeePay: state.employeePay,
+    ...employeeKey,
     monthlyCosts: state.monthlyCosts,
     productiveUtilizationPct: state.productiveUtilizationPct,
     targetUtilizationPct: state.targetUtilizationPct,
@@ -96,9 +107,10 @@ function sanitizeOfferings(offerings) {
  * @returns {Object} Capacity metrics
  */
 function calculateCapacity(params) {
-  const { employees, productiveUtilizationPct, targetUtilizationPct } = params;
+  const { employees, productiveUtilizationPct, targetUtilizationPct, totalAnnualPaidHours } = params;
 
-  const annualPaidHours = employees * HOURS_PER_YEAR;
+  // Use provided totalAnnualPaidHours if available, otherwise calculate from employees
+  const annualPaidHours = totalAnnualPaidHours || (employees * HOURS_PER_YEAR);
   const annualServiceHours = annualPaidHours * (productiveUtilizationPct / 100);
 
   return {
@@ -322,13 +334,50 @@ export function calc(stateInput, options = {}) {
     breakEven: {}
   };
 
-  const employees = Math.max(1, Number(s.employees) || 1);
-  const employeePay = Math.max(0, Number(s.employeePay) || 0);
+  // Handle both new (fullTime/partTime) and old (employees/hoursPerWeek) formats
+  let fullTimeEmployees, partTimeEmployees, fullTimeEmployeePay, partTimeEmployeePay, totalAnnualPaidHours, totalPayroll;
+
+  if ('fullTimeEmployees' in s && 'partTimeEmployees' in s) {
+    // New format
+    fullTimeEmployees = Math.max(0, Number(s.fullTimeEmployees) || 0);
+    partTimeEmployees = Math.max(0, Number(s.partTimeEmployees) || 0);
+    fullTimeEmployeePay = Math.max(0, Number(s.fullTimeEmployeePay) || 0);
+    partTimeEmployeePay = Math.max(0, Number(s.partTimeEmployeePay) || 0);
+
+    const fullTimeHoursPerYear = 40 * 52; // 2080
+    const partTimeHoursPerYear = 20 * 52; // 1040
+    totalAnnualPaidHours = (fullTimeEmployees * fullTimeHoursPerYear) + (partTimeEmployees * partTimeHoursPerYear);
+    totalPayroll = (fullTimeEmployees * fullTimeEmployeePay) + (partTimeEmployees * partTimeEmployeePay);
+  } else {
+    // Old format - convert to new format
+    const employees = Math.max(1, Number(s.employees) || 1);
+    const employeePay = Math.max(0, Number(s.employeePay) || 0);
+    const hoursPerWeek = Math.max(1, Number(s.hoursPerWeek) || 40);
+    const hoursPerYear = hoursPerWeek * 52;
+
+    fullTimeEmployees = employees;
+    partTimeEmployees = 0;
+    fullTimeEmployeePay = employeePay;
+    partTimeEmployeePay = 0;
+    totalAnnualPaidHours = employees * hoursPerYear;
+    totalPayroll = employees * employeePay;
+  }
+
+  // For compatibility with rest of code, use combined values
+  const employees = fullTimeEmployees + partTimeEmployees || 1; // At least 1 for calculations
+  const employeePay = employees > 0 ? totalPayroll / employees : 0; // Average pay per employee
+
   const monthlyCosts = Math.max(0, Number(s.monthlyCosts) || 0);
   const productiveUtilizationPct = clamp(Number(s.productiveUtilizationPct) || 0, 0, 100);
   const targetUtilizationPct = clamp(Number(s.targetUtilizationPct) || 0, 0, 150);
 
   intermediate.sanitization = {
+    fullTimeEmployees,
+    partTimeEmployees,
+    fullTimeEmployeePay,
+    partTimeEmployeePay,
+    totalAnnualPaidHours,
+    totalPayroll,
     employees,
     employeePay,
     monthlyCosts,
@@ -344,7 +393,7 @@ export function calc(stateInput, options = {}) {
 
   // Early return for no offerings
   if (!offerings.length) {
-    const capacity = calculateCapacity({ employees, productiveUtilizationPct, targetUtilizationPct });
+    const capacity = calculateCapacity({ employees, productiveUtilizationPct, targetUtilizationPct, totalAnnualPaidHours });
     const costs = calculateCosts({ employees, employeePay, monthlyCosts });
 
     const result = {
@@ -382,8 +431,8 @@ export function calc(stateInput, options = {}) {
   }
 
   // Calculate capacity and costs
-  const capacity = calculateCapacity({ employees, productiveUtilizationPct, targetUtilizationPct });
-  const costs = calculateCosts({ employees, employeePay, monthlyCosts });
+  const capacity = calculateCapacity({ employees, productiveUtilizationPct, targetUtilizationPct, totalAnnualPaidHours });
+  const costs = calculateCosts({ employees, employeePay: totalPayroll / (employees || 1), monthlyCosts });
 
   intermediate.capacity = capacity;
   intermediate.costs = costs;
