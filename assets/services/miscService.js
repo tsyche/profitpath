@@ -7,21 +7,6 @@ import { persistState } from './stateManager.js';
 // Utility functions for export functionality
 const DEFAULT_CURRENCY = 'USD';
 
-// Track analytics events if available
-function trackEvent(eventName, eventData = {}) {
-  try {
-    // Check for analytics UI or analytics modules
-    if (window.profitPathAnalyticsUI && typeof window.profitPathAnalyticsUI.trackEvent === 'function') {
-      window.profitPathAnalyticsUI.trackEvent(eventName, eventData);
-    } else if (window.profitPathAnalytics && typeof window.profitPathAnalytics.trackEvent === 'function') {
-      window.profitPathAnalytics.trackEvent(eventName, eventData);
-    }
-  } catch (error) {
-    // Silently fail if analytics module is not available
-    console.debug('Analytics tracking not available:', error);
-  }
-}
-
 function loadScript(src) {
   return new Promise((resolve, reject) => {
     const script = document.createElement('script');
@@ -212,8 +197,6 @@ export function resetDefaults() {
 }
 
 export function exportAsCSV() {
-  // Track CSV export
-  trackEvent('export', { format: 'csv' });
 
   let results;
   try {
@@ -280,6 +263,9 @@ export function exportAsCSV() {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+
+  // Track CSV export
+  trackEvent('export', { format: 'csv' });
 }
 
 export function shareScenario() {
@@ -931,9 +917,6 @@ export function loadIndustryTemplate(templateId) {
 }
 
 export function exportAsExcel() {
-  // Track Excel export
-  trackEvent('export', { format: 'excel' });
-
   const state = window.state;
   const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
   const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString();
@@ -975,11 +958,12 @@ export function exportAsExcel() {
   link.click();
   document.body.removeChild(link);
   showNotification('Excel export downloaded!', 'success');
+
+  // Track Excel export
+  trackEvent('export', { format: 'excel' });
 }
 
 export function exportAsPDF() {
-  // Track PDF export
-  trackEvent('export', { format: 'pdf' });
   // Create a printable HTML version and open print dialog
   const state = window.state;
   const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
@@ -1059,13 +1043,13 @@ export function exportAsPDF() {
   printWindow.focus();
   setTimeout(() => {
     printWindow.print();
+    // Track PDF export
+    trackEvent('export', { format: 'pdf' });
   }, 500);
   showNotification('PDF print dialog opened!', 'success');
 }
 
 export function exportAsHTML() {
-  // Track HTML export
-  trackEvent('export', { format: 'html' });
   const state = window.state;
   const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
   const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString();
@@ -1148,11 +1132,12 @@ export function exportAsHTML() {
   link.click();
   document.body.removeChild(link);
   showNotification('HTML report downloaded!', 'success');
+
+  // Track HTML export
+  trackEvent('export', { format: 'html' });
 }
 
 export function shareViaEmail() {
-  // Track email export
-  trackEvent('export', { format: 'email' });
   const state = window.state;
   const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
   const fmtPct = (n) => n.toFixed(1) + '%';
@@ -1176,6 +1161,9 @@ export function shareViaEmail() {
 
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
   showNotification('Email client opened!', 'success');
+
+  // Track email export
+  trackEvent('export', { format: 'email' });
 }
 
 export function showEmbedCode() {
