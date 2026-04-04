@@ -2562,17 +2562,6 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
     });
   }, 50);
 
-  // Add event listener for the button
-  setTimeout(() => {
-    const nextBtn = tooltip.querySelector('.tooltip-next-btn');
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        tooltip.remove();
-        if (onNext) onNext();
-      });
-    }
-  }, 10);
-
   // Highlighting: place a fixed overlay around the target so we don't rely on modifying
   // the target's own styles (avoids stacking-context/overflow issues and layout shifts).
   const OVERLAY_PAD = 9; // pixels to expand the highlight beyond the element (increased by 1 to keep outer perimeter)
@@ -2584,12 +2573,31 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   const parsedBR = parseFloat(computed.borderRadius) || 0;
   const borderRadius = (parsedBR && parsedBR > 4) ? parsedBR + 'px' : '10px';
 
+  // Create overlay invisibly (will show with tooltip)
   const overlay = document.createElement('div');
   overlay.className = 'onboarding-overlay';
-  overlay.style.cssText = 'position: fixed;left: ' + (rect2.left - OVERLAY_PAD) + 'px;top: ' + (rect2.top - OVERLAY_PAD) + 'px;width: ' + (rect2.width + OVERLAY_PAD * 2) + 'px;height: ' + (rect2.height + OVERLAY_PAD * 2) + 'px;border: ' + BORDER_THICKNESS + 'px solid #007bff;border-radius: ' + borderRadius + ';box-shadow: 0 8px 32px rgba(0, 123, 255, 0.12);pointer-events: none;z-index: 9999;animation: pulse 2s infinite;';
+  overlay.style.cssText = 'position: fixed;left: ' + (rect2.left - OVERLAY_PAD) + 'px;top: ' + (rect2.top - OVERLAY_PAD) + 'px;width: ' + (rect2.width + OVERLAY_PAD * 2) + 'px;height: ' + (rect2.height + OVERLAY_PAD * 2) + 'px;border: ' + BORDER_THICKNESS + 'px solid #007bff;border-radius: ' + borderRadius + ';box-shadow: 0 8px 32px rgba(0, 123, 255, 0.12);pointer-events: none;z-index: 9999;opacity: 0;transition: opacity 0.3s ease-out;animation: pulse 2s infinite;';
 
-  // Append overlay underneath the tooltip (tooltip uses z-index:10000)
+  // Append both overlay and tooltip to DOM (both invisible)
   document.body.appendChild(overlay);
+
+  // Add event listener for the button
+  setTimeout(() => {
+    const nextBtn = tooltip.querySelector('.tooltip-next-btn');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        tooltip.remove();
+        if (onNext) onNext();
+      });
+    }
+  }, 10);
+
+  // Now show both tooltip and overlay together
+  requestAnimationFrame(() => {
+    tooltip.style.visibility = 'visible';
+    tooltip.style.opacity = '1';
+    overlay.style.opacity = '1';
+  });
 
   // Store overlay for cleanup
   tooltip._overlay = overlay;
