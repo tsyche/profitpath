@@ -809,13 +809,15 @@ select {
 
 input[type="number"]:focus,
 input[type="text"]:focus,
+textarea:focus,
 select:focus {
-  border-color: rgba(94, 234, 212, 0.5);
-  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.14);
+  border-color: var(--accent, #5eead4);
+  box-shadow: 0 0 0 2px var(--accent, #5eead4);
+  transition: box-shadow 0.15s ease;
 }
 
-button:focus {
-  outline: 2px solid rgba(94, 234, 212, 0.6);
+button:focus-visible {
+  outline: 2px solid var(--accent, #5eead4);
   outline-offset: 2px;
 }
 
@@ -924,6 +926,12 @@ button:focus {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.10);
   background: rgba(255, 255, 255, 0.045);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .kpi .k {
@@ -937,12 +945,17 @@ button:focus {
   margin-top: 6px;
   font-size: 18px;
   font-weight: 700;
+  transition: color 0.3s ease;
 }
 
 .kpi .sub {
   margin-top: 4px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.62)
+}
+
+.kpi-flash {
+  animation: kpiFlash 0.35s ease-out;
 }
 
 .pill {
@@ -1227,17 +1240,20 @@ button:focus {
 }
 
 .gauge-svg {
-  width: 120px;
-  height: 80px;
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+  aspect-ratio: 3 / 2;
 }
 
 .gauge-labels {
   text-align: center;
+  margin-top: 4px;
 }
 
 .gauge-value {
   font-family: var(--mono);
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--text);
 }
@@ -1245,26 +1261,32 @@ button:focus {
 .gauge-text {
   font-size: 11px;
   color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
   margin-top: 2px;
+  font-weight: 500;
 }
 
 /* Profit Waterfall */
 .profit-waterfall {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 8px;
 }
 
 .waterfall-svg {
   width: 100%;
-  height: 80px;
-  max-width: 200px;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  min-height: 180px;
 }
 
 .waterfall-summary {
   display: flex;
   gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-size: 12px;
 }
 
 .summary-item {
@@ -1785,6 +1807,7 @@ input[type="checkbox"] {
   align-items: center;
   justify-content: center;
   z-index: 10000;
+  animation: modalFadeIn 0.18s ease-out;
 }
 
 .modal-content {
@@ -1796,6 +1819,7 @@ input[type="checkbox"] {
   max-height: 80vh;
   overflow-y: auto;
   position: relative;
+  animation: modalSlideIn 0.2s ease-out;
 }
 
 /* Modal sizes */
@@ -2803,6 +2827,41 @@ input[type="checkbox"] {
   }
 }
 
+@keyframes kpiFlash {
+  0% {
+    color: inherit;
+    transform: scale(1);
+  }
+  40% {
+    color: var(--accent, #5eead4);
+    transform: scale(1.04);
+  }
+  100% {
+    color: inherit;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
@@ -2900,6 +2959,7 @@ input[type="checkbox"] {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 15000;
   transform: translateX(100%);
+  opacity: 0;
   transition: transform 0.3s ease, opacity 0.3s ease;
   font-size: 14px;
   color: var(--text);
@@ -2908,6 +2968,7 @@ input[type="checkbox"] {
 
 .toast.show {
   transform: translateX(0);
+  opacity: 1;
 }
 
 .toast.toast-info {

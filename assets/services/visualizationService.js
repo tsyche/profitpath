@@ -44,54 +44,96 @@ export function updateBreakEvenAnalysis(metrics) {
 
 export function updateRichVisualizations(metrics) {
     const vizEl = $('#richVisualizations');
-    if (!vizEl) return;
-
-    // Only show if we have meaningful data
-    if (!metrics || metrics.clients <= 0) {
-      vizEl.style.display = 'none';
-      return;
-    }
+    if (!vizEl || !metrics) return;
 
     // Create utilization gauge
     const utilizationGauge = createUtilizationGauge(metrics);
 
-    // Create profit/loss waterfall (simplified version)
+    // Create profit/loss waterfall
     const profitWaterfall = createProfitWaterfall(metrics);
 
-    vizEl.innerHTML = '<div class="viz-header"><h4 style="margin:0 0 12px 0;font-size:14px;color:var(--text);">Rich Visualizations</h4></div><div class="viz-content"><div class="viz-item"><h5 style="margin:0 0 8px 0;font-size:12px;color:var(--muted);font-weight:600;">Utilization Gauge</h5>' + (utilizationGauge) + '</div><div class="viz-item"><h5 style="margin:0 0 8px 0;font-size:12px;color:var(--muted);font-weight:600;">Profit Waterfall</h5>' + (profitWaterfall) + '</div></div>';
+    vizEl.innerHTML = '<div class="viz-header"><h4 style="margin:0 0 16px 0;font-size:14px;color:var(--text);font-weight:600;">Simple Visualizations</h4></div><div class="viz-content"><div class="viz-item"><h5 style="margin:0 0 8px 0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;font-weight:600;">Utilization Gauge</h5>' + (utilizationGauge) + '</div><div class="viz-item"><h5 style="margin:0 0 8px 0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;font-weight:600;">Profit Waterfall</h5>' + (profitWaterfall) + '</div></div>';
 
     vizEl.style.display = 'block';
   }
 
 export function createUtilizationGauge(metrics) {
     const utilization = Math.min(150, Math.max(0, metrics.capacityPct || 0));
-    const angle = (utilization / 150) * 180; // Semi-circle gauge
+    const angleRad = (utilization / 150) * Math.PI; // Semi-circle: 0° to 180°
 
-    return '<div class="utilization-gauge"><svg viewBox="0 0 120 80" class="gauge-svg"><!--Background arc--><path d="M 10 70 A 50 50 0 0 1 110 70" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/><!--Utilization arc--><path d="M 10 70 A 50 50 0 0 1 ' + (10 + Math.cos((angle - 90) * Math.PI / 180) * 50 + 50) + ' ' + (70 - Math.sin((angle - 90) * Math.PI / 180) * 50) + '" fill="none" stroke="' + (utilization > 100 ? 'var(--bad)' : utilization > 75 ? 'var(--warn)' : 'var(--good)') + '" stroke-width="8"/><!--Needle--><line x1="60" y1="70" x2="' + (60 + Math.cos((angle - 90) * Math.PI / 180) * 40) + '" y2="' + (70 - Math.sin((angle - 90) * Math.PI / 180) * 40) + '" stroke="var(--accent)" stroke-width="3"/><!--Center dot--><circle cx="60" cy="70" r="4" fill="var(--accent)"/></svg><div class="gauge-labels"><div class="gauge-value">' + (fmtPct1(utilization)) + '</div><div class="gauge-text">Utilization</div></div></div>';
+    // Calculate arc endpoint using correct semicircle math: center (60,70), radius 50
+    const arcX = 60 - Math.cos(angleRad) * 50;
+    const arcY = 70 - Math.sin(angleRad) * 50;
+    const needleX = 60 - Math.cos(angleRad) * 40;
+    const needleY = 70 - Math.sin(angleRad) * 40;
+
+    // Large-arc-flag: use 1 if angle > 90° (π/2)
+    const largeArcFlag = angleRad > Math.PI / 2 ? 1 : 0;
+
+    // Zone markers: green (0-75%), amber (75-100%), red (100%+)
+    const pt = (deg) => ({
+      x: 60 - Math.cos((deg / 180) * Math.PI) * 50,
+      y: 70 - Math.sin((deg / 180) * Math.PI) * 50
+    });
+    const pt75 = pt(75);
+    const pt135 = pt(135);
+
+    const arcColor = utilization > 100 ? 'var(--bad)' : utilization > 75 ? 'var(--warn)' : 'var(--good)';
+
+    return '<div class="utilization-gauge"><svg viewBox="0 0 120 80" class="gauge-svg"><!--Background arc--><path d="M 10 70 A 50 50 0 0 0 110 70" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" stroke-linecap="round"/><!--Zone arcs: green 0-75%--><path d="M 10 70 A 50 50 0 0 0 ' + (pt75.x) + ' ' + (pt75.y) + '" fill="none" stroke="rgba(52,211,153,0.3)" stroke-width="8" stroke-linecap="round"/><!--Zone arcs: amber 75-100%--><path d="M ' + (pt75.x) + ' ' + (pt75.y) + ' A 50 50 0 0 0 ' + (pt135.x) + ' ' + (pt135.y) + '" fill="none" stroke="rgba(251,191,36,0.3)" stroke-width="8" stroke-linecap="round"/><!--Zone arcs: red 100%+--><path d="M ' + (pt135.x) + ' ' + (pt135.y) + ' A 50 50 0 0 0 110 70" fill="none" stroke="rgba(251,113,133,0.3)" stroke-width="8" stroke-linecap="round"/><!--Utilization arc--><path d="M 10 70 A 50 50 0 ' + (largeArcFlag) + ' 0 ' + (arcX) + ' ' + (arcY) + '" fill="none" stroke="' + (arcColor) + '" stroke-width="8" stroke-linecap="round"/><!--Needle--><line x1="60" y1="70" x2="' + (needleX) + '" y2="' + (needleY) + '" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><!--Center dot--><circle cx="60" cy="70" r="5" fill="var(--accent)"/></svg><div class="gauge-labels"><div class="gauge-value">' + (fmtPct1(utilization)) + '</div><div class="gauge-text">Utilization</div></div></div>';
   }
 
 export function createProfitWaterfall(metrics) {
     const items = [
       { label: 'Revenue', value: metrics.revenue, color: 'var(--good)' },
       { label: 'Variable Costs', value: -metrics.variableCosts, color: 'var(--bad)' },
-      { label: 'Fixed Costs', value: -metrics.annualFixedCosts - metrics.annualPayroll, color: 'var(--bad)' },
+      { label: 'Fixed & Payroll', value: -(metrics.annualFixedCosts + metrics.annualPayroll), color: 'var(--bad)' },
       { label: 'Net Profit', value: metrics.income, color: metrics.income >= 0 ? 'var(--good)' : 'var(--bad)' }
     ];
 
+    // Normalize values for SVG scaling: find max absolute value to scale bars proportionally
+    const maxAbsValue = Math.max(Math.abs(metrics.revenue), Math.abs(metrics.income), 1);
+    const chartHeight = 40; // SVG units available for bars above/below zero line
+    const scale = (val) => (Math.abs(val) / maxAbsValue) * chartHeight;
+    const zeroLineY = 55; // SVG y-coordinate of zero line
+
     let runningTotal = 0;
-    const bars = items.map((item, index) => {
-      const startY = runningTotal;
-      const endY = runningTotal + item.value;
-      runningTotal = endY;
+    let barHTML = '';
 
-      const height = Math.abs(item.value);
-      const y = Math.min(startY, endY);
-      const barHeight = Math.max(1, height * 0.5); // Scale for visibility
+    items.forEach((item, index) => {
+      const startTotal = runningTotal;
+      const endTotal = runningTotal + item.value;
+      runningTotal = endTotal;
 
-      return '<rect x="' + (index * 25 + 5) + '" y="' + (60 - y * 0.5 - barHeight) + '" width="15" height="' + (barHeight) + '" fill="' + (item.color) + '" opacity="0.7"/><text x="' + (index * 25 + 12.5) + '" y="75" text-anchor="middle" font-size="8" fill="var(--muted)">' + (item.label.split(' ')[0]) + '</text>';
-    }).join('');
+      const barHeight = scale(item.value);
+      const isNegative = item.value < 0;
+      const barY = isNegative
+        ? zeroLineY  // negative bars start at zero and go down
+        : zeroLineY - barHeight;  // positive bars start at zero and go up
 
-    return '<div class="profit-waterfall"><svg viewBox="0 0 100 80" class="waterfall-svg">' + (bars) + '<!--Zero line--><line x1="0" y1="60" x2="100" y2="60" stroke="var(--border)" stroke-width="1"/></svg><div class="waterfall-summary"><div class="summary-item"><span class="summary-label">Net:</span><span class="summary-value" style="color:' + (metrics.income >= 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtMoney0(metrics.income)) + '</span></div></div></div>';
+      const x = 15 + index * 25;
+      const barWidth = 18;
+
+      // Bar
+      barHTML += '<rect x="' + (x) + '" y="' + (barY) + '" width="' + (barWidth) + '" height="' + (barHeight) + '" fill="' + (item.color) + '" opacity="0.75" rx="2"/>';
+
+      // Label below bar
+      barHTML += '<text x="' + (x + barWidth / 2) + '" y="' + (zeroLineY + 12) + '" text-anchor="middle" font-size="10" fill="var(--muted)" font-weight="500">' + (item.label.split(' ')[0]) + '</text>';
+
+      // Value label above/below bar
+      const valueLabelY = isNegative ? zeroLineY + barHeight + 8 : barY - 3;
+      barHTML += '<text x="' + (x + barWidth / 2) + '" y="' + (valueLabelY) + '" text-anchor="middle" font-size="9" fill="var(--text)" font-weight="600">' + (fmtMoney0(item.value)) + '</text>';
+
+      // Connector line to next bar (except after last bar)
+      if (index < items.length - 1) {
+        const nextX = 15 + (index + 1) * 25;
+        const nextStartY = isNegative ? zeroLineY : zeroLineY - scale(item.value);
+        const connY = zeroLineY - scale(endTotal);
+        barHTML += '<line x1="' + (x + barWidth) + '" y1="' + (nextStartY) + '" x2="' + (nextX) + '" y2="' + (connY) + '" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>';
+      }
+    });
+
+    return '<div class="profit-waterfall"><svg viewBox="0 0 120 90" class="waterfall-svg"><!--Zero line--><line x1="5" y1="' + (zeroLineY) + '" x2="115" y2="' + (zeroLineY) + '" stroke="var(--border)" stroke-width="1.5" opacity="0.6"/>' + (barHTML) + '</svg><div class="waterfall-summary"><div class="summary-item"><span class="summary-label">Net Income:</span><span class="summary-value" style="color:' + (metrics.income >= 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtMoney0(metrics.income)) + '</span></div></div></div>';
   }
 
 export function renderSimpleChart(metrics) {
