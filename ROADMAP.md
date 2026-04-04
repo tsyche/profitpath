@@ -8,31 +8,33 @@ See README.md for setup and development instructions.
 
 ## Recently Completed ✅
 
+- Simple Visualizations: Utilization Gauge & Profit Waterfall (fixed arc math, proper value scaling, always visible, zone indicators)
+- Micro-interactions & Animation Polish (KPI flash on value change, modal entrance animations, card hover effects, enhanced focus states, smooth color transitions)
 - Experience Level Explanation Panel (shows feature availability by level)
 - Level Change Toast Notifications (brief feedback on level changes)
 - Feature Restriction Badges (visual indicators for locked features)
 - Documentation consolidation and CLAUDE.md integration
+- Bug fix: Mode switch now immediately updates mix lock checkbox visibility
 
 ---
 
 ## Top 3 Recommended Next Tasks
 
-1. **Simple Visualizations: Utilization Gauge & Profit Waterfall**
-   - Add visual indicators to dashboard showing utilization % and profit breakdown
-   - Quick visual impact with strong user value
-   - Foundation for advanced analytics features
-   - ~4-6 hours effort
-
-2. **Interactive Scenario Comparison (Side-by-Side Diff)**
+1. **Interactive Scenario Comparison (Side-by-Side Diff)**
    - Highlight changes between scenarios with key metric comparison
    - Scenario blending and correlation analysis
    - Major UX improvement for what-if workflows
    - ~5-6 hours effort
 
-3. **Data Import: Bootstrap from CSV/Excel**
+2. **Data Import: Bootstrap from CSV/Excel**
    - Allow users to import client lists, pricing, cost structures from spreadsheets
    - Dramatically reduces setup friction and improves competitive positioning
    - ~3-4 hours effort
+
+3. **Undo/Redo Workflow Support**
+   - Stack-based undo for input changes and scenario edits
+   - Increases experimentation confidence
+   - ~2-3 hours effort
 
 ---
 
@@ -40,8 +42,8 @@ See README.md for setup and development instructions.
 
 **Immediate Next (Quick Wins + Foundation)**
 
-1. Simple visualizations: utilization gauge and profit waterfall charts in main interface.
-2. Scenario comparison system with side-by-side diff view and key metrics comparison.
+1. Scenario comparison system with side-by-side diff view and key metrics comparison.
+2. Data import: CSV/Excel bootstrap for client lists, pricing, cost structures.
 
 **Quick Wins (2-4 Hour Tasks)**
 
@@ -184,24 +186,23 @@ See README.md for setup and development instructions.
 
 ## Status & Notes
 
-- **Current status**: Application is fully functional with all tests passing (159 tests), dev server stable, comprehensive test coverage preventing regressions, and all critical UI/UX issues resolved.
-- **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating.
-- **Latest milestone**: Experience level UX improvements completed (explanation panel, toast notifications, feature badges).
+- **Current status**: Application is fully functional with all tests passing (200 tests), dev server stable, comprehensive test coverage preventing regressions, and all critical UI/UX issues resolved.
+- **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall).
+- **Latest milestone**: Simple visualizations completed (utilization gauge with zone indicators and corrected arc math, profit waterfall with proper value scaling and connector lines). Micro-interactions & animation polish completed (KPI flash, modal transitions, focus states). Bug fix: mode switching now immediately updates UI.
 - **Next priorities**: 
-  1. Visual design polish (micro-interactions, animations, visual indicators) — makes app feel cutting-edge and modern
-  2. Simple visualizations (utilization gauge & profit waterfall) — high impact, enables advanced analytics
-  3. Interactive scenario comparison (side-by-side diff view)
-  4. Data import feature (CSV/Excel bootstrap) — strong competitive advantage
-- **Strategic positioning**: Data import and industry benchmarks are notable gaps vs. competitors and should be prioritized for market differentiation. Visual polish (glassmorphism, animations, micro-interactions) will elevate perceived quality and feel more modern/cutting-edge.
+  1. Interactive scenario comparison (side-by-side diff view) — major UX improvement for what-if analysis
+  2. Data import feature (CSV/Excel bootstrap) — strong competitive advantage, reduces onboarding friction
+  3. Undo/redo workflow support — increases experimentation confidence
+- **Strategic positioning**: Data import and industry benchmarks are notable gaps vs. competitors and should be prioritized for market differentiation. Visual polish (completed) provides modern feel; next focus should shift to functional improvements.
 - **Quick wins available**: 
-  - Micro-interactions & animations (3-4 hrs) have high perceived value with modest effort
   - Number animations and visual indicators (4-5 hrs) make KPI displays more dynamic
   - Undo/redo (2-3 hrs) and performance dashboard (3-4 hrs) have outsized UX impact
 - **Enterprise features (items 14-17) are deferred**: Represent significant scope expansion and require backend infrastructure. Validate market demand before investing.
 
 ### Test Coverage Status
-- **159 tests passing** (comprehensive test suite)
+- **200 tests passing** (comprehensive test suite)
 - **Syntax validation**: Prevents parsing errors and lint issues
 - **UI/UX tests**: All mobile UI, modal functionality, help system, feedback system tests passing
 - ✅ **Analytics tests**: All analytics and feedback system tests passing
-- ✅ **Comprehensive coverage**: Business logic, UI components, error handling, and integration tests
+- ✅ **Visualization tests**: Chart data structure validation, visual consistency, performance tests
+- ✅ **Comprehensive coverage**: Business logic, UI components, error handling, integration tests, animations, feature gating
