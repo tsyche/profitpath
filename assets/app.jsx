@@ -2455,7 +2455,25 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
 
   // Ensure tooltip stays within viewport bounds
   const tooltipWidth = isMobile ? 280 : 300;
-  const tooltipHeight = 200; // Approximate height with navigation
+
+  // Create progress dots
+  const progressDots = steps.map((_, index) => '<span class="tour-dot ' + (index === stepIndex ? 'active' : '') + ' ' + (index < stepIndex ? 'completed' : '') + '" data-step="' + index + '" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px;cursor:pointer;background:' + (index === stepIndex ? '#007bff' : index < stepIndex ? '#28a745' : '#ddd') + ';transition:all 0.2s;"></span>').join('');
+
+  // Create tooltip (initially hidden to measure actual height)
+  const tooltip = document.createElement('div');
+  tooltip.className = 'onboarding-tooltip';
+  tooltip.style.cssText = 'position: fixed;z-index: 10000;background: white;border: 2px solid #007bff;border-radius: 8px;padding: 16px;box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);max-width: ' + (isMobile ? '280px' : '300px') + ';pointer-events: auto;font-size: ' + (isMobile ? '14px' : '16px') + ';visibility: hidden;opacity: 0;transition: opacity 0.3s ease-out;left: 0;top: 0;transform: translate(0, 0);';
+
+  // Set content before measuring
+  tooltip.innerHTML = '<div style="position:relative;padding-right:24px;"><button class="tour-exit-btn" style="position:absolute;top:0;right:0;background:transparent;border:none;font-size:16px;cursor:pointer;color:var(--text, #666);padding:4px;line-height:1;">✕</button><div style="font-weight:bold;margin-bottom:8px;color:var(--text, #007bff);">' + step.title + '</div><div style="margin-bottom:16px;color:var(--text, #333);line-height:1.4;">' + step.content + '</div><div style="display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;"><div class="tour-navigation" style="display:flex;align-items:center;">' + (stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:18px;line-height:1;">‹</button>' : '<div style="width:32px;"></div>') + '<div class="tour-dots" style="display:flex;align-items:center;">' + progressDots + '</div>' + (stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background:#007bff;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:18px;line-height:1;">›</button>' : '<button class="tour-finish-btn" style="background:#28a745;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:16px;line-height:1;">✓</button>') + '</div></div></div>';
+
+  // Append to DOM (invisible) and measure actual height
+  document.body.appendChild(tooltip);
+  const tooltipHeight = tooltip.offsetHeight;
+
+  // Now recalculate position with actual height
+  let finalTop = top;
+  let finalTransform = transform;
 
   if (left < 10) {
     left = 10;
@@ -2463,30 +2481,25 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   if (left + tooltipWidth > window.innerWidth - 10) {
     left = window.innerWidth - tooltipWidth - 10;
   }
-  if (top - tooltipHeight < 10) {
-    top = tooltipHeight + 10;
-    if (!isMobile) transform = transform.replace('-100%', '0');
+  if (finalTop - tooltipHeight < 10) {
+    finalTop = tooltipHeight + 10;
+    if (!isMobile) finalTransform = finalTransform.replace('-100%', '0');
   }
-  if (top + tooltipHeight > window.innerHeight - 10) {
-    top = window.innerHeight - tooltipHeight - 10;
-    if (!isMobile) transform = transform.replace('0', '-100%');
+  if (finalTop + tooltipHeight > window.innerHeight - 10) {
+    finalTop = window.innerHeight - tooltipHeight - 10;
+    if (!isMobile) finalTransform = finalTransform.replace('0', '-100%');
   }
 
-  // Create tooltip with final position-no intermediate rendering
-  const tooltip = document.createElement('div');
-  tooltip.className = 'onboarding-tooltip';
-  tooltip.style.cssText = 'position: fixed;z-index: 10000;background: white;border: 2px solid #007bff;border-radius: 8px;padding: 16px;box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);max-width: ' + (isMobile ? '280px' : '300px') + ';pointer-events: auto;font-size: ' + (isMobile ? '14px' : '16px') + ';left: ' + left + 'px;top: ' + top + 'px;transform: ' + transform + ';opacity: 0;transition: opacity 0.3s ease-out;';
+  // Apply final position and show
+  tooltip.style.visibility = 'visible';
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = finalTop + 'px';
+  tooltip.style.transform = finalTransform;
 
-  // Append to DOM and fade in from final position
-  document.body.appendChild(tooltip);
+  // Fade in
   requestAnimationFrame(() => {
     tooltip.style.opacity = '1';
   });
-
-  // Create progress dots
-  const progressDots = steps.map((_, index) => '<span class="tour-dot ' + (index === stepIndex ? 'active' : '') + ' ' + (index < stepIndex ? 'completed' : '') + '" data-step="' + index + '" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px;cursor:pointer;background:' + (index === stepIndex ? '#007bff' : index < stepIndex ? '#28a745' : '#ddd') + ';transition:all 0.2s;"></span>').join('');
-
-  tooltip.innerHTML = '<div style="position:relative;padding-right:24px;"><button class="tour-exit-btn" style="position:absolute;top:0;right:0;background:transparent;border:none;font-size:16px;cursor:pointer;color:var(--text, #666);padding:4px;line-height:1;">✕</button><div style="font-weight:bold;margin-bottom:8px;color:var(--text, #007bff);">' + step.title + '</div><div style="margin-bottom:16px;color:var(--text, #333);line-height:1.4;">' + step.content + '</div><div style="display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;"><div class="tour-navigation" style="display:flex;align-items:center;">' + (stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:18px;line-height:1;">‹</button>' : '<div style="width:32px;"></div>') + '<div class="tour-dots" style="display:flex;align-items:center;">' + progressDots + '</div>' + (stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background:#007bff;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:18px;line-height:1;">›</button>' : '<button class="tour-finish-btn" style="background:#28a745;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:16px;line-height:1;">✓</button>') + '</div></div></div>';
 
   // Add event listeners for navigation
   setTimeout(() => {
