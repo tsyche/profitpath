@@ -8,13 +8,11 @@ See README.md for setup and development instructions.
 
 ## Recently Completed ✅
 
-- Simple Visualizations: Utilization Gauge & Profit Waterfall (fixed arc math, proper value scaling, always visible, zone indicators)
-- Micro-interactions & Animation Polish (KPI flash on value change, modal entrance animations, card hover effects, enhanced focus states, smooth color transitions)
-- Experience Level Explanation Panel (shows feature availability by level)
-- Level Change Toast Notifications (brief feedback on level changes)
-- Feature Restriction Badges (visual indicators for locked features)
-- Documentation consolidation and CLAUDE.md integration
+- Bug fix: Tour tooltip positioning (removed CSS animation override, fixed position jumping during onboarding)
 - Bug fix: Mode switch now immediately updates mix lock checkbox visibility
+- Feature Restriction Badges (visual indicators for locked features)
+- Level Change Toast Notifications (brief feedback on level changes)
+- Experience Level Explanation Panel (shows feature availability by level)
 
 ---
 
