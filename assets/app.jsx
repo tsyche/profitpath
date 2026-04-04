@@ -569,7 +569,14 @@ function render() {
   // app.jsx standalone)
   function setKpi(id, value) {
     const el = document.getElementById(id);
-    if (el) el.textContent = String(value);
+    if (!el) return;
+    const str = String(value);
+    if (el.textContent !== str) {
+      el.textContent = str;
+      el.classList.remove('kpi-flash');
+      void el.offsetWidth; // force reflow to restart animation
+      el.classList.add('kpi-flash');
+    }
   }
   setKpi('kpiClients', fmtInt(metrics.clients));
   setKpi('kpiSessions', fmtInt(metrics.totalSessions));
@@ -668,6 +675,14 @@ function updateOutputs(metrics) {
 
 $$('#controls input').forEach((el) => {
   el.addEventListener('input', () => {
+    setStateFromInputs();
+    persistState();
+    render();
+  });
+});
+
+$$('#controls select').forEach((el) => {
+  el.addEventListener('change', () => {
     setStateFromInputs();
     persistState();
     render();
