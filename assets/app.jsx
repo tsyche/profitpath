@@ -2490,16 +2490,10 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
     if (!isMobile) finalTransform = finalTransform.replace('0', '-100%');
   }
 
-  // Apply final position and show
-  tooltip.style.visibility = 'visible';
+  // Set final position while still invisible (prevents jump)
   tooltip.style.left = left + 'px';
   tooltip.style.top = finalTop + 'px';
   tooltip.style.transform = finalTransform;
-
-  // Fade in
-  requestAnimationFrame(() => {
-    tooltip.style.opacity = '1';
-  });
 
   // Add event listeners for navigation
   setTimeout(() => {
@@ -2592,11 +2586,13 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
     }
   }, 10);
 
-  // Now show both tooltip and overlay together
+  // Double rAF: first frame commits layout, second frame reveals both together (prevents position jump)
   requestAnimationFrame(() => {
-    tooltip.style.visibility = 'visible';
-    tooltip.style.opacity = '1';
-    overlay.style.opacity = '1';
+    requestAnimationFrame(() => {
+      tooltip.style.visibility = 'visible';
+      tooltip.style.opacity = '1';
+      overlay.style.opacity = '1';
+    });
   });
 
   // Store overlay for cleanup
