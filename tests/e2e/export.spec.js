@@ -151,7 +151,7 @@ test.describe('Export Functionality - E2E', () => {
 
   test.describe('Export with Data Variations', () => {
     test('should handle export with zero employee count', async ({ page }) => {
-      await page.fill('#employees', '0');
+      await page.fill('#fullTimeEmployees', '0');
 
       const exportBtn = page.locator('#exportBtn');
       await expect(exportBtn).toBeVisible();
@@ -162,8 +162,8 @@ test.describe('Export Functionality - E2E', () => {
     });
 
     test('should handle export with large numbers', async ({ page }) => {
-      await page.fill('#employees', '100');
-      await page.fill('#employeePay', '500000');
+      await page.fill('#fullTimeEmployees', '100');
+      await page.fill('#fullTimeEmployeePay', '500000');
       await page.fill('#monthlyCosts', '50000');
 
       const exportBtn = page.locator('#exportBtn');
