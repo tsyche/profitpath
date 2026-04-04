@@ -152,7 +152,8 @@
           <p style="font-size: 12px; color: #374151; margin: 8px 0 4px 0;">
             Choose your experience level to unlock appropriate features
           </p>
-          <div id="levelDescription" class="settings-level-description" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border, #e5e7eb);">
+          <div id="levelDescription" class="settings-level-description"
+            style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border, #e5e7eb);">
             <!-- populated dynamically by JS -->
           </div>
         </div>
@@ -166,7 +167,9 @@
       <div class="settings-section">
         <h4>Analytics</h4>
         <div class="settings-options">
-          <button class="btn btn-secondary" onclick="if(window.profitPathAnalyticsUI) window.profitPathAnalyticsUI.showAnalyticsDashboard()" style="color: #000000;">📊 View Analytics</button>
+          <button class="btn btn-secondary"
+            onclick="if(window.profitPathAnalyticsUI) window.profitPathAnalyticsUI.showAnalyticsDashboard()"
+            style="color: #000000;">📊 View Analytics</button>
         </div>
       </div>
     </div>
@@ -355,8 +358,10 @@
 
             <div class="field" id="lockMixField" style="min-width: 210px;">
               <label title="Automatically adjust service mix percentages to equal 100%">Mix lock (forecast)</label>
-              <label class="hint" style="display:flex; gap:8px; align-items:center; user-select:none;" title="Automatically adjust service mix percentages to equal 100%">
-                <input id="lockMix" type="checkbox" title="Automatically adjust service mix percentages to equal 100%" />
+              <label class="hint" style="display:flex; gap:8px; align-items:center; user-select:none;"
+                title="Automatically adjust service mix percentages to equal 100%">
+                <input id="lockMix" type="checkbox"
+                  title="Automatically adjust service mix percentages to equal 100%" />
                 Auto-balance Mix % to 100%
               </label>
             </div>
@@ -364,44 +369,51 @@
             <div class="team-config-group">
               <div class="field">
                 <label title="Number of full-time team members (40 hrs/week)">Full-time employees</label>
-                <input id="fullTimeEmployees" type="number" min="0" step="1" value="1" title="Number of full-time team members" />
+                <input id="fullTimeEmployees" type="number" min="0" step="1" value="1"
+                  title="Number of full-time team members" />
                 <div class="hint">Full-time staff (40 hours per week).</div>
               </div>
 
               <div class="field">
                 <label title="Total salary cost per full-time employee">Full-time annual pay</label>
-                <input id="fullTimeEmployeePay" type="number" min="0" step="1000" value="60000" title="Total salary cost per full-time employee" />
+                <input id="fullTimeEmployeePay" type="number" min="0" step="1000" value="60000"
+                  title="Total salary cost per full-time employee" />
                 <div class="hint">Payroll for full-time staff ("you" excluded).</div>
               </div>
 
               <div class="field">
                 <label title="Number of part-time team members (20 hrs/week)">Part-time employees</label>
-                <input id="partTimeEmployees" type="number" min="0" step="1" value="0" title="Number of part-time team members" />
+                <input id="partTimeEmployees" type="number" min="0" step="1" value="0"
+                  title="Number of part-time team members" />
                 <div class="hint">Part-time staff (20 hours per week).</div>
               </div>
 
               <div class="field">
                 <label title="Total salary cost per part-time employee">Part-time annual pay</label>
-                <input id="partTimeEmployeePay" type="number" min="0" step="1000" value="30000" title="Total salary cost per part-time employee" />
+                <input id="partTimeEmployeePay" type="number" min="0" step="1000" value="30000"
+                  title="Total salary cost per part-time employee" />
                 <div class="hint">Payroll for part-time staff ("you" excluded).</div>
               </div>
             </div>
 
             <div class="field">
               <label title="Fixed monthly costs like rent, insurance, utilities">Overhead (monthly)</label>
-              <input id="monthlyCosts" type="number" min="0" step="10" value="250" title="Fixed monthly costs like rent, insurance, utilities" />
+              <input id="monthlyCosts" type="number" min="0" step="10" value="250"
+                title="Fixed monthly costs like rent, insurance, utilities" />
               <div class="hint">Converted to annual fixed costs.</div>
             </div>
 
             <div class="field">
               <label title="Percentage of paid hours available for billable work">Productive utilization</label>
-              <input id="productiveUtilizationPct" type="number" min="0" max="100" step="1" value="80" title="Percentage of paid hours available for billable work" />
+              <input id="productiveUtilizationPct" type="number" min="0" max="100" step="1" value="80"
+                title="Percentage of paid hours available for billable work" />
               <div class="hint">% of paid hours actually available for delivering sessions.</div>
             </div>
 
             <div class="field">
               <label title="Target capacity goal you're planning towards">Target utilization (forecasting)</label>
-              <input id="targetUtilizationPct" type="number" min="0" max="150" step="1" value="75" title="Target capacity goal you're planning towards" />
+              <input id="targetUtilizationPct" type="number" min="0" max="150" step="1" value="75"
+                title="Target capacity goal you're planning towards" />
               <div class="hint">Used only in Forecasting mode.</div>
             </div>
           </div>
@@ -411,7 +423,8 @@
           <div class="section-h">
             <h3>Service Offerings</h3>
             <div class="section-actions">
-              <button class="btn primary" id="addOfferingBtn" type="button" title="Add a new service offering to your business">Add offering</button>
+              <button class="btn primary" id="addOfferingBtn" type="button"
+                title="Add a new service offering to your business">Add offering</button>
             </div>
           </div>
 
@@ -457,9 +470,12 @@
         <div class="capacity" title="Current team utilization: how much of available billable hours are being used">
           <div style="min-width: 190px;">
             <div class="muted" style="font-size: 12px;">Capacity</div>
-            <div id="capacityLabel" style="font-weight: 650; margin-top: 4px;" title="Current team utilization: how much of available billable hours are being used">Utilization: 0.0%</div>
+            <div id="capacityLabel" style="font-weight: 650; margin-top: 4px;"
+              title="Current team utilization: how much of available billable hours are being used">Utilization: 0.0%
+            </div>
           </div>
-          <div class="meter" aria-hidden="true" title="Current team utilization: how much of available billable hours are being used">
+          <div class="meter" aria-hidden="true"
+            title="Current team utilization: how much of available billable hours are being used">
             <div id="capacityBar"></div>
           </div>
         </div>
@@ -509,7 +525,8 @@
             <div class="sub">Per-session costs</div>
           </div>
 
-          <div class="kpi" title="Revenue minus variable costs per client — how much each client contributes to covering overhead">
+          <div class="kpi"
+            title="Revenue minus variable costs per client — how much each client contributes to covering overhead">
             <div class="k">Contribution margin</div>
             <div class="v" id="kpiContributionMargin">$0</div>
             <div class="sub">Per client (revenue - variables)</div>
@@ -517,7 +534,8 @@
         </div>
 
         <div style="margin-top: 10px;" class="smallprint">
-          Assumptions: 2080 paid hours/year per employee; productive utilization converts paid hours into service hours.
+          Assumptions: 2080 paid hours/year per employee (1040 hours PT employees); productive utilization converts paid
+          hours into service hours.
         </div>
 
         <!-- Dedicated Break-even Section -->
