@@ -1124,6 +1124,12 @@ button:focus {
 }
 
 /* Break-even analysis section */
+.break-even-kpis {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .break-even-section {
   margin-top: 16px;
   padding: 14px;
