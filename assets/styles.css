@@ -2711,6 +2711,133 @@ input[type="checkbox"] {
   }
 }
 
+/* Side-by-Side Scenario Diff View */
+.scenario-diff-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.scenario-diff-header,
+.scenario-diff-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 1fr 90px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.scenario-diff-header {
+  font-weight: 600;
+  background: var(--surface, #f8f9fa);
+  border-bottom: 2px solid var(--border, #dee2e6);
+  margin-bottom: 4px;
+  padding: 8px;
+}
+
+.scenario-diff-row:nth-child(even) {
+  background: var(--surface, #f8f9fa);
+}
+
+.scenario-diff-row.scenario-diff-offering-row {
+  font-size: 13px;
+  padding: 4px 12px;
+}
+
+.scenario-diff-section-title {
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  padding: 10px 8px 4px;
+  margin-top: 8px;
+}
+
+.scenario-diff-offering {
+  margin-left: 12px;
+  padding: 8px;
+  border-left: 3px solid var(--border, #dee2e6);
+  margin-bottom: 8px;
+}
+
+.scenario-diff-offering-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text, #333);
+  margin-bottom: 4px;
+}
+
+.diff-col-label {
+  font-weight: 500;
+  color: var(--text, #555);
+}
+
+.diff-col-s1,
+.diff-col-s2 {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.diff-col-delta {
+  text-align: center;
+  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.diff-better {
+  color: #28a745;
+}
+
+.diff-worse {
+  color: #dc3545;
+}
+
+.diff-neutral {
+  color: var(--muted);
+}
+
+.diff-date {
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+@media (max-width: 768px) {
+  .scenario-diff-header,
+  .scenario-diff-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 6px 6px;
+  }
+
+  .diff-col-label {
+    grid-column: 1 / -1;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .diff-col-delta {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+
+  .scenario-diff-header {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .diff-col-s1 { text-align: center; }
+  .diff-col-s2 { text-align: center; }
+}
+
 /* Onboarding System Styles */
 .onboarding-dialog-overlay {
   backdrop-filter: blur(4px);

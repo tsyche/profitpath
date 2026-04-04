@@ -6,7 +6,7 @@ import { initTooltips, setTooltipsEnabled } from './utils/tooltipManager.js';
 import * as misc from './services/miscService';
 import * as businessLogic from './services/businessLogic';
 import { saveScenario, loadScenario, deleteScenario } from './services/scenarioService';
-import { closeScenarioModal } from './components/Modal.js';
+import { closeScenarioModal, createModal } from './components/Modal.js';
 import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL } from './services/miscService';
 import { uuid } from './utils/helpers';
 import { showConfirmationModal, showToast } from './services/modalService.js';
@@ -1663,21 +1663,148 @@ function handleComparison() {
   if (comparisonErrorEl) comparisonErrorEl.style.display = 'none'; // Hide previous error
 
   const { scenario1Id, scenario2Id } = getSelectedComparisonScenarios();
-  const scenarios = getAllScenarios();
 
-  const scenario1 = scenarios.find(s => s.id === scenario1Id);
-  const scenario2 = scenarios.find(s => s.id === scenario2Id);
-
-  if (!scenario1 || !scenario2) {
-    $('#comparisonResults').style.display = 'none';
+  if (!scenario1Id || !scenario2Id) {
+    const compRes = $('#comparisonResults');
+    if (compRes) compRes.style.display = 'none';
     return;
   }
 
-  // Calculate metrics for both scenarios
-  const metrics1 = calc(scenario1.data || scenario1.state); // Handle older scenario structure
-  const metrics2 = calc(scenario2.data || scenario2.state); // Handle older scenario structure
+  // Close the scenario modal and open the diff view
+  closeScenarioModal();
+  showScenarioComparisonDiff(scenario1Id, scenario2Id);
+}
 
-  renderComparisonResults(metrics1, metrics2);
+// Show full-width side-by-side scenario comparison diff
+function showScenarioComparisonDiff(id1, id2) {
+  const scenarios = getAllScenarios();
+  const scenario1 = scenarios.find(s => s.id === id1);
+  const scenario2 = scenarios.find(s => s.id === id2);
+
+  if (!scenario1 || !scenario2) {
+    alert('Unable to load scenarios for comparison');
+    return;
+  }
+
+  // Compute metrics for both scenarios
+  const metrics1 = calc(scenario1.data || scenario1.state);
+  const metrics2 = calc(scenario2.data || scenario2.state);
+
+  // Define metrics to compare with hints about what's "better"
+  const metricsToCompare = [
+    { label: 'Clients', key: 'clients', format: fmtInt, betterIsHigher: true },
+    { label: 'Revenue', key: 'revenue', format: fmtMoney0, betterIsHigher: true },
+    { label: 'Net Income', key: 'income', format: fmtMoney0, betterIsHigher: true },
+    { label: 'Utilization', key: 'capacityPct', format: fmtPct1, betterIsHigher: true },
+    { label: 'Fixed Costs', key: 'totalFixedCosts', format: fmtMoney0, betterIsHigher: false },
+    { label: 'Variable Costs', key: 'variableCosts', format: fmtMoney0, betterIsHigher: false },
+    { label: 'Break-even Clients', key: 'breakEvenClients', format: fmtInt, betterIsHigher: false },
+    { label: 'Contribution Margin/Client', key: 'contributionMarginPerClient', format: fmtMoney0, betterIsHigher: true }
+  ];
+
+  // Build header row
+  let contentHtml = '<div class="scenario-diff-wrap">';
+  contentHtml += '<div class="scenario-diff-header">';
+  contentHtml += '<div class="diff-col-label"></div>';
+  contentHtml += '<div class="diff-col-s1"><strong>' + scenario1.name + '</strong><span class="diff-date">' + scenario1.timestamp + '</span></div>';
+  contentHtml += '<div class="diff-col-s2"><strong>' + scenario2.name + '</strong><span class="diff-date">' + scenario2.timestamp + '</span></div>';
+  contentHtml += '<div class="diff-col-delta">Change</div>';
+  contentHtml += '</div>';
+
+  // Build summary metrics section
+  contentHtml += '<div class="scenario-diff-section-title">Summary</div>';
+
+  metricsToCompare.forEach(m => {
+    const val1 = metrics1[m.key];
+    const val2 = metrics2[m.key];
+    const delta = val2 - val1;
+    const deltaStr = m.format(delta);
+
+    // Determine diff class (better/worse/neutral)
+    let diffClass = 'diff-neutral';
+    if (delta !== 0) {
+      const isImprovement = m.betterIsHigher ? (delta > 0) : (delta < 0);
+      diffClass = isImprovement ? 'diff-better' : 'diff-worse';
+    }
+
+    const sign = delta > 0 ? '+' : '';
+    contentHtml += '<div class="scenario-diff-row">';
+    contentHtml += '<div class="diff-col-label">' + m.label + '</div>';
+    contentHtml += '<div class="diff-col-s1">' + m.format(val1) + '</div>';
+    contentHtml += '<div class="diff-col-s2">' + m.format(val2) + '</div>';
+    contentHtml += '<div class="diff-col-delta ' + diffClass + '">' + sign + deltaStr + '</div>';
+    contentHtml += '</div>';
+  });
+
+  // Per-offering breakdown (if offerings match by name)
+  if (metrics1.offeringMetrics && metrics2.offeringMetrics) {
+    const names1 = metrics1.offeringMetrics.map(o => o.name);
+    const names2 = metrics2.offeringMetrics.map(o => o.name);
+    const namesMatch = names1.length === names2.length && names1.every((n, i) => n === names2[i]);
+
+    if (namesMatch && metrics1.offeringMetrics.length > 0) {
+      contentHtml += '<div class="scenario-diff-section-title">By Offering</div>';
+
+      metrics1.offeringMetrics.forEach((off1, idx) => {
+        const off2 = metrics2.offeringMetrics[idx];
+        contentHtml += '<div class="scenario-diff-offering">';
+        contentHtml += '<div class="scenario-diff-offering-name">' + off1.name + '</div>';
+
+        // Revenue
+        const revDelta = off2.revenue - off1.revenue;
+        const revIsImp = revDelta > 0;
+        contentHtml += '<div class="scenario-diff-row scenario-diff-offering-row">';
+        contentHtml += '<div class="diff-col-label">Revenue</div>';
+        contentHtml += '<div class="diff-col-s1">' + fmtMoney0(off1.revenue) + '</div>';
+        contentHtml += '<div class="diff-col-s2">' + fmtMoney0(off2.revenue) + '</div>';
+        contentHtml += '<div class="diff-col-delta ' + (revDelta === 0 ? 'diff-neutral' : revIsImp ? 'diff-better' : 'diff-worse') + '">' + (revDelta > 0 ? '+' : '') + fmtMoney0(revDelta) + '</div>';
+        contentHtml += '</div>';
+
+        // Clients
+        const clientDelta = off2.clients - off1.clients;
+        const clientIsImp = clientDelta > 0;
+        contentHtml += '<div class="scenario-diff-row scenario-diff-offering-row">';
+        contentHtml += '<div class="diff-col-label">Clients</div>';
+        contentHtml += '<div class="diff-col-s1">' + fmtInt(off1.clients) + '</div>';
+        contentHtml += '<div class="diff-col-s2">' + fmtInt(off2.clients) + '</div>';
+        contentHtml += '<div class="diff-col-delta ' + (clientDelta === 0 ? 'diff-neutral' : clientIsImp ? 'diff-better' : 'diff-worse') + '">' + (clientDelta > 0 ? '+' : '') + fmtInt(clientDelta) + '</div>';
+        contentHtml += '</div>';
+
+        // Margin %
+        const marginPct1 = off1.marginPct || 0;
+        const marginPct2 = off2.marginPct || 0;
+        const marginDelta = marginPct2 - marginPct1;
+        const marginIsImp = marginDelta > 0;
+        contentHtml += '<div class="scenario-diff-row scenario-diff-offering-row">';
+        contentHtml += '<div class="diff-col-label">Margin %</div>';
+        contentHtml += '<div class="diff-col-s1">' + fmtPct1(marginPct1) + '</div>';
+        contentHtml += '<div class="diff-col-s2">' + fmtPct1(marginPct2) + '</div>';
+        contentHtml += '<div class="diff-col-delta ' + (marginDelta === 0 ? 'diff-neutral' : marginIsImp ? 'diff-better' : 'diff-worse') + '">' + (marginDelta > 0 ? '+' : '') + fmtPct1(marginDelta) + '</div>';
+        contentHtml += '</div>';
+
+        contentHtml += '</div>';
+      });
+    }
+  }
+
+  contentHtml += '</div>';
+
+  // Create and show modal
+  const modal = createModal({
+    title: 'Scenario Comparison: ' + scenario1.name + ' vs ' + scenario2.name,
+    content: contentHtml,
+    size: 'full'
+  });
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // Close on overlay click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
 }
 
 // Update scenarios list and comparison dropdowns when modal opens
@@ -2787,6 +2914,7 @@ if (typeof closeScenarioModal === 'function') window.closeScenarioModal = closeS
 if (typeof encodeScenarioToURL === 'function') window.encodeScenarioToURL = encodeScenarioToURL;
 if (typeof decodeScenarioFromURL === 'function') window.decodeScenarioFromURL = decodeScenarioFromURL;
 if (typeof loadScenarioFromURL === 'function') window.loadScenarioFromURL = loadScenarioFromURL;
+if (typeof showScenarioComparisonDiff === 'function') window.showScenarioComparisonDiff = showScenarioComparisonDiff;
 function _initializeScenarios() {
   // Set up scenarios button
   const scenariosBtn = document.getElementById('scenariosBtn');
