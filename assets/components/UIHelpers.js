@@ -415,94 +415,16 @@ export function openScenarioModal() {
 
 // Function to perform comparison within modal context
 export function performComparisonInModal(scenarioId1, scenarioId2, modal) {
-  const scenarios = getAllScenarios();
-
-  // Find scenarios by ID
-  const scenario1 = scenarios.find(s => s.id === scenarioId1);
-  const scenario2 = scenarios.find(s => s.id === scenarioId2);
-
-  if (!scenario1 || !scenario2) {
-    console.error('One or both scenarios not found');
-    return;
-  }
-
-  // Find results div within the modal
-  const resultsDiv = modal.querySelector('#comparisonResults') ||
-    modal.querySelector('.comparison-results');
-
-  if (!resultsDiv) {
-    console.error('Comparison results div not found in modal');
-    return;
-  }
-
-  // Show results first
-  resultsDiv.style.display = 'block';
-
-  // Look for tbody in the table wrapper or create it if missing
-  let tbody = null;
-  const tableWrap = resultsDiv.querySelector('.comparison-table-wrap');
-
-  if (tableWrap) {
-    tbody = tableWrap.querySelector('tbody');
-    if (!tbody) {
-      // Create tbody if it doesn't exist
-      const table = tableWrap.querySelector('table');
-      if (table) {
-        tbody = document.createElement('tbody');
-        table.appendChild(tbody);
-        console.log('Created missing tbody for comparison table');
-      }
+  // Delegate to the new full-width diff modal
+  if (typeof window.showScenarioComparisonDiff === 'function') {
+    window.showScenarioComparisonDiff(scenarioId1, scenarioId2);
+    // Close the current modal
+    if (modal && modal.parentNode) {
+      modal.parentNode.remove();
     }
+  } else {
+    console.error('showScenarioComparisonDiff is not available');
   }
-
-  if (!tbody) {
-    console.error('Comparison table tbody not found and could not be created');
-    return;
-  }
-
-  console.log('Performing comparison between scenarios:', scenario1.name, scenario2.name);
-
-  // Generate comparison data
-  const metrics = [
-    { label: 'Employees', value1: scenario1.state.employees, value2: scenario2.state.employees, format: 'number' },
-    { label: 'Employee Pay', value1: scenario1.state.employeePay, value2: scenario2.state.employeePay, format: 'currency' },
-    { label: 'Monthly Costs', value1: scenario1.state.monthlyCosts, value2: scenario2.state.monthlyCosts, format: 'currency' },
-    { label: 'Productive Utilization', value1: scenario1.state.productiveUtilizationPct, value2: scenario2.state.productiveUtilizationPct, format: 'percentage' },
-    { label: 'Target Utilization', value1: scenario1.state.targetUtilizationPct, value2: scenario2.state.targetUtilizationPct, format: 'percentage' },
-    { label: 'Total Offerings', value1: scenario1.state.offerings.length, value2: scenario2.state.offerings.length, format: 'number' }
-  ];
-
-  // Build table rows
-  tbody.innerHTML = metrics.map(metric => {
-    const diff = metric.value2 - metric.value1;
-    const diffClass = diff > 0 ? 'positive' : diff < 0 ? 'negative' : '';
-    const diffSymbol = diff > 0 ? '+' : '';
-
-    let formattedValue1 = metric.value1;
-    let formattedValue2 = metric.value2;
-    let formattedDiff = `${diffSymbol}${diff}`;
-
-    if (metric.format === 'currency') {
-      formattedValue1 = `$${metric.value1.toLocaleString()}`;
-      formattedValue2 = `$${metric.value2.toLocaleString()}`;
-      formattedDiff = `${diffSymbol}$${Math.abs(diff).toLocaleString()}`;
-    } else if (metric.format === 'percentage') {
-      formattedValue1 = `${metric.value1}%`;
-      formattedValue2 = `${metric.value2}%`;
-      formattedDiff = `${diffSymbol}${diff}%`;
-    }
-
-    return `
-      <tr>
-        <td>${metric.label}</td>
-        <td>${formattedValue1}</td>
-        <td>${formattedValue2}</td>
-        <td class="${diffClass}">${formattedDiff}</td>
-      </tr>
-    `;
-  }).join('');
-
-  console.log('Comparison table populated successfully');
 }
 
 export function performComparison(scenarioId1, scenarioId2) {
