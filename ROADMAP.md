@@ -90,6 +90,32 @@ See README.md for setup and development instructions.
    - Touch gesture support
    - Effort: ~3-4 hours
 
+**Visual Design & Cutting-Edge Polish (4-8 Hour Tasks)**
+
+9a. Micro-interactions & Animation Polish
+   - Smooth number animations for KPI values changing (animated counters)
+   - Enhanced button/input focus states with visual feedback
+   - Hover effects on cards revealing additional context
+   - Subtle scale transforms and transitions on interactive elements
+   - Smoother modal/toast entrance animations
+   - Effort: ~3-4 hours
+
+9b. Modern Visual Effects & Color Enhancement
+   - Glassmorphism effects on modals, cards, or overlays (backdrop blur)
+   - Subtle gradient layers on KPI boxes and section headers
+   - Enhanced color contrast and accent color usage (subtle glows on focus)
+   - Refined typography hierarchy and visual rhythm
+   - Better distinction between different section types
+   - Effort: ~2-3 hours
+
+9c. Data Visualization & Visual Indicators
+   - Replace text-only KPI displays with visual indicators (progress rings, gauges)
+   - Animated progress circles for utilization percentages
+   - Visual break-even indicators (danger/warning/success states)
+   - Smooth transitions when data updates
+   - Visual feedback for scenario changes
+   - Effort: ~4-5 hours
+
 **Advanced Visualizations & Analytics (4-6 Hour Tasks)**
 
 10. Advanced Chart Types
@@ -162,11 +188,15 @@ See README.md for setup and development instructions.
 - **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating.
 - **Latest milestone**: Experience level UX improvements completed (explanation panel, toast notifications, feature badges).
 - **Next priorities**: 
-  1. Simple visualizations (utilization gauge & profit waterfall) — high impact, enables advanced analytics
-  2. Interactive scenario comparison (side-by-side diff view)
-  3. Data import feature (CSV/Excel bootstrap) — strong competitive advantage
-- **Strategic positioning**: Data import and industry benchmarks are notable gaps vs. competitors and should be prioritized for market differentiation.
-- **Quick wins available**: Undo/redo (2-3 hrs) and performance dashboard (3-4 hrs) have outsized UX impact.
+  1. Visual design polish (micro-interactions, animations, visual indicators) — makes app feel cutting-edge and modern
+  2. Simple visualizations (utilization gauge & profit waterfall) — high impact, enables advanced analytics
+  3. Interactive scenario comparison (side-by-side diff view)
+  4. Data import feature (CSV/Excel bootstrap) — strong competitive advantage
+- **Strategic positioning**: Data import and industry benchmarks are notable gaps vs. competitors and should be prioritized for market differentiation. Visual polish (glassmorphism, animations, micro-interactions) will elevate perceived quality and feel more modern/cutting-edge.
+- **Quick wins available**: 
+  - Micro-interactions & animations (3-4 hrs) have high perceived value with modest effort
+  - Number animations and visual indicators (4-5 hrs) make KPI displays more dynamic
+  - Undo/redo (2-3 hrs) and performance dashboard (3-4 hrs) have outsized UX impact
 - **Enterprise features (items 14-17) are deferred**: Represent significant scope expansion and require backend infrastructure. Validate market demand before investing.
 
 ### Test Coverage Status
