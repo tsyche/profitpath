@@ -699,11 +699,14 @@ export function populateComparisonDropdowns(modalContext = null) {
   if (!dropdown1 || !dropdown2) {
     const modals = document.querySelectorAll('.modal-overlay');
     modals.forEach(modal => {
-      if (!dropdown1) {
-        dropdown1 = modal.querySelector('#compareScenario1');
-      }
-      if (!dropdown2) {
-        dropdown2 = modal.querySelector('#compareScenario2');
+      // Ensure modal is a proper DOM element before calling querySelector
+      if (modal && modal.querySelector && typeof modal.querySelector === 'function') {
+        if (!dropdown1) {
+          dropdown1 = modal.querySelector('#compareScenario1');
+        }
+        if (!dropdown2) {
+          dropdown2 = modal.querySelector('#compareScenario2');
+        }
       }
     });
   }

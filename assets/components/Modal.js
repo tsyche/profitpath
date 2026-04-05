@@ -1,5 +1,5 @@
 // Consistent Modal Component for ProfitPath
-export function createModal({ title, content, buttons = [], size = 'medium' }) {
+export function createModal({ title, content, buttons = [], size = 'medium', onClose = null }) {
   // Create overlay
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -76,7 +76,11 @@ export function createModal({ title, content, buttons = [], size = 'medium' }) {
   document.body.appendChild(overlay);
 
   // Event listeners
-  const closeModal = () => overlay.remove();
+  const closeModal = () => {
+    overlay.remove();
+    document.removeEventListener('keydown', handleEsc);
+    if (typeof onClose === 'function') onClose();
+  };
 
   // Close on overlay click
   overlay.addEventListener('click', (e) => {
