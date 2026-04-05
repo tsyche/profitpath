@@ -1724,6 +1724,7 @@ function showScenarioComparisonDiff(id1, id2) {
 
   // Build summary metrics section
   contentHtml += '<div class="scenario-diff-section-title">Summary</div>';
+  contentHtml += '<div class="scenario-diff-table">';
 
   metricsToCompare.forEach(m => {
     const val1 = metrics1[m.key];
@@ -1747,6 +1748,8 @@ function showScenarioComparisonDiff(id1, id2) {
     contentHtml += '</div>';
   });
 
+  contentHtml += '</div>';
+
   // Add export and sharing options
   contentHtml += '<div class="scenario-diff-section-title">Export & Share</div>';
   contentHtml += '<div class="scenario-diff-export-options" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">';
@@ -1769,6 +1772,7 @@ function showScenarioComparisonDiff(id1, id2) {
         const off2 = metrics2.offeringMetrics[idx];
         contentHtml += '<div class="scenario-diff-offering">';
         contentHtml += '<div class="scenario-diff-offering-name">' + off1.name + '</div>';
+        contentHtml += '<div class="scenario-diff-table">';
 
         // Revenue
         const revDelta = off2.revenue - off1.revenue;
@@ -1802,6 +1806,7 @@ function showScenarioComparisonDiff(id1, id2) {
         contentHtml += '<div class="diff-col-delta ' + (marginDelta === 0 ? 'diff-neutral' : marginIsImp ? 'diff-better' : 'diff-worse') + '">' + (marginDelta > 0 ? '+' : '') + fmtPct1(marginDelta) + '</div>';
         contentHtml += '</div>';
 
+        contentHtml += '</div>';
         contentHtml += '</div>';
       });
     }
