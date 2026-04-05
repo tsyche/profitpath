@@ -1,5 +1,5 @@
 import { loadScenario, deleteScenario } from "../services/scenarioService";
-import { getAllScenarios, escapeHtml } from "../services/miscService";
+import { getAllScenarios, escapeHtml, populateComparisonDropdowns } from "../services/miscService";
 import { showConfirmationModal, showToast } from "../services/modalService";
 import { createModal } from "../components/Modal";
 
@@ -512,59 +512,6 @@ export function performComparison(scenarioId1, scenarioId2) {
 
   // Show results
   resultsDiv.style.display = 'block';
-}
-
-// Function to refresh scenarios list and dropdowns
-export function refreshScenariosList(modal) {
-  console.log('Refreshing scenarios list...');
-
-  // Refresh scenarios list - sorted naturally (so "2" comes before "10")
-  const allScenarios = getAllScenarios().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
-  const scenariosList = allScenarios.map(s => {
-    const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
-    const ts = escapeHtml(s.timestamp || s.createdAt || '');
-    return `
-<div class="scenario-item" data-scenario-id="${s.id}">
-<div>
-<div class="scenario-item-name">${name}</div>
-<div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
-</div>
-<div class="scenario-item-actions">
-<button class="btn small load-btn" data-scenario-id="${s.id}">Load</button>
-<button class="btn small danger delete-btn" data-scenario-id="${s.id}">Delete</button>
-</div>
-</div>
-`;
-  }).join('');
-
-  const scenariosListContainer = modal.querySelector('#scenariosList');
-  if (scenariosListContainer) {
-    scenariosListContainer.innerHTML = allScenarios.length === 0 ?
-      '<div class="empty-state">No saved scenarios yet. Save one above!</div>' :
-      scenariosList;
-  }
-
-  // Immediately populate comparison dropdowns with modal context
-  console.log('Immediately populating comparison dropdowns...');
-  import('../services/miscService.js').then((miscService) => {
-    miscService.populateComparisonDropdowns(modal);
-  });
-
-  // Also try after a short delay to ensure DOM is ready
-  setTimeout(() => {
-    console.log('Retrying dropdown population after 100ms...');
-    import('../services/miscService.js').then((miscService) => {
-      miscService.populateComparisonDropdowns(modal);
-    });
-  }, 100);
-
-  // And one more time after a longer delay to ensure localStorage is updated
-  setTimeout(() => {
-    console.log('Final dropdown population after 300ms...');
-    import('../services/miscService.js').then((miscService) => {
-      miscService.populateComparisonDropdowns(modal);
-    });
-  }, 300);
 }
 
 export function renderScenariosList() {

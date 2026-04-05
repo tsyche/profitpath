@@ -1677,9 +1677,20 @@ function handleComparison() {
 
 // Show full-width side-by-side scenario comparison diff
 function showScenarioComparisonDiff(id1, id2) {
-  const scenarios = getAllScenarios();
-  const scenario1 = scenarios.find(s => s.id === id1);
-  const scenario2 = scenarios.find(s => s.id === id2);
+  // Check for temp comparison scenarios first (from shared links), then use saved scenarios
+  let tempScenarios = [];
+  const tempData = localStorage.getItem('profitpath-temp-compare');
+  if (tempData) {
+    try {
+      tempScenarios = JSON.parse(tempData);
+    } catch (e) {
+      console.warn('Failed to parse temp comparison data:', e);
+    }
+  }
+
+  const allScenarios = [...tempScenarios, ...getAllScenarios()];
+  const scenario1 = allScenarios.find(s => s.id === id1);
+  const scenario2 = allScenarios.find(s => s.id === id2);
 
   if (!scenario1 || !scenario2) {
     alert('Unable to load scenarios for comparison');
@@ -1736,6 +1747,15 @@ function showScenarioComparisonDiff(id1, id2) {
     contentHtml += '</div>';
   });
 
+  // Add export and sharing options
+  contentHtml += '<div class="scenario-diff-section-title">Export & Share</div>';
+  contentHtml += '<div class="scenario-diff-export-options" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">';
+  contentHtml += '<button class="btn primary" onclick="window.exportComparisonAsCSV(\'' + id1 + '\', \'' + id2 + '\')">📊 Export CSV</button>';
+  contentHtml += '<button class="btn secondary" onclick="window.shareComparison(\'' + id1 + '\', \'' + id2 + '\')">🔗 Share Comparison</button>';
+  contentHtml += '<button class="btn secondary" onclick="window.exportComparisonAsPDF(\'' + id1 + '\', \'' + id2 + '\')">📄 Export PDF</button>';
+  contentHtml += '<button class="btn secondary" onclick="window.getComparisonEmbedCode(\'' + id1 + '\', \'' + id2 + '\')">📋 Get Embed Code</button>';
+  contentHtml += '</div>';
+
   // Per-offering breakdown (if offerings match by name)
   if (metrics1.offeringMetrics && metrics2.offeringMetrics) {
     const names1 = metrics1.offeringMetrics.map(o => o.name);
@@ -1789,11 +1809,182 @@ function showScenarioComparisonDiff(id1, id2) {
 
   contentHtml += '</div>';
 
-  // Create and show modal
-  const modal = createModal({
+  // Create and show modal with onClose callback to return to scenarios
+  createModal({
     title: 'Scenario Comparison: ' + scenario1.name + ' vs ' + scenario2.name,
     content: contentHtml,
-    size: 'full'
+    size: 'full',
+    onClose: () => openScenarioModal()
+  });
+}
+
+// Export comparison as CSV
+window.exportComparisonAsCSV = function (id1, id2) {
+  const scenarios = getAllScenarios();
+  const scenario1 = scenarios.find(s => s.id === id1);
+  const scenario2 = scenarios.find(s => s.id === id2);
+
+  if (!scenario1 || !scenario2) {
+    alert('Unable to load scenarios for export');
+    return;
+  }
+
+  const metrics1 = calc(scenario1.data || scenario1.state);
+  const metrics2 = calc(scenario2.data || scenario2.state);
+
+  // Create CSV content
+  let csvContent = 'Metric,' + scenario1.name + ',' + scenario2.name + ',Change\n';
+
+  const metricsToCompare = [
+    { label: 'Clients', key: 'clients', format: fmtInt },
+    { label: 'Revenue', key: 'revenue', format: fmtMoney0 },
+    { label: 'Net Income', key: 'income', format: fmtMoney0 },
+    { label: 'Utilization', key: 'capacityPct', format: fmtPct1 },
+    { label: 'Fixed Costs', key: 'totalFixedCosts', format: fmtMoney0 },
+    { label: 'Variable Costs', key: 'variableCosts', format: fmtMoney0 },
+    { label: 'Break-even Clients', key: 'breakEvenClients', format: fmtInt },
+    { label: 'Contribution Margin/Client', key: 'contributionMarginPerClient', format: fmtMoney0 }
+  ];
+
+  metricsToCompare.forEach(m => {
+    const val1 = metrics1[m.key];
+    const val2 = metrics2[m.key];
+    const delta = val2 - val1;
+    const sign = delta > 0 ? '+' : '';
+
+    csvContent += m.label + ',' + m.format(val1) + ',' + m.format(val2) + ',' + sign + m.format(delta) + '\n';
+  });
+
+  // Download CSV
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `scenario-comparison-${scenario1.name}-vs-${scenario2.name}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// Share comparison link with full scenario state encoded in URL
+window.shareComparison = function (id1, id2) {
+  const scenarios = getAllScenarios();
+  const scenario1 = scenarios.find(s => s.id === id1);
+  const scenario2 = scenarios.find(s => s.id === id2);
+
+  if (!scenario1 || !scenario2) {
+    alert('Unable to load scenarios for sharing');
+    return;
+  }
+
+  // Encode both scenario states into URL as base64 JSON
+  const statePayload = btoa(JSON.stringify({
+    s1: { name: scenario1.name, state: scenario1.state },
+    s2: { name: scenario2.name, state: scenario2.state }
+  }));
+  const shareUrl = window.location.origin + window.location.pathname + '?compareStates=' + encodeURIComponent(statePayload);
+
+  // Copy to clipboard
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    showToast('Comparison link copied to clipboard!');
+  }).catch(() => {
+    // Fallback: show modal with link to copy manually
+    createModal({
+      title: 'Share Comparison',
+      content: `<p>Share this comparison link:</p><textarea readonly style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 12px; min-height: 80px; word-break: break-all;">${shareUrl}</textarea>`,
+      size: 'medium'
+    });
+  });
+};
+
+// Export comparison as PDF
+window.exportComparisonAsPDF = function (id1, id2) {
+  const scenarios = getAllScenarios();
+  const scenario1 = scenarios.find(s => s.id === id1);
+  const scenario2 = scenarios.find(s => s.id === id2);
+
+  if (!scenario1 || !scenario2) {
+    alert('Unable to load scenarios for export');
+    return;
+  }
+
+  // Create a printable version of the comparison
+  const printWindow = window.open('', '_blank');
+  const metrics1 = calc(scenario1.data || scenario1.state);
+  const metrics2 = calc(scenario2.data || scenario2.state);
+
+  let printContent = `
+    <html>
+      <head>
+        <title>Scenario Comparison: ${scenario1.name} vs ${scenario2.name}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          h1 { color: #333; }
+          table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
+          .positive { color: green; }
+          .negative { color: red; }
+        </style>
+      </head>
+      <body>
+        <h1>Scenario Comparison</h1>
+        <h2>${scenario1.name} vs ${scenario2.name}</h2>
+        <table>
+          <tr><th>Metric</th><th>${scenario1.name}</th><th>${scenario2.name}</th><th>Change</th></tr>
+  `;
+
+  const metricsToCompare = [
+    { label: 'Clients', key: 'clients', format: fmtInt },
+    { label: 'Revenue', key: 'revenue', format: fmtMoney0 },
+    { label: 'Net Income', key: 'income', format: fmtMoney0 },
+    { label: 'Utilization', key: 'capacityPct', format: fmtPct1 }
+  ];
+
+  metricsToCompare.forEach(m => {
+    const val1 = metrics1[m.key];
+    const val2 = metrics2[m.key];
+    const delta = val2 - val1;
+    const sign = delta > 0 ? '+' : '';
+    const changeClass = delta > 0 ? 'positive' : delta < 0 ? 'negative' : '';
+
+    printContent += `<tr><td>${m.label}</td><td>${m.format(val1)}</td><td>${m.format(val2)}</td><td class="${changeClass}">${sign}${m.format(delta)}</td></tr>`;
+  });
+
+  printContent += `
+        </table>
+        <p>Generated on ${new Date().toLocaleDateString()}</p>
+      </body>
+    </html>
+  `;
+
+  printWindow.document.write(printContent);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+};
+
+// Get embed code for comparison
+window.getComparisonEmbedCode = function (id1, id2) {
+  const scenarios = getAllScenarios();
+  const scenario1 = scenarios.find(s => s.id === id1);
+  const scenario2 = scenarios.find(s => s.id === id2);
+
+  if (!scenario1 || !scenario2) {
+    alert('Unable to load scenarios for embed code');
+    return;
+  }
+
+  const embedUrl = window.location.origin + window.location.pathname + '?compare=' + id1 + ',' + id2 + '&embed=true';
+  const embedCode = `<iframe src="${embedUrl}" width="800" height="600" frameborder="0"></iframe>`;
+
+  const modal = createModal({
+    title: 'Embed Comparison',
+    content: `
+      <p>Copy this embed code to add the comparison to your website:</p>
+      <textarea readonly style="width: 100%; height: 100px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;">${embedCode}</textarea>
+      <p style="margin-top: 10px; font-size: 12px; color: #666;">Preview: <a href="${embedUrl}" target="_blank">Open in new tab</a></p>
+    `,
+    size: 'medium'
   });
 
   const overlay = document.createElement('div');
@@ -1801,11 +1992,15 @@ function showScenarioComparisonDiff(id1, id2) {
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
 
-  // Close on overlay click
+  // Select the textarea text
+  const textarea = overlay.querySelector('textarea');
+  textarea.select();
+
+  // Close handlers
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
   });
-}
+};
 
 // Update scenarios list and comparison dropdowns when modal opens
 const scenariosModal = $('#scenariosModal');
@@ -1865,20 +2060,10 @@ if (scenariosModal) {
   populateComparisonDropdowns();
 }
 
-// Event listeners for comparison dropdowns and button
+// Event listener for compare button (dropdown changes no longer auto-trigger)
 const compareBtn = $('#compareBtn');
 if (compareBtn) {
   compareBtn.addEventListener('click', handleComparison);
-}
-
-const compareScenario1 = $('#compareScenario1');
-if (compareScenario1) {
-  compareScenario1.addEventListener('change', handleComparison);
-}
-
-const compareScenario2 = $('#compareScenario2');
-if (compareScenario2) {
-  compareScenario2.addEventListener('change', handleComparison);
 }
 
 // Load scenario from URL first (if present), then localStorage
@@ -1890,6 +2075,24 @@ if (typeof loadSpecificTestScenario === 'function') {
   const testScenarios = getTestScenarios();
   if (Object.keys(testScenarios).length > 0) {
     loadSpecificTestScenario(Object.keys(testScenarios).find(key => new URLSearchParams(window.location.search).get('testScenario') === key));
+  }
+}
+
+// Check for shared comparison link
+const compareStatesParam = new URLSearchParams(window.location.search).get('compareStates');
+if (compareStatesParam) {
+  try {
+    const payload = JSON.parse(atob(decodeURIComponent(compareStatesParam)));
+    if (payload.s1 && payload.s2) {
+      // Create temporary comparison scenarios in localStorage
+      const tempScenarios = [
+        { id: 'temp-s1', name: payload.s1.name, timestamp: new Date().toLocaleString(), state: payload.s1.state },
+        { id: 'temp-s2', name: payload.s2.name, timestamp: new Date().toLocaleString(), state: payload.s2.state }
+      ];
+      localStorage.setItem('profitpath-temp-compare', JSON.stringify(tempScenarios));
+    }
+  } catch (e) {
+    console.warn('Failed to decode comparison link:', e);
   }
 }
 
@@ -1905,6 +2108,27 @@ try {
   console.error('Render failed:', e);
   const dbg = $('#debugPanel');
   if (dbg) dbg.textContent = 'Render error: ' + (e && e.stack ? e.stack : String(e));
+}
+
+// Auto-open comparison if shared link was used
+const tempCompareData = localStorage.getItem('profitpath-temp-compare');
+if (tempCompareData && compareStatesParam) {
+  try {
+    const tempScenarios = JSON.parse(tempCompareData);
+    if (tempScenarios.length === 2) {
+      // Delay to ensure modal is ready
+      setTimeout(() => {
+        window.showScenarioComparisonDiff('temp-s1', 'temp-s2');
+        // Clean up the temp data from localStorage
+        localStorage.removeItem('profitpath-temp-compare');
+        // Remove the compareStates param from the URL
+        const newUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      }, 100);
+    }
+  } catch (e) {
+    console.warn('Failed to auto-open shared comparison:', e);
+  }
 }
 
 // Export key functions for testing and external usage
