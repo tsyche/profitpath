@@ -2649,6 +2649,8 @@ input[type="checkbox"] {
   /* Remove border as it's handled by wrapper */
   background: transparent;
   /* Remove background as it's handled by wrapper */
+  table-layout: fixed;
+  /* Use fixed layout for even column distribution */
 }
 
 .comparison-table th,
@@ -2656,6 +2658,41 @@ input[type="checkbox"] {
   padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid var(--border);
+}
+
+/* Even column widths for balanced layout */
+.comparison-table th:nth-child(1),
+.comparison-table td:nth-child(1) {
+  width: 25%;
+}
+
+/* Metric name */
+.comparison-table th:nth-child(2),
+.comparison-table td:nth-child(2) {
+  width: 25%;
+}
+
+/* Scenario 1 */
+.comparison-table th:nth-child(3),
+.comparison-table td:nth-child(3) {
+  width: 25%;
+}
+
+/* Scenario 2 */
+.comparison-table th:nth-child(4),
+.comparison-table td:nth-child(4) {
+  width: 25%;
+}
+
+/* Difference */
+
+/* Alternating row colors */
+.comparison-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.comparison-table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .comparison-table th {
@@ -2717,6 +2754,45 @@ input[type="checkbox"] {
   flex-direction: column;
   gap: 2px;
   font-size: 14px;
+}
+
+.scenario-diff-export-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--surface, #f8f9fa);
+  border-radius: 8px;
+  border: 1px solid var(--border, #dee2e6);
+}
+
+.scenario-diff-export-options .btn {
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #dee2e6);
+  background: white;
+  color: var(--text, #333);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.scenario-diff-export-options .btn:hover {
+  background: var(--accent, #5eead4);
+  color: white;
+  border-color: var(--accent, #5eead4);
+}
+
+.scenario-diff-export-options .btn.primary {
+  background: var(--accent, #5eead4);
+  color: white;
+  border-color: var(--accent, #5eead4);
+}
+
+.scenario-diff-export-options .btn.primary:hover {
+  background: #2dd4bf;
+  border-color: #2dd4bf;
 }
 
 .scenario-diff-header,
@@ -2810,6 +2886,7 @@ input[type="checkbox"] {
 }
 
 @media (max-width: 768px) {
+
   .scenario-diff-header,
   .scenario-diff-row {
     grid-template-columns: 1fr 1fr;
@@ -2834,8 +2911,13 @@ input[type="checkbox"] {
     grid-template-columns: 1fr 1fr;
   }
 
-  .diff-col-s1 { text-align: center; }
-  .diff-col-s2 { text-align: center; }
+  .diff-col-s1 {
+    text-align: center;
+  }
+
+  .diff-col-s2 {
+    text-align: center;
+  }
 }
 
 /* Onboarding System Styles */
@@ -2946,10 +3028,12 @@ input[type="checkbox"] {
     color: inherit;
     transform: scale(1);
   }
+
   40% {
     color: var(--accent, #5eead4);
     transform: scale(1.04);
   }
+
   100% {
     color: inherit;
     transform: scale(1);
@@ -2960,6 +3044,7 @@ input[type="checkbox"] {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -2970,6 +3055,7 @@ input[type="checkbox"] {
     opacity: 0;
     transform: translateY(-12px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
