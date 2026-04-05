@@ -2771,34 +2771,34 @@ input[type="checkbox"] {
   font-size: 13px;
   padding: 8px 16px;
   border-radius: 6px;
-  border: 1px solid var(--border, #dee2e6);
-  background: white;
-  color: var(--text, #333);
+  border: 1px solid #007bff;
+  background: #007bff;
+  color: white;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .scenario-diff-export-options .btn:hover {
-  background: var(--accent, #5eead4);
+  background: #0056b3;
+  border-color: #0056b3;
   color: white;
-  border-color: var(--accent, #5eead4);
 }
 
 .scenario-diff-export-options .btn.primary {
-  background: var(--accent, #5eead4);
+  background: #007bff;
   color: white;
-  border-color: var(--accent, #5eead4);
+  border-color: #007bff;
 }
 
 .scenario-diff-export-options .btn.primary:hover {
-  background: #2dd4bf;
-  border-color: #2dd4bf;
+  background: #0056b3;
+  border-color: #0056b3;
 }
 
 .scenario-diff-header,
 .scenario-diff-row {
   display: grid;
-  grid-template-columns: 180px 1fr 1fr 90px;
+  grid-template-columns: 1.5fr 2fr 2fr 1fr;
   gap: 8px;
   align-items: center;
   padding: 6px 8px;
@@ -2813,8 +2813,13 @@ input[type="checkbox"] {
   padding: 8px;
 }
 
-.scenario-diff-row:nth-child(even) {
-  background: var(--surface, #f8f9fa);
+/* Zebra striping for metric rows inside .scenario-diff-table */
+.scenario-diff-table .scenario-diff-row:nth-child(odd) {
+  background: transparent;
+}
+
+.scenario-diff-table .scenario-diff-row:nth-child(even) {
+  background: rgba(0, 123, 255, 0.04);
 }
 
 .scenario-diff-row.scenario-diff-offering-row {
@@ -2885,38 +2890,69 @@ input[type="checkbox"] {
   margin-top: 2px;
 }
 
-@media (max-width: 768px) {
-
-  .scenario-diff-header,
-  .scenario-diff-row {
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    padding: 6px 6px;
-  }
-
-  .diff-col-label {
-    grid-column: 1 / -1;
-    font-weight: 600;
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 2px;
-  }
-
-  .diff-col-delta {
-    grid-column: 1 / -1;
-    text-align: left;
-  }
+@media (max-width: 600px) {
+  /* Mobile: 2-row layout per metric */
+  /* Row 1: label (left) | delta (right) */
+  /* Row 2: s1 (left, muted) | s2 (right, muted) */
 
   .scenario-diff-header {
     grid-template-columns: 1fr 1fr;
+    padding: 8px;
+  }
+
+  .scenario-diff-header .diff-col-label,
+  .scenario-diff-header .diff-col-delta {
+    display: none;
+  }
+
+  .scenario-diff-header .diff-col-s1 {
+    grid-column: 1;
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .scenario-diff-header .diff-col-s2 {
+    grid-column: 2;
+    text-align: right;
+    font-weight: 600;
+  }
+
+  .scenario-diff-row {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 2px 8px;
+    padding: 6px 8px;
+  }
+
+  .diff-col-label {
+    grid-column: 1;
+    grid-row: 1;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
   }
 
   .diff-col-s1 {
-    text-align: center;
+    grid-column: 1;
+    grid-row: 2;
+    text-align: left;
+    font-size: 12px;
+    color: var(--muted);
   }
 
   .diff-col-s2 {
-    text-align: center;
+    grid-column: 2;
+    grid-row: 2;
+    text-align: right;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .diff-col-delta {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+    font-size: 13px;
   }
 }
 
