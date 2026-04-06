@@ -2798,11 +2798,15 @@ input[type="checkbox"] {
 .scenario-diff-header,
 .scenario-diff-row {
   display: grid;
-  grid-template-columns: 1.5fr 2fr 2fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   align-items: center;
   padding: 6px 8px;
   border-radius: 4px;
+}
+
+.diff-col-label {
+  overflow-wrap: break-word;
 }
 
 .scenario-diff-header {
@@ -2890,69 +2894,126 @@ input[type="checkbox"] {
   margin-top: 2px;
 }
 
+/* Override colors for comparison modal (white background) */
+.modal-content .scenario-diff-wrap,
+.modal-content .scenario-diff-header,
+.modal-content .scenario-diff-row,
+.modal-content .diff-col-label,
+.modal-content .diff-col-s1,
+.modal-content .diff-col-s2,
+.modal-content .diff-col-delta,
+.modal-content .scenario-diff-section-title,
+.modal-content .scenario-diff-offering-name,
+.modal-content .diff-date {
+  color: #1a1a1a !important;
+}
+
+.modal-content .diff-date {
+  color: #666 !important;
+}
+
+.modal-content .scenario-diff-section-title {
+  color: #555 !important;
+}
+
+.modal-content .scenario-diff-header {
+  background: #f5f5f5 !important;
+  border-bottom-color: #ddd !important;
+}
+
+.modal-content .scenario-diff-row:nth-child(even) {
+  background: #fafafa !important;
+}
+
+.modal-content .scenario-diff-row:nth-child(odd) {
+  background: white !important;
+}
+
 @media (max-width: 600px) {
-  /* Mobile: 2-row layout per metric */
-  /* Row 1: label (left) | delta (right) */
-  /* Row 2: s1 (left, muted) | s2 (right, muted) */
+  /* Mobile: simplified card layout, show only 4 key metrics */
+  .scenario-diff-header { display: none; }
 
-  .scenario-diff-header {
-    grid-template-columns: 1fr 1fr;
-    padding: 8px;
+  .scenario-diff-mobile-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 8px;
+    font-weight: 700;
+    border-bottom: 2px solid #007bff;
+    margin-bottom: 8px;
+    gap: 8px;
   }
 
-  .scenario-diff-header .diff-col-label,
-  .scenario-diff-header .diff-col-delta {
-    display: none;
-  }
-
-  .scenario-diff-header .diff-col-s1 {
-    grid-column: 1;
-    text-align: left;
-    font-weight: 600;
-  }
-
-  .scenario-diff-header .diff-col-s2 {
-    grid-column: 2;
-    text-align: right;
-    font-weight: 600;
+  .scenario-diff-mobile-header span {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
   }
 
   .scenario-diff-row {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    gap: 2px 8px;
-    padding: 6px 8px;
+    display: block;
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border);
+    margin: 0;
   }
 
+  .scenario-diff-row[data-mobile-hide="true"] { display: none; }
+
   .diff-col-label {
-    grid-column: 1;
-    grid-row: 1;
     font-weight: 600;
     font-size: 13px;
     color: var(--text);
-  }
-
-  .diff-col-s1 {
-    grid-column: 1;
-    grid-row: 2;
-    text-align: left;
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .diff-col-s2 {
-    grid-column: 2;
-    grid-row: 2;
-    text-align: right;
-    font-size: 12px;
-    color: var(--muted);
+    display: inline;
+    margin: 0;
+    overflow-wrap: break-word;
   }
 
   .diff-col-delta {
-    grid-column: 2;
-    grid-row: 1;
-    text-align: right;
     font-size: 13px;
+    font-weight: 600;
+    float: right;
+    text-align: right;
+    display: inline;
+    margin: 0;
+  }
+
+  .diff-col-s1,
+  .diff-col-s2 {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0;
+    text-align: left;
+  }
+
+  .diff-col-s1 {
+    display: block;
+    text-align: left;
+    margin-top: 4px;
+  }
+
+  .diff-col-s2 {
+    float: right;
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  /* Mobile comparison controls */
+  .comparison-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .scenario-select {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+
+  #compareBtn {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
   }
 }
 

@@ -736,6 +736,24 @@ export function populateComparisonDropdowns(modalContext = null) {
   });
 
   console.log('Dropdowns populated. Options:', dropdown1?.options?.length || 0);
+
+  // Restore previously selected values from localStorage
+  const savedCompare = JSON.parse(localStorage.getItem('profitpath-compare-selection') || 'null');
+  if (savedCompare) {
+    if (savedCompare.id1) dropdown1.value = savedCompare.id1;
+    if (savedCompare.id2) dropdown2.value = savedCompare.id2;
+  }
+
+  // Add change listeners that only save the selection (not trigger comparison)
+  const saveSelection = () => {
+    localStorage.setItem('profitpath-compare-selection', JSON.stringify({
+      id1: dropdown1.value || '',
+      id2: dropdown2.value || ''
+    }));
+  };
+
+  dropdown1.addEventListener('change', saveSelection);
+  dropdown2.addEventListener('change', saveSelection);
 }
 
 // Additional functions needed by app.jsx
