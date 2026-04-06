@@ -23,7 +23,8 @@ export const DEFAULT_SETTINGS = {
   // Advanced features
   enableCaching: true,
   enableDebugMode: false,
-  showPerformanceMetrics: false
+  showPerformanceMetrics: false,
+  showSensitivityAnalysis: false
 };
 
 // Settings key for localStorage
@@ -39,6 +40,7 @@ export const FEATURE_GATES = {
     showExportOptions: false,
     showDebugPanel: false,
     showPerformanceMetrics: false,
+    showSensitivityAnalysis: false,
     showTooltips: true
   },
 
@@ -50,6 +52,7 @@ export const FEATURE_GATES = {
     showExportOptions: false,
     showDebugPanel: false,
     showPerformanceMetrics: false,
+    showSensitivityAnalysis: true,
     showTooltips: true
   },
 
@@ -61,6 +64,7 @@ export const FEATURE_GATES = {
     showExportOptions: true,
     showDebugPanel: true,
     showPerformanceMetrics: true,
+    showSensitivityAnalysis: true,
     showTooltips: true
   }
 };
