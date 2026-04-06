@@ -13,6 +13,12 @@ const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const calculationCache = new Map();
 const CACHE_MAX_SIZE = 50;
 
+// Performance metrics
+let cacheHits = 0;
+let cacheMisses = 0;
+let lastCalcMs = 0;
+let totalCalcs = 0;
+
 /**
  * Clears the calculation cache
  */
@@ -307,6 +313,8 @@ function calculateBreakEven(results, costs) {
  */
 export function calc(stateInput, options = {}) {
   const { enableCache = true, debug = false } = options;
+  const startTime = performance.now();
+  totalCalcs++;
 
   // Use global state if no input provided
   const s = stateInput || globalThis.state;
@@ -320,9 +328,13 @@ export function calc(stateInput, options = {}) {
   // Check cache first
   if (enableCache && calculationCache.has(cacheKey)) {
     const cached = calculationCache.get(cacheKey);
+    cacheHits++;
     if (debug) console.log('Using cached calculation result');
+    lastCalcMs = performance.now() - startTime;
     return cached;
   }
+
+  cacheMisses++;
 
   // Input validation and sanitization
   const intermediate = {
@@ -469,13 +481,16 @@ export function calc(stateInput, options = {}) {
     }
   }
 
+  lastCalcMs = performance.now() - startTime;
+
   if (debug) {
     console.log('Calculation completed:', {
       mode,
       clients: result.clients,
       revenue: result.revenue,
       income: result.income,
-      cacheSize: calculationCache.size
+      cacheSize: calculationCache.size,
+      calcTimeMs: lastCalcMs.toFixed(2)
     });
   }
 
@@ -486,10 +501,19 @@ export function calc(stateInput, options = {}) {
  * Gets cache statistics
  * @returns {Object} Cache statistics
  */
+/**
+ * Gets cache statistics
+ * @returns {Object} Cache statistics including hit rate and timing
+ */
 export function getCacheStats() {
+  const hitRate = totalCalcs > 0 ? Math.round((cacheHits / totalCalcs) * 100) : 0;
   return {
     size: calculationCache.size,
     maxSize: CACHE_MAX_SIZE,
-    hitRate: 0 // Could be tracked with additional implementation
+    hitRate,
+    hits: cacheHits,
+    misses: cacheMisses,
+    lastCalcMs: lastCalcMs.toFixed(2),
+    totalCalcs
   };
 }

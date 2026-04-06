@@ -61,6 +61,8 @@
       </div>
       <div class="header-right">
         <div class="header-actions">
+          <button id="undoBtn" class="btn icon-btn" type="button" title="Undo (Ctrl+Z)" disabled>↩</button>
+          <button id="redoBtn" class="btn icon-btn" type="button" title="Redo (Ctrl+Y)" disabled>↪</button>
           <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">💾
             Scenarios</button>
           <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
@@ -82,6 +84,8 @@
                 Photography</button>
             </div>
           </div>
+          <button class="btn small" id="importCSVBtn" type="button" title="Import settings from CSV">⬆ Import</button>
+          <input type="file" id="csvFileInput" accept=".csv" style="display:none">
           <div class="export-dropdown">
             <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄
               Export</button>
@@ -570,6 +574,14 @@
           <button id="debugToggle" class="debug-toggle" aria-expanded="false" aria-controls="debugBody">▶ Debug</button>
           <div id="debugBody" class="debug-body collapsed" aria-hidden="true">
             <pre id="debugPanel" class="debug-pre">Debug: no data yet</pre>
+          </div>
+        </div>
+
+        <!-- Performance monitoring panel (collapsible) -->
+        <div class="perf-wrapper expert-feature">
+          <button id="perfToggle" class="debug-toggle" aria-expanded="false" aria-controls="perfBody">▶ Performance</button>
+          <div id="perfBody" class="debug-body collapsed" aria-hidden="true">
+            <div id="perfPanel" class="perf-content"></div>
           </div>
         </div>
       </div>
