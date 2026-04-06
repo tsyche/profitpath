@@ -1,4 +1,4 @@
-import { calc } from '../src/calculations/index.js';
+import { calc, getCacheStats } from '../src/calculations/index.js';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
@@ -241,6 +241,12 @@ const state = {
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings
 };
 
+// Undo/Redo history stacks
+const undoStack = [];
+const redoStack = [];
+const MAX_HISTORY = 50;
+let _lastHistoryField = null; // Track last field edited for debounce
+
 // Make state accessible to calculations module
 globalThis.state = state;
 
@@ -265,6 +271,41 @@ function persistState() {
   }
 }
 
+// Undo/Redo history management
+function pushHistory() {
+  undoStack.push(JSON.stringify(state));
+  if (undoStack.length > MAX_HISTORY) undoStack.shift();
+  redoStack.length = 0; // Clear redo on new action
+  updateUndoRedoButtons();
+}
+
+function undo() {
+  if (!undoStack.length) return;
+  redoStack.push(JSON.stringify(state));
+  Object.assign(state, JSON.parse(undoStack.pop()));
+  persistState();
+  render();
+  updateUndoRedoButtons();
+  showToast('Undone', 'info', 1500);
+}
+
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(JSON.stringify(state));
+  Object.assign(state, JSON.parse(redoStack.pop()));
+  persistState();
+  render();
+  updateUndoRedoButtons();
+  showToast('Redone', 'info', 1500);
+}
+
+function updateUndoRedoButtons() {
+  const undoBtn = $('#undoBtn');
+  const redoBtn = $('#redoBtn');
+  if (undoBtn) undoBtn.disabled = undoStack.length === 0;
+  if (redoBtn) redoBtn.disabled = redoStack.length === 0;
+}
+
 function setStateFromInputs() {
   state.mode = $('#modeSelect').value;
 
@@ -287,6 +328,13 @@ function onTableInput(e) {
   const k = el.dataset.k;
   const i = Number(el.dataset.i);
   if (!k || !Number.isFinite(i)) return;
+
+  // Debounce history: only push on first keystroke of a field
+  const fieldKey = `${i}-${k}`;
+  if (fieldKey !== _lastHistoryField) {
+    pushHistory();
+    _lastHistoryField = fieldKey;
+  }
 
   const o = state.offerings[i];
   if (!o) return;
@@ -675,6 +723,7 @@ function updateOutputs(metrics) {
 
 $$('#controls input').forEach((el) => {
   el.addEventListener('input', () => {
+    pushHistory();
     setStateFromInputs();
     persistState();
     render();
@@ -683,6 +732,7 @@ $$('#controls input').forEach((el) => {
 
 $$('#controls select').forEach((el) => {
   el.addEventListener('change', () => {
+    pushHistory();
     setStateFromInputs();
     persistState();
     render();
@@ -926,7 +976,8 @@ function updateUIForSettings() {
     { selector: '.detailed-breakdown', setting: 'showDetailedBreakdown' },
     { selector: '.comparison-tools', setting: 'showComparisonTools' },
     { selector: '.export-options', setting: 'showExportOptions' },
-    { selector: '.debug-wrapper', setting: 'showDebugPanel' }
+    { selector: '.debug-wrapper', setting: 'showDebugPanel' },
+    { selector: '.perf-wrapper', setting: 'showPerformanceMetrics' }
   ];
 
   elementsToToggle.forEach(({ selector, setting }) => {
@@ -1432,6 +1483,7 @@ if (mobileHelpBtn) {
 }
 
 $('#offeringsBody').addEventListener('input', onTableInput);
+$('#offeringsBody').addEventListener('blur', () => { _lastHistoryField = null; }, true); // Capture blur to clear field tracking
 $('#offeringsBody').addEventListener('click', onTableClick);
 
 // Save state when table content changes
@@ -1673,6 +1725,47 @@ function renderComparisonResults(metrics1, metrics2) {
   tableHtml += '</tbody></table>';
   tableWrap.innerHTML = tableHtml; // Assign to wrapper
   comparisonResultsEl.style.display = 'block';
+}
+
+// CSV Import handler
+function handleCSVImport(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const result = misc.importFromCSV(e.target.result);
+    if (!result.success) {
+      createModal({
+        title: 'Import Error',
+        content: `<div style="color: #dc3545;">${result.errors.map(err => `<p>${err}</p>`).join('')}</div>`,
+        size: 'small',
+        buttons: [{ text: 'Close', primary: true }]
+      });
+      return;
+    }
+
+    const { settings, offerings } = result.data;
+
+    // Apply imported settings to state
+    if (settings.employees !== undefined) state.fullTimeEmployees = settings.employees;
+    if (settings.partTimeEmployees !== undefined) state.partTimeEmployees = settings.partTimeEmployees;
+    if (settings.employeePay !== undefined) state.fullTimeEmployeePay = settings.employeePay;
+    if (settings.partTimeEmployeePay !== undefined) state.partTimeEmployeePay = settings.partTimeEmployeePay;
+    if (settings.monthlyCosts !== undefined) state.monthlyCosts = settings.monthlyCosts;
+    if (settings.productiveUtilizationPct !== undefined) state.productiveUtilizationPct = settings.productiveUtilizationPct;
+    if (settings.targetUtilizationPct !== undefined) state.targetUtilizationPct = settings.targetUtilizationPct;
+
+    // Apply imported offerings
+    if (offerings.length > 0) state.offerings = offerings;
+
+    persistState();
+    render();
+    showToast(`Imported ${offerings.length} offering${offerings.length !== 1 ? 's' : ''} successfully`, 'success', 2000);
+  };
+
+  reader.onerror = () => {
+    showToast('Failed to read CSV file', 'error');
+  };
+
+  reader.readAsText(file);
 }
 
 // Handle comparison logic
@@ -2162,6 +2255,76 @@ function wire() {
   if (typeof render === 'function') {
     render();
   }
+
+  // Wire up undo/redo buttons
+  const undoBtn = $('#undoBtn');
+  const redoBtn = $('#redoBtn');
+  if (undoBtn) undoBtn.addEventListener('click', undo);
+  if (redoBtn) redoBtn.addEventListener('click', redo);
+
+  // Keyboard shortcuts for undo/redo
+  document.addEventListener('keydown', (e) => {
+    const ctrl = e.ctrlKey || e.metaKey;
+    if (ctrl && !e.shiftKey && e.key === 'z') {
+      e.preventDefault();
+      undo();
+    } else if (ctrl && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+      e.preventDefault();
+      redo();
+    }
+  });
+
+  // Wire up CSV import button
+  const importBtn = $('#importCSVBtn');
+  const csvFileInput = $('#csvFileInput');
+  if (importBtn && csvFileInput) {
+    importBtn.addEventListener('click', () => {
+      createModal({
+        title: 'Import from CSV',
+        content: `
+          <p>Upload a CSV file to import your business settings and offerings.</p>
+          <button onclick="misc.generateImportTemplate()" class="btn secondary" style="margin-bottom: 12px; width: 100%;">⬇ Download Template</button>
+          <div id="csvDropZone" style="border: 2px dashed #5eead4; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; background: rgba(94, 234, 212, 0.05);">
+            <div style="color: #5eead4; font-weight: 600; margin-bottom: 8px;">Click to select or drag and drop CSV</div>
+            <div style="font-size: 12px; color: var(--muted);">Supported: .csv files with business settings and offerings</div>
+          </div>
+        `,
+        size: 'medium'
+      });
+
+      // Wire the drop zone after modal renders
+      setTimeout(() => {
+        const zone = document.getElementById('csvDropZone');
+        if (!zone) return;
+
+        zone.addEventListener('click', () => csvFileInput.click());
+
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          zone.style.borderColor = '#60a5fa';
+          zone.style.background = 'rgba(96, 165, 250, 0.1)';
+        });
+
+        zone.addEventListener('dragleave', () => {
+          zone.style.borderColor = '#5eead4';
+          zone.style.background = 'rgba(94, 234, 212, 0.05)';
+        });
+
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.style.borderColor = '#5eead4';
+          zone.style.background = 'rgba(94, 234, 212, 0.05)';
+          const file = e.dataTransfer.files[0];
+          if (file) handleCSVImport(file);
+        });
+      }, 50);
+    });
+
+    csvFileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) handleCSVImport(e.target.files[0]);
+      csvFileInput.value = '';
+    });
+  }
 }
 
 export { render, wire, setStateFromInputs, state };
@@ -2224,9 +2387,75 @@ function initDebugPanel() {
   refreshDebug();
 }
 
-// Initialize debug panel after DOM is ready
+// Performance monitoring panel (Advanced feature)
+function initPerfPanel() {
+  const toggle = $('#perfToggle');
+  const body = $('#perfBody');
+  const panel = $('#perfPanel');
+  if (!toggle || !body || !panel) return;
+
+  let perfInterval = null;
+
+  function refreshPerf() {
+    if (!panel || body.classList.contains('collapsed')) return;
+
+    try {
+      const stats = getCacheStats();
+      const html = `
+        <div><span class="perf-label">Cache:</span> <span class="perf-value">${stats.size} / ${stats.maxSize}</span> entries</div>
+        <div><span class="perf-label">Hit rate:</span> <span class="perf-value">${stats.hitRate}%</span> (${stats.hits} hits, ${stats.misses} misses)</div>
+        <div><span class="perf-label">Last calc:</span> <span class="perf-value">${stats.lastCalcMs}ms</span></div>
+        <div><span class="perf-label">Total calcs:</span> <span class="perf-value">${stats.totalCalcs}</span></div>
+      `;
+      panel.innerHTML = html;
+      toggle.textContent = `▶ Performance — ${stats.hitRate}% hit rate`;
+    } catch (e) {
+      panel.innerHTML = `<div>Error: ${e.message}</div>`;
+      toggle.textContent = '▶ Performance — error';
+    }
+  }
+
+  // Restore expanded state from localStorage
+  const stored = localStorage.getItem('profitpath-perf-expanded');
+  const expanded = stored === '1';
+  if (expanded) {
+    body.classList.remove('collapsed');
+    body.setAttribute('aria-hidden', 'false');
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.textContent = toggle.textContent.replace(/^▶/, '▼');
+  }
+
+  toggle.addEventListener('click', () => {
+    const isCollapsed = body.classList.toggle('collapsed');
+    body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+    const expandedNow = !isCollapsed;
+    toggle.setAttribute('aria-expanded', expandedNow ? 'true' : 'false');
+    toggle.textContent = (expandedNow ? '▼' : '▶') + toggle.textContent.slice(1);
+    localStorage.setItem('profitpath-perf-expanded', expandedNow ? '1' : '0');
+
+    if (expandedNow) {
+      refreshPerf();
+      perfInterval = setInterval(refreshPerf, 2000);
+    } else if (perfInterval) {
+      clearInterval(perfInterval);
+      perfInterval = null;
+    }
+  });
+
+  // Also update perf display on render
+  const originalRender = window.render;
+  window.render = function() {
+    originalRender.apply(this, arguments);
+    if (!body.classList.contains('collapsed')) {
+      refreshPerf();
+    }
+  };
+}
+
+// Initialize debug and performance panels after DOM is ready
 try {
   initDebugPanel();
+  initPerfPanel();
 } catch {
   try {
     persistState();

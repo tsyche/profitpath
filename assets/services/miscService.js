@@ -1499,6 +1499,123 @@ export function throttle(func, limit) {
   };
 }
 
+// CSV Import/Export Functions
+export function generateImportTemplate() {
+  const template = `# Business Settings
+# Edit values in the right column
+employees,3
+partTimeEmployees,0
+employeePay,60000
+partTimeEmployeePay,30000
+monthlyCosts,500
+productiveUtilizationPct,80
+targetUtilizationPct,75
+
+# Offerings
+# Add or remove rows. Mix % values should sum to 100.
+Name,Monthly Price ($),Sessions/Year,Hours/Session,Variable Cost/Session ($),Mix %,Current Clients
+Consulting,1000,12,2,100,60,0
+Support,500,24,1,50,40,0`;
+
+  const element = document.createElement('a');
+  element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(template));
+  element.setAttribute('download', 'profitpath-template.csv');
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
+
+export function importFromCSV(csvText) {
+  const errors = [];
+  const settings = {};
+  const offerings = [];
+
+  try {
+    const lines = csvText.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+
+    let inSettingsSection = false;
+    let inOfferingsSection = false;
+    let offeringHeaders = null;
+
+    for (const line of lines) {
+      if (line.includes('Settings')) {
+        inSettingsSection = true;
+        inOfferingsSection = false;
+        continue;
+      }
+      if (line.includes('Offerings')) {
+        inSettingsSection = false;
+        inOfferingsSection = true;
+        continue;
+      }
+
+      if (inSettingsSection) {
+        const [key, value] = line.split(',').map(s => s.trim());
+        if (key && value !== undefined) {
+          const numValue = parseFloat(value);
+          if (!isNaN(numValue)) {
+            // Map CSV keys to state field names
+            if (key === 'employees') settings.employees = Math.max(0, Math.floor(numValue));
+            if (key === 'partTimeEmployees') settings.partTimeEmployees = Math.max(0, Math.floor(numValue));
+            if (key === 'employeePay') settings.employeePay = Math.max(0, numValue);
+            if (key === 'partTimeEmployeePay') settings.partTimeEmployeePay = Math.max(0, numValue);
+            if (key === 'monthlyCosts') settings.monthlyCosts = Math.max(0, numValue);
+            if (key === 'productiveUtilizationPct') settings.productiveUtilizationPct = Math.max(0, Math.min(100, numValue));
+            if (key === 'targetUtilizationPct') settings.targetUtilizationPct = Math.max(0, numValue);
+          }
+        }
+      }
+
+      if (inOfferingsSection) {
+        if (!offeringHeaders) {
+          // First data row is the header
+          offeringHeaders = line.split(',').map(h => h.trim().toLowerCase());
+          continue;
+        }
+
+        // Parse offering row
+        const values = line.split(',').map(v => v.trim());
+        if (values.length < 7) continue;
+
+        const offering = {
+          id: `offering-${uuid()}`,
+          name: values[0] || 'New Offering',
+          priceMonthly: parseFloat(values[1]) || 0,
+          sessionsPerYear: Math.max(1, Math.floor(parseFloat(values[2]) || 1)),
+          hoursPerSession: Math.max(0.1, parseFloat(values[3]) || 1),
+          variableCostPerSession: Math.max(0, parseFloat(values[4]) || 0),
+          mixPct: Math.max(0, Math.min(100, parseFloat(values[5]) || 0)),
+          currentClients: Math.max(0, Math.floor(parseFloat(values[6]) || 0))
+        };
+
+        // Validate offering
+        if (!offering.name) {
+          errors.push('Offering name cannot be empty');
+          continue;
+        }
+        if (offering.priceMonthly <= 0) {
+          errors.push(`Offering "${offering.name}": price must be > 0`);
+          continue;
+        }
+
+        offerings.push(offering);
+      }
+    }
+
+    // Validate offerings
+    if (offerings.length === 0) {
+      errors.push('CSV must contain at least 1 offering');
+      return { success: false, errors };
+    }
+
+    // Success
+    return { success: true, data: { settings, offerings }, errors };
+  } catch (e) {
+    return { success: false, errors: [`Parse error: ${e.message}`] };
+  }
+}
+
 // Export default object with all functions
 export default {
   escapeHtml,

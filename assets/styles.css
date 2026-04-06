@@ -867,6 +867,24 @@ button:focus-visible {
   border-radius: 9px;
 }
 
+.btn.icon-btn {
+  padding: 5px 8px;
+  font-size: 16px;
+  border-radius: 6px;
+  opacity: 0.7;
+  background: transparent;
+}
+
+.btn.icon-btn:hover:not(:disabled) {
+  opacity: 1;
+  background: var(--panel);
+}
+
+.btn.icon-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 .table-wrap {
   overflow: auto;
   border-radius: 12px;
@@ -1083,6 +1101,37 @@ button:focus-visible {
   max-height: 160px;
   overflow: auto;
   white-space: pre-wrap
+}
+
+/* Performance monitoring panel */
+.perf-wrapper {
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.perf-content {
+  background: rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.perf-content div {
+  margin-bottom: 4px;
+}
+
+.perf-content .perf-label {
+  display: inline-block;
+  width: 140px;
+  font-weight: 600;
+}
+
+.perf-content .perf-value {
+  color: #5eead4;
+  font-weight: 600;
 }
 
 /* Below-bar per-offering compact list */
