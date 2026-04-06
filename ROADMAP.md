@@ -8,6 +8,8 @@ See README.md for setup and development instructions.
 
 ## Recently Completed ✅
 
+- Interactive Scenario Comparison (Side-by-Side Diff) — full feature with summary metrics, per-offering breakdown, exports, sharing
+- Bug fix: Comparison modal text visibility on white background (dark theme color override)
 - Bug fix: Tour tooltip positioning (removed CSS animation override, fixed position jumping during onboarding)
 - Bug fix: Mode switch now immediately updates mix lock checkbox visibility
 - Feature Restriction Badges (visual indicators for locked features)
@@ -18,21 +20,20 @@ See README.md for setup and development instructions.
 
 ## Top 3 Recommended Next Tasks
 
-1. **Interactive Scenario Comparison (Side-by-Side Diff)**
-   - Highlight changes between scenarios with key metric comparison
-   - Scenario blending and correlation analysis
-   - Major UX improvement for what-if workflows
-   - ~5-6 hours effort
-
-2. **Data Import: Bootstrap from CSV/Excel**
+1. **Data Import: Bootstrap from CSV/Excel**
    - Allow users to import client lists, pricing, cost structures from spreadsheets
    - Dramatically reduces setup friction and improves competitive positioning
    - ~3-4 hours effort
 
-3. **Undo/Redo Workflow Support**
+2. **Undo/Redo Workflow Support**
    - Stack-based undo for input changes and scenario edits
    - Increases experimentation confidence
    - ~2-3 hours effort
+
+3. **Performance Monitoring & Optimization Dashboard**
+   - Real-time metrics: cache hit rate, computation time, memory usage
+   - Helps identify bottlenecks proactively
+   - ~3-4 hours effort
 
 ---
 
@@ -40,42 +41,39 @@ See README.md for setup and development instructions.
 
 **Immediate Next (Quick Wins + Foundation)**
 
-1. Scenario comparison system with side-by-side diff view and key metrics comparison.
-2. Data import: CSV/Excel bootstrap for client lists, pricing, cost structures.
+1. Data Import: CSV/Excel Bootstrap
+   - Import client lists, pricing, and cost structures from spreadsheets
+   - Reduces setup friction and onboarding time
+   - Effort: ~3-4 hours
 
 **Quick Wins (2-4 Hour Tasks)**
 
-3. Undo/Redo Workflow Support
+2. Undo/Redo Workflow Support
    - Stack-based undo for input changes and scenario edits
    - Increases experimentation confidence
    - Effort: ~2-3 hours
 
-4. Performance Monitoring & Optimization Dashboard
+3. Performance Monitoring & Optimization Dashboard
    - Real-time metrics: cache hit rate, computation time, memory usage
    - Helps identify bottlenecks proactively
    - Effort: ~3-4 hours
 
 **Core Analytics & Business Intelligence (4-8 Hour Tasks)**
 
-5. Data Import: CSV/Excel Bootstrap
-   - Import client lists, pricing, and cost structures from spreadsheets
-   - Reduces setup friction and onboarding time
-   - Effort: ~3-4 hours
-
-6. Sensitivity Analysis & What-If Scenarios
+4. Sensitivity Analysis & What-If Scenarios
    - Interactive sliders for pricing, costs, utilization, employee count
    - Tornado charts showing impact ranking of variable changes
    - Monte Carlo simulation for risk assessment
    - Effort: ~6-8 hours
 
-7. Tax & Financial Calculations
+5. Tax & Financial Calculations
    - Self-employment tax calculations
    - Quarterly tax estimates
    - Depreciation tracking
    - Profit sharing calculations
    - Effort: ~4-5 hours
 
-8. Customer Acquisition & Growth Modeling
+6. Customer Acquisition & Growth Modeling
    - Customer acquisition cost (CAC) tracking
    - Customer lifetime value (LTV) calculations
    - Churn rate modeling
@@ -84,7 +82,7 @@ See README.md for setup and development instructions.
 
 **UX & Accessibility (3-4 Hour Tasks)**
 
-9. Accessibility & Mobile Experience
+7. Accessibility & Mobile Experience
    - Full keyboard navigation and screen reader optimization
    - Mobile-responsive design improvements
    - Touch gesture support
@@ -92,7 +90,7 @@ See README.md for setup and development instructions.
 
 **Visual Design & Cutting-Edge Polish (4-8 Hour Tasks)**
 
-9a. Micro-interactions & Animation Polish
+8. Micro-interactions & Animation Polish
    - Smooth number animations for KPI values changing (animated counters)
    - Enhanced button/input focus states with visual feedback
    - Hover effects on cards revealing additional context
@@ -100,7 +98,7 @@ See README.md for setup and development instructions.
    - Smoother modal/toast entrance animations
    - Effort: ~3-4 hours
 
-9b. Modern Visual Effects & Color Enhancement
+9. Modern Visual Effects & Color Enhancement
    - Glassmorphism effects on modals, cards, or overlays (backdrop blur)
    - Subtle gradient layers on KPI boxes and section headers
    - Enhanced color contrast and accent color usage (subtle glows on focus)
@@ -108,17 +106,17 @@ See README.md for setup and development instructions.
    - Better distinction between different section types
    - Effort: ~2-3 hours
 
-9c. Data Visualization & Visual Indicators
-   - Replace text-only KPI displays with visual indicators (progress rings, gauges)
-   - Animated progress circles for utilization percentages
-   - Visual break-even indicators (danger/warning/success states)
-   - Smooth transitions when data updates
-   - Visual feedback for scenario changes
-   - Effort: ~4-5 hours
+10. Data Visualization & Visual Indicators
+    - Replace text-only KPI displays with visual indicators (progress rings, gauges)
+    - Animated progress circles for utilization percentages
+    - Visual break-even indicators (danger/warning/success states)
+    - Smooth transitions when data updates
+    - Visual feedback for scenario changes
+    - Effort: ~4-5 hours
 
 **Advanced Visualizations & Analytics (4-6 Hour Tasks)**
 
-10. Advanced Chart Types
+11. Advanced Chart Types
     - Heat maps for multi-variable sensitivity analysis
     - Radar charts for balanced scorecard views
     - Funnel charts for customer journey
@@ -127,7 +125,7 @@ See README.md for setup and development instructions.
 
 **Technical Foundation & Internationalization (2 Hour Tasks)**
 
-11. Advanced Formatting & Localization
+12. Advanced Formatting & Localization
     - Multi-currency support (EUR, GBP, CAD, AUD)
     - Localized number formatting (1,000 vs 1.000 vs 1000)
     - Configurable decimal precision per metric
@@ -135,13 +133,13 @@ See README.md for setup and development instructions.
 
 **Industry Intelligence & Competitive Positioning (6-8 Hour Tasks)**
 
-12. Industry Presets & Benchmarks
+13. Industry Presets & Benchmarks
     - Curated templates for common service businesses (consulting, cleaning, landscaping, fitness, photography, handyman)
     - Industry benchmark comparisons and regional pricing data
     - Success metric tracking and performance standards
     - Effort: ~6-8 hours
 
-13. Seasonal & Market Adjustments
+14. Seasonal & Market Adjustments
     - Seasonal demand modeling with monthly/quarterly variations
     - Geographic pricing variations by region
     - Market rate comparisons and competitive pricing
@@ -150,14 +148,14 @@ See README.md for setup and development instructions.
 
 **Enterprise Features (Scale Layer — Deferred)**
 
-14. Advanced Scenario Management
+15. Advanced Scenario Management
     - Scenario versioning and history tracking
     - Bulk import/export operations
     - Scenario templates and inheritance
     - Team sharing and permissions (requires backend infrastructure)
     - Effort: ~8-10 hours
 
-15. Integration & Automation
+16. Integration & Automation
     - API for third-party integrations
     - Webhook notifications for key metrics
     - Automated data syncing with external services
@@ -165,14 +163,14 @@ See README.md for setup and development instructions.
     - **Note**: Requires backend infrastructure
     - Effort: ~10-12 hours
 
-16. Multi-Year Strategic Planning
+17. Multi-Year Strategic Planning
     - 3-5 year financial projections
     - Hiring and scaling recommendations
     - Investment payback analysis
     - Strategic milestone tracking
     - Effort: ~8-10 hours
 
-17. Optimizer Mode & AI Insights
+18. Optimizer Mode & AI Insights
     - Automated optimization suggestions based on business data
     - Machine learning price optimization
     - Predictive analytics for business outcomes
@@ -184,23 +182,24 @@ See README.md for setup and development instructions.
 
 ## Status & Notes
 
-- **Current status**: Application is fully functional with all tests passing (200 tests), dev server stable, comprehensive test coverage preventing regressions, and all critical UI/UX issues resolved.
-- **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall).
-- **Latest milestone**: Simple visualizations completed (utilization gauge with zone indicators and corrected arc math, profit waterfall with proper value scaling and connector lines). Micro-interactions & animation polish completed (KPI flash, modal transitions, focus states). Bug fix: mode switching now immediately updates UI.
+- **Current status**: Application is fully functional with all tests passing (202 tests), dev server stable, comprehensive test coverage preventing regressions, and all critical UI/UX issues resolved.
+- **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ scenario comparison (side-by-side diff with exports and sharing).
+- **Latest milestone**: Interactive scenario comparison (side-by-side diff view with summary metrics, per-offering breakdown, CSV/PDF exports, shareable links). Fixed comparison modal visibility (dark text colors on white background). Dropdown selections now persist across modal reopens.
 - **Next priorities**: 
-  1. Interactive scenario comparison (side-by-side diff view) — major UX improvement for what-if analysis
-  2. Data import feature (CSV/Excel bootstrap) — strong competitive advantage, reduces onboarding friction
-  3. Undo/redo workflow support — increases experimentation confidence
-- **Strategic positioning**: Data import and industry benchmarks are notable gaps vs. competitors and should be prioritized for market differentiation. Visual polish (completed) provides modern feel; next focus should shift to functional improvements.
+  1. Data import feature (CSV/Excel bootstrap) — strong competitive advantage, reduces onboarding friction
+  2. Undo/redo workflow support — increases experimentation confidence
+  3. Performance dashboard — real-time cache/computation metrics
+- **Strategic positioning**: Data import and industry benchmarks are notable gaps vs. competitors and should be prioritized for market differentiation. Scenario comparison (completed) enables what-if analysis; next focus should be reducing setup friction (CSV import) and workflow improvements (undo/redo).
 - **Quick wins available**: 
-  - Number animations and visual indicators (4-5 hrs) make KPI displays more dynamic
   - Undo/redo (2-3 hrs) and performance dashboard (3-4 hrs) have outsized UX impact
-- **Enterprise features (items 14-17) are deferred**: Represent significant scope expansion and require backend infrastructure. Validate market demand before investing.
+  - Sensitivity analysis with sliders and tornado charts (6-8 hrs) would strengthen analysis capabilities
+- **Enterprise features (items 15-18) are deferred**: Represent significant scope expansion and require backend infrastructure. Validate market demand before investing.
 
 ### Test Coverage Status
-- **200 tests passing** (comprehensive test suite)
+- **202 tests passing** (comprehensive test suite)
 - **Syntax validation**: Prevents parsing errors and lint issues
-- **UI/UX tests**: All mobile UI, modal functionality, help system, feedback system tests passing
+- **UI/UX tests**: All mobile UI, modal functionality, scenario comparison, help system, feedback system tests passing
 - ✅ **Analytics tests**: All analytics and feedback system tests passing
 - ✅ **Visualization tests**: Chart data structure validation, visual consistency, performance tests
+- ✅ **Comparison tests**: Scenario comparison functionality and rendering tests
 - ✅ **Comprehensive coverage**: Business logic, UI components, error handling, integration tests, animations, feature gating
