@@ -391,21 +391,6 @@ export function openScenarioModal() {
     });
   }
 
-  // Set up dropdown change listeners for immediate comparison
-  const dropdown1 = modal.querySelector('#compareScenario1');
-  const dropdown2 = modal.querySelector('#compareScenario2');
-
-  if (dropdown1 && dropdown2) {
-    const handleDropdownChange = () => {
-      if (dropdown1.value && dropdown2.value) {
-        performComparisonInModal(dropdown1.value, dropdown2.value, modal);
-      }
-    };
-
-    dropdown1.addEventListener('change', handleDropdownChange);
-    dropdown2.addEventListener('change', handleDropdownChange);
-  }
-
   // Populate comparison dropdowns
   console.log('Opening scenarios modal, populating dropdowns...');
   import('../services/miscService.js').then((miscService) => {
