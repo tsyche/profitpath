@@ -560,6 +560,36 @@
           <div id="breakEvenAnalysis" class="break-even-section" style="display: none;"></div>
         </div>
 
+        <!-- Tax Estimates Section -->
+        <div class="tax-section-wrapper" style="margin-top: 20px;">
+          <div class="tax-section-header">
+            <span class="section-label">Tax Estimates</span>
+            <span class="section-disclaimer">Simplified US federal only · Consult a tax professional</span>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi" title="Estimated annual self-employment tax (Social Security + Medicare on 92.35% of net income)">
+              <div class="k">SE Tax</div>
+              <div class="v" id="kpiSeTax">—</div>
+              <div class="sub">annual est.</div>
+            </div>
+            <div class="kpi" title="Estimated federal income tax after SE deduction and standard deduction">
+              <div class="k">Federal Tax</div>
+              <div class="v" id="kpiFederalTax">—</div>
+              <div class="sub">annual est.</div>
+            </div>
+            <div class="kpi" title="Quarterly estimated tax payment (total tax ÷ 4)">
+              <div class="k">Quarterly Est.</div>
+              <div class="v" id="kpiQuarterly">—</div>
+              <div class="sub">due per quarter</div>
+            </div>
+            <div class="kpi" title="Owner take-home after all taxes (pre-tax income minus SE tax and federal income tax)">
+              <div class="k">Take-Home</div>
+              <div class="v" id="kpiTakeHome">—</div>
+              <div class="sub">after taxes</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Charts and Visualizations Container -->
         <div class="charts-visualizations-container">
           <!-- Simple chart: Revenue composition (variable costs vs contribution) -->
@@ -567,6 +597,35 @@
 
           <!-- Rich visualizations section -->
           <div id="richVisualizations" class="rich-visualizations" style="display: none;"></div>
+        </div>
+
+        <!-- Sensitivity Analysis panel (collapsible) -->
+        <div class="sensitivity-wrapper advanced-feature">
+          <button id="sensitivityToggle" class="debug-toggle" aria-expanded="false" aria-controls="sensitivityBody">▶ Sensitivity Analysis</button>
+          <div id="sensitivityBody" class="debug-body collapsed" aria-hidden="true">
+            <div id="sensitivityPanel">
+              <div class="sensitivity-sliders">
+                <div class="slider-row">
+                  <label class="slider-label">Price <span id="priceSliderVal">+0%</span></label>
+                  <input type="range" id="priceSlider" min="-50" max="100" value="0" step="5">
+                </div>
+                <div class="slider-row">
+                  <label class="slider-label">Overhead <span id="overheadSliderVal">+0%</span></label>
+                  <input type="range" id="overheadSlider" min="-50" max="100" value="0" step="5">
+                </div>
+                <div class="slider-row">
+                  <label class="slider-label">Utilization <span id="utilizationSliderVal">—%</span></label>
+                  <input type="range" id="utilizationSlider" min="20" max="150" value="75" step="1">
+                </div>
+                <div class="slider-row">
+                  <label class="slider-label">Employees <span id="employeesSliderVal">—</span></label>
+                  <input type="range" id="employeesSlider" min="1" max="20" value="1" step="1">
+                </div>
+              </div>
+              <button id="sensitivityReset" class="btn secondary small" style="margin-top: 8px;">↺ Reset</button>
+              <div id="sensitivityResults" style="margin-top: 12px;"></div>
+            </div>
+          </div>
         </div>
 
         <!-- Debug panel (collapsible) placed at the bottom of the Outputs card -->

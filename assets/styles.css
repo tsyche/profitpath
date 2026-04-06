@@ -1134,6 +1134,81 @@ button:focus-visible {
   font-weight: 600;
 }
 
+/* Tax section */
+.tax-section-wrapper {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.tax-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.section-disclaimer {
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+/* Sensitivity Analysis panel */
+.sensitivity-wrapper { margin-top: 12px; }
+
+.sensitivity-sliders { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+
+.slider-row { display: flex; align-items: center; gap: 10px; }
+
+.slider-label { font-size: 12px; color: var(--muted); min-width: 130px; font-family: var(--mono); }
+
+input[type="range"] {
+  flex: 1;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+}
+
+.sensitivity-comparison { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+.sensitivity-comparison th { color: var(--muted); font-weight: 600; text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--border); }
+.sensitivity-comparison th:first-child { text-align: left; }
+.sensitivity-comparison td { padding: 4px 6px; text-align: right; font-family: var(--mono); }
+.sensitivity-comparison td:first-child { text-align: left; color: var(--muted); font-family: var(--sans); }
+.sensitivity-comparison tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+.sens-better { color: var(--good); }
+.sens-worse { color: var(--bad); }
+.sens-neutral { color: var(--muted); }
+
 /* Below-bar per-offering compact list */
 .simple-chart {
   position: relative
