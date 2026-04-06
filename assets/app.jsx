@@ -1604,6 +1604,24 @@ function populateComparisonDropdowns() {
     option2.textContent = s.name;
     select2.appendChild(option2);
   });
+
+  // Restore previously selected values from localStorage
+  const savedCompare = JSON.parse(localStorage.getItem('profitpath-compare-selection') || 'null');
+  if (savedCompare) {
+    if (savedCompare.id1) select1.value = savedCompare.id1;
+    if (savedCompare.id2) select2.value = savedCompare.id2;
+  }
+
+  // Add change listeners that only save the selection (not trigger comparison)
+  const saveSelection = () => {
+    localStorage.setItem('profitpath-compare-selection', JSON.stringify({
+      id1: select1.value || '',
+      id2: select2.value || ''
+    }));
+  };
+
+  select1.addEventListener('change', saveSelection);
+  select2.addEventListener('change', saveSelection);
 }
 
 // Render the comparison table
@@ -2041,7 +2059,6 @@ if (scenariosModal) {
       if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
         if (!scenariosModal.classList.contains('hidden')) {
           populateComparisonDropdowns();
-          handleComparison(); // Also run comparison if both are selected
         } else {
           // Hide comparison results when modal is closed
           $('#comparisonResults').style.display = 'none';
