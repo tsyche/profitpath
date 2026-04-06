@@ -306,6 +306,64 @@ function calculateBreakEven(results, costs) {
 }
 
 /**
+ * Calculate tax estimates (2024 US rates, single filer, simplified)
+ * @param {number} income - Pre-tax owner income (net profit before taxes)
+ * @returns {Object} Tax estimates: seTax, federalTax, quarterlyEst, takeHome, effectiveRate
+ */
+function calculateTax(income) {
+  if (income <= 0) {
+    return {
+      seTax: 0,
+      federalTax: 0,
+      quarterlyEst: 0,
+      takeHome: Math.max(0, income),
+      effectiveRate: 0
+    };
+  }
+
+  // Self-employment tax (15.3% up to $168,600, then 2.9% above on 92.35% of income)
+  const seBase = income * 0.9235;
+  const ssTax = Math.min(seBase, 168600) * 0.153;
+  const medicareTax = Math.max(0, seBase - 168600) * 0.029;
+  const seTax = ssTax + medicareTax;
+
+  // Federal income tax (owner deducts half of SE tax and standard deduction of $14,600)
+  const taxableIncome = Math.max(0, income - seTax / 2 - 14600);
+
+  // 2024 tax brackets for single filer
+  const brackets = [
+    [11600, 0.10],
+    [35550, 0.12],
+    [53375, 0.22],
+    [91425, 0.24],
+    [51775, 0.32],
+    [365625, 0.35],
+    [Infinity, 0.37]
+  ];
+
+  let federalTax = 0;
+  let remaining = taxableIncome;
+
+  for (const [width, rate] of brackets) {
+    if (remaining <= 0) break;
+    const taxableInThisBracket = Math.min(remaining, width);
+    federalTax += taxableInThisBracket * rate;
+    remaining -= width;
+  }
+
+  const totalTax = seTax + federalTax;
+  const effectiveRate = income > 0 ? Math.round((totalTax / income) * 100) : 0;
+
+  return {
+    seTax: Math.round(seTax),
+    federalTax: Math.round(federalTax),
+    quarterlyEst: Math.round(totalTax / 4),
+    takeHome: Math.round(income - totalTax),
+    effectiveRate
+  };
+}
+
+/**
  * Main calculation engine with caching and debugging support
  * @param {Object} stateInput - Application state (defaults to global state)
  * @param {Object} options - Calculation options
@@ -461,6 +519,9 @@ export function calc(stateInput, options = {}) {
   intermediate.breakEven = breakEven;
 
   // Compile final result
+  const income = modeResults.revenue - costs.totalFixedCosts - modeResults.variableCosts;
+  const taxCalcs = calculateTax(income);
+
   const result = {
     mode,
     offerings,
@@ -468,7 +529,8 @@ export function calc(stateInput, options = {}) {
     ...costs,
     ...modeResults,
     ...breakEven,
-    income: modeResults.revenue - costs.totalFixedCosts - modeResults.variableCosts,
+    income,
+    ...taxCalcs,
     ...(debug ? { _intermediate: intermediate } : {})
   };
 

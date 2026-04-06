@@ -693,6 +693,29 @@ function updateOutputs(metrics) {
       kpiIncome.style.color = metrics.income >= 60000 ? 'var(--good)' : metrics.income >= 0 ? 'var(--warn)' : 'var(--bad)';
     }
 
+    // Tax estimates
+    const kpiSeTax = $('#kpiSeTax');
+    const kpiFederalTax = $('#kpiFederalTax');
+    const kpiQuarterly = $('#kpiQuarterly');
+    const kpiTakeHome = $('#kpiTakeHome');
+    if (kpiSeTax) {
+      if (metrics.income > 0) {
+        kpiSeTax.textContent = fmtMoney0(metrics.seTax);
+        kpiFederalTax.textContent = fmtMoney0(metrics.federalTax);
+        kpiQuarterly.textContent = fmtMoney0(metrics.quarterlyEst);
+        kpiTakeHome.textContent = fmtMoney0(metrics.takeHome);
+        kpiTakeHome.style.color = metrics.takeHome > 0 ? 'var(--good)' : 'var(--bad)';
+      } else {
+        ['#kpiSeTax', '#kpiFederalTax', '#kpiQuarterly', '#kpiTakeHome'].forEach(id => {
+          const el = $(id);
+          if (el) {
+            el.textContent = '—';
+            el.style.color = '';
+          }
+        });
+      }
+    }
+
     // Capacity meter/gauge
     if (capBar) {
       const cap = clamp(metrics.capacityPct, 0, 150);
@@ -977,7 +1000,8 @@ function updateUIForSettings() {
     { selector: '.comparison-tools', setting: 'showComparisonTools' },
     { selector: '.export-options', setting: 'showExportOptions' },
     { selector: '.debug-wrapper', setting: 'showDebugPanel' },
-    { selector: '.perf-wrapper', setting: 'showPerformanceMetrics' }
+    { selector: '.perf-wrapper', setting: 'showPerformanceMetrics' },
+    { selector: '.sensitivity-wrapper', setting: 'showSensitivityAnalysis' }
   ];
 
   elementsToToggle.forEach(({ selector, setting }) => {
@@ -2329,6 +2353,207 @@ function wire() {
 
 export { render, wire, setStateFromInputs, state };
 
+// Sensitivity Analysis Panel
+function initSensitivityPanel() {
+  const toggle = $('#sensitivityToggle');
+  const body = $('#sensitivityBody');
+  if (!toggle || !body) return;
+
+  // Restore expanded state from localStorage
+  const stored = localStorage.getItem('profitpath-sensitivity-expanded');
+  if (stored === '1') {
+    body.classList.remove('collapsed');
+    body.setAttribute('aria-hidden', 'false');
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.textContent = toggle.textContent.replace(/^▶/, '▼');
+    initSliders();
+  }
+
+  toggle.addEventListener('click', () => {
+    const isCollapsed = body.classList.toggle('collapsed');
+    const expandedNow = !isCollapsed;
+    body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+    toggle.setAttribute('aria-expanded', expandedNow ? 'true' : 'false');
+    toggle.textContent = (expandedNow ? '▼' : '▶') + toggle.textContent.slice(1);
+    localStorage.setItem('profitpath-sensitivity-expanded', expandedNow ? '1' : '0');
+    if (expandedNow) initSliders();
+  });
+
+  $('#sensitivityReset')?.addEventListener('click', () => {
+    resetSliders();
+    updateSensitivity();
+  });
+}
+
+function initSliders() {
+  const sliders = {
+    price: $('#priceSlider'),
+    overhead: $('#overheadSlider'),
+    utilization: $('#utilizationSlider'),
+    employees: $('#employeesSlider')
+  };
+
+  const labels = {
+    price: '#priceSliderVal',
+    overhead: '#overheadSliderVal',
+    utilization: '#utilizationSliderVal',
+    employees: '#employeesSliderVal'
+  };
+
+  // Get current state values for baseline
+  const baseUtilization = state.productiveUtilizationPct || 75;
+  const baseEmployees = state.employees || 1;
+
+  sliders.utilization.value = baseUtilization;
+  sliders.employees.value = baseEmployees;
+  $(labels.utilization).textContent = baseUtilization + '%';
+  $(labels.employees).textContent = baseEmployees;
+
+  // Wire up slider input events
+  sliders.price.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value);
+    $(labels.price).textContent = (val >= 0 ? '+' : '') + val + '%';
+    updateSensitivity();
+  });
+
+  sliders.overhead.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value);
+    $(labels.overhead).textContent = (val >= 0 ? '+' : '') + val + '%';
+    updateSensitivity();
+  });
+
+  sliders.utilization.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value);
+    $(labels.utilization).textContent = val + '%';
+    updateSensitivity();
+  });
+
+  sliders.employees.addEventListener('input', (e) => {
+    const val = parseInt(e.target.value);
+    $(labels.employees).textContent = val;
+    updateSensitivity();
+  });
+
+  updateSensitivity();
+}
+
+function resetSliders() {
+  $('#priceSlider').value = 0;
+  $('#overheadSlider').value = 0;
+  $('#utilizationSlider').value = state.productiveUtilizationPct || 75;
+  $('#employeesSlider').value = state.employees || 1;
+
+  $('#priceSliderVal').textContent = '+0%';
+  $('#overheadSliderVal').textContent = '+0%';
+  $('#utilizationSliderVal').textContent = (state.productiveUtilizationPct || 75) + '%';
+  $('#employeesSliderVal').textContent = state.employees || 1;
+}
+
+function updateSensitivity() {
+  // Get slider values
+  const priceAdjust = (parseInt($('#priceSlider').value) || 0) / 100;
+  const overheadAdjust = (parseInt($('#overheadSlider').value) || 0) / 100;
+  const utilizationVal = parseInt($('#utilizationSlider').value) || 75;
+  const employeesVal = parseInt($('#employeesSlider').value) || 1;
+
+  // Build adjusted state copy
+  const adjusted = JSON.parse(JSON.stringify(state));
+  adjusted.productiveUtilizationPct = utilizationVal;
+  adjusted.employees = employeesVal;
+
+  // Apply price multiplier to all offerings
+  if (priceAdjust !== 0) {
+    adjusted.offerings = adjusted.offerings.map(o => ({
+      ...o,
+      priceMonthly: o.priceMonthly * (1 + priceAdjust)
+    }));
+  }
+
+  // Apply overhead multiplier
+  if (overheadAdjust !== 0) {
+    adjusted.monthlyCosts = adjusted.monthlyCosts * (1 + overheadAdjust);
+  }
+
+  // Calculate baseline and adjusted
+  const baseline = calc(state);
+  const adjustedMetrics = calc(adjusted);
+
+  // Build comparison table
+  const rows = [
+    { label: 'Revenue', baseline: baseline.revenue, adjusted: adjustedMetrics.revenue, isCurrency: true },
+    { label: 'Net Income', baseline: baseline.income, adjusted: adjustedMetrics.income, isCurrency: true },
+    { label: 'Utilization', baseline: baseline.capacityPct, adjusted: adjustedMetrics.capacityPct, isCurrency: false, isPercent: true },
+    { label: 'Break-even Clients', baseline: baseline.breakEvenClients, adjusted: adjustedMetrics.breakEvenClients, isCurrency: false },
+    { label: 'Take-Home', baseline: baseline.takeHome, adjusted: adjustedMetrics.takeHome, isCurrency: true }
+  ];
+
+  let tableHtml = '<table class="sensitivity-comparison"><thead><tr><th>Metric</th><th>Baseline</th><th>Adjusted</th><th>Change</th></tr></thead><tbody>';
+  rows.forEach(row => {
+    const baseVal = row.isCurrency ? fmtMoney0(row.baseline) : (row.isPercent ? Math.round(row.baseline) + '%' : Math.round(row.baseline));
+    const adjVal = row.isCurrency ? fmtMoney0(row.adjusted) : (row.isPercent ? Math.round(row.adjusted) + '%' : Math.round(row.adjusted));
+    const delta = row.adjusted - row.baseline;
+    const deltaFormatted = row.isCurrency ? fmtMoney0(delta) : (row.isPercent ? Math.round(delta) + '%' : Math.round(delta));
+    const deltaClass = delta > 0 ? 'sens-better' : (delta < 0 ? 'sens-worse' : 'sens-neutral');
+    const sign = delta >= 0 ? '+' : '';
+    tableHtml += `<tr><td>${row.label}</td><td>${baseVal}</td><td>${adjVal}</td><td class="${deltaClass}">${sign}${deltaFormatted}</td></tr>`;
+  });
+  tableHtml += '</tbody></table>';
+
+  // Build tornado chart (horizontal bars showing impact of ±20% on each slider)
+  const impacts = [];
+
+  // Price impact
+  const priceUp = JSON.parse(JSON.stringify(state));
+  priceUp.offerings = priceUp.offerings.map(o => ({ ...o, priceMonthly: o.priceMonthly * 1.2 }));
+  const priceDownMetrics = calc(priceUp);
+  impacts.push({ label: 'Price', impact: Math.abs(priceDownMetrics.income - baseline.income) });
+
+  // Overhead impact
+  const overheadUp = JSON.parse(JSON.stringify(state));
+  overheadUp.monthlyCosts = overheadUp.monthlyCosts * 1.2;
+  const overheadDownMetrics = calc(overheadUp);
+  impacts.push({ label: 'Overhead', impact: Math.abs(baseline.income - overheadDownMetrics.income) });
+
+  // Utilization impact
+  const utilUp = JSON.parse(JSON.stringify(state));
+  utilUp.productiveUtilizationPct = Math.min(150, (utilUp.productiveUtilizationPct || 75) * 1.2);
+  const utilDownMetrics = calc(utilUp);
+  impacts.push({ label: 'Utilization', impact: Math.abs(utilDownMetrics.income - baseline.income) });
+
+  // Employees impact
+  const empUp = JSON.parse(JSON.stringify(state));
+  empUp.employees = Math.min(20, (empUp.employees || 1) * 1.2);
+  const empDownMetrics = calc(empUp);
+  impacts.push({ label: 'Employees', impact: Math.abs(empDownMetrics.income - baseline.income) });
+
+  // Sort by impact descending
+  impacts.sort((a, b) => b.impact - a.impact);
+  const maxImpact = Math.max(...impacts.map(i => i.impact), 1);
+
+  // Build tornado SVG
+  const barHeight = 20;
+  const gap = 5;
+  const labelWidth = 100;
+  const chartWidth = 250;
+  let tornadoSvg = `<svg width="${labelWidth + chartWidth + 20}" height="${impacts.length * (barHeight + gap) + 40}" style="margin-top: 8px;">`;
+  tornadoSvg += '<text x="0" y="15" font-size="12" fill="var(--muted)" font-weight="600">Impact on Net Income</text>';
+
+  impacts.forEach((item, idx) => {
+    const y = 30 + idx * (barHeight + gap);
+    const barWidth = (item.impact / maxImpact) * chartWidth;
+    tornadoSvg += `<text x="0" y="${y + barHeight - 3}" font-size="11" fill="var(--muted)">${item.label}</text>`;
+    tornadoSvg += `<rect x="${labelWidth}" y="${y}" width="${barWidth}" height="${barHeight - 2}" fill="var(--accent)" opacity="0.6" rx="2"/>`;
+    tornadoSvg += `<text x="${labelWidth + barWidth + 4}" y="${y + barHeight - 3}" font-size="10" fill="var(--muted)" font-family="var(--mono)">${fmtMoney0(item.impact)}</text>`;
+  });
+
+  tornadoSvg += '</svg>';
+
+  // Render into results div
+  const resultsDiv = $('#sensitivityResults');
+  if (resultsDiv) {
+    resultsDiv.innerHTML = tableHtml + tornadoSvg;
+  }
+}
 
 // Global error handler to surface errors into the debug panel for easier debugging
 window.addEventListener('error', (ev) => {
@@ -2452,10 +2677,11 @@ function initPerfPanel() {
   };
 }
 
-// Initialize debug and performance panels after DOM is ready
+// Initialize debug, performance, and sensitivity panels after DOM is ready
 try {
   initDebugPanel();
   initPerfPanel();
+  initSensitivityPanel();
 } catch {
   try {
     persistState();
