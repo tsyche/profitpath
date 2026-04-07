@@ -9,7 +9,7 @@ import { saveScenario, loadScenario, deleteScenario } from './services/scenarioS
 import { closeScenarioModal, createModal } from './components/Modal.js';
 import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL } from './services/miscService';
 import { uuid } from './utils/helpers';
-import { showConfirmationModal, showToast } from './services/modalService.js';
+import { showToast } from './services/modalService.js';
 
 // Test scenarios for development
 const TEST_SCENARIOS = {
@@ -1678,57 +1678,6 @@ function populateComparisonDropdowns() {
 
   select1.addEventListener('change', saveSelection);
   select2.addEventListener('change', saveSelection);
-}
-
-// Render the comparison table
-function renderComparisonResults(metrics1, metrics2) {
-  const comparisonResultsEl = $('#comparisonResults');
-  if (!comparisonResultsEl) return;
-
-  // Render into the wrapper div, not directly into comparisonResultsEl
-  const tableWrap = comparisonResultsEl.querySelector('.comparison-table-wrap');
-  if (!tableWrap) return;
-
-  const metricsToCompare = [
-    { label: 'Clients', key: 'clients', format: fmtInt },
-    { label: 'Annual Sessions', key: 'annualSessions', format: fmtInt },
-    { label: 'Service Hours', key: 'serviceHours', format: fmtInt },
-    { label: 'Utilization', key: 'utilizationPct', format: fmtPct1 },
-    { label: 'Revenue', key: 'revenue', format: fmtMoney0 },
-    { label: 'Fixed Costs', key: 'annualFixedCosts', format: fmtMoney0 },
-    { label: 'Payroll', key: 'annualPayroll', format: fmtMoney0 },
-    { label: 'Variable Costs', key: 'annualVariableCosts', format: fmtMoney0 },
-    { label: 'Net Income', key: 'netIncome', format: fmtMoney0 },
-    { label: 'Break-Even Clients', key: 'breakEvenClients', format: fmtInt },
-    { label: 'Break-Even Revenue', key: 'breakEvenRevenue', format: fmtMoney0 },
-    { label: 'Contribution Margin', key: 'contributionMarginPerClient', format: fmtMoney0 },
-  ];
-
-  let tableHtml = '<table class="comparison-table"><thead><tr><th>Metric</th><th class="scenario-col">Scenario 1</th><th class="scenario-col">Scenario 2</th><th class="difference-col">Difference</th></tr></thead><tbody>';
-
-  metricsToCompare.forEach(m => {
-    const val1 = metrics1[m.key];
-    const val2 = metrics2[m.key];
-    const diff = val2 - val1;
-
-    let diffClass = 'difference-neutral';
-    if (m.key.includes('income') || m.key.includes('revenue') || m.key.includes('margin')) {
-      if (diff > 0) diffClass = 'difference-positive';
-      else if (diff < 0) diffClass = 'difference-negative';
-    } else if (m.key.includes('cost')) {
-      if (diff > 0) diffClass = 'difference-negative';
-      else if (diff < 0) diffClass = 'difference-positive';
-    } else if (m.key.includes('utilization') || m.key.includes('clients') || m.key.includes('sessions') || m.key.includes('hours')) {
-      if (diff > 0) diffClass = 'difference-positive';
-      else if (diff < 0) diffClass = 'difference-negative';
-    }
-
-    tableHtml += '<tr><td class="metric-name">' + m.label + '</td><td class="scenario-col">' + m.format(val1) + '</td><td class="scenario-col">' + m.format(val2) + '</td><td class="difference-col ' + diffClass + '">' + m.format(diff) + '</td></tr>';
-  });
-
-  tableHtml += '</tbody></table>';
-  tableWrap.innerHTML = tableHtml; // Assign to wrapper
-  comparisonResultsEl.style.display = 'block';
 }
 
 // CSV Import handler
