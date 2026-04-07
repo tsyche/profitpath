@@ -22,8 +22,14 @@ export function setTooltipsEnabled(enabled) {
 }
 
 function setupTooltips() {
-  // Read initial tooltip setting from localStorage
-  tooltipsEnabled = localStorage.getItem('showTooltips') !== 'false';
+  // Read initial tooltip setting from localStorage (from profitpath-settings JSON)
+  try {
+    const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
+    tooltipsEnabled = settings.showTooltips !== false;
+  } catch (e) {
+    // Default to enabled if settings can't be read
+    tooltipsEnabled = true;
+  }
 
   // Convert title attributes to data-tooltip for consistent handling
   document.querySelectorAll('[title]').forEach(el => {
@@ -55,10 +61,15 @@ function setupTooltips() {
 function listenForSettingChanges() {
   // Watch for storage changes (when settings are updated)
   window.addEventListener('storage', (e) => {
-    if (e.key === 'showTooltips') {
-      tooltipsEnabled = e.newValue !== 'false';
-      if (!tooltipsEnabled) {
-        hideTooltip();
+    if (e.key === 'profitpath-settings') {
+      try {
+        const settings = JSON.parse(e.newValue || '{}');
+        tooltipsEnabled = settings.showTooltips !== false;
+        if (!tooltipsEnabled) {
+          hideTooltip();
+        }
+      } catch (err) {
+        // Ignore parse errors
       }
     }
   });
