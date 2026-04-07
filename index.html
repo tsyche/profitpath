@@ -50,78 +50,91 @@
     </div>
 
     <header class="header">
-      <div class="header-left">
+      <!-- Logo -->
+      <div class="header-logo">
         <a href="/" class="logo-link">
           <div class="logo" id="logo">
             <img src="assets/logo-final.svg" class="logo-final" alt="ProfitPath logo" />
-            <div class="subtitle">A lightweight simulator for recurring-cadence service businesses (no backend, no build
-              step).</div>
+            <div class="subtitle">A lightweight simulator for recurring-cadence<br>service businesses (no backend, no build step).</div>
           </div>
         </a>
       </div>
-      <div class="header-right">
-        <div class="header-actions">
-          <button id="undoBtn" class="btn icon-btn" type="button" title="Undo (Ctrl+Z)" disabled>↩</button>
-          <button id="redoBtn" class="btn icon-btn" type="button" title="Redo (Ctrl+Y)" disabled>↪</button>
-          <button class="btn small" id="scenariosBtn" type="button" title="Save, load, or manage scenarios">💾
-            Scenarios</button>
-          <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
-          <div class="templates-dropdown">
-            <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢
-              Templates</button>
-            <div class="templates-menu" id="templatesMenu">
-              <button class="template-option" data-template="consulting" title="Management consulting services">💼
-                Consulting</button>
-              <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹
-                Cleaning</button>
-              <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳
-                Landscaping</button>
-              <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧
-                Handyman</button>
-              <button class="template-option" data-template="fitness" title="Personal training and fitness">💪
-                Fitness</button>
-              <button class="template-option" data-template="photography" title="Photography and media services">📸
-                Photography</button>
+
+      <!-- Nav: action buttons (hidden on mobile) -->
+      <nav class="header-nav">
+        <button class="btn small" id="desktopScenariosBtn" type="button" title="Manage Scenarios">💾 Scenarios</button>
+        <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
+        <div class="templates-dropdown">
+          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢 Templates</button>
+          <div class="templates-menu" id="templatesMenu">
+            <button class="template-option" data-template="consulting" title="Management consulting services">💼 Consulting</button>
+            <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹 Cleaning</button>
+            <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳 Landscaping</button>
+            <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧 Handyman</button>
+            <button class="template-option" data-template="fitness" title="Personal training and fitness">💪 Fitness</button>
+            <button class="template-option" data-template="photography" title="Photography and media services">📸 Photography</button>
+          </div>
+        </div>
+        <button class="btn small" id="importCSVBtn" type="button" title="Import settings from CSV">⬆ Import</button>
+        <input type="file" id="csvFileInput" accept=".csv" style="display:none">
+        <div class="export-dropdown">
+          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄 Export</button>
+          <div class="export-menu" id="exportMenu">
+            <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV Spreadsheet</button>
+            <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
+            <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF Report</button>
+            <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML Page</button>
+            <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
+            <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗 Embed Widget</button>
+            <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Right controls: vertical stack of simulator badge, undo/redo, utility icons + hamburger button -->
+      <div class="header-controls">
+        <!-- Control panel (hidden on mobile) -->
+        <div class="control-panel">
+          <!-- Simulator badge with undo/redo buttons -->
+          <div class="simulator-badge-group">
+            <div class="simulator-badge">
+              <span class="dot"></span>
+              <span class="muted">static simulator</span>
+            </div>
+            <div class="undo-redo-compact">
+              <button id="undoBtn" class="undo-redo-icon-btn" type="button" title="Undo (Ctrl+Z)" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 7v6h6" />
+                  <path d="M21 17a9 9 0 0 0-15.5-6L3 13" />
+                </svg>
+              </button>
+              <div class="undo-redo-divider"></div>
+              <button id="redoBtn" class="undo-redo-icon-btn" type="button" title="Redo (Ctrl+Y)" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 7v6h-6" />
+                  <path d="M3 17a9 9 0 0 1 15.5-6L21 13" />
+                </svg>
+              </button>
             </div>
           </div>
-          <button class="btn small" id="importCSVBtn" type="button" title="Import settings from CSV">⬆ Import</button>
-          <input type="file" id="csvFileInput" accept=".csv" style="display:none">
-          <div class="export-dropdown">
-            <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄
-              Export</button>
-            <div class="export-menu" id="exportMenu">
-              <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV
-                Spreadsheet</button>
-              <button class="export-option advanced-feature" data-format="excel"
-                title="Export as Excel with formulas">📈 Excel Workbook</button>
-              <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF
-                Report</button>
-              <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML
-                Page</button>
-              <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
-              <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗
-                Embed Widget</button>
-              <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto
-                Schedule</button>
-            </div>
+
+          <!-- Utility buttons -->
+          <div class="utility-row">
+            <button class="utility-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings">⚙️</button>
+            <button class="utility-btn" id="helpBtn" type="button" title="Help & Guided Tour">❓</button>
+            <button class="utility-btn" id="desktopFeedbackBtn" type="button" title="Send Feedback">✉️</button>
           </div>
         </div>
-        <div class="badge-container">
-          <div class="badge" title="This is a static file app">
-            <span class="dot"></span>
-            <span class="muted">Static simulator</span>
-          </div>
-          <button class="btn small feedback-btn" id="feedbackBtn" type="button" title="Send feedback">✉️
-            Feedback</button>
-        </div>
-        <div class="right-icons">
-          <button class="settings-cog-btn" id="settingsCogBtn" type="button" title="App settings and preferences"
-            aria-label="Settings">⚙️</button>
-          <button class="help-button-inline" id="helpBtn" title="Help & Guided Tour">❓</button>
-          <button class="feedback-btn-inline" id="desktopFeedbackBtn" title="Send Feedback">✉️</button>
-        </div>
+
+        <!-- Hamburger button (hidden on desktop) -->
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
       </div>
-  </div>
+    </header>
+  <!-- Settings dropdown menu -->
   <div class="settings-dropdown">
     <div class="settings-menu" id="settingsMenu">
       <div class="settings-section">
@@ -269,73 +282,6 @@
     </div>
   </div>
 
-  <!-- Hamburger Menu Button -->
-  <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
-  </header>
-
-  <!-- Scenarios Modal -->
-  <div class="modal" id="scenariosModal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Manage Scenarios</h3>
-        <button class="modal-close" id="scenariosCloseBtn" type="button"
-          aria-label="Close scenarios modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="scenarios-section">
-          <h4>Save Current Scenario</h4>
-          <div class="save-scenario-form">
-            <input id="scenarioNameInput" type="text" placeholder="Enter scenario name (e.g., 'Q1 Plan')"
-              maxlength="50" />
-            <button class="btn primary" id="saveScenarioBtn" type="button">Save Scenario</button>
-          </div>
-        </div>
-
-        <div class="scenarios-section">
-          <h4>Saved Scenarios</h4>
-          <div id="scenariosList" class="scenarios-list">
-            <div class="empty-state">No saved scenarios yet. Save one above!</div>
-          </div>
-        </div>
-
-        <div class="scenarios-section">
-          <h4>Compare Scenarios</h4>
-          <div class="comparison-controls">
-            <select id="compareScenario1" class="scenario-select">
-              <option value="">Select first scenario...</option>
-            </select>
-            <span class="vs-text">vs</span>
-            <select id="compareScenario2" class="scenario-select">
-              <option value="">Select second scenario...</option>
-            </select>
-            <button class="btn primary" id="compareBtn" type="button">Compare</button>
-          </div>
-          <div id="comparisonError" class="text-error" style="display: none; margin-top: 8px;"></div>
-          <div id="comparisonResults" class="comparison-results" style="display: none;">
-            <div class="comparison-table-wrap">
-              <table class="comparison-table">
-                <thead>
-                  <tr>
-                    <th>Metric</th>
-                    <th id="scenario1Name">Scenario 1</th>
-                    <th id="scenario2Name">Scenario 2</th>
-                    <th>Difference</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Comparison rows will be inserted here -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Validation Messages -->
   <div class="validation-container" id="validationContainer" style="display: none;"></div>
@@ -567,7 +513,8 @@
             <span class="section-disclaimer">Simplified US federal only · Consult a tax professional</span>
           </div>
           <div class="kpi-grid">
-            <div class="kpi" title="Estimated annual self-employment tax (Social Security + Medicare on 92.35% of net income)">
+            <div class="kpi"
+              title="Estimated annual self-employment tax (Social Security + Medicare on 92.35% of net income)">
               <div class="k">SE Tax</div>
               <div class="v" id="kpiSeTax">—</div>
               <div class="sub">annual est.</div>
@@ -582,7 +529,8 @@
               <div class="v" id="kpiQuarterly">—</div>
               <div class="sub">due per quarter</div>
             </div>
-            <div class="kpi" title="Owner take-home after all taxes (pre-tax income minus SE tax and federal income tax)">
+            <div class="kpi"
+              title="Owner take-home after all taxes (pre-tax income minus SE tax and federal income tax)">
               <div class="k">Take-Home</div>
               <div class="v" id="kpiTakeHome">—</div>
               <div class="sub">after taxes</div>
@@ -601,7 +549,8 @@
 
         <!-- Sensitivity Analysis panel (collapsible) -->
         <div class="sensitivity-wrapper advanced-feature">
-          <button id="sensitivityToggle" class="debug-toggle" aria-expanded="false" aria-controls="sensitivityBody">▶ Sensitivity Analysis</button>
+          <button id="sensitivityToggle" class="debug-toggle" aria-expanded="false" aria-controls="sensitivityBody">▶
+            Sensitivity Analysis</button>
           <div id="sensitivityBody" class="debug-body collapsed" aria-hidden="true">
             <div id="sensitivityPanel">
               <div class="sensitivity-sliders">
@@ -638,7 +587,8 @@
 
         <!-- Performance monitoring panel (collapsible) -->
         <div class="perf-wrapper expert-feature">
-          <button id="perfToggle" class="debug-toggle" aria-expanded="false" aria-controls="perfBody">▶ Performance</button>
+          <button id="perfToggle" class="debug-toggle" aria-expanded="false" aria-controls="perfBody">▶
+            Performance</button>
           <div id="perfBody" class="debug-body collapsed" aria-hidden="true">
             <div id="perfPanel" class="perf-content"></div>
           </div>
