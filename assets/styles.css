@@ -342,6 +342,14 @@ html {
   flex-shrink: 0;
 }
 
+.simulator-badge .dot.dot-forecast {
+  background: #fbbf24;
+}
+
+.simulator-badge .dot.dot-active {
+  background: #22c55e;
+}
+
 /* Compact undo/redo buttons - bottom row */
 .undo-redo-compact {
   display: flex;
