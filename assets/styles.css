@@ -327,7 +327,7 @@ html {
   justify-content: center;
   gap: 4px;
   padding: 0 8px;
-  flex: 1;
+  width: 112px;
   font-size: 11px;
   white-space: nowrap;
   border-bottom: 1px solid var(--border);
