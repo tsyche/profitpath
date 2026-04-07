@@ -64,8 +64,10 @@ const INDUSTRY_TEMPLATES = {
         { name: 'Monthly Retainer', priceMonthly: 2000, sessionsPerYear: 12, hoursPerSession: 10, variableCostPerSession: 100, mixPct: 50, currentClients: 3 },
         { name: 'Project Work', priceMonthly: 3000, sessionsPerYear: 4, hoursPerSession: 20, variableCostPerSession: 200, mixPct: 20, currentClients: 2 }
       ],
-      employees: 1,
-      employeePay: 80000,
+      fullTimeEmployees: 1,
+      partTimeEmployees: 0,
+      fullTimeEmployeePay: 80000,
+      partTimeEmployeePay: 30000,
       monthlyCosts: 500,
       productiveUtilizationPct: 75,
       targetUtilizationPct: 80
@@ -80,8 +82,10 @@ const INDUSTRY_TEMPLATES = {
         { name: 'Biweekly Cleaning', priceMonthly: 250, sessionsPerYear: 26, hoursPerSession: 3, variableCostPerSession: 30, mixPct: 30, currentClients: 10 },
         { name: 'Deep Cleaning', priceMonthly: 400, sessionsPerYear: 4, hoursPerSession: 6, variableCostPerSession: 50, mixPct: 10, currentClients: 5 }
       ],
-      employees: 2,
-      employeePay: 45000,
+      fullTimeEmployees: 2,
+      partTimeEmployees: 0,
+      fullTimeEmployeePay: 45000,
+      partTimeEmployeePay: 30000,
       monthlyCosts: 300,
       productiveUtilizationPct: 85,
       targetUtilizationPct: 90
@@ -96,8 +100,10 @@ const INDUSTRY_TEMPLATES = {
         { name: 'Group Fitness Classes', priceMonthly: 150, sessionsPerYear: 96, hoursPerSession: 0.5, variableCostPerSession: 0, mixPct: 30, currentClients: 48 },
         { name: 'Online Coaching', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 0.1, variableCostPerSession: 0, mixPct: 10, currentClients: 60 }
       ],
-      employees: 1,
-      employeePay: 40000,
+      fullTimeEmployees: 1,
+      partTimeEmployees: 0,
+      fullTimeEmployeePay: 40000,
+      partTimeEmployeePay: 30000,
       monthlyCosts: 200,
       productiveUtilizationPct: 80,
       targetUtilizationPct: 85
@@ -112,8 +118,10 @@ const INDUSTRY_TEMPLATES = {
         { name: 'Biweekly Lawn Care', priceMonthly: 100, sessionsPerYear: 26, hoursPerSession: 1, variableCostPerSession: 15, mixPct: 30, currentClients: 15 },
         { name: 'Seasonal Services', priceMonthly: 200, sessionsPerYear: 4, hoursPerSession: 4, variableCostPerSession: 40, mixPct: 20, currentClients: 10 }
       ],
-      employees: 2,
-      employeePay: 35000,
+      fullTimeEmployees: 2,
+      partTimeEmployees: 0,
+      fullTimeEmployeePay: 35000,
+      partTimeEmployeePay: 30000,
       monthlyCosts: 400,
       productiveUtilizationPct: 85,
       targetUtilizationPct: 90
@@ -128,8 +136,10 @@ const INDUSTRY_TEMPLATES = {
         { name: 'Portrait Sessions', priceMonthly: 300, sessionsPerYear: 48, hoursPerSession: 2, variableCostPerSession: 25, mixPct: 35, currentClients: 24 },
         { name: 'Event Photography', priceMonthly: 800, sessionsPerYear: 24, hoursPerSession: 4, variableCostPerSession: 75, mixPct: 25, currentClients: 12 }
       ],
-      employees: 1,
-      employeePay: 55000,
+      fullTimeEmployees: 1,
+      partTimeEmployees: 0,
+      fullTimeEmployeePay: 55000,
+      partTimeEmployeePay: 30000,
       monthlyCosts: 300,
       productiveUtilizationPct: 75,
       targetUtilizationPct: 80
@@ -144,8 +154,10 @@ const INDUSTRY_TEMPLATES = {
         { name: 'Repair Services', priceMonthly: 180, sessionsPerYear: 24, hoursPerSession: 1.5, variableCostPerSession: 30, mixPct: 35, currentClients: 20 },
         { name: 'Home Improvement', priceMonthly: 300, sessionsPerYear: 8, hoursPerSession: 4, variableCostPerSession: 60, mixPct: 25, currentClients: 10 }
       ],
-      employees: 1,
-      employeePay: 50000,
+      fullTimeEmployees: 1,
+      partTimeEmployees: 0,
+      fullTimeEmployeePay: 50000,
+      partTimeEmployeePay: 30000,
       monthlyCosts: 250,
       productiveUtilizationPct: 80,
       targetUtilizationPct: 85
@@ -3523,11 +3535,7 @@ function hideContextualHelp() {
   }
 
   // Show confirmation
-  const notification = document.createElement('div');
-  notification.textContent = 'Contextual tooltips disabled.';
-  notification.style.cssText = 'position: fixed;top: 20px;left: 50%;transform: translateX(-50%);background: var(--accent, #007bff);color: white;padding: 10px 20px;border-radius: 6px;z-index: 10002;font-size: 14px;';
-  document.body.appendChild(notification);
-  setTimeout(() => notification.remove(), 3000);
+  showToast('Contextual tooltips disabled.', 'info', 2000);
 }
 
 function showContextualHelp() {
@@ -3551,11 +3559,7 @@ function showContextualHelp() {
   }
 
   // Show confirmation
-  const notification = document.createElement('div');
-  notification.textContent = 'Contextual tooltips enabled! Hover over elements to see help.';
-  notification.style.cssText = 'position: fixed;top: 20px;left: 50%;transform: translateX(-50%);background: var(--accent, #007bff);color: white;padding: 10px 20px;border-radius: 6px;z-index: 10002;font-size: 14px;';
-  document.body.appendChild(notification);
-  setTimeout(() => notification.remove(), 3000);
+  showToast('Contextual tooltips enabled! Hover over elements to see help.', 'info', 2000);
 }
 
 function showEnhancedTooltip(e) {

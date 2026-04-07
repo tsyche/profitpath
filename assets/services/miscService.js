@@ -669,8 +669,10 @@ export function loadIndustryTemplate(templateId) {
       mixPct: o.mixPct || 0,
       currentClients: o.currentClients || 0
     }));
-    window.state.employees = config.employees;
-    window.state.employeePay = config.employeePay;
+    window.state.fullTimeEmployees = config.employees || config.fullTimeEmployees || 1;
+    window.state.partTimeEmployees = config.partTimeEmployees || 0;
+    window.state.fullTimeEmployeePay = config.employeePay || config.fullTimeEmployeePay || 60000;
+    window.state.partTimeEmployeePay = config.partTimeEmployeePay || 30000;
     window.state.monthlyCosts = config.monthlyCosts;
     window.state.productiveUtilizationPct = config.productiveUtilizationPct;
     window.state.targetUtilizationPct = config.targetUtilizationPct;
