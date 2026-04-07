@@ -135,7 +135,7 @@ function calculateCosts(params) {
   const { employees, employeePay, monthlyCosts } = params;
 
   const annualFixedCosts = monthlyCosts * 12;
-  const annualPayroll = Math.max(0, employees - 1) * employeePay; // Excludes owner
+  const annualPayroll = employees * employeePay;
 
   return {
     annualFixedCosts,

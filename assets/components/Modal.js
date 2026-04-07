@@ -1,5 +1,8 @@
 // Consistent Modal Component for ProfitPath
-export function createModal({ title, content, buttons = [], size = 'medium', onClose = null }) {
+export function createModal({ title, content, buttons = [], size = 'medium', id = '', onClose = null }) {
+  // Prevent stacked modals by closing any existing ones first
+  closeCurrentModal();
+
   // Create overlay
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -18,7 +21,8 @@ export function createModal({ title, content, buttons = [], size = 'medium', onC
 
   // Create modal content
   const modal = document.createElement('div');
-  modal.className = 'modal-content';
+  modal.className = 'modal-content modal';
+  if (id) modal.id = id;
 
   // Size variations
   const sizeStyles = {
@@ -131,9 +135,13 @@ export function closeScenarioModal() {
   if (modal) {
     modal.classList.add('hidden');
   }
-  // Also close any overlay modals
-  const overlay = document.querySelector('.modal-overlay');
-  if (overlay) {
-    overlay.remove();
-  }
+}
+
+// Global helper to close any overlay modal
+export function closeCurrentModal() {
+  const overlays = document.querySelectorAll('.modal-overlay');
+  overlays.forEach(o => o.remove());
+  
+  // Also handle scenarios modal specifically
+  closeScenarioModal();
 }

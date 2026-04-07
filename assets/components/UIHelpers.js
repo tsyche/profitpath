@@ -93,97 +93,66 @@ export function openScenarioModal() {
   };
 
   const scenarios = getAllScenarios();
-  console.log('Available scenarios for dropdown:', scenarios);
   const scenariosList = scenarios.map(s => {
     const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
     const ts = escapeHtml(s.timestamp || s.createdAt || '');
     return `
-    <div class="scenario-item">
+    <div class="scenario-item" data-scenario-id="${s.id}">
       <div>
         <div class="scenario-item-name">${name}</div>
         <div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
       </div>
       <div class="scenario-item-actions">
-        <button class="btn small load-btn" data-scenario-id="${escapeHtml(s.id)}">📂 Load</button>
-        <button class="btn small danger delete-btn" data-scenario-id="${escapeHtml(s.id)}">🗑️ Delete</button>
+        <button class="btn small load-btn" data-scenario-id="${s.id}">📂 Load</button>
+        <button class="btn small danger delete-btn" data-scenario-id="${s.id}">🗑️ Delete</button>
       </div>
     </div>
   `;
   }).join('');
 
   const content = `
-    <div class="scenarios-section">
-      <h4 style="color: black !important;">Save Current Configuration</h4>
-      <div class="save-scenario-form">
-        <input type="text" id="scenarioNameInput" placeholder="Enter scenario name..." />
-        <button class="btn primary" id="saveScenarioBtn">💾 Save Scenario</button>
-      </div>
-    </div>
-    
-    <div class="scenarios-section">
-      <h4 style="color: black !important;">Load Saved Scenarios</h4>
-      <div id="scenariosList" class="scenarios-list">
-        ${scenarios.length === 0 ? '<div class="empty-state">No saved scenarios yet. Save one above!</div>' : scenariosList}
-      </div>
-    </div>
-
-    <div class="scenarios-section">
-      <h4 style="color: black !important;">Compare Scenarios</h4>
-      <div class="comparison-controls">
-        <select id="compareScenario1" class="scenario-select">
-          <option value="">Select first scenario...</option>
-        </select>
-        <span class="vs-text">vs</span>
-        <select id="compareScenario2" class="scenario-select">
-          <option value="">Select second scenario...</option>
-        </select>
-        <button class="btn" id="compareBtn">⚖️ Compare</button>
-      </div>
-      <div id="comparisonResults" class="comparison-results" style="display: none;">
-        <div class="comparison-table-wrap">
-          <table class="comparison-table">
-            <thead>
-              <tr>
-                <th>Metric</th>
-                <th class="scenario-col">Scenario 1</th>
-                <th class="scenario-col">Scenario 2</th>
-                <th class="difference-col">Difference</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Comparison data will be inserted here -->
-            </tbody>
-          </table>
+    <div class="scenarios-container">
+      <div class="save-scenario-section" style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+        <h4 style="margin: 0 0 12px; color: var(--text); font-size: 16px;">💾 Save Current Configuration</h4>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="scenarioNameInput" placeholder="Enter scenario name..." style="flex: 1; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 14px;">
+          <button class="btn primary" id="saveScenarioBtn">💾 Save</button>
         </div>
+      </div>
+      
+      <div class="scenarios-list-section" style="margin-bottom: 24px;">
+        <h4 style="margin: 0 0 12px; color: var(--text); font-size: 16px;">📂 Load Saved Scenarios</h4>
+        <div id="scenariosList" class="scenarios-list" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(0,0,0,0.1);">
+          ${scenarios.length === 0 ? '<div style="padding: 20px; text-align: center; color: var(--muted);">No saved scenarios yet.</div>' : scenariosList}
+        </div>
+      </div>
+
+      <div class="comparison-section">
+        <h4 style="margin: 0 0 12px; color: var(--text); font-size: 16px;">⚖️ Compare Scenarios</h4>
+        <div class="comparison-controls" style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+          <select id="compareScenario1" class="scenario-select" style="flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--panel); color: var(--text);">
+            <option value="">Select first...</option>
+          </select>
+          <span style="color: var(--muted); font-weight: 600;">VS</span>
+          <select id="compareScenario2" class="scenario-select" style="flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--panel); color: var(--text);">
+            <option value="">Select second...</option>
+          </select>
+          <button class="btn" id="compareBtn">⚖️ Compare</button>
+        </div>
+        <div id="comparisonResults" class="comparison-results" style="display: none;"></div>
       </div>
     </div>
   `;
 
   const modal = createModal({
-    title: 'Scenarios',
+    id: 'scenariosModal',
+    title: '💾 Scenarios',
     content: content,
     buttons: [
-      { text: 'Close', action: cleanupModal, primary: false }
+      { text: 'Close', primary: false }
     ],
     size: 'large'
   });
-
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.appendChild(modal);
-  document.body.appendChild(overlay);
-
-  // Update close button action
-  const closeBtn = modal.querySelector('.modal-close');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', cleanupModal);
-  }
-
-  // Update modal close button in footer
-  const modalCloseBtn = modal.querySelector('.modal-btn[data-index="0"]');
-  if (modalCloseBtn) {
-    modalCloseBtn.addEventListener('click', cleanupModal);
-  }
 
   // Populate comparison dropdowns after modal is added to DOM
   console.log('Modal added to DOM, populating dropdowns immediately...');
@@ -412,41 +381,36 @@ export function performComparisonInModal(scenarioId1, scenarioId2, modal) {
   }
 }
 
-export function performComparison(scenarioId1, scenarioId2) {
+export function performComparison(scenarioId1, scenarioId2, modal = null) {
   console.log('performComparison called with:', scenarioId1, scenarioId2);
 
   const scenarios = getAllScenarios();
-  console.log('Available scenarios:', scenarios);
 
-  // Find scenarios by ID, not name
+  // Find scenarios by ID
   const scenario1 = scenarios.find(s => s.id === scenarioId1);
   const scenario2 = scenarios.find(s => s.id === scenarioId2);
 
-  console.log('Found scenarios:', { scenario1: scenario1?.name, scenario2: scenario2?.name });
-
   if (!scenario1 || !scenario2) {
     import('../services/modalService.js').then((modalService) => {
-      modalService.showToast('One or both scenarios not found');
+      modalService.showToast('Scenario not found');
     });
     return;
   }
 
-  // Find results div within the modal
-  const resultsDiv = document.querySelector('#comparisonResults') ||
-    document.querySelector('.modal-overlay #comparisonResults') ||
-    document.querySelector('#scenariosModal #comparisonResults');
-
+  // Find results div within the modal if provided, or globally (for tests)
+  const resultsDiv = modal ? (modal.querySelector('#comparisonResults') || modal.parentElement?.querySelector('#comparisonResults')) : 
+                     document.querySelector('#comparisonResults');
+  
   if (!resultsDiv) {
-    console.error('Comparison results div not found');
+    console.error('Comparison results div not found in modal context');
     return;
   }
 
-  // Show results first
+  // Show results
   resultsDiv.style.display = 'block';
 
-  // Look for tbody in the table wrapper
-  const tableWrap = resultsDiv.querySelector('.comparison-table-wrap');
-  const tbody = tableWrap ? tableWrap.querySelector('tbody') : null;
+  // Look for tbody
+  const tbody = resultsDiv.querySelector('tbody');
 
   if (!tbody) {
     console.error('Comparison table tbody not found');
