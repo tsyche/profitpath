@@ -317,7 +317,7 @@ html {
   border-radius: 9px;
   background: var(--panel);
   overflow: hidden;
-  height: 32px;
+  height: 40px;
 }
 
 /* Simulator badge - top row */
