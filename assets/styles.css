@@ -2246,9 +2246,9 @@ input[type="checkbox"] {
   color: white !important;
 }
 
-/* Buttons inside modals */
-.modal-content .btn,
-.modal-content .btn.danger {
+/* Buttons inside modals - force white text */
+.modal-body .btn,
+.modal-footer .btn {
   color: white !important;
 }
 
