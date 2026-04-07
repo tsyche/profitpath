@@ -2289,7 +2289,12 @@ function wire() {
     });
 
     csvFileInput.addEventListener('change', (e) => {
-      if (e.target.files[0]) handleCSVImport(e.target.files[0]);
+      if (e.target.files[0]) {
+        handleCSVImport(e.target.files[0]);
+      } else {
+        // User cancelled - close the modal
+        closeModal();
+      }
       csvFileInput.value = '';
     });
   }

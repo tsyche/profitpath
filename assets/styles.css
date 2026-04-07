@@ -240,7 +240,7 @@ body {
 .header+.validation-container,
 .validation-container+.grid,
 .header+.grid {
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 /* Final safe overrides: ensure bottom spacing and tighter header/content gap
@@ -482,7 +482,7 @@ html {
 }
 
 .grid {
-  margin-top: 6px !important;
+  margin-top: 2px !important;
   padding-bottom: 12px !important;
 }
 
@@ -2246,6 +2246,12 @@ input[type="checkbox"] {
   color: white !important;
 }
 
+/* Buttons inside modals */
+.modal-content .btn,
+.modal-content .btn.danger {
+  color: white !important;
+}
+
 /* Scenarios modal buttons */
 .scenarios-list .btn {
   background: #007bff !important;
@@ -3571,68 +3577,64 @@ input[type="checkbox"] {
 /* Toast Notification Styles */
 .toast {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  border-left: 4px solid var(--border);
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: rgba(34, 197, 94, 0.85);
   border-radius: 8px;
-  padding: 12px 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 14px 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   z-index: 15000;
-  transform: translateX(100%);
   opacity: 0;
   transition: transform 0.3s ease, opacity 0.3s ease;
   font-size: 14px;
-  color: var(--text);
-  max-width: 300px;
+  color: white;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(34, 197, 94, 0.4);
 }
 
 .toast.show {
-  transform: translateX(0);
+  transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
 
-.toast.toast-info {
-  border-left-color: var(--accent);
+.toast .toast-close {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
 }
 
-.toast.toast-success {
-  border-left-color: #22c55e;
-  background: #064e3b;
-  color: #d1fae5;
-  border-top-color: #10b981;
-  border-right-color: #10b981;
-  border-bottom-color: #10b981;
+.toast .toast-close:hover {
+  opacity: 1;
 }
 
-.toast.toast-warning {
-  border-left-color: #f59e0b;
-  background: #292524;
-  color: #fde68a;
-  border-top-color: #f59e0b;
-  border-right-color: #f59e0b;
-  border-bottom-color: #f59e0b;
+.toast .toast-message {
+  flex: 1;
 }
 
-.toast.toast-error {
-  border-left-color: #ef4444;
-  background: #3f1d1d;
-  color: #fecaca;
-  border-top-color: #ef4444;
-  border-right-color: #ef4444;
-  border-bottom-color: #ef4444;
-}
-
+/* Remove individual type styling - all toasts now use green theme */
+.toast.toast-info,
+.toast.toast-success,
+.toast.toast-warning,
+.toast.toast-error,
 .toast.toast-confirmation {
-  border-left-color: #3b82f6;
-  background: #1e3a8a;
-  color: #bfdbfe;
-  border-top-color: #3b82f6;
-  border-right-color: #3b82f6;
-  border-bottom-color: #3b82f6;
+  background: rgba(34, 197, 94, 0.85);
+  color: white;
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
 /* Analytics Dashboard Styles */
