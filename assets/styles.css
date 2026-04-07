@@ -328,7 +328,7 @@ html {
   gap: 4px;
   padding: 0 8px;
   width: 112px;
-  flex: 2;
+  flex: 3;
   font-size: 11px;
   white-space: nowrap;
   border-bottom: 1px solid var(--border);
@@ -2255,10 +2255,29 @@ input[type="checkbox"] {
   color: white !important;
 }
 
-/* Buttons inside modals - force dark text for light background */
+/* Buttons inside modals - white text on dark backgrounds */
 .modal-body .btn,
 .modal-footer .btn {
-  color: #1f2937 !important;
+  color: white !important;
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
+.modal-body .btn:hover,
+.modal-footer .btn:hover {
+  background: #4b5563 !important;
+}
+
+.modal-body .btn.primary,
+.modal-footer .btn.primary {
+  background: #007bff !important;
+  border-color: #0056b3 !important;
+}
+
+.modal-body .btn.danger,
+.modal-footer .btn.danger {
+  background: #dc3545 !important;
+  border-color: #a02834 !important;
 }
 
 /* Scenarios modal buttons */
