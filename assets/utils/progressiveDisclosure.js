@@ -1,5 +1,6 @@
 // Progressive disclosure functionality
 export function initializeProgressiveDisclosure() {
+  if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
   const userLevel = localStorage.getItem('userExperienceLevel') || 'beginner';
 
   // Hide advanced features based on user level

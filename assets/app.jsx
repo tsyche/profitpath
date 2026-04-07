@@ -205,17 +205,10 @@ const safeParseNumber = (value, defaultValue = 0) => {
   return isNaN(parsed) ? defaultValue : parsed;
 };
 
-const rebalanceMix = () => {
-  if (state.mode === 'forecast' && state.lockMix) {
-    const sum = state.offerings.reduce((a, o) => a + (Number(o.mixPct) || 0), 0);
-    if (sum > 0) {
-      state.offerings.forEach((o) => (o.mixPct = ((Number(o.mixPct) || 0) / sum) * 100));
-    }
-  }
-};
+// No local shadowing needed
 
 // Additional missing function wrappers - only include functions that exist
-const updateValidationDisplay = (...args) => (misc && typeof misc.updateValidationDisplay === 'function') ? misc.updateValidationDisplay(...args) : undefined;
+const updateValidationDisplay = (...args) => (businessLogic && typeof businessLogic.updateValidationDisplay === 'function') ? businessLogic.updateValidationDisplay(...args) : undefined;
 const lazyLoadChart = (...args) => (misc && typeof misc.lazyLoadChart === 'function') ? misc.lazyLoadChart(...args) : undefined;
 const updateRichVisualizations = (...args) => (misc && typeof misc.updateRichVisualizations === 'function') ? misc.updateRichVisualizations(...args) : undefined;
 
@@ -257,7 +250,7 @@ if (typeof window !== 'undefined') {
   window.render = render;
   window.updateOutputs = updateOutputs;
   window.updateValidationDisplay = updateValidationDisplay;
-  window.rebalanceMix = rebalanceMix;
+  window.rebalanceMix = businessLogic.rebalanceMix;
   window.defaultOfferings = businessLogic.defaultOfferings;
   window.persistState = persistState;
 }
@@ -402,7 +395,7 @@ function onTableInput(e) {
   if (k === 'name') {
     o.name = el.value;
   } else if (k === 'mixPct' && state.mode === 'forecast' && state.lockMix) {
-    rebalanceMix(i, value);
+    businessLogic.rebalanceMix(i, value);
   } else {
     o[k] = value;
   }
@@ -1514,69 +1507,13 @@ $('#offeringsBody').addEventListener('click', onTableClick);
 $('#offeringsBody').addEventListener('input', persistState);
 $('#offeringsBody').addEventListener('click', () => setTimeout(persistState, 0));
 
-// Scenario modal wiring - use new modal system
-{
-  const scenariosBtnEl = $('#scenariosBtn');
-  if (scenariosBtnEl) {
-    scenariosBtnEl.addEventListener('click', () => {
-      openScenarioModal();
-    });
-  }
-
-  // Set up close button for scenarios modal
-  const scenariosCloseBtnEl = $('#scenariosCloseBtn');
-  if (scenariosCloseBtnEl) {
-    scenariosCloseBtnEl.addEventListener('click', () => {
-      closeScenarioModal();
-    });
-  }
-
-  // Set up save button with confirmation
-  const saveBtn = $('#saveScenarioBtn');
-  if (saveBtn) {
-    saveBtn.addEventListener('click', async () => {
-      const input = $('#scenarioNameInput');
-      if (!input || !input.value.trim()) {
-        showToast('Please enter a scenario name', 'error');
-        return;
-      }
-
-      const result = await showConfirmationModal(
-        'Save Scenario',
-        'Save current configuration as "' + input.value.trim() + '"?',
-        'This will overwrite any existing scenario with the same name.'
-      );
-
-      if (result) {
-        saveScenario(input.value.trim());
-        showToast('Scenario saved successfully', 'success');
-      }
-    });
-  }
-
-  // Set up input enter key
-  const input = $('#scenarioNameInput');
-  if (input) {
-    input.addEventListener('keypress', async (e) => {
-      if (e.key === 'Enter') {
-        if (!input.value.trim()) {
-          showToast('Please enter a scenario name', 'error');
-          return;
-        }
-
-        const result = await showConfirmationModal(
-          'Save Scenario',
-          'Save current configuration as "' + input.value.trim() + '"?',
-          'This will overwrite any existing scenario with the same name.'
-        );
-
-        if (result) {
-          saveScenario(input.value.trim());
-          showToast('Scenario saved successfully', 'success');
-        }
-      }
-    });
-  }
+// Scenarios button wiring - uses new dynamic modal in UIHelpers
+// Wire up desktop scenarios button (mobile button is wired at line 1410)
+const desktopScenariosBtn = $('#desktopScenariosBtn');
+if (desktopScenariosBtn) {
+  desktopScenariosBtn.addEventListener('click', () => {
+    openScenarioModal();
+  });
 }
 
 // Desktop menu buttons wiring - defer until scripts are loaded
@@ -2321,7 +2258,14 @@ function wire() {
         const zone = document.getElementById('csvDropZone');
         if (!zone) return;
 
-        zone.addEventListener('click', () => csvFileInput.click());
+        zone.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const input = document.getElementById('csvFileInput');
+          if (input) {
+            input.click();
+          }
+        });
 
         zone.addEventListener('dragover', (e) => {
           e.preventDefault();
@@ -2669,7 +2613,7 @@ function initPerfPanel() {
 
   // Also update perf display on render
   const originalRender = window.render;
-  window.render = function() {
+  window.render = function () {
     originalRender.apply(this, arguments);
     if (!body.classList.contains('collapsed')) {
       refreshPerf();
@@ -3616,57 +3560,7 @@ if (typeof encodeScenarioToURL === 'function') window.encodeScenarioToURL = enco
 if (typeof decodeScenarioFromURL === 'function') window.decodeScenarioFromURL = decodeScenarioFromURL;
 if (typeof loadScenarioFromURL === 'function') window.loadScenarioFromURL = loadScenarioFromURL;
 if (typeof showScenarioComparisonDiff === 'function') window.showScenarioComparisonDiff = showScenarioComparisonDiff;
-function _initializeScenarios() {
-  // Set up scenarios button
-  const scenariosBtn = document.getElementById('scenariosBtn');
-  if (scenariosBtn) {
-    scenariosBtn.addEventListener('click', openScenarioModal);
-  }
-
-  // Set up modal close button
-  const modalCloseBtn = document.querySelector('#scenariosModal .btn-close');
-  if (modalCloseBtn) {
-    modalCloseBtn.addEventListener('click', closeScenarioModal);
-  }
-
-  // Set up save button
-  const saveBtn = document.getElementById('saveScenarioBtn');
-  if (saveBtn) {
-    saveBtn.addEventListener('click', () => {
-      const input = document.getElementById('scenarioNameInput');
-      if (input) {
-        saveScenario(input.value);
-      }
-    });
-  }
-
-  // Set up input enter key
-  const input = document.getElementById('scenarioNameInput');
-  if (input) {
-    input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        saveScenario(input.value);
-      }
-    });
-  }
-
-  // Delegate events for load and delete buttons
-  // Delegate events for load and delete buttons
-  const scenariosList = document.getElementById('scenariosList');
-  if (scenariosList) {
-    scenariosList.addEventListener('click', (e) => {
-      const target = e.target;
-      const scenarioId = target.dataset.scenarioId;
-
-      if (target.classList.contains('load-btn') && scenarioId) {
-        loadScenario(scenarioId);
-      } else if (target.classList.contains('delete-btn') && scenarioId) {
-        // Directly call deleteScenario - it handles its own confirmation
-        deleteScenario(scenarioId);
-      }
-    });
-  }
-}
+// Scenarios initialization removed - handled by main wiring
 
 // Initialize scenarios when DOM is ready - REMOVED to prevent conflicts with new modal system
 // initializeScenarios();

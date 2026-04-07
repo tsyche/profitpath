@@ -256,52 +256,15 @@ html {
   padding-bottom: 24px !important;
 }
 
+/* ── Header: 3-column grid ──────────────────────────────── */
 .header {
-  margin-bottom: 0 !important;
-  /* make header sit closer to content */
-}
-
-.validation-container {
-  /* Keep validation banners centered and matching the grid/card widths */
-  max-width: calc(100vw - 64px) !important;
-  margin: 4px auto 12px !important;
-  padding: 4px 0 !important;
-}
-
-.grid {
-  margin-top: 6px !important;
-  padding-bottom: 12px !important;
-  /* extra safety so cards don't touch bottom */
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 0;
-  /* bring header even closer to content */
-  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: flex-start;
+  gap: 8px;
   padding: 10px 0;
-  /* slightly reduced vertical padding */
-}
-
-.header-left {
-  flex: 0 0 auto;
-}
-
-.header-right {
-  flex: 0 0 auto;
-  max-width: var(--side-max);
-}
-
-
-.header>div:first-child {
-  flex: 1;
-}
-
-.header>.header-right {
-  flex: 0 0 var(--side-max);
+  position: relative;
+  margin-bottom: 0;
 }
 
 .header h1 {
@@ -315,6 +278,212 @@ html {
   color: var(--muted);
   font-size: 13px;
   margin-top: 2px;
+}
+
+/* ── Logo (column 1) ──────────────────────────────────── */
+.header-logo {
+  flex: 0 0 auto;
+}
+
+/* ── Nav: action buttons (column 2, hidden on mobile) ──── */
+.header-nav {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ── Right controls (column 3): control panel + hamburger ── */
+.header-controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Control panel: flex column with minimal gap */
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Simulator badge group: split button with text top, icons bottom */
+.simulator-badge-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--panel);
+  overflow: hidden;
+  height: 32px;
+}
+
+/* Simulator badge - top row */
+.simulator-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 8px;
+  flex: 1;
+  font-size: 11px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.simulator-badge .dot {
+  width: 5px;
+  height: 5px;
+  background: #5eead4;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Compact undo/redo buttons - bottom row */
+.undo-redo-compact {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  flex: 1;
+  padding: 0 2px;
+  background: var(--panel);
+}
+
+.undo-redo-icon-btn {
+  flex: 1;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+  color: var(--accent);
+}
+
+.undo-redo-icon-btn:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.undo-redo-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.undo-redo-icon-btn svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+/* Divider line between undo and redo */
+.undo-redo-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* Utility buttons */
+.utility-row {
+  display: flex;
+  gap: 4px;
+}
+
+.utility-btn {
+  flex: 1;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.utility-btn:hover:not(:disabled) {
+  background: var(--surface);
+  border-color: var(--accent);
+}
+
+.utility-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Hamburger button (hidden on desktop) ────────────── */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  z-index: 100;
+}
+
+.hamburger-btn span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--text);
+  margin: 3px auto;
+  transition: all 0.25s ease;
+}
+
+.hamburger-btn.active span:nth-child(1) {
+  transform: rotate(45deg) translate(4px, 4px);
+}
+
+.hamburger-btn.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-btn.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(4px, -4px);
+}
+
+/* ── Mobile (≤768px): nav and panel hide, hamburger shows ── */
+@media (max-width: 768px) {
+  .header {
+    grid-template-columns: auto auto;
+    align-items: center;
+    padding: 8px;
+  }
+  .header-nav {
+    display: none;
+  }
+  .control-panel {
+    display: none;
+  }
+  .hamburger-btn {
+    display: flex;
+  }
+}
+
+.validation-container {
+  max-width: calc(100vw - 64px) !important;
+  margin: 4px auto 12px !important;
+  padding: 4px 0 !important;
+}
+
+.grid {
+  margin-top: 6px !important;
+  padding-bottom: 12px !important;
 }
 
 /* Logo styling (inline SVG) */
@@ -505,12 +674,47 @@ html {
 
 .badge {
   display: inline-flex;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 12px;
+  padding: 4px 10px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.04);
+  min-width: 160px;
+  height: 32px;
+}
+
+.badge-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-left: auto;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.icon-btn-inline {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.icon-btn-inline:hover:not(:disabled) {
+  color: var(--accent);
+  background: rgba(94, 234, 212, 0.1);
+}
+
+.icon-btn-inline:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .badge .dot {
@@ -556,61 +760,7 @@ html {
 }
 
 
-.right-icons {
-  display: flex;
-  position: relative;
-  width: 76px;
-  height: 34px;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.right-icons button {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  position: absolute;
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
-.right-icons button:first-child {
-  top: 0;
-  right: 0;
-}
-
-.right-icons button:nth-child(2) {
-  top: 42px;
-  right: 0;
-}
-
-.right-icons button:nth-child(3) {
-  top: 0;
-  right: 42px;
-}
-
-.right-icons button:hover {
-  background: var(--accent);
-  color: #fff;
-}
-
-/* Hide desktop badge and right-icons on mobile */
-@media (max-width: 768px) {
-  .header .badge-container {
-    display: none;
-  }
-
-  /* Hide right-icons on mobile since they're now in hamburger menu */
-  .right-icons {
-    display: none
-  }
-}
+/* right-icons styling removed - now using utility-row and utility-btn */
 
 .grid {
   display: grid;
@@ -1163,13 +1313,29 @@ button:focus-visible {
 }
 
 /* Sensitivity Analysis panel */
-.sensitivity-wrapper { margin-top: 12px; }
+.sensitivity-wrapper {
+  margin-top: 12px;
+}
 
-.sensitivity-sliders { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.sensitivity-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
 
-.slider-row { display: flex; align-items: center; gap: 10px; }
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-.slider-label { font-size: 12px; color: var(--muted); min-width: 130px; font-family: var(--mono); }
+.slider-label {
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 130px;
+  font-family: var(--mono);
+}
 
 input[type="range"] {
   flex: 1;
@@ -1199,15 +1365,52 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 
-.sensitivity-comparison { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
-.sensitivity-comparison th { color: var(--muted); font-weight: 600; text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--border); }
-.sensitivity-comparison th:first-child { text-align: left; }
-.sensitivity-comparison td { padding: 4px 6px; text-align: right; font-family: var(--mono); }
-.sensitivity-comparison td:first-child { text-align: left; color: var(--muted); font-family: var(--sans); }
-.sensitivity-comparison tr:nth-child(even) { background: rgba(255,255,255,0.03); }
-.sens-better { color: var(--good); }
-.sens-worse { color: var(--bad); }
-.sens-neutral { color: var(--muted); }
+.sensitivity-comparison {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.sensitivity-comparison th {
+  color: var(--muted);
+  font-weight: 600;
+  text-align: right;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sensitivity-comparison th:first-child {
+  text-align: left;
+}
+
+.sensitivity-comparison td {
+  padding: 4px 6px;
+  text-align: right;
+  font-family: var(--mono);
+}
+
+.sensitivity-comparison td:first-child {
+  text-align: left;
+  color: var(--muted);
+  font-family: var(--sans);
+}
+
+.sensitivity-comparison tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sens-better {
+  color: var(--good);
+}
+
+.sens-worse {
+  color: var(--bad);
+}
+
+.sens-neutral {
+  color: var(--muted);
+}
 
 /* Below-bar per-offering compact list */
 .simple-chart {
@@ -2603,12 +2806,7 @@ input[type="checkbox"] {
   }
 }
 
-/* Header actions spacing */
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
+/* Header actions spacing - removed, using grid layout now */
 
 .header-actions {
   display: flex;
@@ -3054,8 +3252,11 @@ input[type="checkbox"] {
 }
 
 @media (max-width: 600px) {
+
   /* Mobile: simplified card layout, show only 4 key metrics */
-  .scenario-diff-header { display: none; }
+  .scenario-diff-header {
+    display: none;
+  }
 
   .scenario-diff-mobile-header {
     display: flex;
@@ -3080,7 +3281,9 @@ input[type="checkbox"] {
     margin: 0;
   }
 
-  .scenario-diff-row[data-mobile-hide="true"] { display: none; }
+  .scenario-diff-row[data-mobile-hide="true"] {
+    display: none;
+  }
 
   .diff-col-label {
     font-weight: 600;
