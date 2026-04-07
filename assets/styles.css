@@ -473,12 +473,15 @@ html {
     align-items: center;
     padding: 8px;
   }
+
   .header-nav {
     display: none;
   }
+
   .control-panel {
     display: none;
   }
+
   .hamburger-btn {
     display: flex;
   }
@@ -577,8 +580,8 @@ html {
 }
 
 .mobile-menu {
-  background: rgba(0, 0, 0, 0.9);
-  border: 1px solid var(--border);
+  background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   min-width: 200px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -589,13 +592,13 @@ html {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #e5e7eb;
   position: relative;
 }
 
 .mobile-menu-title {
   font-weight: 600;
-  color: var(--text);
+  color: #1f2937;
 }
 
 
@@ -604,7 +607,7 @@ html {
   align-items: center;
   gap: 6px;
   font-size: 16px;
-  color: var(--muted);
+  color: #6b7280;
   margin-bottom: 4px;
   margin-left: 4px;
 }
@@ -620,13 +623,13 @@ html {
 
 .mobile-menu-title {
   font-weight: 600;
-  color: var(--text);
+  color: #1f2937;
 }
 
 .mobile-menu-close {
   background: none;
   border: none;
-  color: var(--text);
+  color: #374151;
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -653,6 +656,9 @@ html {
   text-align: left;
   justify-content: flex-start;
   gap: 8px;
+  color: #374151 !important;
+  background: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
 }
 
 .logo-final {
@@ -2280,8 +2286,8 @@ input[type="checkbox"] {
   border-color: #a02834 !important;
 }
 
-/* Scenarios modal buttons */
-.scenarios-list .btn {
+/* Scenarios modal buttons - using ID prefix for higher specificity to override modal-body color */
+#scenariosModal .scenarios-list .btn {
   background: #007bff !important;
   color: white !important;
   border: 1px solid #007bff !important;
@@ -2290,13 +2296,13 @@ input[type="checkbox"] {
   border-radius: 4px !important;
 }
 
-.scenarios-list .btn.danger {
+#scenariosModal .scenarios-list .btn.danger {
   background: #dc3545 !important;
   color: white !important;
   border: 1px solid #dc3545 !important;
 }
 
-.scenarios-list .btn:hover {
+#scenariosModal .scenarios-list .btn:hover {
   opacity: 0.8 !important;
 }
 
@@ -2336,7 +2342,7 @@ input[type="checkbox"] {
 }
 
 /* Main scenarios buttons */
-#saveScenarioBtn {
+#scenariosModal #saveScenarioBtn {
   background: #007bff !important;
   color: white !important;
   border: none !important;
@@ -2345,7 +2351,7 @@ input[type="checkbox"] {
   font-weight: bold !important;
 }
 
-#compareBtn {
+#scenariosModal #compareBtn {
   background: #28a745 !important;
   color: white !important;
   border: none !important;
