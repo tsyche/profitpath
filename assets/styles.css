@@ -2246,10 +2246,10 @@ input[type="checkbox"] {
   color: white !important;
 }
 
-/* Buttons inside modals - force white text */
+/* Buttons inside modals - force dark text for light background */
 .modal-body .btn,
 .modal-footer .btn {
-  color: white !important;
+  color: #1f2937 !important;
 }
 
 /* Scenarios modal buttons */
