@@ -499,6 +499,22 @@ function render() {
   {
     const el = $('#modeSelect'); if (el) el.value = state.mode;
   }
+
+  // Update simulator badge text and color based on mode
+  {
+    const badge = $('.simulator-badge');
+    if (badge) {
+      const muted = badge.querySelector('.muted');
+      if (muted) {
+        muted.textContent = state.mode === 'forecast' ? 'forecast mode' : 'active customers';
+      }
+      const dot = badge.querySelector('.dot');
+      if (dot) {
+        dot.className = 'dot ' + (state.mode === 'forecast' ? 'dot-forecast' : 'dot-active');
+      }
+    }
+  }
+
   {
     const el = $('#fullTimeEmployees'); if (el) el.value = state.fullTimeEmployees;
   }
