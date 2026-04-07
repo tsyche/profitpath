@@ -328,6 +328,7 @@ html {
   gap: 4px;
   padding: 0 8px;
   width: 112px;
+  flex: 2;
   font-size: 11px;
   white-space: nowrap;
   border-bottom: 1px solid var(--border);
