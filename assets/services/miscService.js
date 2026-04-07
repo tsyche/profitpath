@@ -35,237 +35,27 @@ export function escapeHtml(str) {
     .replaceAll("'", '&#039;');
 }
 
-export function setStateFromInputs() {
-  state.mode = $('#modeSelect').value;
-
-  // Validate and sanitize inputs
-  state.employees = Math.max(1, Math.floor(safeParseNumber($('#employees').value, 1)));
-  state.employeePay = Math.max(0, safeParseNumber($('#employeePay').value, 0));
-  state.monthlyCosts = Math.max(0, safeParseNumber($('#monthlyCosts').value, 0));
-  state.productiveUtilizationPct = clamp(safeParseNumber($('#productiveUtilizationPct').value, 80), 0, 100);
-  state.targetUtilizationPct = clamp(safeParseNumber($('#targetUtilizationPct').value, 75), 0, 150);
-  state.lockMix = Boolean($('#lockMix')?.checked);
-}
-
-export function onTableInput(e) {
-  const el = e.target;
-  if (!(el instanceof HTMLInputElement)) return;
-
-  const k = el.dataset.k;
-  const i = Number(el.dataset.i);
-  if (!k || !Number.isFinite(i)) return;
-
-  const o = state.offerings[i];
-  if (!o) return;
-
-  // Validate and sanitize input based on field type
-  let value = el.value;
-  let validationError = null;
-
-  if (k === 'priceMonthly') {
-    const parsed = safeParseNumber(value, 0);
-    if (parsed <= 0) {
-      validationError = 'Price must be greater than $0';
-      value = 0;
-    } else {
-      value = parsed;
+// Clipboard fallback for non-secure contexts
+function copyToClipboardFallback(text) {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "fixed";
+  textArea.style.left = "-9999px";
+  textArea.style.top = "-9999px";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  return new Promise((resolve, reject) => {
+    try {
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      if (successful) resolve();
+      else reject(new Error('Copy command failed'));
+    } catch (err) {
+      document.body.removeChild(textArea);
+      reject(err);
     }
-  } else if (k === 'variableCostPerSession') {
-    const parsed = safeParseNumber(value, 0);
-    if (parsed < 0) {
-      validationError = 'Variable costs cannot be negative';
-      value = 0;
-    } else {
-      value = parsed;
-    }
-  } else if (k === 'sessionsPerYear') {
-    const parsed = Math.floor(safeParseNumber(value, 0));
-    if (parsed <= 0) {
-      validationError = 'Must have at least 1 session per year';
-      value = 1;
-    } else {
-      value = parsed;
-    }
-  } else if (k === 'hoursPerSession') {
-    const parsed = safeParseNumber(value, 0);
-    if (parsed <= 0) {
-      validationError = 'Session must take at least 0.1 hours';
-      value = 0.1;
-    } else {
-      value = parsed;
-    }
-  } else if (k === 'currentClients') {
-    const parsed = Math.floor(safeParseNumber(value, 0));
-    if (parsed < 0) {
-      validationError = 'Client count cannot be negative';
-      value = 0;
-    } else {
-      value = parsed;
-    }
-  } else if (k === 'mixPct') {
-    const parsed = safeParseNumber(value, 0, 0, 100);
-    value = parsed;
-  }
-
-  // Show validation error if any and provide auto-fix for some cases
-  if (validationError) {
-    // Validation error handled-value has been sanitized
-
-    // Auto-fix common issues
-    if (k === 'priceMonthly' && value === 0 && o.priceMonthly === 0) {
-      // Suggest a reasonable default price
-    }
-
-  }
-
-  if (k === 'name') {
-    o.name = el.value;
-  } else if (k === 'mixPct' && state.mode === 'forecast' && state.lockMix) {
-    if (typeof rebalanceMix === 'function') rebalanceMix(i, value);
-  } else {
-    o[k] = value;
-  }
-
-  // Update state and outputs in-place without re-rendering the entire table to preserve focus.
-  try {
-    if (typeof persistState === 'function') persistState();
-  } catch (e) {
-    console.warn('Failed to persist state on input:', e);
-  }
-
-  // Refresh outputs to reflect the change
-  try {
-    if (typeof calc === 'function') {
-      const metrics = calc();
-      if (typeof updateOutputs === 'function') updateOutputs(metrics);
-      if (typeof updateValidationDisplay === 'function') updateValidationDisplay(); // Update validation messages after calculations
-    }
-  } catch (e) {
-    console.warn('Failed to refresh outputs on input:', e);
-  }
-  // If changing mix in locked forecast mode, re-render to update other mix inputs
-  if (k === 'mixPct' && state.mode === 'forecast' && state.lockMix) {
-    if (typeof render === 'function') render();
-  }
-}
-
-export function onTableClick(e) {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-
-  const action = btn.dataset.action;
-  if (!action) return;
-
-  if (action === 'removeOffering') {
-    const i = Number(btn.dataset.i);
-    if (Number.isFinite(i)) {
-      state.offerings.splice(i, 1);
-      if (state.offerings.length === 0) {
-        if (typeof defaultOfferings === 'function') {
-          state.offerings = defaultOfferings();
-        }
-      }
-      if (typeof render === 'function') render();
-    }
-  }
-}
-
-export function addOffering() {
-  state.offerings.push({
-    id: uuid(),
-    name: 'Offering ' + (state.offerings.length + 1),
-    priceMonthly: 100,
-    sessionsPerYear: 12,
-    hoursPerSession: 1.0,
-    variableCostPerSession: 0,
-    mixPct: 0,
-    currentClients: 0,
   });
-  if (typeof render === 'function') render();
-}
-
-export function resetDefaults() {
-  state.offerings = typeof defaultOfferings === 'function' ? defaultOfferings() : [];
-  state.employees = 1;
-  state.employeePay = 60000;
-  state.monthlyCosts = 10000;
-  state.productiveUtilizationPct = 80;
-  state.targetUtilizationPct = 75;
-  state.mode = 'forecast';
-  localStorage.removeItem('profitpath-state');
-  if (typeof render === 'function') render();
-}
-
-export function exportAsCSV() {
-
-  let results;
-  try {
-    // Use calc from global scope or handle gracefully if not available
-    if (typeof calc === 'function') {
-      results = calc();
-    } else {
-      // Fallback: use current state directly
-      results = { state: state, metrics: {} };
-      console.warn('calc function not available, using current state');
-    }
-  } catch (e) {
-    console.error('Calculation failed in exportAsCSV:', e);
-    alert('Error: Could not generate CSV export due to calculation error. Please check your inputs.');
-    return;
-  }
-
-  // CSV header with summary metrics
-  const lines = [
-    'ProfitPath Business Analysis Report',
-    'Generated: ' + (new Date().toLocaleString()),
-    'Analysis Mode: ' + (state.mode === 'forecast' ? 'Forecast(Planning)' : 'Current(Operations Analysis)'),
-    '',
-    'BUSINESS PARAMETERS',
-    'Parameter,Value,Unit',
-    'Number of Employees, ' + (state.employees) + ', people',
-    'Annual Employee Compensation, ' + (fmtMoney0(state.employeePay)) + ', USD / year',
-    'Monthly Overhead Costs, ' + (fmtMoney0(state.monthlyCosts)) + ', USD / month',
-    'Productive Utilization Target, ' + (fmtPct1(state.productiveUtilizationPct)) + ',% of available hours',
-    'Overall Utilization Target, ' + (fmtPct1(state.targetUtilizationPct)) + ',% of total capacity',
-    '',
-    'FINANCIAL RESULTS',
-    'Metric,Value,Unit',
-    'Total Annual Revenue, ' + (fmtMoney0(results.revenue)) + ', USD / year',
-    'Total Variable Costs, ' + (fmtMoney0(results.variableCosts)) + ', USD / year',
-    'Gross Contribution Margin, ' + (fmtMoney0(Math.max(0, (results.revenue || 0) - (results.variableCosts || 0)))) + ', USD / year',
-    'Fixed Overhead Costs, ' + (fmtMoney0(results.annualFixedCosts)) + ', USD / year',
-    'Net Profit(Loss), ' + (fmtMoney0(results.income)) + ', USD / year',
-    'Profit Margin, ' + (fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)) + ',% of revenue',
-    'Total Billable Hours, ' + (fmtInt(results.serviceHours || 0)) + ', hours / year',
-    'Capacity Utilization, ' + (fmtPct1(results.capacityPct || 0)) + ',% of total capacity',
-    '',
-    'SERVICE OFFERINGS BREAKDOWN',
-    'Service Name,Monthly Price,Sessions per Year,Hours per Session,Variable Cost per Session,Client Mix %,Current Clients,Projected Annual Revenue,Capacity Required',
-  ];
-
-  state.offerings.forEach((o) => {
-    const annualRevenue = o.priceMonthly * 12 * (state.mode === 'forecast' ? o.mixPct / 100 : o.currentClients);
-    const capacityRequired = state.mode === 'forecast' ? Math.ceil((o.sessionsPerYear * state.employees * state.productiveUtilizationPct / 100) / o.sessionsPerYear) : o.currentClients;
-    lines.push(
-      '"' + (o.name) + '", ' + (o.priceMonthly) + ', ' + (o.sessionsPerYear) + ', ' + (o.hoursPerSession) + ', ' + (o.variableCostPerSession) + ', ' + (o.mixPct) + ', ' + (o.currentClients) + ', ' + (fmtMoney0(annualRevenue)) + ', ' + (capacityRequired)
-    );
-  });
-
-  const csv = lines.join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-
-  link.setAttribute('href', url);
-  link.setAttribute('download', 'profitpath-export-' + (new Date().toISOString().split('T')[0]) + '.csv');
-  link.style.visibility = 'hidden';
-
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  // Track CSV export
-  trackEvent('export', { format: 'csv' });
 }
 
 export function shareScenario() {
@@ -274,18 +64,77 @@ export function shareScenario() {
     showToast('Failed to generate share link', 'error');
     return;
   }
-
-  // Update social media meta tags with scenario data
   updateSocialMetaTags(window.state);
+  const handleCopySuccess = () => showToast('Share link copied to clipboard!', 'success');
+  const handleCopyError = () => showToast('Share link: ' + shareUrl, 'info');
 
-  // Copy to clipboard and show toast
-  navigator.clipboard.writeText(shareUrl).then(() => {
-    console.log('[SHARE] Clipboard success, calling showToast...');
-    showToast('Share link copied to clipboard!', 'success');
-    console.log('[SHARE] showToast called');
-  }).catch(() => {
-    showToast('Share link: ' + shareUrl, 'info');
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    navigator.clipboard.writeText(shareUrl)
+      .then(handleCopySuccess)
+      .catch(() => copyToClipboardFallback(shareUrl).then(handleCopySuccess).catch(handleCopyError));
+  } else {
+    copyToClipboardFallback(shareUrl).then(handleCopySuccess).catch(handleCopyError);
+  }
+}
+
+export function exportAsCSV() {
+  let results;
+  try {
+    if (typeof calc === 'function') {
+      results = calc(state);
+    } else {
+      results = { state: state, metrics: {} };
+    }
+  } catch (e) {
+    console.error('Calculation failed in exportAsCSV:', e);
+    alert('Error: Could not generate CSV export due to calculation error.');
+    return;
+  }
+
+  const lines = [
+    'ProfitPath Business Analysis Report',
+    'Generated: ' + (new Date().toLocaleString()),
+    'Mode: ' + (state.mode === 'forecast' ? 'Forecast' : 'Current'),
+    '',
+    'BUSINESS PARAMETERS',
+    'Parameter,Value,Unit',
+    'Full-time Employees,' + (state.fullTimeEmployees) + ',people',
+    'Part-time Employees,' + (state.partTimeEmployees) + ',people',
+    'FT Annual Pay,' + (fmtMoney0(state.fullTimeEmployeePay)) + ',USD/yr',
+    'PT Annual Pay,' + (fmtMoney0(state.partTimeEmployeePay)) + ',USD/yr',
+    'Monthly Overhead,' + (fmtMoney0(state.monthlyCosts)) + ',USD/mo',
+    'Productive Utilization,' + (fmtPct1(state.productiveUtilizationPct)) + ',%',
+    'Target Utilization,' + (fmtPct1(state.targetUtilizationPct)) + ',%',
+    '',
+    'FINANCIAL RESULTS',
+    'Metric,Value,Unit',
+    'Total Annual Revenue,' + (fmtMoney0(results.revenue)) + ',USD/yr',
+    'Total Variable Costs,' + (fmtMoney0(results.variableCosts)) + ',USD/yr',
+    'Net Profit(Loss),' + (fmtMoney0(results.income)) + ',USD/yr',
+    'Profit Margin,' + (fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)) + ',%',
+    'Capacity Utilization,' + (fmtPct1(results.capacityPct || 0)) + ',%',
+    '',
+    'SERVICE OFFERINGS',
+    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients',
+  ];
+
+  state.offerings.forEach((o) => {
+    lines.push(
+      '"' + (o.name) + '",' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients)
+    );
   });
+
+  const csv = lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'profitpath-' + (new Date().toISOString().split('T')[0]) + '.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 60000); // Revoke after a minute
+  trackEvent('export', { format: 'csv' });
 }
 
 function showShareErrorModal() {
@@ -463,99 +312,7 @@ export function loadState() {
 }
 
 // Export functions for business logic
-export function validateBusinessLogic() {
-  const errors = [];
-
-  if (state.employees <= 0) {
-    errors.push('Number of employees must be greater than 0');
-  }
-
-  if (state.employeePay < 0) {
-    errors.push('Employee pay cannot be negative');
-  }
-
-  if (state.monthlyCosts < 0) {
-    errors.push('Monthly costs cannot be negative');
-  }
-
-  if (state.productiveUtilizationPct < 0 || state.productiveUtilizationPct > 100) {
-    errors.push('Productive utilization must be between 0% and 100%');
-  }
-
-  if (state.targetUtilizationPct < 0 || state.targetUtilizationPct > 150) {
-    errors.push('Target utilization must be between 0% and 150%');
-  }
-
-  state.offerings.forEach((o, i) => {
-    if (o.priceMonthly <= 0) {
-      errors.push(`Offering "${o.name}" must have a price greater than $0`);
-    }
-
-    if (o.sessionsPerYear <= 0) {
-      errors.push(`Offering "${o.name}" must have at least 1 session per year`);
-    }
-
-    if (o.hoursPerSession <= 0) {
-      errors.push(`Offering "${o.name}" must take at least 0.1 hours per session`);
-    }
-
-    if (o.variableCostPerSession < 0) {
-      errors.push(`Offering "${o.name}" cannot have negative variable costs`);
-    }
-
-    if (o.mixPct < 0 || o.mixPct > 100) {
-      errors.push(`Offering "${o.name}" mix percentage must be between 0% and 100%`);
-    }
-  });
-
-  return errors;
-}
-
-export function rebalanceMix(changedIndex, newValue) {
-  const total = state.offerings.reduce((sum, o, i) => i === changedIndex ? sum : sum + o.mixPct, 0);
-  const remaining = Math.max(0, 100 - newValue);
-
-  state.offerings.forEach((o, i) => {
-    if (i !== changedIndex) {
-      o.mixPct = (o.mixPct / total) * remaining;
-    }
-  });
-}
-
-export function defaultOfferings() {
-  return [
-    {
-      id: uuid(),
-      name: 'Consulting',
-      priceMonthly: 500,
-      sessionsPerYear: 12,
-      hoursPerSession: 2.0,
-      variableCostPerSession: 50,
-      mixPct: 33.33,
-      currentClients: 0,
-    },
-    {
-      id: uuid(),
-      name: 'Training',
-      priceMonthly: 200,
-      sessionsPerYear: 6,
-      hoursPerSession: 4.0,
-      variableCostPerSession: 20,
-      mixPct: 33.33,
-      currentClients: 0,
-    },
-    {
-      id: uuid(),
-      name: 'Support',
-      priceMonthly: 100,
-      sessionsPerYear: 24,
-      hoursPerSession: 0.5,
-      variableCostPerSession: 10,
-      mixPct: 33.34,
-      currentClients: 0,
-    },
-  ];
-}
+// Removed redundant functions
 
 // Export functions for chart and visualization
 export function renderChart(containerId, data, options = {}) {
@@ -1619,22 +1376,8 @@ export function importFromCSV(csvText) {
 // Export default object with all functions
 export default {
   escapeHtml,
-  setStateFromInputs,
-  onTableInput,
-  onTableClick,
-  addOffering,
-  resetDefaults,
   exportAsCSV,
   shareScenario,
-  showModal,
-  showLoadingModal,
-  showSuccessModal,
-  showErrorModal,
-  persistState,
-  loadState,
-  validateBusinessLogic,
-  rebalanceMix,
-  defaultOfferings,
   renderChart,
   saveScenario,
   loadScenario,

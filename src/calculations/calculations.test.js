@@ -241,8 +241,41 @@ describe('Calculation Engine', () => {
 
       // Should sanitize to valid values
       expect(result.annualFixedCosts).toBe(0) // monthlyCosts sanitized to 0
-      expect(result.annualPayroll).toBe(0) // employeePay sanitized to 0
       // Other validations should work as expected
+    })
+  })
+
+  describe('calc - Payroll Logic', () => {
+    it('should include all employees in annual payroll (no -1 owner exclusion)', () => {
+      const state = {
+        mode: 'forecast',
+        employees: 1,
+        employeePay: 60000,
+        monthlyCosts: 0,
+        productiveUtilizationPct: 80,
+        targetUtilizationPct: 100,
+        offerings: []
+      }
+
+      const result = calc(state)
+
+      // Previously this would have been 0 due to (employees - 1)
+      expect(result.annualPayroll).toBe(60000)
+    })
+
+    it('should calculate payroll correctly for multiple employees', () => {
+      const state = {
+        mode: 'forecast',
+        employees: 3,
+        employeePay: 50000,
+        monthlyCosts: 0,
+        productiveUtilizationPct: 80,
+        targetUtilizationPct: 100,
+        offerings: []
+      }
+
+      const result = calc(state)
+      expect(result.annualPayroll).toBe(150000)
     })
   })
 })

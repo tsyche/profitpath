@@ -10,7 +10,7 @@ test.describe('Scenario Workflows - E2E', () => {
   test.describe('Scenario Management', () => {
     test('should open scenarios modal', async ({ page }) => {
       // Click scenarios button
-      const scenariosBtn = page.locator('#scenariosBtn');
+      const scenariosBtn = page.locator('#desktopScenariosBtn');
       await expect(scenariosBtn).toBeVisible();
       await scenariosBtn.click();
 
@@ -20,7 +20,7 @@ test.describe('Scenario Workflows - E2E', () => {
     });
 
     test('should display scenario interface', async ({ page }) => {
-      const scenariosBtn = page.locator('#scenariosBtn');
+      const scenariosBtn = page.locator('#desktopScenariosBtn');
       await scenariosBtn.click();
 
       // Modal should not have hidden class
@@ -32,11 +32,11 @@ test.describe('Scenario Workflows - E2E', () => {
     });
 
     test('should have input for scenario name', async ({ page }) => {
-      const scenariosBtn = page.locator('#scenariosBtn');
+      const scenariosBtn = page.locator('#desktopScenariosBtn');
       await scenariosBtn.click();
 
       const modal = page.locator('#scenariosModal');
-      await expect(modal).not.toHaveClass(/hidden/);
+      await expect(modal).toBeVisible();
 
       // Look for scenario name input
       const input = modal.locator('input[type="text"]').first();
@@ -48,15 +48,21 @@ test.describe('Scenario Workflows - E2E', () => {
 
   test.describe('Scenario Persistence', () => {
     test('should load scenarios from localStorage', async ({ page }) => {
-      // Set up a test scenario in localStorage
+      // Set up a test scenario in localStorage (app expects an array format)
       await page.evaluate(() => {
-        const testScenarios = {
-          'test-scenario-1': {
-            employees: 3,
-            employeePay: 65000,
-            monthlyCosts: 1500
+        const testScenarios = [
+          {
+            id: 'test-scenario-1',
+            name: 'test-scenario-1',
+            timestamp: new Date().toLocaleString(),
+            createdAt: new Date().toISOString(),
+            state: {
+              employees: 3,
+              employeePay: 65000,
+              monthlyCosts: 1500
+            }
           }
-        };
+        ];
         localStorage.setItem('profitpath-scenarios', JSON.stringify(testScenarios));
       });
 
@@ -65,15 +71,30 @@ test.describe('Scenario Workflows - E2E', () => {
       await waitForPageReady(page);
 
       // Open scenarios modal
-      const scenariosBtn = page.locator('#scenariosBtn');
+      const scenariosBtn = page.locator('#desktopScenariosBtn');
+      await expect(scenariosBtn).toBeVisible({ timeout: 5000 });
+
+      // Listen for console errors
+      const errors = [];
+      page.on('pageerror', error => errors.push(error.message));
+
       await scenariosBtn.click();
 
+      // Wait for modal to be created (async operation)
+      await page.waitForSelector('#scenariosModal', { timeout: 5000 });
+
       const modal = page.locator('#scenariosModal');
-      await expect(modal).not.toHaveClass(/hidden/);
+      await expect(modal).toBeVisible();
+
+      // Log any errors for debugging
+      if (errors.length > 0) {
+        console.log('JavaScript errors:', errors);
+      }
 
       // Verify modal has content
-      const modalContent = modal.textContent();
+      const modalContent = await modal.textContent();
       expect(modalContent).toBeTruthy();
+      expect(modalContent).toContain('test-scenario-1');
     });
   });
 
@@ -121,11 +142,14 @@ test.describe('Scenario Workflows - E2E', () => {
       await waitForPageReady(page);
 
       // Open scenarios modal
-      const scenariosBtn = page.locator('#scenariosBtn');
+      const scenariosBtn = page.locator('#desktopScenariosBtn');
       await scenariosBtn.click();
 
+      // Wait for modal to be created (async operation)
+      await page.waitForSelector('#scenariosModal', { timeout: 2000 });
+
       const modal = page.locator('#scenariosModal');
-      await expect(modal).not.toHaveClass(/hidden/);
+      await expect(modal).toBeVisible();
 
       // Should show empty state or instructions
       const text = await modal.textContent();
@@ -138,11 +162,12 @@ test.describe('Scenario Workflows - E2E', () => {
       await page.fill('#fullTimeEmployeePay', '70000');
 
       // Navigate using modal
-      const scenariosBtn = page.locator('#scenariosBtn');
+      const scenariosBtn = page.locator('#desktopScenariosBtn');
       await scenariosBtn.click();
 
       const modal = page.locator('#scenariosModal');
-      await expect(modal).not.toHaveClass(/hidden/);
+      await page.waitForSelector('#scenariosModal', { timeout: 2000 });
+      await expect(modal).toBeVisible();
 
       // Close modal using Escape key
       await page.keyboard.press('Escape');

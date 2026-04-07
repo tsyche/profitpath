@@ -6,20 +6,47 @@ export function validateBusinessLogic() {
   const warnings = [];
 
   // Validate global inputs
-  if (state.employees < 1) {
+  if (state.fullTimeEmployees < 0) {
     issues.push({
       severity: 'error',
-      message: 'Employees must be at least 1',
-      field: 'employees',
-      suggestion: 'Set employees to 1 (you can exclude yourself from payroll costs)'
+      message: 'Full-time employees cannot be negative',
+      field: 'fullTimeEmployees',
+      suggestion: 'Set to at least 0'
     });
   }
 
-  if (state.employeePay < 0) {
+  if (state.partTimeEmployees < 0) {
     issues.push({
       severity: 'error',
-      message: 'Employee pay cannot be negative',
-      field: 'employeePay',
+      message: 'Part-time employees cannot be negative',
+      field: 'partTimeEmployees',
+      suggestion: 'Set to at least 0'
+    });
+  }
+
+  if (state.fullTimeEmployees + state.partTimeEmployees < 1) {
+    warnings.push({
+      severity: 'warning',
+      message: 'No employees defined',
+      field: 'fullTimeEmployees',
+      suggestion: 'Add at least 1 full-time or part-time employee for capacity'
+    });
+  }
+
+  if (state.fullTimeEmployeePay < 0) {
+    issues.push({
+      severity: 'error',
+      message: 'Full-time employee pay cannot be negative',
+      field: 'fullTimeEmployeePay',
+      suggestion: 'Enter a positive annual pay amount'
+    });
+  }
+
+  if (state.partTimeEmployeePay < 0) {
+    issues.push({
+      severity: 'error',
+      message: 'Part-time employee pay cannot be negative',
+      field: 'partTimeEmployeePay',
       suggestion: 'Enter a positive annual pay amount'
     });
   }
