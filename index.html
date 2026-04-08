@@ -120,9 +120,9 @@
 
           <!-- Utility buttons -->
           <div class="utility-row">
-            <button class="utility-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings">⚙️</button>
-            <button class="utility-btn" id="helpBtn" type="button" title="Help & Guided Tour">❓</button>
             <button class="utility-btn" id="desktopFeedbackBtn" type="button" title="Send Feedback">✉️</button>
+            <button class="utility-btn" id="helpBtn" type="button" title="Help & Guided Tour">❓</button>
+            <button class="utility-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings">⚙️</button>
           </div>
         </div>
 
@@ -201,7 +201,7 @@
       <div class="mobile-menu-header">
         <div class="mobile-menu-badge">
           <span class="dot"></span>
-          <span class="muted">static simulator</span>
+          <span style="color: #1f2937; font-size: 12px; font-weight: 500;">forecast mode</span>
         </div>
         <div style="display: flex; gap: 4px;">
           <button id="mobileUndoBtn" class="undo-redo-icon-btn" type="button" title="Undo (Ctrl+Z)" disabled>
@@ -220,6 +220,32 @@
         <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
       </div>
       <div class="mobile-menu-content" style="max-height: 70vh; overflow-y: auto;">
+        <!-- Key Metrics Card - Always Visible -->
+        <div style="padding: 12px 8px; border-bottom: 2px solid #e5e7eb; margin-bottom: 12px;">
+          <h3 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px;">At a Glance</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Revenue</div>
+              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsRevenue">—</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Net Income</div>
+              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsIncome">—</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Clients</div>
+              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsClients">—</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Sessions</div>
+              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsAnnualSessions">—</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; grid-column: 1 / -1;">
+              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Utilization</div>
+              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsUtilization">—</div>
+            </div>
+          </div>
+        </div>
         <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
         <button class="btn mobile-menu-btn" id="mobileShareBtn">🔗 Share Scenario</button>
         <div class="mobile-templates-section">
@@ -254,19 +280,31 @@
           </div>
         </div>
         <button class="btn mobile-menu-btn" id="mobileFeedbackBtn">✉️ Give Feedback</button>
+        <button class="btn mobile-menu-btn" id="mobileHelpBtn">❓ Help & Tour</button>
         <button class="btn mobile-menu-btn" id="mobileSettingsBtn">⚙️ Settings</button>
-        <div class="mobile-settings-section" style="display: none; padding: 8px; max-height: 60vh; overflow-y: auto;">
+        <div class="mobile-settings-section" style="display: none; padding: 8px; max-height: 60vh; overflow-y: auto; width: 100%; box-sizing: border-box;">
           <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1f2937;">Experience Level</h4>
-          <div class="settings-options" style="display: flex; flex-direction: column; gap: 8px;">
-            <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel" value="beginner">
-              Beginner</label>
-            <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel" value="intermediate">
-              Intermediate</label>
-            <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel" value="advanced">
-              Advanced</label>
+          <div class="settings-options" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel" value="beginner">
+                Beginner</label>
+              <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">Core features active.</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel" value="intermediate">
+                Intermediate</label>
+              <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">Advanced calculations and scenario tools unlocked.</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel" value="advanced">
+                Advanced</label>
+              <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">All features enabled, including export suite and debug panel.</div>
+            </div>
+          </div>
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+            <button class="btn mobile-submenu-btn" id="mobileAnalyticsBtn">📊 Analytics</button>
           </div>
         </div>
-        <button class="btn mobile-menu-btn" id="mobileHelpBtn">❓ Help & Tour</button>
       </div>
     </div>
   </div>
@@ -291,10 +329,41 @@
   </div>
 
 
-  <!-- Validation Messages -->
-  <div class="validation-container" id="validationContainer" style="display: none;"></div>
-
   <div class="grid">
+    <!-- Key Metrics Overview Card -->
+    <section class="card" id="keyMetricsCard" style="grid-column: 1 / -1; display: none;" class="desktop-only">
+      <div class="card-h">
+        <h2>At a Glance (Key Metrics)</h2>
+      </div>
+      <div class="card-b">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; font-size: 14px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Revenue</div>
+            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsRevenue">—</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Net Income</div>
+            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsIncome">—</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Clients</div>
+            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsClients">—</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Annual Sessions</div>
+            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsAnnualSessions">—</div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Utilization</div>
+            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsUtilization">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Validation Messages -->
+    <div class="validation-container" id="validationContainer" style="display: none; grid-column: 1 / -1;"></div>
+
     <section class="card" id="controls">
       <div class="card-h">
         <h2>Inputs</h2>

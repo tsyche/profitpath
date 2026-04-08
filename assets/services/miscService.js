@@ -519,6 +519,15 @@ export function closeMobileMenu() {
   const hamburger = document.getElementById('hamburgerBtn');
   if (overlay) overlay.classList.remove('active');
   if (hamburger) hamburger.classList.remove('active');
+
+  // Collapse all expanded menu sections
+  const mobileTemplatesOptions = document.getElementById('mobileTemplatesOptions');
+  const mobileExportOptions = document.getElementById('mobileExportOptions');
+  const mobileSettingsSection = document.querySelector('.mobile-settings-section');
+
+  if (mobileTemplatesOptions) mobileTemplatesOptions.style.display = 'none';
+  if (mobileExportOptions) mobileExportOptions.style.display = 'none';
+  if (mobileSettingsSection) mobileSettingsSection.style.display = 'none';
 }
 
 export function restoreScheduling() {
