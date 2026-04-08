@@ -661,9 +661,6 @@ html {
   border: 1px solid #e5e7eb !important;
 }
 
-.mobile-submenu-btn {
-  color: #1f2937 !important;
-}
 
 .logo-final {
   height: 56px;
@@ -2994,6 +2991,9 @@ input[type="checkbox"] {
   text-align: left;
   width: 100%;
   justify-content: flex-start;
+  color: #1f2937 !important;
+  background: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
 }
 
 /* Mobile templates options */
