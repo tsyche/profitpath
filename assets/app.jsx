@@ -1529,18 +1529,6 @@ if (mobileHelpBtn) {
   });
 }
 
-{
-  const mobileSettingsBtn = $('#mobileSettingsBtn');
-  if (mobileSettingsBtn) {
-    mobileSettingsBtn.addEventListener('click', () => {
-      const settingsCogBtn = $('#settingsCogBtn');
-      if (settingsCogBtn) {
-        settingsCogBtn.click();
-      }
-      closeMobileMenu();
-    });
-  }
-}
 
 $('#offeringsBody').addEventListener('input', onTableInput);
 $('#offeringsBody').addEventListener('blur', () => { _lastHistoryField = null; }, true); // Capture blur to clear field tracking
