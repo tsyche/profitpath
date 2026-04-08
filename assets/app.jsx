@@ -1405,6 +1405,17 @@ if (document.readyState === 'loading') {
   setupMobileShareButton();
 }
 
+const mobileExportBtn = $('#mobileExportBtn');
+if (mobileExportBtn) {
+  mobileExportBtn.addEventListener('click', () => {
+    const options = $('#mobileExportOptions');
+    if (options) {
+      _closeAllMobileSubmenus();
+      options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
+    }
+  });
+}
+
 const mobileTemplatesBtn = $('#mobileTemplatesBtn');
 if (mobileTemplatesBtn) {
   mobileTemplatesBtn.addEventListener('click', () => {
