@@ -531,9 +531,9 @@ function render() {
   {
     const badge = $('.mobile-menu-badge');
     if (badge) {
-      const muted = badge.querySelector('.muted');
-      if (muted) {
-        muted.textContent = state.mode === 'forecast' ? 'forecast mode' : 'active customers';
+      const modeSpan = badge.querySelectorAll('span')[1];
+      if (modeSpan) {
+        modeSpan.textContent = state.mode === 'forecast' ? 'forecast mode' : 'active customers';
       }
       const dot = badge.querySelector('.dot');
       if (dot) {
@@ -541,6 +541,9 @@ function render() {
       }
     }
   }
+
+  // Update key metrics display (both full screen and mobile)
+  updateKeyMetrics();
 
   {
     const el = $('#fullTimeEmployees'); if (el) el.value = state.fullTimeEmployees;
@@ -1544,6 +1547,44 @@ if (mobileHelpBtn) {
     }
     closeMobileMenu();
   });
+}
+
+
+// Mobile Analytics button
+const mobileAnalyticsBtn = $('#mobileAnalyticsBtn');
+if (mobileAnalyticsBtn) {
+  mobileAnalyticsBtn.addEventListener('click', () => {
+    showToast('Analytics dashboard will be available in the next update!', 'info', 2000);
+  });
+}
+
+// Update key metrics for both full screen and mobile
+function updateKeyMetrics() {
+  try {
+    const metrics = calc(state);
+
+    // Full screen key metrics (Revenue, Net Income, Clients, Annual Sessions, Utilization)
+    const fullScreenIds = ['keyMetricsRevenue', 'keyMetricsIncome', 'keyMetricsClients', 'keyMetricsAnnualSessions', 'keyMetricsUtilization'];
+    const fullScreenValues = [metrics.revenue || 0, metrics.income || 0, metrics.clients || 0, metrics.totalSessions || 0, metrics.capacityPct || 0];
+    const formatters = [fmtMoney0, fmtMoney0, fmtInt, fmtInt, fmtPct1];
+
+    fullScreenIds.forEach((id, idx) => {
+      const el = $('#' + id);
+      if (el) el.textContent = formatters[idx](fullScreenValues[idx]);
+    });
+
+    // Mobile key metrics (Revenue, Net Income, Clients, Annual Sessions, Utilization - same as full screen)
+    const mobileIds = ['mobileKeyMetricsRevenue', 'mobileKeyMetricsIncome', 'mobileKeyMetricsClients', 'mobileKeyMetricsAnnualSessions', 'mobileKeyMetricsUtilization'];
+    const mobileValues = [metrics.revenue || 0, metrics.income || 0, metrics.clients || 0, metrics.totalSessions || 0, metrics.capacityPct || 0];
+    const mobileFormatters = [fmtMoney0, fmtMoney0, fmtInt, fmtInt, fmtPct1];
+
+    mobileIds.forEach((id, idx) => {
+      const el = $('#' + id);
+      if (el) el.textContent = mobileFormatters[idx](mobileValues[idx]);
+    });
+  } catch (e) {
+    console.error('Error updating key metrics:', e);
+  }
 }
 
 // Mobile undo/redo buttons

@@ -24,6 +24,40 @@
   box-sizing: border-box;
 }
 
+/* Desktop-only elements */
+#keyMetricsCard {
+  display: block !important;
+}
+
+/* Mobile twisty button styling */
+.mobile-twisty-btn {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 4px;
+  border: none;
+  background: none;
+  color: #1f2937 !important;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mobile-twisty-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  #keyMetricsCard {
+    display: none !important;
+  }
+}
+
 html,
 body {
   height: 100%;
@@ -373,7 +407,7 @@ html {
   align-items: center;
   justify-content: center;
   transition: opacity 0.15s;
-  color: var(--accent);
+  color: #ffffff;
 }
 
 .undo-redo-icon-btn:hover:not(:disabled) {
@@ -389,6 +423,35 @@ html {
   flex-shrink: 0;
   width: 14px;
   height: 14px;
+}
+
+/* Mobile-specific undo/redo buttons - darker styling for white menu background */
+@media (max-width: 768px) {
+  .undo-redo-icon-btn {
+    height: 28px;
+    padding: 6px 8px;
+    border: 1px solid #111827;
+    border-radius: 6px;
+    background: #1f2937;
+    color: #ffffff;
+  }
+
+  .undo-redo-icon-btn:hover:not(:disabled) {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .undo-redo-icon-btn:disabled {
+    opacity: 0.5;
+    background: #d1d5db;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+  }
+
+  .undo-redo-icon-btn svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 /* Divider line between undo and redo */
@@ -584,7 +647,12 @@ html {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   min-width: 200px;
+  max-width: 280px;
+  width: 100%;
+  box-sizing: border-box;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
 }
 
 .mobile-menu-header {
@@ -642,6 +710,8 @@ html {
 
 .mobile-menu-content {
   padding: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Allow select dropdowns to overflow mobile menu */
@@ -652,6 +722,7 @@ html {
 
 .mobile-menu-btn {
   width: 100%;
+  box-sizing: border-box;
   margin-bottom: 4px;
   text-align: left;
   justify-content: flex-start;
@@ -3035,6 +3106,7 @@ input[type="checkbox"] {
   padding: 0.5rem 1rem !important;
   text-align: left;
   width: 100%;
+  box-sizing: border-box;
   justify-content: flex-start;
   color: #1f2937 !important;
   background: #f9fafb !important;
@@ -3392,31 +3464,40 @@ input[type="checkbox"] {
 
 @media (max-width: 600px) {
 
-  /* Mobile: simplified card layout, show only 4 key metrics */
+  /* Mobile: vertical card-based layout for comparison */
+  .scenario-diff-wrap {
+    gap: 0;
+  }
+
   .scenario-diff-header {
     display: none;
   }
 
   .scenario-diff-mobile-header {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 8px;
-    font-weight: 700;
-    border-bottom: 2px solid #007bff;
-    margin-bottom: 8px;
-    gap: 8px;
+    display: none;
   }
 
-  .scenario-diff-mobile-header span {
-    flex: 1;
-    text-align: center;
-    font-size: 13px;
+  /* Section titles */
+  .scenario-diff-section-title {
+    padding: 12px 8px 8px;
+    margin-top: 16px;
+    border-top: 2px solid var(--border);
   }
 
+  .scenario-diff-section-title:first-of-type {
+    border-top: none;
+    margin-top: 0;
+  }
+
+  /* Simplified vertical card layout for each metric */
   .scenario-diff-row {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     padding: 12px 8px;
+    border: none;
     border-bottom: 1px solid var(--border);
+    background: transparent;
     margin: 0;
   }
 
@@ -3424,43 +3505,83 @@ input[type="checkbox"] {
     display: none;
   }
 
+  /* Metric name */
   .diff-col-label {
     font-weight: 600;
     font-size: 13px;
     color: var(--text);
-    display: inline;
     margin: 0;
-    overflow-wrap: break-word;
+    padding: 0;
+    display: block;
   }
 
-  .diff-col-delta {
-    font-size: 13px;
-    font-weight: 600;
-    float: right;
-    text-align: right;
-    display: inline;
-    margin: 0;
-  }
-
+  /* Value cards - side by side */
   .diff-col-s1,
   .diff-col-s2 {
     display: inline-block;
+    width: calc(50% - 4px);
     font-size: 12px;
-    color: var(--muted);
+    color: var(--text);
     margin: 0;
-    text-align: left;
+    padding: 6px;
+    text-align: center;
+    background: var(--surface, #f8f9fa);
+    border-radius: 4px;
+    font-family: var(--mono);
+    border: 1px solid var(--border);
   }
 
   .diff-col-s1 {
-    display: block;
-    text-align: left;
-    margin-top: 4px;
+    margin-right: 8px;
   }
 
-  .diff-col-s2 {
-    float: right;
-    text-align: right;
-    margin-top: 4px;
+  /* Delta/change indicator */
+  .diff-col-delta {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    display: block;
+    margin: 0;
+    padding: 4px;
+    border-radius: 4px;
+  }
+
+  .diff-col-delta.diff-better {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+  }
+
+  .diff-col-delta.diff-worse {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+  }
+
+  .diff-col-delta.diff-neutral {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--muted);
+  }
+
+  /* Offering section styling */
+  .scenario-diff-offering {
+    margin-left: 0;
+    padding: 12px 8px;
+    border-left: none;
+    border-top: 2px solid var(--border);
+    margin-bottom: 0;
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .scenario-diff-offering-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .scenario-diff-offering-row {
+    padding: 8px 0;
   }
 
   /* Mobile comparison controls */
@@ -3480,6 +3601,17 @@ input[type="checkbox"] {
     width: 100%;
     padding: 12px;
     font-size: 14px;
+  }
+
+  /* Export options */
+  .scenario-diff-export-options {
+    flex-direction: column;
+  }
+
+  .scenario-diff-export-options .btn {
+    width: 100%;
+    font-size: 12px;
+    padding: 8px 12px;
   }
 }
 
