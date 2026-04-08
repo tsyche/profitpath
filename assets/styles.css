@@ -656,9 +656,13 @@ html {
   text-align: left;
   justify-content: flex-start;
   gap: 8px;
-  color: #374151 !important;
+  color: #1f2937 !important;
   background: #f9fafb !important;
   border: 1px solid #e5e7eb !important;
+}
+
+.mobile-submenu-btn {
+  color: #1f2937 !important;
 }
 
 .logo-final {
