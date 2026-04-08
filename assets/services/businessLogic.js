@@ -228,12 +228,29 @@ export function validateBusinessLogic() {
     }
 
   } catch (e) {
+    let errorMsg = 'Unable to calculate metrics due to data issues';
+    let suggestion = 'Check your input values for invalid data';
+
+    // Provide more specific error messages based on mode
+    if (state.mode === 'current') {
+      errorMsg = 'Unable to calculate metrics - check client counts and offering data';
+      suggestion = 'Ensure all service offerings have valid client counts (0 or more)';
+    } else if (state.offerings.length === 0) {
+      errorMsg = 'Cannot calculate without service offerings';
+      suggestion = 'Add at least one service offering to perform calculations';
+    } else if (state.fullTimeEmployees + state.partTimeEmployees === 0) {
+      errorMsg = 'Cannot calculate without employees';
+      suggestion = 'Add at least one full-time or part-time employee';
+    }
+
     warnings.push({
       severity: 'error',
-      message: 'Unable to calculate metrics due to data issues',
+      message: errorMsg,
       field: 'calculation-error',
-      suggestion: 'Fix the validation errors above to enable calculations'
+      suggestion: suggestion
     });
+
+    console.error('Calculation error:', e);
   }
 
   return { issues, warnings };
