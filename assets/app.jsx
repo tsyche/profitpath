@@ -1546,6 +1546,17 @@ if (mobileHelpBtn) {
   });
 }
 
+// Mobile undo/redo buttons
+const mobileUndoBtn = $('#mobileUndoBtn');
+if (mobileUndoBtn) {
+  mobileUndoBtn.addEventListener('click', undo);
+}
+
+const mobileRedoBtn = $('#mobileRedoBtn');
+if (mobileRedoBtn) {
+  mobileRedoBtn.addEventListener('click', redo);
+}
+
 
 $('#offeringsBody').addEventListener('input', onTableInput);
 $('#offeringsBody').addEventListener('blur', () => { _lastHistoryField = null; }, true); // Capture blur to clear field tracking
