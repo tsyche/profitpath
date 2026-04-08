@@ -1410,8 +1410,11 @@ if (mobileExportBtn) {
   mobileExportBtn.addEventListener('click', () => {
     const options = $('#mobileExportOptions');
     if (options) {
+      const isOpen = options.style.display === 'flex';
       _closeAllMobileSubmenus();
-      options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
+      if (!isOpen) {
+        options.style.display = 'flex';
+      }
     }
   });
 }
@@ -1421,8 +1424,11 @@ if (mobileTemplatesBtn) {
   mobileTemplatesBtn.addEventListener('click', () => {
     const options = $('#mobileTemplatesOptions');
     if (options) {
+      const isOpen = options.style.display === 'flex';
       _closeAllMobileSubmenus();
-      options.style.display = options.style.display === 'flex' ? 'none' : 'flex';
+      if (!isOpen) {
+        options.style.display = 'flex';
+      }
     }
   });
 }
