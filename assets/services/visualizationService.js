@@ -303,16 +303,15 @@ export function renderSimpleChart(metrics) {
   setupChartEventListeners(el);
 }
 
-// Helper function to set up basic chart interactivity with pinning support
+// Helper function to set up basic chart interactivity with locking support
 function setupChartEventListeners(chartEl) {
   if (!chartEl) return;
 
   const tooltip = chartEl.querySelector('.chart-tooltip');
   if (!tooltip) return;
 
-  let pinnedRect = null;
+  let isLocked = false;
   let hideTimeout = null;
-  let currentHoveredRect = null;
 
   // Get the SVG container and all chart rects
   const svg = chartEl.querySelector('svg');
@@ -320,32 +319,15 @@ function setupChartEventListeners(chartEl) {
 
   if (!rects || rects.length === 0) return;
 
-  const positionTooltip = (x, y, isLocked = false) => {
-    if (isLocked) {
-      // For locked tooltips, adjust for scroll position so it stays with the page
-      tooltip.style.position = 'fixed';
-      tooltip.style.left = (x + 10) + 'px';
-      tooltip.style.top = (y - 20) + 'px';
-    } else {
-      // For hover tooltips, use fixed positioning relative to viewport
-      tooltip.style.position = 'fixed';
-      tooltip.style.left = (x + 10) + 'px';
-      tooltip.style.top = (y - 20) + 'px';
-    }
+  // Position tooltip at a fixed location above the chart
+  const positionTooltip = () => {
+    const chartRect = chartEl.getBoundingClientRect();
+    tooltip.style.position = 'fixed';
+    tooltip.style.left = (chartRect.left + chartRect.width / 2 - 90) + 'px'; // Center above chart
+    tooltip.style.top = (chartRect.top - 100) + 'px'; // Above chart
   };
 
-  const updateLockedTooltipPosition = () => {
-    if (pinnedRect && tooltip.classList.contains('visible')) {
-      // Get the pinned rect's position on screen
-      const rect = pinnedRect.getBoundingClientRect();
-      const chartRect = chartEl.getBoundingClientRect();
-
-      // Position tooltip near the chart, offset from top
-      positionTooltip(chartRect.left + chartRect.width / 2, chartRect.top - 30, true);
-    }
-  };
-
-  const showTooltip = (rect, e) => {
+  const showTooltip = (rect) => {
     if (!rect) return;
 
     // Clear any pending hide
@@ -353,8 +335,6 @@ function setupChartEventListeners(chartEl) {
       clearTimeout(hideTimeout);
       hideTimeout = null;
     }
-
-    currentHoveredRect = rect;
 
     const offering = escapeHtml(rect.getAttribute('data-offering') || '');
     const type = escapeHtml(rect.getAttribute('data-type') || '');
@@ -367,8 +347,8 @@ function setupChartEventListeners(chartEl) {
     tooltipHTML += `<div style="font-size:10px;color:var(--muted);margin-top:2px;">% of Revenue: ${pct}</div>`;
 
     // Add lock button - show appropriate state
-    if (pinnedRect === rect) {
-      tooltipHTML += `<button class="tooltip-pin-btn">🔒 Locked (tap to unlock)</button>`;
+    if (isLocked) {
+      tooltipHTML += `<button class="tooltip-pin-btn">🔒 Tap to unlock</button>`;
     } else {
       tooltipHTML += `<button class="tooltip-pin-btn">📌 Tap to lock</button>`;
     }
@@ -378,90 +358,65 @@ function setupChartEventListeners(chartEl) {
     tooltip.classList.add('visible');
     tooltip.style.display = 'block';
 
-    // Position tooltip near cursor (only if not locked)
-    if (pinnedRect === null && e && e.clientX !== undefined) {
-      positionTooltip(e.clientX, e.clientY, false);
-    } else if (pinnedRect === rect) {
-      // If locked, position it at the chart area
-      updateLockedTooltipPosition();
-    }
+    // Position tooltip at fixed location above chart
+    positionTooltip();
 
     // Add click handler for lock button
     const lockBtn = tooltip.querySelector('.tooltip-pin-btn');
     if (lockBtn) {
       lockBtn.onclick = (ev) => {
         ev.stopPropagation();
-        if (pinnedRect === rect) {
-          // Unlock
-          pinnedRect = null;
-          showTooltip(rect, ev); // Refresh to show unhide state
-        } else {
-          // Lock this one
-          pinnedRect = rect;
-          showTooltip(rect, ev); // Refresh to show locked state
-        }
+        isLocked = !isLocked;
+        showTooltip(rect); // Refresh to show new state
       };
     }
   };
 
   const hideTooltip = () => {
-    // Only hide if nothing is pinned
-    if (pinnedRect === null) {
+    // Only hide if not locked
+    if (!isLocked) {
       hideTimeout = setTimeout(() => {
         tooltip.classList.remove('visible');
         setTimeout(() => {
           tooltip.style.display = 'none';
           tooltip.innerHTML = '';
-          currentHoveredRect = null;
         }, 100);
-      }, 50); // Small delay to prevent flashing when moving between rects
+      }, 50); // Small delay to prevent flashing
     }
   };
 
-  // Set up event listeners on SVG rects using proper event names for SVG
+  // Set up event listeners on SVG rects
   rects.forEach((rect) => {
-    // Show tooltip on hover
+    // Show tooltip on hover - always updates to show current hovered section
     rect.addEventListener('mouseover', (e) => {
-      showTooltip(rect, e);
+      showTooltip(rect);
     });
 
-    // Update tooltip position as user moves mouse (only if not pinned)
-    rect.addEventListener('mousemove', (e) => {
-      if (pinnedRect === null && tooltip.classList.contains('visible')) {
-        positionTooltip(e.clientX, e.clientY, false);
-      }
-    });
-
-    // Hide tooltip with slight delay to prevent flashing
+    // Hide tooltip when leaving chart (unless locked)
     rect.addEventListener('mouseout', () => {
       hideTooltip();
     });
 
-    // Click to lock/unlock
+    // Click/tap to lock/unlock
     rect.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (pinnedRect === rect) {
-        pinnedRect = null;
-        showTooltip(rect, e);
-      } else {
-        pinnedRect = rect;
-        showTooltip(rect, e);
-      }
+      isLocked = !isLocked;
+      showTooltip(rect);
     });
   });
 
   // Click outside to unlock
   document.addEventListener('click', (e) => {
-    if (pinnedRect && !chartEl.contains(e.target)) {
-      pinnedRect = null;
+    if (isLocked && !chartEl.contains(e.target)) {
+      isLocked = false;
       hideTooltip();
     }
   });
 
-  // Update locked tooltip position when scrolling
+  // Update tooltip position when scrolling
   window.addEventListener('scroll', () => {
-    if (pinnedRect && tooltip.classList.contains('visible')) {
-      updateLockedTooltipPosition();
+    if (tooltip.classList.contains('visible')) {
+      positionTooltip();
     }
   }, { passive: true });
 }
