@@ -2373,16 +2373,17 @@ function wire() {
     }
   });
 
-  // Wire up CSV import button
+  // Wire up CSV import button — guard prevents duplicate listeners when wire() is called multiple times
   const importBtn = $('#importCSVBtn');
   const csvFileInput = $('#csvFileInput');
-  if (importBtn && csvFileInput) {
+  if (importBtn && csvFileInput && !importBtn._importWired) {
+    importBtn._importWired = true;
+
     importBtn.addEventListener('click', () => {
       createModal({
         title: 'Import from CSV',
         content: `
           <p>Upload a CSV file to import your business settings and offerings.</p>
-          <button onclick="misc.generateImportTemplate()" class="btn secondary" style="margin-bottom: 12px; width: 100%;">⬇ Download Template</button>
           <div id="csvDropZone" style="border: 2px dashed #5eead4; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; background: rgba(94, 234, 212, 0.05);">
             <div style="color: #5eead4; font-weight: 600; margin-bottom: 8px;">Click to select or drag and drop CSV</div>
             <div style="font-size: 12px; color: var(--muted);">Supported: .csv files with business settings and offerings</div>
@@ -2400,7 +2401,8 @@ function wire() {
           e.preventDefault();
           e.stopPropagation();
           const input = document.getElementById('csvFileInput');
-          if (input) {
+          if (input && !input._pickerOpen) {
+            input._pickerOpen = true;
             input.click();
           }
         });
@@ -2427,13 +2429,18 @@ function wire() {
     });
 
     csvFileInput.addEventListener('change', (e) => {
+      csvFileInput._pickerOpen = false;
       if (e.target.files[0]) {
         handleCSVImport(e.target.files[0]);
       } else {
-        // User cancelled - close the modal
         closeModal();
       }
       csvFileInput.value = '';
+    });
+
+    // Also clear the guard on cancel (browsers that fire 'cancel' instead of 'change')
+    csvFileInput.addEventListener('cancel', () => {
+      csvFileInput._pickerOpen = false;
     });
   }
 }
