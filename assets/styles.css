@@ -1738,122 +1738,43 @@ input[type="range"]::-moz-range-thumb {
 
 /* Tooltip for SVG segments */
 .simple-chart .chart-tooltip {
-  position: absolute;
-  pointer-events: none;
-  background: rgba(0, 0, 0, 0.85);
+  position: fixed;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.9);
   color: #fff;
-  padding: 6px 8px;
+  padding: 8px 10px;
   border-radius: 6px;
-  font-size: 12px;
-  transform: translate(-50%, -120%);
-  white-space: nowrap;
-  z-index: 30;
-  opacity: 1;
-  transition: opacity 0.1s ease, transform 0.1s ease;
-  display: block;
-  /* keep present for measurement; visibility controlled via .visible */
+  font-size: 11px;
+  white-space: normal;
+  max-width: 180px;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  display: none;
   visibility: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.simple-chart .chart-tooltip.pinned {
-  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease, background 0.2s ease;
+.tooltip-pin-btn {
+  background: transparent !important;
+  border: 1px solid var(--accent) !important;
+  color: var(--accent) !important;
+  font-size: 10px !important;
+  cursor: pointer !important;
+  padding: 4px 8px !important;
+  border-radius: 3px !important;
+  opacity: 0.8 !important;
+  transition: all 0.2s ease !important;
+  display: block !important;
+  width: 100% !important;
+  margin-top: 6px !important;
 }
 
-.simple-chart .chart-tooltip.visible {
-  opacity: 1;
-  visibility: visible;
-  transform: translate(-50%, -140%);
+.tooltip-pin-btn:hover {
+  opacity: 1 !important;
+  background: rgba(94, 234, 212, 0.1) !important;
 }
-
-/* Caret arrow pointing at hovered segment */
-.simple-chart .chart-tooltip::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid rgba(0, 0, 0, 0.85);
-  bottom: -6px;
-}
-
-.simple-chart .chart-tooltip.below::after {
-  /* Flip caret when tooltip is below the pointer */
-  border-top: none;
-  border-bottom: 6px solid rgba(0, 0, 0, 0.85);
-  top: -6px;
-  bottom: auto;
-}
-
-.simple-chart .chart-tooltip.below {
-  transform: translate(-50%, 0%);
-}
-
-/* Pinned tooltip styling */
-.simple-chart .chart-tooltip {
-  transition: all 0.2s ease;
-}
-
-.simple-chart .chart-tooltip.pinned {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(94, 234, 212, 0.3);
-  border: 1px solid rgba(94, 234, 212, 0.6);
-  background: rgba(0, 0, 0, 0.95);
-  transform: translate(-50%, -140%) scale(1.02);
-}
-
-/* Pin button visual feedback */
-.simple-chart .tooltip-pin {
-  transition: transform 0.1s ease;
-}
-
-.simple-chart .tooltip-pin:hover {
-  transform: scale(1.1);
-}
-
-.simple-chart .tooltip-close {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 6px;
-  transition: background-color 0.1s ease;
-}
-
-.simple-chart .tooltip-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.simple-chart .tooltip-close:hover {
-  background: rgba(255, 255, 255, 0.03)
-}
-
-.simple-chart .tooltip-pin {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.95);
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 6px;
-  transition: background-color 0.1s ease;
-}
-
-.simple-chart .tooltip-pin:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.simple-chart .tooltip-pin:hover {
-  background: rgba(255, 255, 255, 0.03)
-}
-
-/* Highlight a pinned SVG rect with an outline and glow */
-/* Note: visual pinned indicators (outline + pin overlay) removed per UX preference */
 
 .muted {
   color: var(--muted)
