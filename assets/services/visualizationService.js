@@ -82,28 +82,70 @@ export function updateRichVisualizations(metrics) {
 
 export function createUtilizationGauge(metrics) {
     const utilization = Math.min(150, Math.max(0, metrics.capacityPct || 0));
-    const angleRad = (utilization / 150) * Math.PI; // Semi-circle: 0° to 180°
 
-    // Calculate arc endpoint using correct semicircle math: center (60,70), radius 50
-    const arcX = 60 - Math.cos(angleRad) * 50;
-    const arcY = 70 - Math.sin(angleRad) * 50;
-    const needleX = 60 - Math.cos(angleRad) * 40;
-    const needleY = 70 - Math.sin(angleRad) * 40;
+    // Create a proper speedometer-style gauge
+    // Range: 0-150%, with visual zones: green (0-75%), amber (75-100%), red (100-150%)
+    const angle = -135 + (utilization / 150) * 270; // -135° to 135° (270° total sweep)
+    const angleRad = (angle * Math.PI) / 180;
 
-    // Large-arc-flag: use 1 if angle > 90° (π/2)
-    const largeArcFlag = angleRad > Math.PI / 2 ? 1 : 0;
+    // Needle positioning (from center, pointing at angle)
+    const needleX = 60 + Math.cos(angleRad) * 35;
+    const needleY = 60 + Math.sin(angleRad) * 35;
 
-    // Zone markers: green (0-75%), amber (75-100%), red (100%+)
-    const pt = (deg) => ({
-      x: 60 - Math.cos((deg / 180) * Math.PI) * 50,
-      y: 70 - Math.sin((deg / 180) * Math.PI) * 50
+    // Determine color based on utilization
+    const gaugeColor = utilization > 100 ? '#fb7185' : utilization > 75 ? '#fbbf24' : '#34d399';
+
+    // Create gauge background with zones
+    let svg = '<svg viewBox="0 0 120 100" class="gauge-svg" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));">';
+
+    // Gauge background (light gray arc)
+    svg += '<path d="M 25 60 A 35 35 0 1 1 95 60" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="6" stroke-linecap="round"/>';
+
+    // Green zone (0-75%)
+    svg += '<path d="M 25 60 A 35 35 0 0 1 55.96 26.27" fill="none" stroke="rgba(52,211,153,0.4)" stroke-width="6" stroke-linecap="round"/>';
+
+    // Amber zone (75-100%)
+    svg += '<path d="M 55.96 26.27 A 35 35 0 0 1 95 60" fill="none" stroke="rgba(251,191,36,0.4)" stroke-width="6" stroke-linecap="round"/>';
+
+    // Red zone (100-150%) - would overflow but keeps visual consistency
+    svg += '<path d="M 95 60 A 35 35 0 0 1 87.5 88.7" fill="none" stroke="rgba(251,113,133,0.4)" stroke-width="6" stroke-linecap="round"/>';
+
+    // Fill arc (shows actual utilization)
+    const fillAngle = -135 + Math.min(utilization, 150) / 150 * 270;
+    const fillAngleRad = (fillAngle * Math.PI) / 180;
+    const fillX = 60 + Math.cos(fillAngleRad) * 35;
+    const fillY = 60 + Math.sin(fillAngleRad) * 35;
+    const largeArc = Math.min(utilization, 150) > 75 ? 1 : 0;
+
+    svg += '<path d="M 25 60 A 35 35 0 ' + largeArc + ' 1 ' + fillX + ' ' + fillY + '" fill="none" stroke="' + gaugeColor + '" stroke-width="6" stroke-linecap="round" opacity="0.9"/>';
+
+    // Tick marks and labels
+    const ticks = [0, 25, 50, 75, 100, 125, 150];
+    ticks.forEach((tick) => {
+      const tickAngle = (-135 + (tick / 150) * 270) * Math.PI / 180;
+      const innerX = 60 + Math.cos(tickAngle) * 28;
+      const innerY = 60 + Math.sin(tickAngle) * 28;
+      const outerX = 60 + Math.cos(tickAngle) * 33;
+      const outerY = 60 + Math.sin(tickAngle) * 33;
+
+      svg += '<line x1="' + innerX + '" y1="' + innerY + '" x2="' + outerX + '" y2="' + outerY + '" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>';
+
+      // Add labels for key points
+      if (tick === 0 || tick === 75 || tick === 150) {
+        const labelAngle = (-135 + (tick / 150) * 270) * Math.PI / 180;
+        const labelX = 60 + Math.cos(labelAngle) * 18;
+        const labelY = 60 + Math.sin(labelAngle) * 18;
+        svg += '<text x="' + labelX + '" y="' + labelY + '" text-anchor="middle" dy=".3em" font-size="8" fill="var(--muted)" font-weight="500">' + tick + '%</text>';
+      }
     });
-    const pt75 = pt(75);
-    const pt135 = pt(135);
 
-    const arcColor = utilization > 100 ? 'var(--bad)' : utilization > 75 ? 'var(--warn)' : 'var(--good)';
+    // Needle (pointer) - looks like a speedometer needle
+    svg += '<line x1="60" y1="60" x2="' + needleX + '" y2="' + needleY + '" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round"/>';
+    svg += '<circle cx="60" cy="60" r="3.5" fill="var(--text)"/>';
 
-    return '<div class="utilization-gauge"><svg viewBox="0 0 120 80" class="gauge-svg"><!--Background arc--><path d="M 10 70 A 50 50 0 0 0 110 70" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" stroke-linecap="round"/><!--Zone arcs: green 0-75%--><path d="M 10 70 A 50 50 0 0 0 ' + (pt75.x) + ' ' + (pt75.y) + '" fill="none" stroke="rgba(52,211,153,0.3)" stroke-width="8" stroke-linecap="round"/><!--Zone arcs: amber 75-100%--><path d="M ' + (pt75.x) + ' ' + (pt75.y) + ' A 50 50 0 0 0 ' + (pt135.x) + ' ' + (pt135.y) + '" fill="none" stroke="rgba(251,191,36,0.3)" stroke-width="8" stroke-linecap="round"/><!--Zone arcs: red 100%+--><path d="M ' + (pt135.x) + ' ' + (pt135.y) + ' A 50 50 0 0 0 110 70" fill="none" stroke="rgba(251,113,133,0.3)" stroke-width="8" stroke-linecap="round"/><!--Utilization arc--><path d="M 10 70 A 50 50 0 ' + (largeArcFlag) + ' 0 ' + (arcX) + ' ' + (arcY) + '" fill="none" stroke="' + (arcColor) + '" stroke-width="8" stroke-linecap="round"/><!--Needle--><line x1="60" y1="70" x2="' + (needleX) + '" y2="' + (needleY) + '" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><!--Center dot--><circle cx="60" cy="70" r="5" fill="var(--accent)"/></svg><div class="gauge-labels"><div class="gauge-value">' + (fmtPct1(utilization)) + '</div><div class="gauge-text">Utilization</div></div></div>';
+    svg += '</svg>';
+
+    return '<div class="utilization-gauge">' + svg + '<div class="gauge-labels"><div class="gauge-value">' + fmtPct1(utilization) + '</div><div class="gauge-text">Utilization</div></div></div>';
   }
 
 export function createProfitWaterfall(metrics) {
@@ -140,12 +182,14 @@ export function createProfitWaterfall(metrics) {
       // Bar
       barHTML += '<rect x="' + (x) + '" y="' + (barY) + '" width="' + (barWidth) + '" height="' + (barHeight) + '" fill="' + (item.color) + '" opacity="0.75" rx="2"/>';
 
-      // Label below bar
-      barHTML += '<text x="' + (x + barWidth / 2) + '" y="' + (zeroLineY + 12) + '" text-anchor="middle" font-size="10" fill="var(--muted)" font-weight="500">' + (item.label.split(' ')[0]) + '</text>';
+      // Label below bar - smaller text, abbreviated
+      const labelText = item.label.length > 6 ? item.label.substring(0, 3) : item.label.split(' ')[0];
+      barHTML += '<text x="' + (x + barWidth / 2) + '" y="' + (zeroLineY + 10) + '" text-anchor="middle" font-size="7" fill="var(--muted)" font-weight="500">' + (labelText) + '</text>';
 
-      // Value label above/below bar
-      const valueLabelY = isNegative ? zeroLineY + barHeight + 8 : barY - 3;
-      barHTML += '<text x="' + (x + barWidth / 2) + '" y="' + (valueLabelY) + '" text-anchor="middle" font-size="9" fill="var(--text)" font-weight="600">' + (fmtMoney0(item.value)) + '</text>';
+      // Value label above/below bar - smaller font, abbreviated currency
+      const valueLabelY = isNegative ? zeroLineY + barHeight + 6 : barY - 2;
+      const shortValue = item.value > 0 ? '$' + Math.round(item.value / 1000) + 'k' : '$' + Math.round(item.value / 1000) + 'k';
+      barHTML += '<text x="' + (x + barWidth / 2) + '" y="' + (valueLabelY) + '" text-anchor="middle" font-size="6.5" fill="var(--text)" font-weight="600">' + (shortValue) + '</text>';
 
       // Connector line to next bar (except after last bar)
       if (index < items.length - 1) {
@@ -156,7 +200,7 @@ export function createProfitWaterfall(metrics) {
       }
     });
 
-    return '<div class="profit-waterfall"><svg viewBox="0 0 120 90" class="waterfall-svg"><!--Zero line--><line x1="5" y1="' + (zeroLineY) + '" x2="115" y2="' + (zeroLineY) + '" stroke="var(--border)" stroke-width="1.5" opacity="0.6"/>' + (barHTML) + '</svg><div class="waterfall-summary"><div class="summary-item"><span class="summary-label">Net Income:</span><span class="summary-value" style="color:' + (metrics.income >= 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtMoney0(metrics.income)) + '</span></div></div></div>';
+    return '<div class="profit-waterfall"><svg viewBox="0 0 120 85" class="waterfall-svg"><!--Zero line--><line x1="5" y1="' + (zeroLineY) + '" x2="115" y2="' + (zeroLineY) + '" stroke="var(--border)" stroke-width="1.5" opacity="0.6"/>' + (barHTML) + '</svg><div class="waterfall-summary"><div class="summary-item"><span class="summary-label">Net:</span><span class="summary-value" style="color:' + (metrics.income >= 0 ? 'var(--good)' : 'var(--bad)') + ';">' + (fmtMoney0(metrics.income)) + '</span></div></div></div>';
   }
 
 export function renderSimpleChart(metrics) {
@@ -259,35 +303,102 @@ export function renderSimpleChart(metrics) {
   setupChartEventListeners(el);
 }
 
-// Helper function to set up basic chart interactivity
+// Helper function to set up basic chart interactivity with pinning support
 function setupChartEventListeners(chartEl) {
   if (!chartEl) return;
 
   const tooltip = chartEl.querySelector('.chart-tooltip');
   if (!tooltip) return;
 
+  let pinnedRect = null;
+
   // Get all chart rects
   const rects = chartEl.querySelectorAll('svg rect[data-offering]');
 
+  const showTooltip = (rect, e) => {
+    if (!rect) return;
+    const offering = escapeHtml(rect.getAttribute('data-offering') || '');
+    const type = escapeHtml(rect.getAttribute('data-type') || '');
+    const variable = escapeHtml(rect.getAttribute('data-var') || '$0');
+    const contrib = escapeHtml(rect.getAttribute('data-contrib') || '$0');
+    const pct = escapeHtml(rect.getAttribute('data-pct') || '0%');
+
+    let tooltipHTML = `<div class="tooltip-content"><strong>${offering}</strong>`;
+    tooltipHTML += `<div style="font-size:11px;margin-top:4px;color:var(--muted);">${type === 'variable' ? 'Variable Cost' : 'Contribution'}: ${type === 'variable' ? variable : contrib}</div>`;
+    tooltipHTML += `<div style="font-size:10px;color:var(--muted);margin-top:2px;">% of Revenue: ${pct}</div>`;
+
+    // Add pin button if not already pinned
+    if (pinnedRect !== rect) {
+      tooltipHTML += `<button class="tooltip-pin-btn" style="background:none;border:none;color:var(--accent);font-size:11px;margin-top:6px;cursor:pointer;padding:2px 6px;border-radius:3px;border:1px solid var(--accent);opacity:0.7;">📌 Lock</button>`;
+    } else {
+      tooltipHTML += `<button class="tooltip-pin-btn" style="background:none;border:none;color:var(--accent);font-size:11px;margin-top:6px;cursor:pointer;padding:2px 6px;border-radius:3px;border:1px solid var(--accent);opacity:0.7;">🔒 Locked</button>`;
+    }
+
+    tooltipHTML += '</div>';
+    tooltip.innerHTML = tooltipHTML;
+    tooltip.classList.add('visible');
+    tooltip.style.display = 'block';
+
+    // Add click handler for pin button
+    const pinBtn = tooltip.querySelector('.tooltip-pin-btn');
+    if (pinBtn) {
+      pinBtn.onclick = (ev) => {
+        ev.stopPropagation();
+        if (pinnedRect === rect) {
+          pinnedRect = null;
+          pinBtn.textContent = '📌 Lock';
+        } else {
+          pinnedRect = rect;
+          pinBtn.textContent = '🔒 Locked';
+        }
+      };
+    }
+  };
+
   rects.forEach((rect) => {
     rect.addEventListener('mouseenter', (e) => {
-      const offering = escapeHtml(rect.getAttribute('data-offering') || '');
-      const type = escapeHtml(rect.getAttribute('data-type') || '');
-      const variable = escapeHtml(rect.getAttribute('data-var') || '$0');
-      const contrib = escapeHtml(rect.getAttribute('data-contrib') || '$0');
-      const pct = escapeHtml(rect.getAttribute('data-pct') || '0%');
-
-      tooltip.innerHTML = `<div class="tooltip-content"><strong>${offering}</strong><div style="font-size:12px;margin-top:4px;color:var(--muted);">${type === 'variable' ? 'Variable Cost' : 'Contribution'}: ${type === 'variable' ? variable : contrib}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">% of Revenue: ${pct}</div></div>`;
-      tooltip.classList.add('visible');
-      tooltip.style.display = 'block';
+      // Only show tooltip if not pinned, or if hovering over the pinned rect
+      if (!pinnedRect || pinnedRect === rect) {
+        showTooltip(rect, e);
+      }
     });
 
     rect.addEventListener('mouseleave', () => {
+      // Only hide if not pinned
+      if (pinnedRect !== rect) {
+        tooltip.classList.remove('visible');
+        setTimeout(() => {
+          tooltip.style.display = 'none';
+          tooltip.innerHTML = '';
+        }, 150);
+      }
+    });
+
+    rect.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (pinnedRect === rect) {
+        pinnedRect = null;
+        tooltip.classList.remove('visible');
+        setTimeout(() => {
+          tooltip.style.display = 'none';
+          tooltip.innerHTML = '';
+        }, 150);
+      } else {
+        pinnedRect = rect;
+        showTooltip(rect, e);
+      }
+    });
+  });
+
+  // Click outside to unpin
+  document.addEventListener('click', (e) => {
+    if (pinnedRect && !chartEl.contains(e.target)) {
+      pinnedRect = null;
       tooltip.classList.remove('visible');
       setTimeout(() => {
         tooltip.style.display = 'none';
         tooltip.innerHTML = '';
       }, 150);
-    });
+    }
   });
 }
