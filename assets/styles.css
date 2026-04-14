@@ -269,10 +269,9 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 1001;
   margin: 0;
   padding: 0;
-  padding-bottom: 48px; /* extended fade zone below content */
   width: 100%;
   box-sizing: border-box;
   background:
@@ -280,9 +279,24 @@ body {
     radial-gradient(900px 600px at 85% 20%, rgba(94, 234, 212, 0.10), transparent 60%),
     var(--bg);
   background-attachment: fixed;
-  /* Fade the bottom of the header element to transparent */
-  -webkit-mask-image: linear-gradient(180deg, black 0%, black 80%, transparent 100%);
-  mask-image: linear-gradient(180deg, black 0%, black 80%, transparent 100%);
+}
+
+/* Fade overlay — separate from header so dropdowns inside header are never clipped */
+.header-fade {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 130px;
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 58%, transparent 100%);
+  pointer-events: none;
+  z-index: 99; /* above page, below header (1001) and dropdowns (1002) */
+}
+
+@media (max-width: 768px) {
+  .header-fade {
+    height: 110px;
+  }
 }
 
 /* Header background: removed - using direct header background instead */
@@ -532,7 +546,6 @@ body {
 /* ── Mobile (≤768px): nav and panel hide, hamburger shows ── */
 @media (max-width: 768px) {
   .header {
-    padding-bottom: 60px;
     width: 100%;
     max-width: 100%;
     margin: 0;
@@ -665,7 +678,7 @@ body {
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
+  z-index: 1002;
   backdrop-filter: blur(4px);
 }
 
@@ -1776,7 +1789,7 @@ input[type="range"]::-moz-range-thumb {
   position: fixed;
   pointer-events: auto;
   background: transparent;
-  z-index: 1000;
+  z-index: 1002;
   opacity: 0;
   transition: opacity 0.15s ease;
   display: none;
@@ -2808,7 +2821,7 @@ input[type="checkbox"] {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: 1002;
   min-width: 180px;
   padding: 0.5rem 0;
   margin-top: 0.25rem;
@@ -2849,7 +2862,7 @@ input[type="checkbox"] {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: 1002;
   min-width: 310px;
   max-width: 330px;
   max-height: 90vh;
@@ -3055,7 +3068,7 @@ input[type="checkbox"] {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: 1002;
   min-width: 160px;
   padding: 0.5rem 0;
   margin-top: 0.25rem;
