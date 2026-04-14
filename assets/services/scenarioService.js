@@ -130,6 +130,7 @@ export function performLoad(scenario) {
     window.state.productiveUtilizationPct = scenarioData.productiveUtilizationPct ?? window.state.productiveUtilizationPct;
     window.state.targetUtilizationPct = scenarioData.targetUtilizationPct ?? window.state.targetUtilizationPct;
     window.state.lockMix = scenarioData.lockMix ?? window.state.lockMix;
+    window.state.loadedTemplate = scenarioData.loadedTemplate ?? null; // Clear template badge when loading scenarios
 
     persistState(); // Save loaded scenario as current state
     window.render();
