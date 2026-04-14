@@ -907,18 +907,21 @@ export function showEmbedCode() {
     content: `
       <p>Copy this code to embed ProfitPath on your website:</p>
       <textarea id="embedCodeText" readonly style="width:100%;height:100px;padding:10px;margin:10px 0;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--text);box-sizing:border-box;">${embedCode}</textarea>
-      <button id="embedCopyBtn" class="btn primary" style="width:100%;">Copy to Clipboard</button>
     `,
     size: 'medium',
-    onOpen: () => {
-      document.getElementById('embedCopyBtn').addEventListener('click', () => {
-        navigator.clipboard.writeText(embedCode).then(() => {
-          showToast('Embed code copied to clipboard!', 'success', 2000);
-        }).catch(() => {
-          showToast('Copy failed — select the code above and copy manually.', 'error', 3000);
-        });
-      });
-    }
+    buttons: [
+      {
+        text: 'Copy to Clipboard',
+        primary: true,
+        action: () => {
+          navigator.clipboard.writeText(embedCode).then(() => {
+            showToast('Embed code copied to clipboard!', 'success', 2000);
+          }).catch(() => {
+            showToast('Copy failed — select the code above and copy manually.', 'error', 3000);
+          });
+        }
+      }
+    ]
   });
 }
 
