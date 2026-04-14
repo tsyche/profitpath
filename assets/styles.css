@@ -1382,11 +1382,17 @@ button:focus-visible {
 }
 
 .debug-body {
-  margin-top: 8px
+  margin-top: 8px;
+  max-height: 500px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.25s ease-out, opacity 0.2s ease-out, margin 0.2s ease-out;
 }
 
 .debug-body.collapsed {
-  display: none
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
 }
 
 .debug-pre {
@@ -1404,6 +1410,19 @@ button:focus-visible {
 .perf-wrapper {
   margin-top: 12px;
   margin-bottom: 8px;
+}
+
+.perf-body {
+  max-height: 500px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.25s ease-out, opacity 0.2s ease-out, margin 0.2s ease-out;
+}
+
+.perf-body.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
 }
 
 .perf-content {
