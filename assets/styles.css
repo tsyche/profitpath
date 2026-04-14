@@ -600,7 +600,7 @@ html {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.5px;
-  transform: translateY(-5px);
+  transform: translateY(-8px);
 }
 
 @media (max-width: 768px) {
