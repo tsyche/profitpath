@@ -269,7 +269,7 @@ export function renderSimpleChart(metrics) {
     x += revPct;
   });
 
-  const svgParts = ['<svg viewBox="0 0 100 20" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">'];
+  const svgParts = ['<svg viewBox="0 0 100 20" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="pointer-events:auto;">'];
   rects.forEach((r) => {
     const xPos = (r.x * 100).toFixed(3);
     const w = (r.w * 100).toFixed(3);
@@ -280,7 +280,7 @@ export function renderSimpleChart(metrics) {
     const contribAttr = escapeHtml(fmtMoney0(r.contribVal || 0));
     const pctAttr = escapeHtml(((r.pct || 0) * 100).toFixed(0) + '%');
     const hoursAttr = escapeHtml((r.hours || 0).toFixed(1));
-    svgParts.push('<rect x="' + (xPos) + '" y="2" width="' + (w) + '" height="16" rx="3" fill="' + (r.color) + '" data-offering="' + (offeringAttr) + '" data-type="' + (typeAttr) + '" data-var="' + (varAttr) + '" data-contrib="' + (contribAttr) + '" data-pct="' + (pctAttr) + '" data-hours="' + (hoursAttr) + '"></rect>');
+    svgParts.push('<rect x="' + (xPos) + '" y="2" width="' + (w) + '" height="16" rx="3" fill="' + (r.color) + '" data-offering="' + (offeringAttr) + '" data-type="' + (typeAttr) + '" data-var="' + (varAttr) + '" data-contrib="' + (contribAttr) + '" data-pct="' + (pctAttr) + '" data-hours="' + (hoursAttr) + '" style="pointer-events:auto;cursor:pointer;" class="chart-rect"></rect>');
   });
 
   // intentionally do not render per-offering inline labels (legend below provides totals)
@@ -312,8 +312,11 @@ function setupChartEventListeners(chartEl) {
 
   let pinnedRect = null;
 
-  // Get all chart rects
+  // Get the SVG container and all chart rects
+  const svg = chartEl.querySelector('svg');
   const rects = chartEl.querySelectorAll('svg rect[data-offering]');
+
+  if (!rects || rects.length === 0) return;
 
   const showTooltip = (rect, e) => {
     if (!rect) return;
@@ -361,23 +364,24 @@ function setupChartEventListeners(chartEl) {
     }
   };
 
+  // Set up event listeners on SVG rects using proper event names for SVG
   rects.forEach((rect) => {
-    rect.addEventListener('mouseenter', (e) => {
-      // Only show tooltip if not pinned, or if hovering over the pinned rect
+    // Use mouseover/mouseout for better SVG compatibility
+    rect.addEventListener('mouseover', (e) => {
       if (!pinnedRect || pinnedRect === rect) {
         showTooltip(rect, e);
       }
     });
 
     rect.addEventListener('mousemove', (e) => {
-      // Update tooltip position as user moves mouse (only if not pinned)
+      // Update tooltip position as user moves mouse
       if ((!pinnedRect || pinnedRect === rect) && tooltip.classList.contains('visible')) {
         tooltip.style.left = (e.clientX + 10) + 'px';
         tooltip.style.top = (e.clientY - 20) + 'px';
       }
     });
 
-    rect.addEventListener('mouseleave', () => {
+    rect.addEventListener('mouseout', () => {
       // Only hide if not pinned
       if (pinnedRect !== rect) {
         tooltip.classList.remove('visible');
