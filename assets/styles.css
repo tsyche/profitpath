@@ -2846,12 +2846,12 @@ input[type="checkbox"] {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
-  min-width: 280px;
-  max-width: 320px;
-  max-height: 80vh;
-  overflow-y: auto;
+  min-width: 310px;
+  max-width: 330px;
+  max-height: 90vh;
+  overflow: hidden;
   overflow-x: hidden;
-  padding: var(--gap);
+  padding: 8px;
 }
 
 .settings-dropdown.active .settings-menu {
@@ -2859,7 +2859,7 @@ input[type="checkbox"] {
 }
 
 .settings-section {
-  margin-bottom: calc(var(--gap) * 1.5);
+  margin-bottom: 12px;
 }
 
 .settings-section:last-child {
@@ -2867,8 +2867,8 @@ input[type="checkbox"] {
 }
 
 .settings-section h4 {
-  margin: 0 0 calc(var(--gap) * 0.5) 0;
-  font-size: 14px;
+  margin: 0 0 8px 0;
+  font-size: 13px;
   font-weight: 600;
   color: #111;
 }
@@ -2936,6 +2936,17 @@ input[type="checkbox"] {
 .settings-level-description .level-feature-item.locked {
   color: #888;
   font-size: 11px;
+}
+
+/* Experience Level Tab Styling */
+.settings-section label input[type="radio"]:checked {
+  accent-color: #007bff;
+}
+
+.settings-section label:has(input[type="radio"]:checked) {
+  background: white !important;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Desktop Settings Cog Button */

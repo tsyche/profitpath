@@ -56,7 +56,7 @@ export const FEATURE_GATES = {
     showTooltips: true
   },
 
-  // Advanced: All features
+  // Advanced: All features (tooltips disabled for power users)
   advanced: {
     showAdvancedCalculations: true,
     showDetailedBreakdown: true,
@@ -65,7 +65,7 @@ export const FEATURE_GATES = {
     showDebugPanel: true,
     showPerformanceMetrics: true,
     showSensitivityAnalysis: true,
-    showTooltips: true
+    showTooltips: false
   }
 };
 

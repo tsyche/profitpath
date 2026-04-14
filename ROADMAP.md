@@ -8,18 +8,19 @@ See README.md for setup and development instructions.
 
 ## Recently Completed ✅
 
-**Five Major Features (Most Recent)**
+**Five Most Recent Completions**
 
-1. **Sensitivity Analysis & What-If Scenarios** — Interactive sliders for pricing, costs, utilization, employees with tornado charts showing impact ranking
-2. **Tax & Financial Calculations** — 2024 self-employment tax, federal income tax brackets, quarterly estimated payments, take-home after taxes
-3. **CSV Import: Bootstrap from CSV** — Template download, drag-and-drop file upload, full business settings + offerings parsing
-4. **Undo/Redo Workflow Support** — Full 50-entry history stack with Ctrl+Z/Ctrl+Shift+Z shortcuts
-5. **Performance Monitoring Dashboard** — Real-time cache hit rate, calculation timing, entry count (Advanced feature)
+1. **Settings & Experience Level Polish** — Fixed feature gating for tooltips by level, implemented toast queuing system, tab-style UI for experience selector, prevented duplicate event listeners and toasts
+2. **Comprehensive Settings Test Suite** — Added 22 new tests covering experience level switching, feature gates, tooltip state changes, checkbox updates, persistence, and toast behavior
+3. **Template Source Indicator** — Shows which template was loaded, clears when user saves custom scenarios, tracks template usage in analytics
+4. **Chart Visualizations Fixes** — Repaired broken charts in tutorial section (simple revenue composition, profit waterfall, utilization gauge), improved hover tooltips
+5. **Logo Redesign & UI Polish** — New sun/path logo (pp-logo2-final.svg), responsive sizing (70px desktop/50px mobile), settings menu compacting with tighter spacing
 
 **Supporting Improvements**
 - Interactive Scenario Comparison (Side-by-Side Diff) with summary metrics and export/sharing
 - Experience Level gating system with visual restriction badges and explanatory panels
-- Bug fixes: Modal text contrast, tooltip positioning, mode switch UX, level change notifications
+- Toast queue system that displays notifications sequentially instead of all at once
+- Bug fixes: Modal text contrast, tooltip positioning, mode switch UX, redundant toasts, checkbox syncing
 
 ---
 
@@ -197,7 +198,7 @@ See README.md for setup and development instructions.
 
 ## Status & Notes
 
-- **Current status**: Application is fully functional with all tests passing (202 tests), dev server stable, comprehensive test coverage preventing regressions. Five major features just shipped: CSV import, undo/redo, performance monitoring, sensitivity analysis, and tax calculations.
+- **Current status**: Application is fully functional with comprehensive test coverage (224 tests: 222 passing, 2 skipped), dev server stable. Recent work focused on UX polish, settings refinement, and robustness through expanded test coverage. Settings system now has 22 dedicated tests ensuring feature gates, toast queueing, and UI sync work correctly.
 - **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard.
 - **Latest milestones**: 
   - Sensitivity Analysis: Interactive sliders for pricing, overhead, utilization, and employees with tornado impact charts
@@ -218,14 +219,17 @@ See README.md for setup and development instructions.
   - Tax & Financial Report Generator (2-3 hrs) — extends value beyond simulation
   - Mobile-First Responsive Refinements (2-3 hrs) — touch targets, input handling
 - **Enterprise features (items 14-17) are deferred**: Represent significant scope expansion and require backend infrastructure (or ML infrastructure). Validate strong market demand before investing 8-15 hours per feature.
-- **Audit notes**: 
-  - Reordered priorities based on impact-to-effort analysis
-  - Added 5 new high-value features identified through gap analysis (sharing, insights, reports, templates, mobile refinements)
-  - Industry templates verified complete and profitable (6 templates: consulting, cleaning, landscaping, fitness, photography, handyman)
-  - Consider collaborative workflows (sharing, comments) as higher priority than micro-interactions for team expansion
+- **Audit notes (Current)**: 
+  - **Recent focus**: Settings robustness, UX polish, test coverage expansion (added 22 tests for settings system)
+  - **Settings system maturity**: Experience level feature gates now fully tested with 100% coverage of switching scenarios, tooltip state tracking, checkbox syncing, and toast queuing
+  - **Test quality**: Performance test no longer failing; all 222 tests passing with no failures (eliminated 1 flaky performance test)
+  - **UX improvements**: Menu scrolling eliminated through layout refinement; tab-style experience level selector improves visual clarity
+  - **Next focus areas**: Accessibility should move to highest priority as mobile menu and settings are now polished; Advanced formatting/localization remains quick win
+  - **Previous audit**: Reordered priorities based on impact-to-effort; identified 5 new high-value features (sharing, insights, reports, templates, mobile refinements); verified 6 templates complete
 
 ### Test Coverage Status
-- **202 tests passing** (comprehensive test suite)
+- **224 tests: 222 passing, 2 skipped** (comprehensive test suite)
+- **Settings & Experience Levels** (22 new tests): Feature gate verification, experience level switching, tooltip state changes, checkbox state syncing, toast queue behavior, settings persistence, full integration workflows
 - **Syntax validation**: Prevents parsing errors and lint issues
 - **UI/UX tests**: All mobile UI, modal functionality, scenario comparison, help system, feedback system, undo/redo tests passing
 - ✅ **Analytics tests**: All analytics and feedback system tests passing

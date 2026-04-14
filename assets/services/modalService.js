@@ -323,28 +323,37 @@ export function getModalCount() {
 /**
  * Add toast notification functionality
  */
-export function showToast(message, type = 'info', duration = 3000) {
+// Toast queue system
+const toastQueue = [];
+let currentToast = null;
+let toastTimeout = null;
+
+function showNextToast() {
+    // If a toast is currently displayed, don't show another
+    if (currentToast) return;
+
+    // Get the next toast from the queue
+    const nextToastData = toastQueue.shift();
+    if (!nextToastData) return;
+
     // Create toast element
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
+    toast.className = `toast toast-${nextToastData.type}`;
+    currentToast = toast;
 
     // Create message span
     const messageSpan = document.createElement('span');
     messageSpan.className = 'toast-message';
-    messageSpan.textContent = message;
+    messageSpan.textContent = nextToastData.message;
 
     // Create close button
     const closeBtn = document.createElement('button');
     closeBtn.className = 'toast-close';
     closeBtn.innerHTML = '&times;';
     closeBtn.setAttribute('aria-label', 'Close notification');
-    closeBtn.addEventListener('click', () => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 300);
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeToast(toast);
     });
 
     // Add message and close button to toast
@@ -358,14 +367,35 @@ export function showToast(message, type = 'info', duration = 3000) {
     setTimeout(() => toast.classList.add('show'), 10);
 
     // Auto-remove after duration
+    toastTimeout = setTimeout(() => {
+        removeToast(toast);
+    }, nextToastData.duration);
+}
+
+function removeToast(toast) {
+    // Clear any pending timeout
+    if (toastTimeout) {
+        clearTimeout(toastTimeout);
+        toastTimeout = null;
+    }
+
+    toast.classList.remove('show');
     setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 300);
-    }, duration);
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+        currentToast = null;
+        // Show next toast in queue if any
+        showNextToast();
+    }, 300);
+}
+
+export function showToast(message, type = 'info', duration = 3000) {
+    // Add toast to queue
+    toastQueue.push({ message, type, duration });
+
+    // Try to show it if nothing is currently displayed
+    showNextToast();
 
     // Return false to prevent async response issues
     return false;
