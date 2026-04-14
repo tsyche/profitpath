@@ -1,6 +1,11 @@
 // Business Logic
 import { uuid } from '../utils/helpers';
 
+// Formatting utilities
+const DEFAULT_CURRENCY = 'USD';
+const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
+const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
+
 export function validateBusinessLogic() {
   const issues = [];
   const warnings = [];
@@ -228,19 +233,39 @@ export function validateBusinessLogic() {
     }
 
   } catch (e) {
-    let errorMsg = 'Unable to calculate metrics due to data issues';
-    let suggestion = 'Check your input values for invalid data';
+    let errorMsg = 'Unable to calculate metrics';
+    let suggestion = 'Check that all required fields are filled in';
 
-    // Provide more specific error messages based on mode
-    if (state.mode === 'current') {
-      errorMsg = 'Unable to calculate metrics - check client counts and offering data';
-      suggestion = 'Ensure all service offerings have valid client counts (0 or more)';
-    } else if (state.offerings.length === 0) {
+    // Provide more specific error messages based on state
+    // Check structural issues first
+    if (state.offerings && state.offerings.length === 0) {
       errorMsg = 'Cannot calculate without service offerings';
       suggestion = 'Add at least one service offering to perform calculations';
-    } else if (state.fullTimeEmployees + state.partTimeEmployees === 0) {
+    } else if (!state.fullTimeEmployees && !state.partTimeEmployees) {
       errorMsg = 'Cannot calculate without employees';
       suggestion = 'Add at least one full-time or part-time employee';
+    } else if (state.mode === 'current') {
+      // In current mode, check if offerings have required fields
+      const offeringIssues = [];
+      if (state.offerings) {
+        state.offerings.forEach((o, idx) => {
+          if (!o.name) offeringIssues.push('Offering ' + (idx + 1) + ' has no name');
+          if (!o.sessionsPerYear) offeringIssues.push('Offering ' + (idx + 1) + ' has no sessions');
+          if (!o.hoursPerSession) offeringIssues.push('Offering ' + (idx + 1) + ' has no session length');
+          if (typeof o.currentClients === 'undefined' || o.currentClients === null) offeringIssues.push('Offering ' + (idx + 1) + ' has no client count');
+        });
+      }
+      if (offeringIssues.length > 0) {
+        errorMsg = 'Current mode missing required data: ' + offeringIssues.join('; ');
+        suggestion = 'Ensure all offerings have names, sessions, hours, and client counts';
+      } else {
+        errorMsg = 'Calculation error in current mode';
+        suggestion = 'Check your offering details are correct';
+      }
+    } else {
+      // Forecast mode
+      errorMsg = 'Calculation error - check your data values';
+      suggestion = 'Verify all numeric values are valid and non-negative';
     }
 
     warnings.push({
@@ -250,7 +275,12 @@ export function validateBusinessLogic() {
       suggestion: suggestion
     });
 
-    console.error('Calculation error:', e);
+    console.error('Calculation error in validateBusinessLogic():', e.message, {
+      mode: state.mode,
+      employees: (state.fullTimeEmployees || 0) + (state.partTimeEmployees || 0),
+      offerings: state.offerings ? state.offerings.length : 0,
+      errorDetails: e.toString()
+    });
   }
 
   return { issues, warnings };
@@ -326,11 +356,15 @@ export function updateValidationDisplay() {
 
   const { issues, warnings } = validateBusinessLogic();
 
-  // Clear existing messages
+  // Always clear existing messages first
   validationContainer.innerHTML = '';
 
-  // Create error messages
+  // Track if we have any messages
+  let hasMessages = false;
+
+  // Create error messages (for structural/critical errors)
   if (issues.length > 0) {
+    hasMessages = true;
     const errorsEl = document.createElement('div');
     errorsEl.className = 'validation-errors';
 
@@ -344,21 +378,29 @@ export function updateValidationDisplay() {
     validationContainer.appendChild(errorsEl);
   }
 
-  // Create warning messages
+  // Create warning messages (for business logic issues and info)
   if (warnings.length > 0) {
+    hasMessages = true;
     const warningsEl = document.createElement('div');
     warningsEl.className = 'validation-warnings';
 
     warnings.forEach(warning => {
       const warningEl = document.createElement('div');
       warningEl.className = 'validation-item validation-' + (warning.severity);
-      warningEl.innerHTML = '<div class="validation-message"><strong>' + (warning.severity === 'warning' ? '⚠️' : '💡') + '</strong>' + (warning.message) + '</div><div class="validation-suggestion">' + (warning.suggestion) + '</div>';
+      // Show appropriate icon based on severity
+      let icon = '💡';
+      if (warning.severity === 'error') {
+        icon = '⚠️';
+      } else if (warning.severity === 'warning') {
+        icon = '⚠️';
+      }
+      warningEl.innerHTML = '<div class="validation-message"><strong>' + icon + '</strong>' + (warning.message) + '</div><div class="validation-suggestion">' + (warning.suggestion) + '</div>';
       warningsEl.appendChild(warningEl);
     });
 
     validationContainer.appendChild(warningsEl);
   }
 
-  // Hide container if no messages
-  validationContainer.style.display = (issues.length > 0 || warnings.length > 0) ? 'block' : 'none';
+  // Set display based on whether we have messages
+  validationContainer.style.display = hasMessages ? 'block' : 'none';
 }

@@ -224,23 +224,23 @@
         <div style="padding: 12px 8px; border-bottom: 2px solid #e5e7eb; margin-bottom: 12px;">
           <h3 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px;">At a Glance</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
-            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;" data-tooltip="Total income from all clients across all service offerings">
               <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Revenue</div>
               <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsRevenue">—</div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;" data-tooltip="Revenue minus all fixed costs and variable costs — your bottom line profit">
               <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Net Income</div>
               <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsIncome">—</div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;" data-tooltip="Number of active clients (current mode) or forecasted clients (forecast mode)">
               <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Clients</div>
               <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsClients">—</div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;" data-tooltip="Total number of service sessions delivered per year across all offerings">
               <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Sessions</div>
               <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsAnnualSessions">—</div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; grid-column: 1 / -1;">
+            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; grid-column: 1 / -1;" data-tooltip="Percentage of available capacity being used (100% = at target, >100% = overbooked)">
               <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Utilization</div>
               <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsUtilization">—</div>
             </div>
@@ -337,23 +337,23 @@
       </div>
       <div class="card-b">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; font-size: 14px;">
-          <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;" data-tooltip="Total income from all clients across all service offerings">
             <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Revenue</div>
             <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsRevenue">—</div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;" data-tooltip="Revenue minus all fixed costs and variable costs — your bottom line profit">
             <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Net Income</div>
             <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsIncome">—</div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;" data-tooltip="Number of active clients (current mode) or forecasted clients (forecast mode)">
             <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Clients</div>
             <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsClients">—</div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;" data-tooltip="Total number of service sessions delivered per year across all offerings">
             <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Annual Sessions</div>
             <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsAnnualSessions">—</div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;" data-tooltip="Percentage of available capacity being used (100% = at target, >100% = overbooked)">
             <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Utilization</div>
             <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsUtilization">—</div>
           </div>

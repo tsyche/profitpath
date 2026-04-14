@@ -1462,65 +1462,27 @@ export function wire(skipLocalStorageLoading = false) {
           }
 
           function loadOnboardingIndustryTemplate(industryId) {
-            const templates = {
-              consulting: {
-                offerings: [{
-                  name: 'Strategy Consulting',
-                  priceMonthly: 5000,
-                  sessionsPerYear: 12,
-                  hoursPerSession: 8,
-                  variableCostPerSession: 200
-                }]
-              },
-              cleaning: {
-                offerings: [{
-                  name: 'Standard Cleaning',
-                  priceMonthly: 150,
-                  sessionsPerYear: 4,
-                  hoursPerSession: 2,
-                  variableCostPerSession: 15
-                }]
-              },
-              landscaping: {
-                offerings: [{
-                  name: 'Weekly Lawn Care',
-                  priceMonthly: 200,
-                  sessionsPerYear: 52,
-                  hoursPerSession: 1,
-                  variableCostPerSession: 25
-                }]
-              },
-              fitness: {
-                offerings: [{
-                  name: 'Personal Training',
-                  priceMonthly: 300,
-                  sessionsPerYear: 48,
-                  hoursPerSession: 1,
-                  variableCostPerSession: 0
-                }]
-              },
-              photography: {
-                offerings: [{
-                  name: 'Wedding Photography',
-                  priceMonthly: 2500,
-                  sessionsPerYear: 6,
-                  hoursPerSession: 8,
-                  variableCostPerSession: 100
-                }]
-              }
-            };
-
-            const template = templates[industryId];
+            // Use the same INDUSTRY_TEMPLATES as single source of truth
+            const template = window.INDUSTRY_TEMPLATES && window.INDUSTRY_TEMPLATES[industryId];
             if (template) {
-              // Apply template to current scenario
-              if (template.offerings) {
-                state.offerings = template.offerings.map(o => ({
-                  ...o,
-                  id: uuid(),
-                  mixPct: 100 / template.offerings.length,
-                  currentClients: 0
-                }));
-              }
+              const config = template.config;
+
+              // Apply template to current scenario - load all offerings like the main menu
+              state.offerings = config.offerings.map(o => ({
+                ...o,
+                id: uuid(),
+                mixPct: o.mixPct || (100 / config.offerings.length),
+                currentClients: o.currentClients || 0
+              }));
+
+              // Apply employee and cost configuration
+              state.fullTimeEmployees = config.fullTimeEmployees || 1;
+              state.partTimeEmployees = config.partTimeEmployees || 0;
+              state.fullTimeEmployeePay = config.fullTimeEmployeePay || 60000;
+              state.partTimeEmployeePay = config.partTimeEmployeePay || 30000;
+              state.monthlyCosts = config.monthlyCosts || 250;
+              state.productiveUtilizationPct = config.productiveUtilizationPct || 80;
+              state.targetUtilizationPct = config.targetUtilizationPct || 85;
 
               // Refresh the UI
               render();
