@@ -3,6 +3,7 @@
 import { safeParseNumber } from '../utils/helpers';
 import { showToast } from './modalService.js';
 import { persistState } from './stateManager.js';
+import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizations, updateBreakEvenAnalysis } from './visualizationService.js';
 
 // Utility functions for export functionality
 const DEFAULT_CURRENCY = 'USD';
@@ -969,13 +970,26 @@ export function updateValidationDisplay() {
 }
 
 export function lazyLoadChart(metrics) {
-  // Placeholder for lazy loading charts
-  console.log('lazyLoadChart called:', metrics);
+  try {
+    if (typeof renderSimpleChart === 'function') {
+      renderSimpleChart(metrics);
+    }
+  } catch (e) {
+    console.warn('lazyLoadChart error:', e);
+  }
 }
 
 export function updateRichVisualizations(metrics) {
-  // Placeholder for updating rich visualizations
-  console.log('updateRichVisualizations called:', metrics);
+  try {
+    if (typeof vizUpdateRichVisualizations === 'function') {
+      vizUpdateRichVisualizations(metrics);
+    }
+    if (typeof updateBreakEvenAnalysis === 'function') {
+      updateBreakEvenAnalysis(metrics);
+    }
+  } catch (e) {
+    console.warn('updateRichVisualizations error:', e);
+  }
 }
 
 export function toggleMobileMenu() {
