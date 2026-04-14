@@ -320,6 +320,31 @@ function setupChartEventListeners(chartEl) {
 
   if (!rects || rects.length === 0) return;
 
+  const positionTooltip = (x, y, isLocked = false) => {
+    if (isLocked) {
+      // For locked tooltips, adjust for scroll position so it stays with the page
+      tooltip.style.position = 'fixed';
+      tooltip.style.left = (x + 10) + 'px';
+      tooltip.style.top = (y - 20) + 'px';
+    } else {
+      // For hover tooltips, use fixed positioning relative to viewport
+      tooltip.style.position = 'fixed';
+      tooltip.style.left = (x + 10) + 'px';
+      tooltip.style.top = (y - 20) + 'px';
+    }
+  };
+
+  const updateLockedTooltipPosition = () => {
+    if (pinnedRect && tooltip.classList.contains('visible')) {
+      // Get the pinned rect's position on screen
+      const rect = pinnedRect.getBoundingClientRect();
+      const chartRect = chartEl.getBoundingClientRect();
+
+      // Position tooltip near the chart, offset from top
+      positionTooltip(chartRect.left + chartRect.width / 2, chartRect.top - 30, true);
+    }
+  };
+
   const showTooltip = (rect, e) => {
     if (!rect) return;
 
@@ -355,8 +380,10 @@ function setupChartEventListeners(chartEl) {
 
     // Position tooltip near cursor (only if not locked)
     if (pinnedRect === null && e && e.clientX !== undefined) {
-      tooltip.style.left = (e.clientX + 10) + 'px';
-      tooltip.style.top = (e.clientY - 20) + 'px';
+      positionTooltip(e.clientX, e.clientY, false);
+    } else if (pinnedRect === rect) {
+      // If locked, position it at the chart area
+      updateLockedTooltipPosition();
     }
 
     // Add click handler for lock button
@@ -401,8 +428,7 @@ function setupChartEventListeners(chartEl) {
     // Update tooltip position as user moves mouse (only if not pinned)
     rect.addEventListener('mousemove', (e) => {
       if (pinnedRect === null && tooltip.classList.contains('visible')) {
-        tooltip.style.left = (e.clientX + 10) + 'px';
-        tooltip.style.top = (e.clientY - 20) + 'px';
+        positionTooltip(e.clientX, e.clientY, false);
       }
     });
 
@@ -431,4 +457,11 @@ function setupChartEventListeners(chartEl) {
       hideTooltip();
     }
   });
+
+  // Update locked tooltip position when scrolling
+  window.addEventListener('scroll', () => {
+    if (pinnedRect && tooltip.classList.contains('visible')) {
+      updateLockedTooltipPosition();
+    }
+  }, { passive: true });
 }
