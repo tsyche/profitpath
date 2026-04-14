@@ -974,7 +974,7 @@ export function updateValidationDisplay() {
 
 export function lazyLoadChart(metrics) {
   try {
-    if (typeof renderSimpleChart === 'function') {
+    if (renderSimpleChart) {
       renderSimpleChart(metrics);
     }
   } catch (e) {

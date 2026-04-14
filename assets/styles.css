@@ -1756,6 +1756,12 @@ input[type="range"]::-moz-range-thumb {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.simple-chart .chart-tooltip.visible {
+  opacity: 1;
+  visibility: visible;
+  display: block;
+}
+
 .tooltip-pin-btn {
   background: transparent !important;
   border: 1px solid var(--accent) !important;
