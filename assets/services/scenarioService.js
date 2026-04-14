@@ -59,11 +59,21 @@ function performSave(name) {
     document.querySelectorAll('#scenarioNameInput').forEach(i => i.value = '');
     renderScenariosList();
 
+    // Clear template badge when saving custom scenario
+    if (window.state) {
+      window.state.loadedTemplate = null;
+    }
+
     // Update dropdowns immediately after localStorage is updated
     const modalOverlay = document.querySelector('.modal-overlay');
     import('./miscService.js').then(miscService => {
       miscService.populateComparisonDropdowns(modalOverlay);
     });
+
+    // Update UI to remove template badge
+    if (window.render) {
+      window.render();
+    }
 
     // Show success notification
     showToast('Scenario saved successfully!', 'success');
