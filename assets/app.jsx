@@ -3672,9 +3672,22 @@ function showEnhancedTooltip(e) {
   document.body.appendChild(tooltip);
 
   const rect = e.target.getBoundingClientRect();
-  tooltip.style.left = (rect.left + rect.width / 2) + 'px';
-  tooltip.style.top = (rect.top - 8) + 'px';
-  tooltip.style.transform = 'translate(-50%, -100%)';
+  const tRect = tooltip.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+
+  // Clamp left so tooltip doesn't overflow viewport edges
+  const halfWidth = tRect.width / 2;
+  const clampedLeft = Math.min(Math.max(centerX, halfWidth + 8), window.innerWidth - halfWidth - 8);
+  tooltip.style.left = clampedLeft + 'px';
+  tooltip.style.transform = 'translateX(-50%)';
+
+  // Force below if element has data-tooltip-below, or if too close to the top
+  if ('tooltipBelow' in e.target.dataset || rect.top - tRect.height - 12 < 0) {
+    tooltip.style.top = (rect.bottom + 8) + 'px';
+  } else {
+    tooltip.style.top = (rect.top - 8) + 'px';
+    tooltip.style.transform += ' translateY(-100%)';
+  }
 
   e.target._tooltip = tooltip;
 }
