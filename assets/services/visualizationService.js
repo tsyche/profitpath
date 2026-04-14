@@ -158,9 +158,12 @@ export function createProfitWaterfall(metrics) {
 
     // Normalize values for SVG scaling: find max absolute value to scale bars proportionally
     const maxAbsValue = Math.max(Math.abs(metrics.revenue), Math.abs(metrics.income), 1);
-    const chartHeight = 40; // SVG units available for bars above/below zero line
+    const chartHeight = 32; // SVG units available for bars above/below zero line
     const scale = (val) => (Math.abs(val) / maxAbsValue) * chartHeight;
-    const zeroLineY = 55; // SVG y-coordinate of zero line
+    const centerY = 50; // SVG y-coordinate of center band
+    const bandHeight = 8; // Height of the center band to contain labels
+    const bandTop = centerY - bandHeight / 2;
+    const bandBottom = centerY + bandHeight / 2;
 
     let runningTotal = 0;
     let barHTML = '';
@@ -173,8 +176,8 @@ export function createProfitWaterfall(metrics) {
       const barHeight = scale(item.value);
       const isNegative = item.value < 0;
       const barY = isNegative
-        ? zeroLineY  // negative bars start at zero and go down
-        : zeroLineY - barHeight;  // positive bars start at zero and go up
+        ? bandBottom  // negative bars start at bottom edge of band and go down
+        : bandTop - barHeight;  // positive bars start at top edge of band and go up
 
       const x = 15 + index * 25;
       const barWidth = 18;
@@ -182,26 +185,150 @@ export function createProfitWaterfall(metrics) {
       // Bar
       barHTML += '<rect x="' + (x) + '" y="' + (barY) + '" width="' + (barWidth) + '" height="' + (barHeight) + '" fill="' + (item.color) + '" opacity="0.75" rx="2"/>';
 
-      // Label below bar - smaller text, abbreviated
-      const labelText = item.label.length > 6 ? item.label.substring(0, 3) : item.label.split(' ')[0];
-      barHTML += '<text x="' + (x + barWidth / 2) + '" y="' + (zeroLineY + 10) + '" text-anchor="middle" font-size="7" fill="var(--muted)" font-weight="500">' + (labelText) + '</text>';
+      // Label in center band - 3-letter abbreviations, centered vertically
+      let labelText;
+      let labelTitle;
+      if (item.label === 'Revenue') {
+        labelText = 'REV';
+        labelTitle = 'Total revenue from all service offerings';
+      } else if (item.label === 'Variable Costs') {
+        labelText = 'VAR';
+        labelTitle = 'Direct costs that scale with client volume';
+      } else if (item.label === 'Fixed & Payroll') {
+        labelText = 'FIX';
+        labelTitle = 'Operating expenses and employee payroll';
+      } else if (item.label === 'Net Profit') {
+        labelText = 'NET';
+        labelTitle = 'Profit after all costs';
+      } else {
+        labelText = item.label.substring(0, 3);
+        labelTitle = item.label;
+      }
+      barHTML += '<text class="waterfall-label" data-waterfall-tooltip="' + (escapeHtml(labelTitle)) + '" x="' + (x + barWidth / 2) + '" y="' + (centerY) + '" dy=".32em" text-anchor="middle" font-size="6.5" fill="var(--muted)" font-weight="600" style="cursor:help;">' + (labelText) + '</text>';
 
-      // Value label above/below bar - smaller font, abbreviated currency
-      const valueLabelY = isNegative ? zeroLineY + barHeight + 6 : barY - 2;
+      // Value label at the edge of the bar
+      const valueLabelY = isNegative
+        ? barY + barHeight + 7  // below the negative bar
+        : barY - 2;             // above the positive bar
+
       const shortValue = item.value > 0 ? '$' + Math.round(item.value / 1000) + 'k' : '$' + Math.round(item.value / 1000) + 'k';
-      barHTML += '<text x="' + (x + barWidth / 2) + '" y="' + (valueLabelY) + '" text-anchor="middle" font-size="6.5" fill="var(--text)" font-weight="600">' + (shortValue) + '</text>';
+      barHTML += '<text x="' + (x + barWidth / 2) + '" y="' + (valueLabelY) + '" text-anchor="middle" font-size="6" fill="var(--text)" font-weight="600">' + (shortValue) + '</text>';
 
       // Connector line to next bar (except after last bar)
       if (index < items.length - 1) {
         const nextX = 15 + (index + 1) * 25;
-        const nextStartY = isNegative ? zeroLineY : zeroLineY - scale(item.value);
-        const connY = zeroLineY - scale(endTotal);
+        const nextStartY = isNegative ? bandBottom : bandTop - scale(item.value);
+        const endTotalScale = scale(endTotal);
+        const connY = endTotal >= 0 ? bandTop - endTotalScale : bandBottom + Math.abs(endTotalScale);
         barHTML += '<line x1="' + (x + barWidth) + '" y1="' + (nextStartY) + '" x2="' + (nextX) + '" y2="' + (connY) + '" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>';
       }
     });
 
-    return '<div class="profit-waterfall"><svg viewBox="0 0 120 85" class="waterfall-svg"><!--Zero line--><line x1="5" y1="' + (zeroLineY) + '" x2="115" y2="' + (zeroLineY) + '" stroke="var(--border)" stroke-width="1.5" opacity="0.6"/>' + (barHTML) + '</svg><div class="waterfall-summary"><div class="summary-item"><span class="summary-label">Net:</span><span class="summary-value" style="color:' + (metrics.income >= 0 ? 'var(--good)' : 'var(--bad)') + ';">' + (fmtMoney0(metrics.income)) + '</span></div></div></div>';
+    const html = '<div class="profit-waterfall"><svg viewBox="0 0 120 100" class="waterfall-svg"><!--Center band background--><rect x="5" y="' + bandTop + '" width="110" height="' + bandHeight + '" fill="rgba(200,200,200,0.12)" rx="1"/>' + (barHTML) + '</svg><div class="waterfall-summary"><div class="summary-item"><span class="summary-label">Net:</span><span class="summary-value" style="color:' + (metrics.income >= 0 ? 'var(--good)' : 'var(--bad)') + ';">' + (fmtMoney0(metrics.income)) + '</span></div></div></div>';
+
+    // Setup waterfall label tooltips after render
+    setTimeout(() => {
+      setupWaterfallLabelTooltips();
+    }, 10);
+
+    return html;
   }
+
+function isTooltipsEnabled() {
+  try {
+    const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
+    return settings.showTooltips !== false;
+  } catch (e) {
+    return true;
+  }
+}
+
+function setupWaterfallLabelTooltips() {
+  const labels = document.querySelectorAll('.waterfall-label');
+  if (!labels.length) return;
+
+  let activeTooltip = null;
+  let hideTimeout = null;
+
+  const showTooltip = (label) => {
+    if (!isTooltipsEnabled()) return;
+
+    if (hideTimeout) clearTimeout(hideTimeout);
+
+    const text = label.getAttribute('data-waterfall-tooltip');
+    if (!text) return;
+
+    // Remove old tooltip if exists
+    if (activeTooltip) activeTooltip.remove();
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'smart-tooltip';
+    tooltip.textContent = text;
+    tooltip.style.cssText = `
+      position: fixed;
+      background: rgba(0, 0, 0, 0.95);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      max-width: 200px;
+      white-space: normal;
+      word-wrap: break-word;
+      z-index: 10001;
+      border: 1px solid rgba(94, 234, 212, 0.3);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+      line-height: 1.3;
+    `;
+
+    document.body.appendChild(tooltip);
+    activeTooltip = tooltip;
+
+    const svgRect = label.closest('svg').getBoundingClientRect();
+    const bbox = label.getBBox();
+    const labelScreenX = svgRect.left + (bbox.x + bbox.width / 2) * (svgRect.width / 120);
+    const labelScreenY = svgRect.top + bbox.y * (svgRect.height / 100);
+
+    let left = labelScreenX - 100;
+    let top = labelScreenY - 40;
+
+    if (left < 8) left = 8;
+    if (left + 200 > window.innerWidth - 8) left = window.innerWidth - 208;
+    if (top < 8) top = labelScreenY + 20;
+
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  };
+
+  const hideTooltip = () => {
+    hideTimeout = setTimeout(() => {
+      if (activeTooltip) {
+        activeTooltip.remove();
+        activeTooltip = null;
+      }
+    }, 100);
+  };
+
+  const clearTooltip = () => {
+    if (hideTimeout) clearTimeout(hideTimeout);
+    if (activeTooltip) activeTooltip.remove();
+    activeTooltip = null;
+  };
+
+  labels.forEach((label) => {
+    label.addEventListener('mouseenter', () => showTooltip(label));
+    label.addEventListener('mouseleave', () => hideTooltip());
+  });
+
+  // Listen for tooltip setting changes
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'profitpath-settings') {
+      if (!isTooltipsEnabled()) {
+        clearTooltip();
+      }
+    }
+  });
+}
 
 export function renderSimpleChart(metrics) {
   const el = $('#simpleChart');

@@ -966,7 +966,7 @@ function updateLevelDescription(level) {
       locked: ['Full export suite (Excel, PDF, Email)', 'Debug panel']
     },
     advanced: {
-      enabled: ['All features', 'Full export suite', 'Debug panel', 'Performance metrics'],
+      enabled: ['Basic calculations', 'Advanced calculations', 'Detailed breakdowns', 'Scenario comparison', 'Sensitivity analysis', 'Tooltips', 'CSV import', 'Undo/Redo', 'Full export suite (Excel, PDF, HTML, Email)', 'Debug panel', 'Performance metrics', 'Scenario comparison tools'],
       locked: []
     }
   };
@@ -998,35 +998,96 @@ function updateLevelDescription(level) {
 }
 
 // Settings management
+let settingsInitialized = false;
+
 function initializeSettings() {
   const settings = typeof loadSettings === 'function' ? loadSettings() : {};
 
-  // Set experience level radio buttons
+  // Only attach event listeners once to prevent duplicates
+  if (!settingsInitialized) {
+    settingsInitialized = true;
+
+    // Set experience level radio buttons
+    const experienceRadios = document.querySelectorAll('input[name="experienceLevel"]');
+    experienceRadios.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const prevSettings = typeof loadSettings === 'function' ? loadSettings() : {};
+        const level = e.target.value;
+
+        // Only show toast if level actually changed
+        if (prevSettings.experienceLevel !== level) {
+          const prevTooltipsState = prevSettings.showTooltips;
+
+          setExperienceLevel(level);
+
+          // Get new settings to check if tooltips changed
+          const newSettings = typeof loadSettings === 'function' ? loadSettings() : {};
+          const newTooltipsState = newSettings.showTooltips;
+
+          // Show toast notification for level change
+          const labels = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' };
+          const hints = {
+            beginner: 'Core features active.',
+            intermediate: 'Advanced calculations and scenario tools unlocked.',
+            advanced: 'All features enabled, including export suite and debug panel.'
+          };
+          showToast(`${labels[level]} mode — ${hints[level]}`, 'info', 1800);
+
+          // Show toast for tooltips change if it occurred
+          if (prevTooltipsState !== newTooltipsState) {
+            if (newTooltipsState) {
+              showToast('Contextual tooltips enabled! Hover over elements to see help.', 'info', 1800);
+            } else {
+              showToast('Contextual tooltips disabled.', 'info', 1800);
+            }
+          }
+
+          // Update level description panel
+          updateLevelDescription(level);
+
+          // Delay UI update slightly to ensure settings are saved first
+          setTimeout(() => {
+            updateUIForSettings();
+          }, 50);
+        }
+      });
+    });
+
+    // Set feature toggles
+    const checkboxes = [
+      'showAdvancedCalculations',
+      'showDetailedBreakdown',
+      'showComparisonTools',
+      'showExportOptions',
+      'showDebugPanel',
+      'showTooltips'
+    ];
+
+    checkboxes.forEach(key => {
+      const checkbox = $('#' + key);
+      if (checkbox) {
+        checkbox.addEventListener('change', (e) => {
+          const prevSettings = typeof loadSettings === 'function' ? loadSettings() : {};
+          const newValue = e.target.checked;
+
+          // Only update if value actually changed
+          if (prevSettings[key] !== newValue) {
+            updateSetting(key, newValue);
+            updateUIForSettings();
+          }
+        });
+      }
+    });
+  }
+
+  // Update checkbox states and level description (runs every time)
+  const settings2 = typeof loadSettings === 'function' ? loadSettings() : {};
+
   const experienceRadios = document.querySelectorAll('input[name="experienceLevel"]');
   experienceRadios.forEach(radio => {
-    radio.checked = radio.value === settings.experienceLevel;
-    radio.addEventListener('change', (e) => {
-      const level = e.target.value;
-      setExperienceLevel(level);
-
-      // Show toast notification for level change
-      const labels = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' };
-      const hints = {
-        beginner: 'Core features active.',
-        intermediate: 'Advanced calculations and scenario tools unlocked.',
-        advanced: 'All features enabled, including export suite and debug panel.'
-      };
-      showToast(`${labels[level]} mode — ${hints[level]}`, 'info', 4000);
-
-      // Update level description panel
-      updateLevelDescription(level);
-
-      initializeSettings(); // Reinitialize to apply new settings
-      updateUIForSettings();
-    });
+    radio.checked = radio.value === settings2.experienceLevel;
   });
 
-  // Set feature toggles
   const checkboxes = [
     'showAdvancedCalculations',
     'showDetailedBreakdown',
@@ -1039,16 +1100,16 @@ function initializeSettings() {
   checkboxes.forEach(key => {
     const checkbox = $('#' + key);
     if (checkbox) {
-      checkbox.checked = settings[key];
-      checkbox.addEventListener('change', (e) => {
-        updateSetting(key, e.target.checked);
-        updateUIForSettings();
-      });
+      // Force update by setting checked state based on current settings
+      const shouldBeChecked = settings2[key] === true;
+      if (checkbox.checked !== shouldBeChecked) {
+        checkbox.checked = shouldBeChecked;
+      }
     }
   });
 
   // Update level description panel on initialization
-  updateLevelDescription(settings.experienceLevel || 'beginner');
+  updateLevelDescription(settings2.experienceLevel || 'beginner');
 }
 
 function updateUIForSettings() {
@@ -1072,11 +1133,17 @@ function updateUIForSettings() {
     });
   });
 
-  // Update tooltips visibility
+  // Update tooltips checkbox state
+  const tooltipCheckbox = $('#showTooltips');
+  if (tooltipCheckbox) {
+    tooltipCheckbox.checked = settings.showTooltips === true;
+  }
+
+  // Update tooltips visibility - silent mode (no toast)
   if (settings.showTooltips) {
-    showContextualHelp();
+    updateTooltipsUIOnly(true);
   } else {
-    hideContextualHelp();
+    updateTooltipsUIOnly(false);
   }
 }
 
@@ -2768,6 +2835,16 @@ const _initializeOnboarding = () => {
   // Initialize contextual tooltips
   initializeContextualTooltips();
 
+  // Initialize enhanced tooltip system with current setting state
+  try {
+    const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
+    const tooltipsEnabled = settings.showTooltips !== false;
+    updateTooltipsUIOnly(tooltipsEnabled);
+  } catch (e) {
+    // Default to enabled if settings can't be read
+    updateTooltipsUIOnly(true);
+  }
+
   // Initialize progressive disclosure
   initializeProgressiveDisclosure();
 };
@@ -3507,19 +3584,46 @@ function initializeContextualTooltips() {
   });
 }
 
-function hideContextualHelp() {
-  // Disable enhanced tooltips
-  const tooltipElements = document.querySelectorAll('[data-tooltip-enabled="true"]');
-  tooltipElements.forEach(el => {
-    if (el.dataset.originalTitle) {
-      el.title = el.dataset.originalTitle;
-      delete el.dataset.tooltipEnabled;
-      delete el.dataset.originalTitle;
+// Silent tooltip UI update (no toast) - for syncing with settings
+function updateTooltipsUIOnly(enabled) {
+  const tooltipElements = document.querySelectorAll('[title]');
 
-      el.removeEventListener('mouseenter', showEnhancedTooltip);
-      el.removeEventListener('mouseleave', hideEnhancedTooltip);
-    }
-  });
+  if (enabled) {
+    // Enable tooltips without showing toast
+    tooltipElements.forEach(el => {
+      if (!el.dataset.tooltipEnabled) {
+        el.dataset.originalTitle = el.title;
+        el.dataset.tooltipEnabled = 'true';
+        el.title = '';
+        el.addEventListener('mouseenter', showEnhancedTooltip);
+        el.addEventListener('mouseleave', hideEnhancedTooltip);
+      }
+    });
+  } else {
+    // Disable tooltips without showing toast
+    tooltipElements.forEach(el => {
+      if (el.dataset.tooltipEnabled === 'true') {
+        el.title = el.dataset.originalTitle || '';
+        delete el.dataset.tooltipEnabled;
+        delete el.dataset.originalTitle;
+        el.removeEventListener('mouseenter', showEnhancedTooltip);
+        el.removeEventListener('mouseleave', hideEnhancedTooltip);
+        // Clear tooltip if it's currently showing
+        if (el._tooltip) {
+          el._tooltip.remove();
+          delete el._tooltip;
+        }
+      }
+    });
+    // Clear any existing tooltips
+    const activeTooltips = document.querySelectorAll('.enhanced-tooltip');
+    activeTooltips.forEach(t => t.remove());
+  }
+}
+
+function hideContextualHelp() {
+  // Disable enhanced tooltips with confirmation toast
+  updateTooltipsUIOnly(false);
 
   // Update settings to reflect tooltips are disabled
   setTooltipsEnabled(false);
@@ -3528,22 +3632,12 @@ function hideContextualHelp() {
   }
 
   // Show confirmation
-  showToast('Contextual tooltips disabled.', 'info', 2000);
+  showToast('Contextual tooltips disabled.', 'info', 1800);
 }
 
 function showContextualHelp() {
-  // Enable enhanced tooltips
-  const tooltipElements = document.querySelectorAll('[title]');
-  tooltipElements.forEach(el => {
-    if (!el.dataset.tooltipEnabled) {
-      el.dataset.originalTitle = el.title;
-      el.dataset.tooltipEnabled = 'true';
-      el.title = ''; // Remove basic tooltip
-
-      el.addEventListener('mouseenter', showEnhancedTooltip);
-      el.addEventListener('mouseleave', hideEnhancedTooltip);
-    }
-  });
+  // Enable enhanced tooltips with confirmation toast
+  updateTooltipsUIOnly(true);
 
   // Update settings to reflect tooltips are enabled
   setTooltipsEnabled(true);
@@ -3552,10 +3646,21 @@ function showContextualHelp() {
   }
 
   // Show confirmation
-  showToast('Contextual tooltips enabled! Hover over elements to see help.', 'info', 2000);
+  showToast('Contextual tooltips enabled! Hover over elements to see help.', 'info', 1800);
 }
 
 function showEnhancedTooltip(e) {
+  // Check if tooltips are actually enabled (check localStorage for current setting)
+  try {
+    const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
+    if ('showTooltips' in settings && settings.showTooltips === false) {
+      hideEnhancedTooltip(e);
+      return;
+    }
+  } catch (err) {
+    // Continue with default behavior if settings can't be read
+  }
+
   const content = e.target.dataset.originalTitle;
   if (!content) return;
 
@@ -3575,7 +3680,7 @@ function showEnhancedTooltip(e) {
 }
 
 function hideEnhancedTooltip(e) {
-  if (e.target._tooltip) {
+  if (e.target && e.target._tooltip) {
     e.target._tooltip.remove();
     delete e.target._tooltip;
   }

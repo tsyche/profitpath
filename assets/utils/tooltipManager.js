@@ -79,6 +79,12 @@ function listenForSettingChanges() {
 }
 
 function showTooltip(element) {
+  // Don't show if tooltips are disabled
+  if (!tooltipsEnabled) {
+    hideTooltip();
+    return;
+  }
+
   // Remove any existing tooltip
   hideTooltip();
 
