@@ -1,7 +1,15 @@
 // Progressive disclosure functionality
 export function initializeProgressiveDisclosure() {
   if (typeof document === 'undefined' || typeof document.querySelectorAll !== 'function') return;
-  const userLevel = localStorage.getItem('userExperienceLevel') || 'beginner';
+
+  // Read experience level from profitpath-settings (correct storage key)
+  let userLevel = 'beginner';
+  try {
+    const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
+    userLevel = settings.experienceLevel || 'beginner';
+  } catch (e) {
+    // Default to beginner if settings can't be read
+  }
 
   // Hide advanced features based on user level
   const advancedElements = document.querySelectorAll('.advanced-feature:not(.export-option)');

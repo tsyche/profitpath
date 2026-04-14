@@ -2576,6 +2576,7 @@ function updateSensitivity() {
 
   // Build comparison table
   const rows = [
+    { label: 'Employees', baseline: state.employees || 1, adjusted: employeesVal, isCurrency: false },
     { label: 'Revenue', baseline: baseline.revenue, adjusted: adjustedMetrics.revenue, isCurrency: true },
     { label: 'Net Income', baseline: baseline.income, adjusted: adjustedMetrics.income, isCurrency: true },
     { label: 'Utilization', baseline: baseline.capacityPct, adjusted: adjustedMetrics.capacityPct, isCurrency: false, isPercent: true },
@@ -2583,7 +2584,7 @@ function updateSensitivity() {
     { label: 'Take-Home', baseline: baseline.takeHome, adjusted: adjustedMetrics.takeHome, isCurrency: true }
   ];
 
-  let tableHtml = '<table class="sensitivity-comparison"><thead><tr><th>Metric</th><th>Baseline</th><th>Adjusted</th><th>Change</th></tr></thead><tbody>';
+  let tableHtml = '<table class="sensitivity-comparison"><thead><tr><th title="The metric being compared">Metric</th><th title="Current value from your saved state">Baseline</th><th title="Value after applying slider adjustments">Adjusted</th><th title="Difference between adjusted and baseline (green = positive, red = negative)">Change</th></tr></thead><tbody>';
   rows.forEach(row => {
     const baseVal = row.isCurrency ? fmtMoney0(row.baseline) : (row.isPercent ? Math.round(row.baseline) + '%' : Math.round(row.baseline));
     const adjVal = row.isCurrency ? fmtMoney0(row.adjusted) : (row.isPercent ? Math.round(row.adjusted) + '%' : Math.round(row.adjusted));
@@ -2595,35 +2596,75 @@ function updateSensitivity() {
   });
   tableHtml += '</tbody></table>';
 
-  // Build tornado chart (horizontal bars showing impact of ±20% on each slider)
+  // Build tornado chart (horizontal bars showing impact of current slider adjustments)
   const impacts = [];
 
-  // Price impact
-  const priceUp = JSON.parse(JSON.stringify(state));
-  priceUp.offerings = priceUp.offerings.map(o => ({ ...o, priceMonthly: o.priceMonthly * 1.2 }));
-  const priceDownMetrics = calc(priceUp);
-  impacts.push({ label: 'Price', impact: Math.abs(priceDownMetrics.income - baseline.income) });
+  // Price impact (current slider adjustment or default ±20%)
+  if (priceAdjust !== 0) {
+    const priceOnly = JSON.parse(JSON.stringify(state));
+    priceOnly.offerings = priceOnly.offerings.map(o => ({ ...o, priceMonthly: o.priceMonthly * (1 + priceAdjust) }));
+    const priceOnlyMetrics = calc(priceOnly);
+    impacts.push({ label: 'Price', impact: Math.abs(priceOnlyMetrics.income - baseline.income) });
+  } else {
+    // Show default +20% impact if not adjusted
+    const priceUp = JSON.parse(JSON.stringify(state));
+    priceUp.offerings = priceUp.offerings.map(o => ({ ...o, priceMonthly: o.priceMonthly * 1.2 }));
+    const priceDownMetrics = calc(priceUp);
+    impacts.push({ label: 'Price', impact: Math.abs(priceDownMetrics.income - baseline.income) });
+  }
 
-  // Overhead impact
-  const overheadUp = JSON.parse(JSON.stringify(state));
-  overheadUp.monthlyCosts = overheadUp.monthlyCosts * 1.2;
-  const overheadDownMetrics = calc(overheadUp);
-  impacts.push({ label: 'Overhead', impact: Math.abs(baseline.income - overheadDownMetrics.income) });
+  // Overhead impact (current slider adjustment or default ±20%)
+  if (overheadAdjust !== 0) {
+    const overheadOnly = JSON.parse(JSON.stringify(state));
+    overheadOnly.monthlyCosts = overheadOnly.monthlyCosts * (1 + overheadAdjust);
+    const overheadOnlyMetrics = calc(overheadOnly);
+    impacts.push({ label: 'Overhead', impact: Math.abs(overheadOnlyMetrics.income - baseline.income) });
+  } else {
+    // Show default +20% impact if not adjusted
+    const overheadUp = JSON.parse(JSON.stringify(state));
+    overheadUp.monthlyCosts = overheadUp.monthlyCosts * 1.2;
+    const overheadDownMetrics = calc(overheadUp);
+    impacts.push({ label: 'Overhead', impact: Math.abs(baseline.income - overheadDownMetrics.income) });
+  }
 
-  // Utilization impact
-  const utilUp = JSON.parse(JSON.stringify(state));
-  utilUp.productiveUtilizationPct = Math.min(150, (utilUp.productiveUtilizationPct || 75) * 1.2);
-  const utilDownMetrics = calc(utilUp);
-  impacts.push({ label: 'Utilization', impact: Math.abs(utilDownMetrics.income - baseline.income) });
+  // Utilization impact (current slider adjustment or default ±20%)
+  const utilDelta = utilizationVal - (state.productiveUtilizationPct || 75);
+  if (utilDelta !== 0) {
+    const utilOnly = JSON.parse(JSON.stringify(state));
+    utilOnly.productiveUtilizationPct = utilizationVal;
+    const utilOnlyMetrics = calc(utilOnly);
+    impacts.push({ label: 'Utilization', impact: Math.abs(utilOnlyMetrics.income - baseline.income) });
+  } else {
+    // Show default +20% impact if not adjusted
+    const utilUp = JSON.parse(JSON.stringify(state));
+    utilUp.productiveUtilizationPct = Math.min(150, (utilUp.productiveUtilizationPct || 75) * 1.2);
+    const utilDownMetrics = calc(utilUp);
+    impacts.push({ label: 'Utilization', impact: Math.abs(utilDownMetrics.income - baseline.income) });
+  }
 
-  // Employees impact
-  const empUp = JSON.parse(JSON.stringify(state));
-  empUp.employees = Math.min(20, (empUp.employees || 1) * 1.2);
-  const empDownMetrics = calc(empUp);
-  impacts.push({ label: 'Employees', impact: Math.abs(empDownMetrics.income - baseline.income) });
+  // Employees impact (current slider adjustment or default ±20%)
+  const empDelta = employeesVal - (state.employees || 1);
+  if (empDelta !== 0) {
+    const empOnly = JSON.parse(JSON.stringify(state));
+    empOnly.employees = employeesVal;
+    if (empOnly.fullTimeEmployees) empOnly.fullTimeEmployees = employeesVal;
+    const empOnlyMetrics = calc(empOnly);
+    impacts.push({ label: 'Employees', impact: Math.abs(empOnlyMetrics.income - baseline.income) });
+  } else {
+    // Show default +20% impact if not adjusted
+    const empUp = JSON.parse(JSON.stringify(state));
+    empUp.employees = Math.min(20, (empUp.employees || 1) * 1.2);
+    const empDownMetrics = calc(empUp);
+    impacts.push({ label: 'Employees', impact: Math.abs(empDownMetrics.income - baseline.income) });
+  }
 
-  // Sort by impact descending
-  impacts.sort((a, b) => b.impact - a.impact);
+  // Sort by label to maintain consistent order (not by impact value)
+  const labelOrder = ['Price', 'Overhead', 'Utilization', 'Employees'];
+  impacts.sort((a, b) => {
+    const idxA = labelOrder.indexOf(a.label);
+    const idxB = labelOrder.indexOf(b.label);
+    return idxA - idxB;
+  });
   const maxImpact = Math.max(...impacts.map(i => i.impact), 1);
 
   // Build tornado SVG
@@ -2631,14 +2672,16 @@ function updateSensitivity() {
   const gap = 5;
   const labelWidth = 100;
   const chartWidth = 250;
-  let tornadoSvg = `<svg width="${labelWidth + chartWidth + 20}" height="${impacts.length * (barHeight + gap) + 40}" style="margin-top: 8px;">`;
+  const valueWidth = 100; // space for the value text (increased for larger numbers like 15,790)
+  let tornadoSvg = `<svg width="${labelWidth + chartWidth + valueWidth}" height="${impacts.length * (barHeight + gap) + 40}" style="margin-top: 8px;">`;
   tornadoSvg += '<text x="0" y="15" font-size="12" fill="var(--muted)" font-weight="600">Impact on Net Income</text>';
 
   impacts.forEach((item, idx) => {
     const y = 30 + idx * (barHeight + gap);
     const barWidth = (item.impact / maxImpact) * chartWidth;
+    const tooltipText = getTornadoTooltip(item.label);
     tornadoSvg += `<text x="0" y="${y + barHeight - 3}" font-size="11" fill="var(--muted)">${item.label}</text>`;
-    tornadoSvg += `<rect x="${labelWidth}" y="${y}" width="${barWidth}" height="${barHeight - 2}" fill="var(--accent)" opacity="0.6" rx="2"/>`;
+    tornadoSvg += `<rect x="${labelWidth}" y="${y}" width="${barWidth}" height="${barHeight - 2}" fill="var(--accent)" opacity="0.6" rx="2"><title>${tooltipText}</title></rect>`;
     tornadoSvg += `<text x="${labelWidth + barWidth + 4}" y="${y + barHeight - 3}" font-size="10" fill="var(--muted)" font-family="var(--mono)">${fmtMoney0(item.impact)}</text>`;
   });
 
@@ -2649,6 +2692,17 @@ function updateSensitivity() {
   if (resultsDiv) {
     resultsDiv.innerHTML = tableHtml + tornadoSvg;
   }
+}
+
+// Helper function to get tooltip text for tornado chart bars
+function getTornadoTooltip(label) {
+  const tooltips = {
+    'Price': 'Impact of pricing changes on net income (revenue effect)',
+    'Overhead': 'Impact of overhead cost changes on net income (cost effect)',
+    'Utilization': 'Impact of utilization changes on net income (capacity effect)',
+    'Employees': 'Impact of team size changes on net income (capacity + cost effect)'
+  };
+  return tooltips[label] || 'Impact on net income';
 }
 
 // Global error handler to surface errors into the debug panel for easier debugging
@@ -2674,9 +2728,11 @@ function initDebugPanel() {
     try {
       const res = calc(state);
       pre.textContent = JSON.stringify(res, null, 2);
+      pre.title = 'Raw calculation engine output showing all computed metrics (for troubleshooting)';
       toggle.textContent = '▶ Debug — clients: ' + (res.clients || 0) + ', revenue: ' + fmtMoney0(res.revenue || 0);
     } catch (e) {
       pre.textContent = 'Error generating debug: ' + (e && e.stack ? e.stack : String(e));
+      pre.title = 'Error generating debug output';
       toggle.textContent = '▶ Debug — error';
     }
   }
@@ -2723,10 +2779,10 @@ function initPerfPanel() {
     try {
       const stats = getCacheStats();
       const html = `
-        <div><span class="perf-label">Cache:</span> <span class="perf-value">${stats.size} / ${stats.maxSize}</span> entries</div>
-        <div><span class="perf-label">Hit rate:</span> <span class="perf-value">${stats.hitRate}%</span> (${stats.hits} hits, ${stats.misses} misses)</div>
-        <div><span class="perf-label">Last calc:</span> <span class="perf-value">${stats.lastCalcMs}ms</span></div>
-        <div><span class="perf-label">Total calcs:</span> <span class="perf-value">${stats.totalCalcs}</span></div>
+        <div title="Number of cached calculation results (improves performance by avoiding redundant calculations)"><span class="perf-label">Cache:</span> <span class="perf-value">${stats.size} / ${stats.maxSize}</span> entries</div>
+        <div title="Percentage of calculations served from cache (higher is better)"><span class="perf-label">Hit rate:</span> <span class="perf-value">${stats.hitRate}%</span> (${stats.hits} hits, ${stats.misses} misses)</div>
+        <div title="Time taken for the most recent calculation"><span class="perf-label">Last calc:</span> <span class="perf-value">${stats.lastCalcMs}ms</span></div>
+        <div title="Total number of calculations performed this session"><span class="perf-label">Total calcs:</span> <span class="perf-value">${stats.totalCalcs}</span></div>
       `;
       panel.innerHTML = html;
       toggle.textContent = `▶ Performance — ${stats.hitRate}% hit rate`;

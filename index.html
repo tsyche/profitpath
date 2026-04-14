@@ -713,22 +713,27 @@
               <div class="sensitivity-sliders">
                 <div class="slider-row">
                   <label class="slider-label">Price <span id="priceSliderVal">+0%</span></label>
-                  <input type="range" id="priceSlider" min="-50" max="100" value="0" step="5">
+                  <input type="range" id="priceSlider" min="-50" max="100" value="0" step="5"
+                    title="Adjust service pricing by percentage (e.g., +20% = 20% price increase)">
                 </div>
                 <div class="slider-row">
                   <label class="slider-label">Overhead <span id="overheadSliderVal">+0%</span></label>
-                  <input type="range" id="overheadSlider" min="-50" max="100" value="0" step="5">
+                  <input type="range" id="overheadSlider" min="-50" max="100" value="0" step="5"
+                    title="Adjust monthly overhead costs by percentage">
                 </div>
                 <div class="slider-row">
                   <label class="slider-label">Utilization <span id="utilizationSliderVal">—%</span></label>
-                  <input type="range" id="utilizationSlider" min="20" max="150" value="75" step="1">
+                  <input type="range" id="utilizationSlider" min="20" max="150" value="75" step="1"
+                    title="Percentage of paid hours that are billable (productive time)">
                 </div>
                 <div class="slider-row">
                   <label class="slider-label">Employees <span id="employeesSliderVal">—</span></label>
-                  <input type="range" id="employeesSlider" min="1" max="20" value="1" step="1">
+                  <input type="range" id="employeesSlider" min="1" max="20" value="1" step="1"
+                    title="Number of full-time equivalent employees on your team">
                 </div>
               </div>
-              <button id="sensitivityReset" class="btn secondary small" style="margin-top: 8px;">↺ Reset</button>
+              <button id="sensitivityReset" class="btn secondary small" style="margin-top: 8px;"
+                title="Reset all sliders to their baseline values">↺ Reset</button>
               <div id="sensitivityResults" style="margin-top: 12px;"></div>
             </div>
           </div>
