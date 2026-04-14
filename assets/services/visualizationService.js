@@ -296,24 +296,22 @@ export function renderSimpleChart(metrics) {
 
   const offeringListHTML = '<div class="offering-list">' + (offeringItems) + '</div>';
 
-  // append a tooltip element used for hover and a lock button for global lock state
-  const lockBtn = '<button id="chartLockBtn" class="chart-lock-btn" title="Toggle tooltip lock" style="padding:4px 8px;font-size:12px;background:var(--border);border:1px solid var(--border);color:var(--text);border-radius:4px;cursor:pointer;margin-right:8px;">🔓 Lock</button>';
-  el.innerHTML = lockBtn + svgParts.join('') + legend + offeringListHTML + '<div class="chart-tooltip" aria-hidden="true"></div>';
+  // append a tooltip element used for hover
+  el.innerHTML = svgParts.join('') + legend + offeringListHTML + '<div class="chart-tooltip" aria-hidden="true"></div>';
 
   // Set up hover and click event listeners for chart interactivity
   setupChartEventListeners(el);
 }
 
-// Helper function to set up basic chart interactivity with locking support
+// Helper function to set up basic chart interactivity with simple tooltip on hover
 function setupChartEventListeners(chartEl) {
   if (!chartEl) return;
 
   const tooltip = chartEl.querySelector('.chart-tooltip');
   if (!tooltip) return;
 
-  let isLocked = false;
   let hideTimeout = null;
-  let currentRect = null; // Track currently hovered/locked rect for positioning
+  let currentRect = null;
 
   // Get the SVG container and all chart rects
   const svg = chartEl.querySelector('svg');
@@ -328,22 +326,19 @@ function setupChartEventListeners(chartEl) {
     const svgRect = svg.getBoundingClientRect();
     const hoveredRect = rect.getBoundingClientRect();
 
-    // Position tooltip just above the SVG with a small gap
     tooltip.style.position = 'fixed';
-    tooltip.style.top = (svgRect.top - 50) + 'px'; // Just above chart
+    tooltip.style.top = (svgRect.top - 50) + 'px';
 
-    // Center tooltip horizontally on the hovered section
     const rectCenterX = hoveredRect.left + hoveredRect.width / 2;
-    const tooltipWidth = 150; // approximate width of tooltip
+    const tooltipWidth = 150;
     tooltip.style.left = (rectCenterX - tooltipWidth / 2) + 'px';
   };
 
   const showTooltip = (rect) => {
     if (!rect) return;
 
-    currentRect = rect; // Track for repositioning on scroll
+    currentRect = rect;
 
-    // Clear any pending hide
     if (hideTimeout) {
       clearTimeout(hideTimeout);
       hideTimeout = null;
@@ -358,60 +353,40 @@ function setupChartEventListeners(chartEl) {
     let tooltipHTML = `<div class="tooltip-content"><strong>${offering}</strong>`;
     tooltipHTML += `<div style="font-size:11px;margin-top:4px;color:var(--muted);">${type === 'variable' ? 'Variable Cost' : 'Contribution'}: ${type === 'variable' ? variable : contrib}</div>`;
     tooltipHTML += `<div style="font-size:10px;color:var(--muted);margin-top:2px;">% of Revenue: ${pct}</div>`;
-    tooltipHTML += '<div class="tooltip-arrow"></div>'; // Arrow pointing down to chart
+    tooltipHTML += '<div class="tooltip-arrow"></div>';
     tooltipHTML += '</div>';
 
     tooltip.innerHTML = tooltipHTML;
     tooltip.classList.add('visible');
     tooltip.style.display = 'block';
 
-    // Position tooltip just above the hovered section
     positionTooltip(rect);
   };
 
   const hideTooltip = () => {
-    // Only hide if not locked
-    if (!isLocked) {
-      hideTimeout = setTimeout(() => {
-        tooltip.classList.remove('visible');
-        setTimeout(() => {
-          tooltip.style.display = 'none';
-          tooltip.innerHTML = '';
-        }, 100);
-      }, 50); // Small delay to prevent flashing
-    }
+    hideTimeout = setTimeout(() => {
+      tooltip.classList.remove('visible');
+      setTimeout(() => {
+        tooltip.style.display = 'none';
+        tooltip.innerHTML = '';
+      }, 100);
+    }, 50);
   };
 
-  // Set up event listeners on SVG rects
+  // Show on hover or click
   rects.forEach((rect) => {
-    // Show tooltip on hover - always updates to show current hovered section
-    rect.addEventListener('mouseover', (e) => {
+    rect.addEventListener('mouseover', () => {
       showTooltip(rect);
     });
 
-    // Hide tooltip when leaving chart (unless locked)
     rect.addEventListener('mouseout', () => {
       hideTooltip();
     });
-  });
 
-  // Set up global lock button
-  const lockBtn = chartEl.querySelector('#chartLockBtn');
-  if (lockBtn) {
-    lockBtn.onclick = (e) => {
+    rect.addEventListener('click', (e) => {
       e.stopPropagation();
-      isLocked = !isLocked;
-      lockBtn.textContent = isLocked ? '🔒 Unlock' : '🔓 Lock';
-    };
-  }
-
-  // Click outside to unlock
-  document.addEventListener('click', (e) => {
-    if (isLocked && !chartEl.contains(e.target)) {
-      isLocked = false;
-      if (lockBtn) lockBtn.textContent = '🔓 Lock';
-      hideTooltip();
-    }
+      showTooltip(rect);
+    });
   });
 
   // Update tooltip position when scrolling
