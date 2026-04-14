@@ -329,15 +329,21 @@ function setupChartEventListeners(chartEl) {
 
     // Add pin button if not already pinned
     if (pinnedRect !== rect) {
-      tooltipHTML += `<button class="tooltip-pin-btn" style="background:none;border:none;color:var(--accent);font-size:11px;margin-top:6px;cursor:pointer;padding:2px 6px;border-radius:3px;border:1px solid var(--accent);opacity:0.7;">📌 Lock</button>`;
+      tooltipHTML += `<button class="tooltip-pin-btn">📌 Lock</button>`;
     } else {
-      tooltipHTML += `<button class="tooltip-pin-btn" style="background:none;border:none;color:var(--accent);font-size:11px;margin-top:6px;cursor:pointer;padding:2px 6px;border-radius:3px;border:1px solid var(--accent);opacity:0.7;">🔒 Locked</button>`;
+      tooltipHTML += `<button class="tooltip-pin-btn">🔒 Locked</button>`;
     }
 
     tooltipHTML += '</div>';
     tooltip.innerHTML = tooltipHTML;
     tooltip.classList.add('visible');
     tooltip.style.display = 'block';
+
+    // Position tooltip near cursor
+    if (e && e.clientX !== undefined) {
+      tooltip.style.left = (e.clientX + 10) + 'px';
+      tooltip.style.top = (e.clientY - 20) + 'px';
+    }
 
     // Add click handler for pin button
     const pinBtn = tooltip.querySelector('.tooltip-pin-btn');
@@ -360,6 +366,14 @@ function setupChartEventListeners(chartEl) {
       // Only show tooltip if not pinned, or if hovering over the pinned rect
       if (!pinnedRect || pinnedRect === rect) {
         showTooltip(rect, e);
+      }
+    });
+
+    rect.addEventListener('mousemove', (e) => {
+      // Update tooltip position as user moves mouse (only if not pinned)
+      if ((!pinnedRect || pinnedRect === rect) && tooltip.classList.contains('visible')) {
+        tooltip.style.left = (e.clientX + 10) + 'px';
+        tooltip.style.top = (e.clientY - 20) + 'px';
       }
     });
 
