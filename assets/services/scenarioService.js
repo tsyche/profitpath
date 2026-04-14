@@ -31,12 +31,17 @@ function performSave(name) {
     const timestamp = new Date().toLocaleString();
     const createdAt = new Date().toISOString();
     const currentState = window.state;
+    const scenarioState = JSON.parse(JSON.stringify(currentState)); // Deep copy
+
+    // Clear template info when saving as custom scenario
+    scenarioState.loadedTemplate = null;
+
     const scenario = {
       id: uuid(),
       name: name,
       timestamp,
       createdAt,
-      state: JSON.parse(JSON.stringify(currentState)), // Deep copy
+      state: scenarioState,
     };
 
     scenarios.push(scenario);

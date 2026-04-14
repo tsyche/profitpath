@@ -244,6 +244,7 @@ const state = {
   productiveUtilizationPct: 80, // percent of hours available for service delivery
   targetUtilizationPct: 75, // forecasting target
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings
+  loadedTemplate: null, // Track which template was loaded (null if custom scenario)
 };
 
 // Undo/Redo history stacks
@@ -474,6 +475,24 @@ function resetDefaults() {
   render();
 }
 
+// Update template source indicator badge
+function updateTemplateBadge() {
+  const badge = $('#templateBadge');
+  const templateName = $('#templateName');
+
+  if (state.loadedTemplate && window.INDUSTRY_TEMPLATES && window.INDUSTRY_TEMPLATES[state.loadedTemplate]) {
+    const template = window.INDUSTRY_TEMPLATES[state.loadedTemplate];
+    if (badge && templateName) {
+      templateName.textContent = template.name;
+      badge.style.display = 'block';
+    }
+  } else {
+    if (badge) {
+      badge.style.display = 'none';
+    }
+  }
+}
+
 function render() {
   const focus = captureTableFocus('offeringsTable');
 
@@ -682,6 +701,9 @@ function render() {
 
   // Update validation messages
   if (typeof updateValidationDisplay === 'function') updateValidationDisplay();
+
+  // Update template source badge
+  updateTemplateBadge();
 }
 
 function updateOutputs(metrics) {
@@ -2935,6 +2957,9 @@ function loadOnboardingIndustryTemplate(industryId) {
     state.monthlyCosts = config.monthlyCosts || 250;
     state.productiveUtilizationPct = config.productiveUtilizationPct || 80;
     state.targetUtilizationPct = config.targetUtilizationPct || 85;
+
+    // Track that this data came from a template
+    state.loadedTemplate = industryId;
 
     // Refresh the UI
     render();
