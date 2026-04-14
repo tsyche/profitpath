@@ -200,14 +200,14 @@ body {
   }
 
   .logo-final {
-    height: 80px;
+    height: 70px;
     width: auto;
     margin-bottom: 8px;
   }
 
   @media (max-width: 768px) {
     .logo-final {
-      height: 60px;
+      height: 52px;
       margin-bottom: 6px;
     }
   }
@@ -764,7 +764,7 @@ html {
 
 
 .logo-final {
-  height: 80px;
+  height: 70px;
   width: auto;
   display: block;
   margin-bottom: 14px
