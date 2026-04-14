@@ -313,6 +313,7 @@ function setupChartEventListeners(chartEl) {
 
   let isLocked = false;
   let hideTimeout = null;
+  let currentRect = null; // Track currently hovered/locked rect for positioning
 
   // Get the SVG container and all chart rects
   const svg = chartEl.querySelector('svg');
@@ -320,16 +321,27 @@ function setupChartEventListeners(chartEl) {
 
   if (!rects || rects.length === 0) return;
 
-  // Position tooltip at a fixed location above the chart
-  const positionTooltip = () => {
-    const chartRect = chartEl.getBoundingClientRect();
+  // Position tooltip just above the chart with arrow pointing to the hovered section
+  const positionTooltip = (rect) => {
+    if (!rect) return;
+
+    const svgRect = svg.getBoundingClientRect();
+    const hoveredRect = rect.getBoundingClientRect();
+
+    // Position tooltip just above the SVG with a small gap
     tooltip.style.position = 'fixed';
-    tooltip.style.left = (chartRect.left + chartRect.width / 2 - 90) + 'px'; // Center above chart
-    tooltip.style.top = (chartRect.top - 100) + 'px'; // Above chart
+    tooltip.style.top = (svgRect.top - 50) + 'px'; // Just above chart
+
+    // Center tooltip horizontally on the hovered section
+    const rectCenterX = hoveredRect.left + hoveredRect.width / 2;
+    const tooltipWidth = 150; // approximate width of tooltip
+    tooltip.style.left = (rectCenterX - tooltipWidth / 2) + 'px';
   };
 
   const showTooltip = (rect) => {
     if (!rect) return;
+
+    currentRect = rect; // Track for repositioning on scroll
 
     // Clear any pending hide
     if (hideTimeout) {
@@ -346,14 +358,15 @@ function setupChartEventListeners(chartEl) {
     let tooltipHTML = `<div class="tooltip-content"><strong>${offering}</strong>`;
     tooltipHTML += `<div style="font-size:11px;margin-top:4px;color:var(--muted);">${type === 'variable' ? 'Variable Cost' : 'Contribution'}: ${type === 'variable' ? variable : contrib}</div>`;
     tooltipHTML += `<div style="font-size:10px;color:var(--muted);margin-top:2px;">% of Revenue: ${pct}</div>`;
+    tooltipHTML += '<div class="tooltip-arrow"></div>'; // Arrow pointing down to chart
     tooltipHTML += '</div>';
 
     tooltip.innerHTML = tooltipHTML;
     tooltip.classList.add('visible');
     tooltip.style.display = 'block';
 
-    // Position tooltip at fixed location above chart
-    positionTooltip();
+    // Position tooltip just above the hovered section
+    positionTooltip(rect);
   };
 
   const hideTooltip = () => {
@@ -403,8 +416,8 @@ function setupChartEventListeners(chartEl) {
 
   // Update tooltip position when scrolling
   window.addEventListener('scroll', () => {
-    if (tooltip.classList.contains('visible')) {
-      positionTooltip();
+    if (tooltip.classList.contains('visible') && currentRect) {
+      positionTooltip(currentRect);
     }
   }, { passive: true });
 }
