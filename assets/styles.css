@@ -200,8 +200,16 @@ body {
   }
 
   .logo-final {
-    height: 32px;
-    margin-bottom: 4px;
+    height: 56px;
+    width: auto;
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 768px) {
+    .logo-final {
+      height: 48px;
+      margin-bottom: 6px;
+    }
   }
 
   .subtitle {
