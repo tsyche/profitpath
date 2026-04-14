@@ -296,8 +296,9 @@ export function renderSimpleChart(metrics) {
 
   const offeringListHTML = '<div class="offering-list">' + (offeringItems) + '</div>';
 
-  // append a tooltip element used for hover
-  el.innerHTML = svgParts.join('') + legend + offeringListHTML + '<div class="chart-tooltip" aria-hidden="true"></div>';
+  // append a tooltip element used for hover and a lock button for global lock state
+  const lockBtn = '<button id="chartLockBtn" class="chart-lock-btn" title="Toggle tooltip lock" style="padding:4px 8px;font-size:12px;background:var(--border);border:1px solid var(--border);color:var(--text);border-radius:4px;cursor:pointer;margin-right:8px;">🔓 Lock</button>';
+  el.innerHTML = lockBtn + svgParts.join('') + legend + offeringListHTML + '<div class="chart-tooltip" aria-hidden="true"></div>';
 
   // Set up hover and click event listeners for chart interactivity
   setupChartEventListeners(el);
@@ -345,31 +346,14 @@ function setupChartEventListeners(chartEl) {
     let tooltipHTML = `<div class="tooltip-content"><strong>${offering}</strong>`;
     tooltipHTML += `<div style="font-size:11px;margin-top:4px;color:var(--muted);">${type === 'variable' ? 'Variable Cost' : 'Contribution'}: ${type === 'variable' ? variable : contrib}</div>`;
     tooltipHTML += `<div style="font-size:10px;color:var(--muted);margin-top:2px;">% of Revenue: ${pct}</div>`;
-
-    // Add lock button - show appropriate state
-    if (isLocked) {
-      tooltipHTML += `<button class="tooltip-pin-btn">🔒 Tap to unlock</button>`;
-    } else {
-      tooltipHTML += `<button class="tooltip-pin-btn">📌 Tap to lock</button>`;
-    }
-
     tooltipHTML += '</div>';
+
     tooltip.innerHTML = tooltipHTML;
     tooltip.classList.add('visible');
     tooltip.style.display = 'block';
 
     // Position tooltip at fixed location above chart
     positionTooltip();
-
-    // Add click handler for lock button
-    const lockBtn = tooltip.querySelector('.tooltip-pin-btn');
-    if (lockBtn) {
-      lockBtn.onclick = (ev) => {
-        ev.stopPropagation();
-        isLocked = !isLocked;
-        showTooltip(rect); // Refresh to show new state
-      };
-    }
   };
 
   const hideTooltip = () => {
@@ -396,19 +380,23 @@ function setupChartEventListeners(chartEl) {
     rect.addEventListener('mouseout', () => {
       hideTooltip();
     });
+  });
 
-    // Click/tap to lock/unlock
-    rect.addEventListener('click', (e) => {
+  // Set up global lock button
+  const lockBtn = chartEl.querySelector('#chartLockBtn');
+  if (lockBtn) {
+    lockBtn.onclick = (e) => {
       e.stopPropagation();
       isLocked = !isLocked;
-      showTooltip(rect);
-    });
-  });
+      lockBtn.textContent = isLocked ? '🔒 Unlock' : '🔓 Lock';
+    };
+  }
 
   // Click outside to unlock
   document.addEventListener('click', (e) => {
     if (isLocked && !chartEl.contains(e.target)) {
       isLocked = false;
+      if (lockBtn) lockBtn.textContent = '🔓 Lock';
       hideTooltip();
     }
   });
