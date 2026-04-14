@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description"
     content="ProfitPath — a lightweight client-side simulator for recurring-cadence service businesses. Plan pricing, forecast capacity, and optimize profitability." />
   <meta name="theme-color" content="#1f2937" />
@@ -43,13 +43,9 @@
 </head>
 
 <body>
-  <div class="page">
-    <div class="file-warning hidden" id="fileWarning">
-      This app must be served over <span class="mono">http://localhost</span> (module scripts are blocked on <span
-        class="mono">file://</span>). Start a server and open <span class="mono">http://localhost:8000/</span>.
-    </div>
-
-    <header class="header">
+  <header class="header">
+    <div class="header-background"></div>
+    <div class="header-content">
       <!-- Logo -->
       <div class="header-logo">
         <a href="/" class="logo-link">
@@ -123,9 +119,9 @@
 
           <!-- Utility buttons -->
           <div class="utility-row">
-            <button class="utility-btn" id="desktopFeedbackBtn" type="button" title="Send Feedback">✉️</button>
-            <button class="utility-btn" id="helpBtn" type="button" title="Help & Guided Tour">❓</button>
-            <button class="utility-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings">⚙️</button>
+            <button class="utility-btn" id="desktopFeedbackBtn" type="button" title="Send Feedback" data-tooltip-below>✉️</button>
+            <button class="utility-btn" id="helpBtn" type="button" title="Help & Guided Tour" data-tooltip-below>❓</button>
+            <button class="utility-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings" data-tooltip-below>⚙️</button>
           </div>
         </div>
 
@@ -136,7 +132,15 @@
           <span></span>
         </button>
       </div>
-    </header>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="file-warning hidden" id="fileWarning">
+      This app must be served over <span class="mono">http://localhost</span> (module scripts are blocked on <span
+        class="mono">file://</span>). Start a server and open <span class="mono">http://localhost:8000/</span>.
+    </div>
+
   <!-- Settings dropdown menu -->
   <div class="settings-dropdown">
     <div class="settings-menu" id="settingsMenu">
