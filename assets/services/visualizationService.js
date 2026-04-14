@@ -311,6 +311,8 @@ function setupChartEventListeners(chartEl) {
   if (!tooltip) return;
 
   let pinnedRect = null;
+  let hideTimeout = null;
+  let currentHoveredRect = null;
 
   // Get the SVG container and all chart rects
   const svg = chartEl.querySelector('svg');
@@ -320,6 +322,15 @@ function setupChartEventListeners(chartEl) {
 
   const showTooltip = (rect, e) => {
     if (!rect) return;
+
+    // Clear any pending hide
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      hideTimeout = null;
+    }
+
+    currentHoveredRect = rect;
+
     const offering = escapeHtml(rect.getAttribute('data-offering') || '');
     const type = escapeHtml(rect.getAttribute('data-type') || '');
     const variable = escapeHtml(rect.getAttribute('data-var') || '$0');
@@ -330,11 +341,11 @@ function setupChartEventListeners(chartEl) {
     tooltipHTML += `<div style="font-size:11px;margin-top:4px;color:var(--muted);">${type === 'variable' ? 'Variable Cost' : 'Contribution'}: ${type === 'variable' ? variable : contrib}</div>`;
     tooltipHTML += `<div style="font-size:10px;color:var(--muted);margin-top:2px;">% of Revenue: ${pct}</div>`;
 
-    // Add pin button if not already pinned
-    if (pinnedRect !== rect) {
-      tooltipHTML += `<button class="tooltip-pin-btn">📌 Lock</button>`;
+    // Add lock button - show appropriate state
+    if (pinnedRect === rect) {
+      tooltipHTML += `<button class="tooltip-pin-btn">🔒 Locked (tap to unlock)</button>`;
     } else {
-      tooltipHTML += `<button class="tooltip-pin-btn">🔒 Locked</button>`;
+      tooltipHTML += `<button class="tooltip-pin-btn">📌 Tap to lock</button>`;
     }
 
     tooltipHTML += '</div>';
@@ -342,65 +353,70 @@ function setupChartEventListeners(chartEl) {
     tooltip.classList.add('visible');
     tooltip.style.display = 'block';
 
-    // Position tooltip near cursor
-    if (e && e.clientX !== undefined) {
+    // Position tooltip near cursor (only if not locked)
+    if (pinnedRect === null && e && e.clientX !== undefined) {
       tooltip.style.left = (e.clientX + 10) + 'px';
       tooltip.style.top = (e.clientY - 20) + 'px';
     }
 
-    // Add click handler for pin button
-    const pinBtn = tooltip.querySelector('.tooltip-pin-btn');
-    if (pinBtn) {
-      pinBtn.onclick = (ev) => {
+    // Add click handler for lock button
+    const lockBtn = tooltip.querySelector('.tooltip-pin-btn');
+    if (lockBtn) {
+      lockBtn.onclick = (ev) => {
         ev.stopPropagation();
         if (pinnedRect === rect) {
+          // Unlock
           pinnedRect = null;
-          pinBtn.textContent = '📌 Lock';
+          showTooltip(rect, ev); // Refresh to show unhide state
         } else {
+          // Lock this one
           pinnedRect = rect;
-          pinBtn.textContent = '🔒 Locked';
+          showTooltip(rect, ev); // Refresh to show locked state
         }
       };
     }
   };
 
+  const hideTooltip = () => {
+    // Only hide if nothing is pinned
+    if (pinnedRect === null) {
+      hideTimeout = setTimeout(() => {
+        tooltip.classList.remove('visible');
+        setTimeout(() => {
+          tooltip.style.display = 'none';
+          tooltip.innerHTML = '';
+          currentHoveredRect = null;
+        }, 100);
+      }, 50); // Small delay to prevent flashing when moving between rects
+    }
+  };
+
   // Set up event listeners on SVG rects using proper event names for SVG
   rects.forEach((rect) => {
-    // Use mouseover/mouseout for better SVG compatibility
+    // Show tooltip on hover
     rect.addEventListener('mouseover', (e) => {
-      if (!pinnedRect || pinnedRect === rect) {
-        showTooltip(rect, e);
-      }
+      showTooltip(rect, e);
     });
 
+    // Update tooltip position as user moves mouse (only if not pinned)
     rect.addEventListener('mousemove', (e) => {
-      // Update tooltip position as user moves mouse
-      if ((!pinnedRect || pinnedRect === rect) && tooltip.classList.contains('visible')) {
+      if (pinnedRect === null && tooltip.classList.contains('visible')) {
         tooltip.style.left = (e.clientX + 10) + 'px';
         tooltip.style.top = (e.clientY - 20) + 'px';
       }
     });
 
+    // Hide tooltip with slight delay to prevent flashing
     rect.addEventListener('mouseout', () => {
-      // Only hide if not pinned
-      if (pinnedRect !== rect) {
-        tooltip.classList.remove('visible');
-        setTimeout(() => {
-          tooltip.style.display = 'none';
-          tooltip.innerHTML = '';
-        }, 150);
-      }
+      hideTooltip();
     });
 
+    // Click to lock/unlock
     rect.addEventListener('click', (e) => {
       e.stopPropagation();
       if (pinnedRect === rect) {
         pinnedRect = null;
-        tooltip.classList.remove('visible');
-        setTimeout(() => {
-          tooltip.style.display = 'none';
-          tooltip.innerHTML = '';
-        }, 150);
+        showTooltip(rect, e);
       } else {
         pinnedRect = rect;
         showTooltip(rect, e);
@@ -408,15 +424,11 @@ function setupChartEventListeners(chartEl) {
     });
   });
 
-  // Click outside to unpin
+  // Click outside to unlock
   document.addEventListener('click', (e) => {
     if (pinnedRect && !chartEl.contains(e.target)) {
       pinnedRect = null;
-      tooltip.classList.remove('visible');
-      setTimeout(() => {
-        tooltip.style.display = 'none';
-        tooltip.innerHTML = '';
-      }, 150);
+      hideTooltip();
     }
   });
 }
