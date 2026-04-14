@@ -586,6 +586,22 @@ html {
   align-items: flex-start
 }
 
+.logo-with-name {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-name {
+  font-size: 24px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
 /* Hamburger Menu */
 .hamburger-btn {
   display: none;
