@@ -2,7 +2,7 @@
 
 ProfitPath exposes three experience levels that control which UI features are visible by default and which advanced controls are available in the Settings panel.
 
-These levels are implemented as feature gates in `src/settings/index.js` (see `FEATURE_GATES`) and applied in the UI by `assets/app.js` (`updateUIForSettings`). Use the Settings panel to change levels; the selection is persisted to `localStorage`.
+These levels are implemented as feature gates in `src/settings/index.js` (see `FEATURE_GATES`) and applied in the UI by `assets/app.jsx` (`updateUIForSettings`). Use the Settings panel to change levels; the selection is persisted to `localStorage`.
 
 ## Levels and feature mapping (current)
 
@@ -43,7 +43,7 @@ The app hides/shows elements by toggling display on selectors tied to feature ke
 - `.export-options` / `.advanced-feature` / `.expert-feature` — extra export formats and advanced export UI
 - `.debug-panel` — collapsible debug panel under Outputs
 
-When adding a new feature flag, update `FEATURE_GATES` in `src/settings/index.js` and ensure the corresponding DOM elements are toggled in `assets/app.js`'s `updateUIForSettings`.
+When adding a new feature flag, update `FEATURE_GATES` in `src/settings/index.js` and ensure the corresponding DOM elements are toggled in `assets/app.jsx`'s `updateUIForSettings`.
 
 ## Developer notes
 
