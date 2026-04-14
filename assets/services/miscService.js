@@ -595,6 +595,9 @@ export function loadIndustryTemplate(templateId) {
     window.state.productiveUtilizationPct = config.productiveUtilizationPct;
     window.state.targetUtilizationPct = config.targetUtilizationPct;
 
+    // Track that this data came from a template
+    window.state.loadedTemplate = templateId;
+
     // Refresh the UI
     if (typeof window.render === 'function') window.render();
     persistState();
