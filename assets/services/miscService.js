@@ -559,13 +559,48 @@ export function loadScenarioFromURL() {
 }
 
 export function loadSettings() {
-  return JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
+  const DEFAULT_SETTINGS = {
+    experienceLevel: 'beginner',
+    showAdvancedCalculations: false,
+    showDetailedBreakdown: false,
+    showComparisonTools: false,
+    showExportOptions: false,
+    showDebugPanel: false,
+    showTooltips: true,
+    enableCaching: true,
+    enableDebugMode: false,
+    showPerformanceMetrics: false,
+    showSensitivityAnalysis: false,
+    theme: 'auto',
+    compactMode: false
+  };
+
+  try {
+    const stored = localStorage.getItem('profitpath-settings');
+    if (stored) {
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+    }
+  } catch (error) {
+    console.warn('Failed to load settings:', error);
+  }
+  return { ...DEFAULT_SETTINGS };
 }
 
 export function setExperienceLevel(level) {
-  const settings = loadSettings();
-  settings.experienceLevel = level;
-  localStorage.setItem('profitpath-settings', JSON.stringify(settings));
+  const FEATURE_GATES = {
+    beginner: { showAdvancedCalculations: false, showDetailedBreakdown: false, showComparisonTools: false, showExportOptions: false, showDebugPanel: false, showPerformanceMetrics: false, showSensitivityAnalysis: false, showTooltips: true },
+    intermediate: { showAdvancedCalculations: true, showDetailedBreakdown: true, showComparisonTools: true, showExportOptions: false, showDebugPanel: false, showPerformanceMetrics: false, showSensitivityAnalysis: true, showTooltips: true },
+    advanced: { showAdvancedCalculations: true, showDetailedBreakdown: true, showComparisonTools: true, showExportOptions: true, showDebugPanel: true, showPerformanceMetrics: true, showSensitivityAnalysis: true, showTooltips: false }
+  };
+
+  const currentSettings = loadSettings();
+  const newSettings = { ...currentSettings, experienceLevel: level };
+
+  if (FEATURE_GATES[level]) {
+    Object.assign(newSettings, FEATURE_GATES[level]);
+  }
+
+  localStorage.setItem('profitpath-settings', JSON.stringify(newSettings));
 }
 
 export function updateSetting(key, value) {
