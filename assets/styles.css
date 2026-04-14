@@ -600,7 +600,7 @@ html {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.5px;
-  margin-top: -5px;
+  margin-top: -10px;
 }
 
 @media (max-width: 768px) {
