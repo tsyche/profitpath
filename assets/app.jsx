@@ -1142,8 +1142,10 @@ function updateUIForSettings() {
   // Update tooltips visibility - silent mode (no toast)
   if (settings.showTooltips) {
     updateTooltipsUIOnly(true);
+    setTooltipsEnabled(true);
   } else {
     updateTooltipsUIOnly(false);
+    setTooltipsEnabled(false);
   }
 }
 

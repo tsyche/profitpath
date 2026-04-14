@@ -54,7 +54,8 @@
               <img src="assets/pp-logo2-final.svg" class="logo-final" alt="ProfitPath logo" />
               <span class="logo-name">ProfitPath</span>
             </div>
-            <div class="subtitle">A lightweight simulator for recurring-cadence<br>service businesses (no backend, no build step).</div>
+            <div class="subtitle">A lightweight simulator for recurring-cadence<br>service businesses (no backend, no
+              build step).</div>
           </div>
         </a>
       </div>
@@ -64,28 +65,42 @@
         <button class="btn small" id="desktopScenariosBtn" type="button" title="Manage Scenarios">💾 Scenarios</button>
         <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
         <div class="templates-dropdown">
-          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢 Templates</button>
+          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢
+            Templates</button>
           <div class="templates-menu" id="templatesMenu">
-            <button class="template-option" data-template="consulting" title="Management consulting services">💼 Consulting</button>
-            <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹 Cleaning</button>
-            <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳 Landscaping</button>
-            <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧 Handyman</button>
-            <button class="template-option" data-template="fitness" title="Personal training and fitness">💪 Fitness</button>
-            <button class="template-option" data-template="photography" title="Photography and media services">📸 Photography</button>
+            <button class="template-option" data-template="consulting" title="Management consulting services">💼
+              Consulting</button>
+            <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹
+              Cleaning</button>
+            <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳
+              Landscaping</button>
+            <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧
+              Handyman</button>
+            <button class="template-option" data-template="fitness" title="Personal training and fitness">💪
+              Fitness</button>
+            <button class="template-option" data-template="photography" title="Photography and media services">📸
+              Photography</button>
           </div>
         </div>
         <button class="btn small" id="importCSVBtn" type="button" title="Import settings from CSV">⬆ Import</button>
         <input type="file" id="csvFileInput" accept=".csv" style="display:none">
         <div class="export-dropdown">
-          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄 Export</button>
+          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄
+            Export</button>
           <div class="export-menu" id="exportMenu">
-            <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV Spreadsheet</button>
-            <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas">📈 Excel Workbook</button>
-            <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF Report</button>
-            <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML Page</button>
+            <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV
+              Spreadsheet</button>
+            <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas">📈
+              Excel Workbook</button>
+            <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF
+              Report</button>
+            <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML
+              Page</button>
             <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
-            <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗 Embed Widget</button>
-            <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto Schedule</button>
+            <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗 Embed
+              Widget</button>
+            <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto
+              Schedule</button>
           </div>
         </div>
       </nav>
@@ -102,14 +117,16 @@
             </div>
             <div class="undo-redo-compact">
               <button id="undoBtn" class="undo-redo-icon-btn" type="button" title="Undo (Ctrl+Z)" disabled>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 7v6h6" />
                   <path d="M21 17a9 9 0 0 0-15.5-6L3 13" />
                 </svg>
               </button>
               <div class="undo-redo-divider"></div>
               <button id="redoBtn" class="undo-redo-icon-btn" type="button" title="Redo (Ctrl+Y)" disabled>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 7v6h-6" />
                   <path d="M3 17a9 9 0 0 1 15.5-6L21 13" />
                 </svg>
@@ -119,9 +136,12 @@
 
           <!-- Utility buttons -->
           <div class="utility-row">
-            <button class="utility-btn" id="desktopFeedbackBtn" type="button" title="Send Feedback" data-tooltip-below>✉️</button>
-            <button class="utility-btn" id="helpBtn" type="button" title="Help & Guided Tour" data-tooltip-below>❓</button>
-            <button class="utility-btn" id="settingsCogBtn" type="button" title="App settings and preferences" aria-label="Settings" data-tooltip-below>⚙️</button>
+            <button class="utility-btn" id="desktopFeedbackBtn" type="button" title="Send Feedback"
+              data-tooltip-below>✉️</button>
+            <button class="utility-btn" id="helpBtn" type="button" title="Help & Guided Tour"
+              data-tooltip-below>❓</button>
+            <button class="utility-btn" id="settingsCogBtn" type="button" title="App settings and preferences"
+              aria-label="Settings" data-tooltip-below>⚙️</button>
           </div>
         </div>
 
@@ -142,59 +162,60 @@
         class="mono">file://</span>). Start a server and open <span class="mono">http://localhost:8000/</span>.
     </div>
 
-  <!-- Settings dropdown menu -->
-  <div class="settings-dropdown">
-    <div class="settings-menu" id="settingsMenu">
-      <div class="settings-section">
-        <h4>Experience Level</h4>
-        <div class="settings-options">
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin: 4px 0; background: #e5e7eb; padding: 2px; border-radius: 4px;">
-            <label
-              style="display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 6px 4px; border: none; border-radius: 3px; background: transparent; text-align: center; transition: all 0.2s ease;">
-              <input type="radio" name="experienceLevel" value="beginner" style="margin: 0;">
-              <div>
-                <div style="font-weight: 600; color: #000000; font-size: 11px;">Beginner</div>
-                <div style="font-size: 10px; color: #374151; line-height: 1.1;">Basic</div>
-              </div>
-            </label>
-            <label
-              style="display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 6px 4px; border: none; border-radius: 3px; background: transparent; text-align: center; transition: all 0.2s ease;">
-              <input type="radio" name="experienceLevel" value="intermediate" style="margin: 0;">
-              <div>
-                <div style="font-weight: 600; color: #000000; font-size: 11px;">Intermediate</div>
-                <div style="font-size: 10px; color: #374151; line-height: 1.1;">Advanced</div>
-              </div>
-            </label>
-            <label
-              style="display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 6px 4px; border: none; border-radius: 3px; background: transparent; text-align: center; transition: all 0.2s ease;">
-              <input type="radio" name="experienceLevel" value="advanced" style="margin: 0;">
-              <div>
-                <div style="font-weight: 600; color: #000000; font-size: 11px;">Advanced</div>
-                <div style="font-size: 10px; color: #374151; line-height: 1.1;">All</div>
-              </div>
-            </label>
-          </div>
-          <div id="levelDescription" class="settings-level-description"
-            style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border, #e5e7eb); font-size: 11px;">
-            <!-- populated dynamically by JS -->
+    <!-- Settings dropdown menu -->
+    <div class="settings-dropdown">
+      <div class="settings-menu" id="settingsMenu">
+        <div class="settings-section">
+          <h4>Experience Level</h4>
+          <div class="settings-options">
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin: 4px 0; background: #e5e7eb; padding: 2px; border-radius: 4px;">
+              <label
+                style="display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 6px 4px; border: none; border-radius: 3px; background: transparent; text-align: center; transition: all 0.2s ease;">
+                <input type="radio" name="experienceLevel" value="beginner" style="margin: 0;">
+                <div>
+                  <div style="font-weight: 600; color: #000000; font-size: 11px;">Beginner</div>
+                  <div style="font-size: 10px; color: #374151; line-height: 1.1;">Basic</div>
+                </div>
+              </label>
+              <label
+                style="display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 6px 4px; border: none; border-radius: 3px; background: transparent; text-align: center; transition: all 0.2s ease;">
+                <input type="radio" name="experienceLevel" value="intermediate" style="margin: 0;">
+                <div>
+                  <div style="font-weight: 600; color: #000000; font-size: 11px;">Intermediate</div>
+                  <div style="font-size: 10px; color: #374151; line-height: 1.1;">Advanced</div>
+                </div>
+              </label>
+              <label
+                style="display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 6px 4px; border: none; border-radius: 3px; background: transparent; text-align: center; transition: all 0.2s ease;">
+                <input type="radio" name="experienceLevel" value="advanced" style="margin: 0;">
+                <div>
+                  <div style="font-weight: 600; color: #000000; font-size: 11px;">Advanced</div>
+                  <div style="font-size: 10px; color: #374151; line-height: 1.1;">All</div>
+                </div>
+              </label>
+            </div>
+            <div id="levelDescription" class="settings-level-description"
+              style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border, #e5e7eb); font-size: 11px;">
+              <!-- populated dynamically by JS -->
+            </div>
           </div>
         </div>
-      </div>
-      <div class="settings-section">
-        <h4>Preferences</h4>
-        <div class="settings-options">
-          <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
+        <div class="settings-section">
+          <h4>Preferences</h4>
+          <div class="settings-options">
+            <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
+          </div>
         </div>
-      </div>
-      <div class="settings-section" style="margin-bottom: 0;">
-        <div class="settings-options">
-          <button class="btn btn-secondary"
-            onclick="if(window.profitPathAnalyticsUI) window.profitPathAnalyticsUI.showAnalyticsDashboard()"
-            style="color: #000000; width: 100%;">📊 View Analytics</button>
+        <div class="settings-section" style="margin-bottom: 0;">
+          <div class="settings-options">
+            <button class="btn btn-secondary"
+              onclick="if(window.profitPathAnalyticsUI) window.profitPathAnalyticsUI.showAnalyticsDashboard()"
+              style="color: #000000; width: 100%;">📊 View Analytics</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   </div>
   </div>
   </div>
@@ -209,13 +230,15 @@
         </div>
         <div style="display: flex; gap: 4px;">
           <button id="mobileUndoBtn" class="undo-redo-icon-btn" type="button" title="Undo (Ctrl+Z)" disabled>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 7v6h6" />
               <path d="M21 17a9 9 0 0 0-15.5-6L3 13" />
             </svg>
           </button>
           <button id="mobileRedoBtn" class="undo-redo-icon-btn" type="button" title="Redo (Ctrl+Y)" disabled>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 7v6h-6" />
               <path d="M3 17a9 9 0 0 1 15.5-6L21 13" />
             </svg>
@@ -226,27 +249,49 @@
       <div class="mobile-menu-content" style="max-height: 70vh; overflow-y: auto;">
         <!-- Key Metrics Card - Always Visible -->
         <div style="padding: 12px 8px; border-bottom: 2px solid #e5e7eb; margin-bottom: 12px;">
-          <h3 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px;">At a Glance</h3>
+          <h3
+            style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px;">
+            At a Glance</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
-            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;" data-tooltip="Total income from all clients across all service offerings">
-              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Revenue</div>
-              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsRevenue">—</div>
+            <div
+              style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;"
+              data-tooltip="Total income from all clients across all service offerings">
+              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Revenue
+              </div>
+              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;"
+                id="mobileKeyMetricsRevenue">—</div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;" data-tooltip="Revenue minus all fixed costs and variable costs — your bottom line profit">
-              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Net Income</div>
-              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsIncome">—</div>
+            <div
+              style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;"
+              data-tooltip="Revenue minus all fixed costs and variable costs — your bottom line profit">
+              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Net Income
+              </div>
+              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;"
+                id="mobileKeyMetricsIncome">—</div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;" data-tooltip="Number of active clients (current mode) or forecasted clients (forecast mode)">
-              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Clients</div>
-              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsClients">—</div>
+            <div
+              style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;"
+              data-tooltip="Number of active clients (current mode) or forecasted clients (forecast mode)">
+              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Clients
+              </div>
+              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;"
+                id="mobileKeyMetricsClients">—</div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;" data-tooltip="Total number of service sessions delivered per year across all offerings">
-              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Sessions</div>
-              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsAnnualSessions">—</div>
+            <div
+              style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;"
+              data-tooltip="Total number of service sessions delivered per year across all offerings">
+              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Sessions
+              </div>
+              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;"
+                id="mobileKeyMetricsAnnualSessions">—</div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; grid-column: 1 / -1;" data-tooltip="Percentage of available capacity being used (100% = at target, >100% = overbooked)">
-              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Utilization</div>
-              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;" id="mobileKeyMetricsUtilization">—</div>
+            <div
+              style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; grid-column: 1 / -1;"
+              data-tooltip="Percentage of available capacity being used (100% = at target, >100% = overbooked)">
+              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Utilization</div>
+              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;"
+                id="mobileKeyMetricsUtilization">—</div>
             </div>
           </div>
         </div>
@@ -286,23 +331,29 @@
         <button class="btn mobile-menu-btn" id="mobileFeedbackBtn">✉️ Give Feedback</button>
         <button class="btn mobile-menu-btn" id="mobileHelpBtn">❓ Help & Tour</button>
         <button class="btn mobile-menu-btn" id="mobileSettingsBtn">⚙️ Settings</button>
-        <div class="mobile-settings-section" style="display: none; padding: 8px; max-height: 60vh; overflow-y: auto; width: 100%; box-sizing: border-box;">
+        <div class="mobile-settings-section"
+          style="display: none; padding: 8px; max-height: 60vh; overflow-y: auto; width: 100%; box-sizing: border-box;">
           <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1f2937;">Experience Level</h4>
           <div class="settings-options" style="display: flex; flex-direction: column; gap: 10px;">
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel" value="beginner">
+              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel"
+                  value="beginner">
                 Beginner</label>
               <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">Core features active.</div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel" value="intermediate">
+              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel"
+                  value="intermediate">
                 Intermediate</label>
-              <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">Advanced calculations and scenario tools unlocked.</div>
+              <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">Advanced calculations and scenario tools
+                unlocked.</div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel" value="advanced">
+              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel"
+                  value="advanced">
                 Advanced</label>
-              <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">All features enabled, including export suite and debug panel.</div>
+              <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">All features enabled, including export
+                suite and debug panel.</div>
             </div>
           </div>
           <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
@@ -340,26 +391,42 @@
         <h2>At a Glance (Key Metrics)</h2>
       </div>
       <div class="card-b">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; font-size: 14px;">
-          <div style="display: flex; flex-direction: column; gap: 4px;" data-tooltip="Total income from all clients across all service offerings">
-            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Revenue</div>
-            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsRevenue">—</div>
+        <div
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; font-size: 14px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;"
+            data-tooltip="Total income from all clients across all service offerings">
+            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Revenue
+            </div>
+            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);"
+              id="keyMetricsRevenue">—</div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;" data-tooltip="Revenue minus all fixed costs and variable costs — your bottom line profit">
-            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Net Income</div>
-            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsIncome">—</div>
+          <div style="display: flex; flex-direction: column; gap: 4px;"
+            data-tooltip="Revenue minus all fixed costs and variable costs — your bottom line profit">
+            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Net
+              Income</div>
+            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);"
+              id="keyMetricsIncome">—</div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;" data-tooltip="Number of active clients (current mode) or forecasted clients (forecast mode)">
-            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Clients</div>
-            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsClients">—</div>
+          <div style="display: flex; flex-direction: column; gap: 4px;"
+            data-tooltip="Number of active clients (current mode) or forecasted clients (forecast mode)">
+            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Clients
+            </div>
+            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);"
+              id="keyMetricsClients">—</div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;" data-tooltip="Total number of service sessions delivered per year across all offerings">
-            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Annual Sessions</div>
-            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsAnnualSessions">—</div>
+          <div style="display: flex; flex-direction: column; gap: 4px;"
+            data-tooltip="Total number of service sessions delivered per year across all offerings">
+            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Annual
+              Sessions</div>
+            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);"
+              id="keyMetricsAnnualSessions">—</div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;" data-tooltip="Percentage of available capacity being used (100% = at target, >100% = overbooked)">
-            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Utilization</div>
-            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);" id="keyMetricsUtilization">—</div>
+          <div style="display: flex; flex-direction: column; gap: 4px;"
+            data-tooltip="Percentage of available capacity being used (100% = at target, >100% = overbooked)">
+            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+              Utilization</div>
+            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);"
+              id="keyMetricsUtilization">—</div>
           </div>
         </div>
       </div>
@@ -369,7 +436,8 @@
     <div class="validation-container" id="validationContainer" style="display: none; grid-column: 1 / -1;"></div>
 
     <!-- Template Source Indicator -->
-    <div id="templateBadge" class="template-badge" style="display: none; grid-column: 1 / -1; padding: 12px 16px; background: rgba(94, 234, 212, 0.1); border: 1px solid rgba(94, 234, 212, 0.3); border-radius: 8px; margin-bottom: 12px; font-size: 13px;">
+    <div id="templateBadge" class="template-badge"
+      style="display: none; grid-column: 1 / -1; padding: 12px 16px; background: rgba(94, 234, 212, 0.1); border: 1px solid rgba(94, 234, 212, 0.3); border-radius: 8px; margin-bottom: 12px; font-size: 13px;">
       <span style="color: var(--muted);">Loaded from:</span>
       <strong style="color: var(--accent); margin-left: 4px;" id="templateName">Template Name</strong>
       <span style="color: var(--muted); margin-left: 8px;">— Save a custom scenario to use your own data</span>
@@ -637,7 +705,8 @@
 
         <!-- Sensitivity Analysis panel (collapsible) -->
         <div class="sensitivity-wrapper advanced-feature">
-          <button id="sensitivityToggle" class="debug-toggle" aria-expanded="false" aria-controls="sensitivityBody">▶
+          <button id="sensitivityToggle" class="debug-toggle" aria-expanded="false" aria-controls="sensitivityBody"
+            title="Explore how changes to pricing, overhead, utilization, and team size affect your profitability">▶
             Sensitivity Analysis</button>
           <div id="sensitivityBody" class="debug-body collapsed" aria-hidden="true">
             <div id="sensitivityPanel">
@@ -665,20 +734,22 @@
           </div>
         </div>
 
-        <!-- Debug panel (collapsible) placed at the bottom of the Outputs card -->
-        <div class="debug-wrapper expert-feature">
-          <button id="debugToggle" class="debug-toggle" aria-expanded="false" aria-controls="debugBody">▶ Debug</button>
-          <div id="debugBody" class="debug-body collapsed" aria-hidden="true">
-            <pre id="debugPanel" class="debug-pre">Debug: no data yet</pre>
-          </div>
-        </div>
-
         <!-- Performance monitoring panel (collapsible) -->
         <div class="perf-wrapper expert-feature">
-          <button id="perfToggle" class="debug-toggle" aria-expanded="false" aria-controls="perfBody">▶
+          <button id="perfToggle" class="debug-toggle" aria-expanded="false" aria-controls="perfBody"
+            title="View calculation engine performance metrics and cache statistics">▶
             Performance</button>
           <div id="perfBody" class="debug-body collapsed" aria-hidden="true">
             <div id="perfPanel" class="perf-content"></div>
+          </div>
+        </div>
+
+        <!-- Debug panel (collapsible) placed at the bottom of the Outputs card -->
+        <div class="debug-wrapper expert-feature">
+          <button id="debugToggle" class="debug-toggle" aria-expanded="false" aria-controls="debugBody"
+            title="View raw calculation data and internal state for troubleshooting">▶ Debug</button>
+          <div id="debugBody" class="debug-body collapsed" aria-hidden="true">
+            <pre id="debugPanel" class="debug-pre">Debug: no data yet</pre>
           </div>
         </div>
       </div>
