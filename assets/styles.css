@@ -1223,6 +1223,11 @@ button:focus-visible {
   background: rgba(255, 255, 255, 0.04);
 }
 
+/* Charts and Visualizations Container */
+.charts-visualizations-container {
+  margin-top: 16px;
+}
+
 /* Simple chart in Outputs: small stacked bar and labels */
 .simple-chart {
   margin-top: 14px;
