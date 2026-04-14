@@ -1,4 +1,27 @@
 import { lazyLoadChart } from "../utils/chartUtils";
+
+// Import formatting utilities
+const DEFAULT_CURRENCY = 'USD';
+const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
+const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
+const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
+
+// DOM utility (make sure $ is available)
+const $ = (selector) => {
+  if (typeof document === 'undefined') return null;
+  return document.querySelector(selector);
+};
+
+// HTML escape helper
+const escapeHtml = (str) => {
+  return String(str == null ? '' : str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+};
+
 // Visualization Services
 
 export function updateBreakEvenAnalysis(metrics) {
@@ -236,78 +259,35 @@ export function renderSimpleChart(metrics) {
   setupChartEventListeners(el);
 }
 
-export function hideTooltip() {
-    if (pinned) return; // don't hide when pinned
-    const tooltip = el.querySelector('.chart-tooltip');
-    if (!tooltip) return;
+// Helper function to set up basic chart interactivity
+function setupChartEventListeners(chartEl) {
+  if (!chartEl) return;
 
-    tooltip.classList.remove('visible');
-    hideTimeout = setTimeout(() => {
-      tooltip.style.display = 'none';
-      tooltip.innerHTML = '';
-    }, 150); // Short delay for normal hide
-  }
+  const tooltip = chartEl.querySelector('.chart-tooltip');
+  if (!tooltip) return;
 
-export function unpinTooltip() {
-    pinned = false;
-    pinnedRect = null;
-    const tooltip = el.querySelector('.chart-tooltip');
-    if (tooltip) {
-      tooltip.classList.remove('pinned');
+  // Get all chart rects
+  const rects = chartEl.querySelectorAll('svg rect[data-offering]');
+
+  rects.forEach((rect) => {
+    rect.addEventListener('mouseenter', (e) => {
+      const offering = escapeHtml(rect.getAttribute('data-offering') || '');
+      const type = escapeHtml(rect.getAttribute('data-type') || '');
+      const variable = escapeHtml(rect.getAttribute('data-var') || '$0');
+      const contrib = escapeHtml(rect.getAttribute('data-contrib') || '$0');
+      const pct = escapeHtml(rect.getAttribute('data-pct') || '0%');
+
+      tooltip.innerHTML = `<div class="tooltip-content"><strong>${offering}</strong><div style="font-size:12px;margin-top:4px;color:var(--muted);">${type === 'variable' ? 'Variable Cost' : 'Contribution'}: ${type === 'variable' ? variable : contrib}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">% of Revenue: ${pct}</div></div>`;
+      tooltip.classList.add('visible');
+      tooltip.style.display = 'block';
+    });
+
+    rect.addEventListener('mouseleave', () => {
       tooltip.classList.remove('visible');
-      updatePinnedIndicator(null);
-      // Hide immediately
-      tooltip.style.display = 'none';
-    }
-  }
-
-export function setupTooltipButtons() {
-    const tooltip = el.querySelector('.chart-tooltip');
-    if (!tooltip) return;
-
-    // Remove existing event listeners to prevent duplicates
-    const existingCloseBtn = tooltip.querySelector('.tooltip-close');
-    const existingPinBtn = tooltip.querySelector('.tooltip-pin');
-
-    if (existingCloseBtn) {
-      existingCloseBtn.replaceWith(existingCloseBtn.cloneNode(true));
-    }
-    if (existingPinBtn) {
-      existingPinBtn.replaceWith(existingPinBtn.cloneNode(true));
-    }
-
-    // Re-attach event listeners to fresh buttons
-    const closeBtn = tooltip.querySelector('.tooltip-close');
-    const pinBtn = tooltip.querySelector('.tooltip-pin');
-
-    if (closeBtn) {
-      closeBtn.onclick = (ev) => {
-        ev.stopPropagation();
-        pinned = false;
-        pinnedRect = null;
-        tooltip.classList.remove('pinned');
-        tooltip.classList.remove('visible');
-        updatePinnedIndicator(null);
+      setTimeout(() => {
         tooltip.style.display = 'none';
         tooltip.innerHTML = '';
-      };
-    }
-
-    if (pinBtn) {
-      pinBtn.onclick = (ev) => {
-        ev.stopPropagation();
-        pinned = !pinned;
-        if (pinned) {
-          pinnedRect = tooltip._currentRect;
-          tooltip.classList.add('pinned');
-          pinBtn.textContent = '📍';
-          updatePinnedIndicator(tooltip._currentRect);
-        } else {
-          pinnedRect = null;
-          tooltip.classList.remove('pinned');
-          pinBtn.textContent = '📌';
-          updatePinnedIndicator(null);
-        }
-      };
-    }
-  }
+      }, 150);
+    });
+  });
+}
