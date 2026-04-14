@@ -8,131 +8,169 @@ See README.md for setup and development instructions.
 
 ## Recently Completed ✅
 
-- Sensitivity Analysis & What-If Scenarios — interactive sliders for pricing, costs, utilization, employees; tornado charts showing impact ranking
-- Tax & Financial Calculations — 2024 self-employment tax, federal income tax brackets, quarterly estimated payments, take-home after taxes
-- Performance Monitoring Dashboard (Advanced feature) — real-time cache hit rate, calculation timing, entry count
-- Undo/Redo Workflow Support — full history stack (50 entry max), Ctrl+Z/Ctrl+Shift+Z shortcuts, toast feedback
-- CSV Import: Bootstrap from CSV — template download, drag-and-drop file upload, business settings + offerings import
-- Interactive Scenario Comparison (Side-by-Side Diff) — full feature with summary metrics, per-offering breakdown, exports, sharing
-- Bug fix: Comparison modal text visibility on white background (dark theme color override)
-- Bug fix: Tour tooltip positioning (removed CSS animation override, fixed position jumping during onboarding)
-- Bug fix: Mode switch now immediately updates mix lock checkbox visibility
-- Feature Restriction Badges (visual indicators for locked features)
-- Level Change Toast Notifications (brief feedback on level changes)
-- Experience Level Explanation Panel (shows feature availability by level)
+**Five Major Features (Most Recent)**
+
+1. **Sensitivity Analysis & What-If Scenarios** — Interactive sliders for pricing, costs, utilization, employees with tornado charts showing impact ranking
+2. **Tax & Financial Calculations** — 2024 self-employment tax, federal income tax brackets, quarterly estimated payments, take-home after taxes
+3. **CSV Import: Bootstrap from CSV** — Template download, drag-and-drop file upload, full business settings + offerings parsing
+4. **Undo/Redo Workflow Support** — Full 50-entry history stack with Ctrl+Z/Ctrl+Shift+Z shortcuts
+5. **Performance Monitoring Dashboard** — Real-time cache hit rate, calculation timing, entry count (Advanced feature)
+
+**Supporting Improvements**
+- Interactive Scenario Comparison (Side-by-Side Diff) with summary metrics and export/sharing
+- Experience Level gating system with visual restriction badges and explanatory panels
+- Bug fixes: Modal text contrast, tooltip positioning, mode switch UX, level change notifications
 
 ---
 
 ## Top 3 Recommended Next Tasks
 
-1. **Customer Acquisition & Growth Modeling**
+1. **Accessibility & Mobile Experience** ⭐ START HERE
+   - Full keyboard navigation and screen reader optimization
+   - Mobile-responsive design improvements (touch targets, input handling)
+   - Mobile-first layout polish
+   - Highest impact-to-effort ratio; broadens addressable market
+   - ~3-4 hours effort
+
+2. **Advanced Formatting & Localization** (Quick Win)
+   - Multi-currency support (EUR, GBP, CAD, AUD)
+   - Localized number formatting
+   - Configurable decimal precision per metric
+   - Enables international expansion with minimal effort
+   - ~2 hours effort
+
+3. **Customer Acquisition & Growth Modeling** (Core Analytics)
    - Customer acquisition cost (CAC) tracking
    - Customer lifetime value (LTV) calculations
    - Churn rate modeling
    - Growth rate projections
+   - Completes financial analysis suite
    - ~4-6 hours effort
-
-2. **Accessibility & Mobile Experience**
-   - Full keyboard navigation and screen reader optimization
-   - Mobile-responsive design improvements
-   - Touch gesture support
-   - ~3-4 hours effort
-
-3. **Micro-interactions & Animation Polish**
-   - Smooth number animations for KPI values changing (animated counters)
-   - Enhanced button/input focus states with visual feedback
-   - Hover effects on cards revealing additional context
-   - Subtle scale transforms and transitions on interactive elements
-   - Smoother modal/toast entrance animations
-   - ~3-4 hours effort
 
 ---
 
 ## Fully Prioritized Backlog (high → low)
 
-**Immediate Next (Core Analytics)**
+**Immediate Next (Foundation & Quick Wins)**
 
-1. Customer Acquisition & Growth Modeling
+1. Accessibility & Mobile Experience
+   - Full keyboard navigation and screen reader optimization
+   - Mobile-responsive design improvements (touch targets, input handling)
+   - Touch gesture support and mobile-first layout polish
+   - Impact: Broadens addressable market, enables accessibility features
+   - Effort: ~3-4 hours
+
+2. Advanced Formatting & Localization (Quick Win)
+    - Multi-currency support (EUR, GBP, CAD, AUD)
+    - Localized number formatting (1,000 vs 1.000 vs 1000)
+    - Configurable decimal precision per metric
+    - Impact: Enables international expansion
+    - Effort: ~2 hours
+
+**Core Analytics Expansion**
+
+3. Customer Acquisition & Growth Modeling
    - Customer acquisition cost (CAC) tracking
    - Customer lifetime value (LTV) calculations
    - Churn rate modeling
    - Growth rate projections
+   - Impact: Completes financial analysis suite
    - Effort: ~4-6 hours
 
-**UX & Accessibility (3-4 Hour Tasks)**
+**New: Collaboration & Insights (High-Value Additions)**
 
-2. Accessibility & Mobile Experience
-   - Full keyboard navigation and screen reader optimization
-   - Mobile-responsive design improvements
-   - Touch gesture support
+4. Read-only Scenario Sharing & Collaborative Comments
+   - Generate shareable read-only links for scenarios
+   - Annotation/comment system on calculations and offerings
+   - Client presentation mode without editing risk
+   - Impact: Enables team workflows and client collaboration
+   - Effort: ~2-3 hours
+
+5. AI-Powered Profitability Insights Engine
+   - Rules-based optimization suggestions ("increase price X by 10%")
+   - Automated alerts for declining utilization
+   - Competitive pricing recommendations
+   - Auto-generated what-if scenarios
+   - Impact: Transforms calculator into strategic advisor
    - Effort: ~3-4 hours
 
-**Visual Design & Cutting-Edge Polish (4-8 Hour Tasks)**
+**Visual Design & Cutting-Edge Polish**
 
-3. Micro-interactions & Animation Polish
-   - Smooth number animations for KPI values changing (animated counters)
+6. Micro-interactions & Animation Polish
+   - Smooth number animations for KPI values (animated counters)
    - Enhanced button/input focus states with visual feedback
-   - Hover effects on cards revealing additional context
-   - Subtle scale transforms and transitions on interactive elements
+   - Hover effects revealing additional context
+   - Subtle scale transforms and transitions
    - Smoother modal/toast entrance animations
    - Effort: ~3-4 hours
 
-4. Modern Visual Effects & Color Enhancement
-   - Glassmorphism effects on modals, cards, or overlays (backdrop blur)
+7. Modern Visual Effects & Color Enhancement
+   - Glassmorphism effects on modals, cards, overlays (backdrop blur)
    - Subtle gradient layers on KPI boxes and section headers
-   - Enhanced color contrast and accent color usage (subtle glows on focus)
+   - Enhanced color contrast and accent color usage
    - Refined typography hierarchy and visual rhythm
-   - Better distinction between different section types
    - Effort: ~2-3 hours
 
-5. Data Visualization & Visual Indicators
+8. Data Visualization & Visual Indicators
     - Replace text-only KPI displays with visual indicators (progress rings, gauges)
     - Animated progress circles for utilization percentages
     - Visual break-even indicators (danger/warning/success states)
-    - Smooth transitions when data updates
-    - Visual feedback for scenario changes
+    - Smooth transitions on data updates
     - Effort: ~4-5 hours
 
-**Advanced Visualizations & Analytics (4-6 Hour Tasks)**
+**Advanced Analytics (4-6 Hour Tasks)**
 
-6. Advanced Formatting & Localization
-    - Multi-currency support (EUR, GBP, CAD, AUD)
-    - Localized number formatting (1,000 vs 1.000 vs 1000)
-    - Configurable decimal precision per metric
-    - Effort: ~2 hours
-
-7. Advanced Chart Types
+9. Advanced Chart Types
     - Heat maps for multi-variable sensitivity analysis
     - Radar charts for balanced scorecard views
     - Funnel charts for customer journey
     - Geographic pricing maps
     - Effort: ~4-6 hours
 
-**Industry Intelligence & Competitive Positioning (6-8 Hour Tasks)**
+10. Tax & Financial Report Generator
+    - Quarterly income projection summaries
+    - Tax liability report with itemization
+    - Business performance summary for loan applications
+    - PDF export with professional formatting
+    - Impact: Extends app value beyond simulation
+    - Effort: ~2-3 hours
 
-8. Industry Presets & Benchmarks
-    - Curated templates for common service businesses (consulting, cleaning, landscaping, fitness, photography, handyman)
+**Industry Intelligence & Competitive Positioning**
+
+11. Industry Benchmarks & Competitive Pricing
+    - ✅ Templates complete (consulting, cleaning, landscaping, fitness, photography, handyman)
     - Industry benchmark comparisons and regional pricing data
     - Success metric tracking and performance standards
-    - Effort: ~6-8 hours
+    - Regional pricing variations by market
+    - Effort: ~4-6 hours (templates done; focus on benchmarking)
 
-9. Seasonal & Market Adjustments
+12. Seasonal & Market Adjustments
     - Seasonal demand modeling with monthly/quarterly variations
     - Geographic pricing variations by region
     - Market rate comparisons and competitive pricing
     - Economic indicator integration
     - Effort: ~4-5 hours
 
+**Mobile & Platform Support (Scale Layer)**
+
+13. Native Android & iOS Support via Capacitor
+    - Build and distribute iOS and Android APKs
+    - Native app wrapper around web build (Capacitor)
+    - Native notifications and local storage integration
+    - Offline capability and app persistence
+    - App store / Google Play Store distribution readiness
+    - Effort: ~8-10 hours (initial setup + testing)
+
 **Enterprise Features (Scale Layer — Deferred)**
 
-10. Advanced Scenario Management
+14. Advanced Scenario Management
     - Scenario versioning and history tracking
     - Bulk import/export operations
     - Scenario templates and inheritance
     - Team sharing and permissions (requires backend infrastructure)
     - Effort: ~8-10 hours
 
-11. Integration & Automation
+15. Integration & Automation
     - API for third-party integrations
     - Webhook notifications for key metrics
     - Automated data syncing with external services
@@ -140,14 +178,14 @@ See README.md for setup and development instructions.
     - **Note**: Requires backend infrastructure
     - Effort: ~10-12 hours
 
-12. Multi-Year Strategic Planning
+16. Multi-Year Strategic Planning
     - 3-5 year financial projections
     - Hiring and scaling recommendations
     - Investment payback analysis
     - Strategic milestone tracking
     - Effort: ~8-10 hours
 
-13. Optimizer Mode & AI Insights
+17. Optimizer Mode & AI Insights
     - Automated optimization suggestions based on business data
     - Machine learning price optimization
     - Predictive analytics for business outcomes
@@ -167,16 +205,24 @@ See README.md for setup and development instructions.
   - CSV Import: Template download, drag-and-drop file upload, full business settings + offerings parsing with validation
   - Undo/Redo: Full 50-entry history stack with Ctrl+Z/Ctrl+Shift+Z shortcuts and debounced table edits
   - Performance Dashboard: Real-time cache hit rate, calculation timing, entry count (Advanced feature gate)
-- **Next priorities**: 
-  1. Customer acquisition & growth modeling — rounds out financial analysis suite with CAC and LTV tracking
-  2. Accessibility & mobile experience improvements — keyboard navigation, screen readers, touch gestures
-  3. Micro-interactions & animation polish — smooth number animations and visual feedback enhancements
-- **Strategic positioning**: Sensitivity analysis and tax calculations significantly deepen analytical capabilities. CSV import reduces setup friction (major competitive advantage). Performance dashboard enables power users to optimize. Strong foundation established for advanced financial modeling. Next focus: customer acquisition metrics and accessibility improvements to broaden market appeal.
-- **Quick wins available**: 
-  - Advanced Formatting & Localization (2 hrs) — multi-currency support
-  - Micro-interactions & Animation Polish (3-4 hrs) — visual polish on KPI animations
-  - Accessibility & Mobile Experience (3-4 hrs) — keyboard nav, screen reader support
-- **Enterprise features (items 12-15) are deferred**: Represent significant scope expansion and require backend infrastructure. Validate market demand before investing.
+- **Next priorities** (Reordered by impact/effort):
+  1. **Accessibility & Mobile Experience** ⭐ — Highest impact-to-effort ratio; broadens addressable market to accessibility-conscious users and mobile-first business owners
+  2. **Advanced Formatting & Localization** — Quick 2-hour win; enables international expansion (EUR, GBP, CAD, AUD support)
+  3. **Customer Acquisition & Growth Modeling** — Completes financial analysis suite with CAC, LTV, and churn tracking
+  4. **Read-only Scenario Sharing & Comments** — New high-value feature enabling team workflows without backend complexity
+  5. **AI-Powered Profitability Insights** — Transforms calculator into strategic advisor with rules-based optimization suggestions
+- **Strategic positioning**: Sensitivity analysis, tax calculations, and CSV import create a powerful financial modeling foundation. Reordering priorities to accessibility-first because: (1) expands market to accessibility-conscious segments, (2) enables screen reader users, (3) improves mobile experience for on-the-go usage, (4) higher impact than micro-interactions. Quick wins (localization, insights) keep momentum. Enterprise features (mobile app, backend integrations) deferred until market demand validates investment.
+- **Quick wins available** (High-Value, Low Effort):
+  - Advanced Formatting & Localization (2 hrs) — multi-currency support, international expansion
+  - Read-only Scenario Sharing & Comments (2-3 hrs) — collaboration without backend
+  - Tax & Financial Report Generator (2-3 hrs) — extends value beyond simulation
+  - Mobile-First Responsive Refinements (2-3 hrs) — touch targets, input handling
+- **Enterprise features (items 14-17) are deferred**: Represent significant scope expansion and require backend infrastructure (or ML infrastructure). Validate strong market demand before investing 8-15 hours per feature.
+- **Audit notes**: 
+  - Reordered priorities based on impact-to-effort analysis
+  - Added 5 new high-value features identified through gap analysis (sharing, insights, reports, templates, mobile refinements)
+  - Industry templates verified complete and profitable (6 templates: consulting, cleaning, landscaping, fitness, photography, handyman)
+  - Consider collaborative workflows (sharing, comments) as higher priority than micro-interactions for team expansion
 
 ### Test Coverage Status
 - **202 tests passing** (comprehensive test suite)
