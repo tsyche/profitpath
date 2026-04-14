@@ -114,9 +114,9 @@ const INDUSTRY_TEMPLATES = {
     description: 'Lawn care and landscaping business',
     config: {
       offerings: [
-        { name: 'Weekly Lawn Maintenance', priceMonthly: 150, sessionsPerYear: 52, hoursPerSession: 1.5, variableCostPerSession: 20, mixPct: 50, currentClients: 20 },
-        { name: 'Biweekly Lawn Care', priceMonthly: 100, sessionsPerYear: 26, hoursPerSession: 1, variableCostPerSession: 15, mixPct: 30, currentClients: 15 },
-        { name: 'Seasonal Services', priceMonthly: 200, sessionsPerYear: 4, hoursPerSession: 4, variableCostPerSession: 40, mixPct: 20, currentClients: 10 }
+        { name: 'Weekly Lawn Maintenance', priceMonthly: 280, sessionsPerYear: 52, hoursPerSession: 1.5, variableCostPerSession: 20, mixPct: 50, currentClients: 15 },
+        { name: 'Biweekly Lawn Care', priceMonthly: 200, sessionsPerYear: 26, hoursPerSession: 1, variableCostPerSession: 15, mixPct: 30, currentClients: 10 },
+        { name: 'Seasonal Services', priceMonthly: 350, sessionsPerYear: 4, hoursPerSession: 4, variableCostPerSession: 40, mixPct: 20, currentClients: 8 }
       ],
       fullTimeEmployees: 2,
       partTimeEmployees: 0,
@@ -590,12 +590,12 @@ function render() {
     const tr = document.createElement('tr');
 
     const mixCell = isForecast
-      ? '<input aria-label="Mix % for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" max="100" step="1" value="' + ((o.mixPct ?? 0).toFixed(1)) + '" data-k="mixPct" data-i="' + (idx) + '" />'
+      ? '<input aria-label="Mix % for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" max="100" step="1" value="' + ((o.mixPct ?? 0).toFixed(1)) + '" data-k="mixPct" data-i="' + (idx) + '" data-tooltip="Percentage of total clients using this offering" />'
       : '<span class="muted">—</span>';
 
     const clientsCell = isForecast
       ? '<span class="muted">—</span>'
-      : '<input aria-label="Clients for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" step="1" value="' + (o.currentClients ?? 0) + '" data-k="currentClients" data-i="' + (idx) + '" />';
+      : '<input aria-label="Clients for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" step="1" value="' + (o.currentClients ?? 0) + '" data-k="currentClients" data-i="' + (idx) + '" data-tooltip="Number of active clients for this offering" />';
 
     const estClients = isForecast
       ? Math.floor(metrics.clients * ((o.mixPct || 0) / 100))
@@ -605,13 +605,13 @@ function render() {
       ? Math.round(estClients * o.sessionsPerYear)
       : Math.round((o.currentClients || 0) * o.sessionsPerYear);
 
-    tr.innerHTML = '<td class="cell-edit group-start group-inputs" data-label="Offering"><input aria-label="Offering name" type="text" value="' + (escapeHtml(o.name)) + '" data-k="name" data-i="' + (idx) + '"/></td>' +
-      '<td class="cell-edit group-inputs" data-label="Price / mo"><input aria-label="Price per month for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="10" value="' + (o.priceMonthly) + '" data-k="priceMonthly" data-i="' + (idx) + '"/></td>' +
-      '<td class="cell-edit group-inputs" data-label="Sessions / yr"><input aria-label="Sessions per year for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.sessionsPerYear) + '" data-k="sessionsPerYear" data-i="' + (idx) + '"/></td>' +
-      '<td class="cell-edit group-inputs" data-label="Hours / session"><input aria-label="Hours per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="0.1" value="' + (o.hoursPerSession) + '" data-k="hoursPerSession" data-i="' + (idx) + '"/></td>' +
-      '<td class="cell-edit group-inputs group-end" data-label="Var $ / session"><input aria-label="Variable cost per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.variableCostPerSession) + '" data-k="variableCostPerSession" data-i="' + (idx) + '"/></td>' +
-      '<td class="cell-edit group-start group-mode" data-label="Mix % (forecast)">' + (mixCell) + '</td>' +
-      '<td class="cell-edit group-mode group-end" data-label="Clients (current)">' + (clientsCell) + '</td>' +
+    tr.innerHTML = '<td class="cell-edit group-start group-inputs" data-label="Offering"><input aria-label="Offering name" type="text" value="' + (escapeHtml(o.name)) + '" data-k="name" data-i="' + (idx) + '" data-tooltip="Name of this service offering"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Price / mo"><input aria-label="Price per month for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="10" value="' + (o.priceMonthly) + '" data-k="priceMonthly" data-i="' + (idx) + '" data-tooltip="Monthly billing price per client"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Sessions / yr"><input aria-label="Sessions per year for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.sessionsPerYear) + '" data-k="sessionsPerYear" data-i="' + (idx) + '" data-tooltip="How many times per year this service is delivered to each client"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Hours / session"><input aria-label="Hours per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="0.1" value="' + (o.hoursPerSession) + '" data-k="hoursPerSession" data-i="' + (idx) + '" data-tooltip="Duration of each service session in hours"/></td>' +
+      '<td class="cell-edit group-inputs group-end" data-label="Var $ / session"><input aria-label="Variable cost per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.variableCostPerSession) + '" data-k="variableCostPerSession" data-i="' + (idx) + '" data-tooltip="Cost per session (materials, supplies, delivery, etc.)"/></td>' +
+      '<td class="cell-edit group-start group-mode" data-label="Mix % (forecast)" data-tooltip="Percentage of total clients using this offering (forecast mode only)">' + (mixCell) + '</td>' +
+      '<td class="cell-edit group-mode group-end" data-label="Clients (current)" data-tooltip="Number of active clients for this offering (current mode only)">' + (clientsCell) + '</td>' +
       '<td class="cell-readonly group-start group-est" data-label="Est. clients"><span class="mono">' + (fmtInt(estClients)) + '</span></td>' +
       '<td class="cell-readonly group-est" data-label="Est. sessions"><span class="mono">' + (fmtInt(estSessions)) + '</span></td>' +
       '<td class="cell-readonly group-metrics" data-label="Annual Revenue"><span class="mono">' + (fmtMoney0(metrics.offeringMetrics[idx]?.revenue || 0)) + '</span></td>' +
@@ -2914,65 +2914,27 @@ function selectIndustry(industryId, dialog) {
 }
 
 function loadOnboardingIndustryTemplate(industryId) {
-  const templates = {
-    consulting: {
-      offerings: [{
-        name: 'Strategy Consulting',
-        priceMonthly: 5000,
-        sessionsPerYear: 12,
-        hoursPerSession: 8,
-        variableCostPerSession: 200
-      }]
-    },
-    cleaning: {
-      offerings: [{
-        name: 'Standard Cleaning',
-        priceMonthly: 150,
-        sessionsPerYear: 4,
-        hoursPerSession: 2,
-        variableCostPerSession: 15
-      }]
-    },
-    landscaping: {
-      offerings: [{
-        name: 'Weekly Lawn Care',
-        priceMonthly: 200,
-        sessionsPerYear: 52,
-        hoursPerSession: 1,
-        variableCostPerSession: 25
-      }]
-    },
-    fitness: {
-      offerings: [{
-        name: 'Personal Training',
-        priceMonthly: 300,
-        sessionsPerYear: 48,
-        hoursPerSession: 1,
-        variableCostPerSession: 0
-      }]
-    },
-    photography: {
-      offerings: [{
-        name: 'Wedding Photography',
-        priceMonthly: 2500,
-        sessionsPerYear: 6,
-        hoursPerSession: 8,
-        variableCostPerSession: 100
-      }]
-    }
-  };
-
-  const template = templates[industryId];
+  // Use the same INDUSTRY_TEMPLATES as single source of truth
+  const template = INDUSTRY_TEMPLATES[industryId];
   if (template) {
-    // Apply template to current scenario
-    if (template.offerings) {
-      state.offerings = template.offerings.map(o => ({
-        ...o,
-        id: uuid(),
-        mixPct: 100 / template.offerings.length,
-        currentClients: 0
-      }));
-    }
+    const config = template.config;
+
+    // Apply template to current scenario - load all offerings like the main menu
+    state.offerings = config.offerings.map(o => ({
+      ...o,
+      id: uuid(),
+      mixPct: o.mixPct || (100 / config.offerings.length),
+      currentClients: o.currentClients || 0
+    }));
+
+    // Apply employee and cost configuration
+    state.fullTimeEmployees = config.fullTimeEmployees || 1;
+    state.partTimeEmployees = config.partTimeEmployees || 0;
+    state.fullTimeEmployeePay = config.fullTimeEmployeePay || 60000;
+    state.partTimeEmployeePay = config.partTimeEmployeePay || 30000;
+    state.monthlyCosts = config.monthlyCosts || 250;
+    state.productiveUtilizationPct = config.productiveUtilizationPct || 80;
+    state.targetUtilizationPct = config.targetUtilizationPct || 85;
 
     // Refresh the UI
     render();
