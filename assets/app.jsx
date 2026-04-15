@@ -2458,11 +2458,14 @@ function initSensitivityPanel() {
   // Restore expanded state from localStorage
   const stored = localStorage.getItem('profitpath-sensitivity-expanded');
   if (stored === '1') {
-    body.classList.remove('collapsed');
-    body.setAttribute('aria-hidden', 'false');
-    toggle.setAttribute('aria-expanded', 'true');
-    toggle.textContent = toggle.textContent.replace(/^▶/, '▼');
-    initSliders();
+    // Small delay to allow CSS transitions to animate
+    setTimeout(() => {
+      body.classList.remove('collapsed');
+      body.setAttribute('aria-hidden', 'false');
+      toggle.setAttribute('aria-expanded', 'true');
+      toggle.textContent = toggle.textContent.replace(/^▶/, '▼');
+      initSliders();
+    }, 50);
   }
 
   toggle.addEventListener('click', () => {
@@ -2729,11 +2732,15 @@ function initDebugPanel() {
       const res = calc(state);
       pre.textContent = JSON.stringify(res, null, 2);
       pre.title = 'Raw calculation engine output showing all computed metrics (for troubleshooting)';
-      toggle.textContent = '▶ Debug — clients: ' + (res.clients || 0) + ', revenue: ' + fmtMoney0(res.revenue || 0);
+      const isExpanded = !body.classList.contains('collapsed');
+      const arrow = isExpanded ? '▼' : '▶';
+      toggle.textContent = `${arrow} Debug — clients: ${res.clients || 0}, revenue: ${fmtMoney0(res.revenue || 0)}`;
     } catch (e) {
       pre.textContent = 'Error generating debug: ' + (e && e.stack ? e.stack : String(e));
       pre.title = 'Error generating debug output';
-      toggle.textContent = '▶ Debug — error';
+      const isExpanded = !body.classList.contains('collapsed');
+      const arrow = isExpanded ? '▼' : '▶';
+      toggle.textContent = `${arrow} Debug — error`;
     }
   }
 
@@ -2741,10 +2748,15 @@ function initDebugPanel() {
   const stored = localStorage.getItem('profitpath-debug-expanded');
   const expanded = stored === '1';
   if (expanded) {
-    body.classList.remove('collapsed');
-    body.setAttribute('aria-hidden', 'false');
-    toggle.setAttribute('aria-expanded', 'true');
-    toggle.textContent = toggle.textContent.replace(/^▶/, '▼');
+    // Small delay to allow CSS transitions to animate
+    setTimeout(() => {
+      body.classList.remove('collapsed');
+      body.setAttribute('aria-hidden', 'false');
+      toggle.setAttribute('aria-expanded', 'true');
+      toggle.textContent = toggle.textContent.replace(/^▶/, '▼');
+      // Refresh debug data when panel is expanded on page load
+      refreshDebug();
+    }, 50);
   }
 
   toggle.addEventListener('click', () => {
@@ -2785,10 +2797,14 @@ function initPerfPanel() {
         <div title="Total number of calculations performed this session"><span class="perf-label">Total calcs:</span> <span class="perf-value">${stats.totalCalcs}</span></div>
       `;
       panel.innerHTML = html;
-      toggle.textContent = `▶ Performance — ${stats.hitRate}% hit rate`;
+      const isExpanded = !body.classList.contains('collapsed');
+      const arrow = isExpanded ? '▼' : '▶';
+      toggle.textContent = `${arrow} Performance — ${stats.hitRate}% hit rate`;
     } catch (e) {
       panel.innerHTML = `<div>Error: ${e.message}</div>`;
-      toggle.textContent = '▶ Performance — error';
+      const isExpanded = !body.classList.contains('collapsed');
+      const arrow = isExpanded ? '▼' : '▶';
+      toggle.textContent = `${arrow} Performance — error`;
     }
   }
 
@@ -2796,10 +2812,15 @@ function initPerfPanel() {
   const stored = localStorage.getItem('profitpath-perf-expanded');
   const expanded = stored === '1';
   if (expanded) {
-    body.classList.remove('collapsed');
-    body.setAttribute('aria-hidden', 'false');
-    toggle.setAttribute('aria-expanded', 'true');
-    toggle.textContent = toggle.textContent.replace(/^▶/, '▼');
+    // Small delay to allow CSS transitions to animate
+    setTimeout(() => {
+      body.classList.remove('collapsed');
+      body.setAttribute('aria-hidden', 'false');
+      toggle.setAttribute('aria-expanded', 'true');
+      toggle.textContent = toggle.textContent.replace(/^▶/, '▼');
+      // Refresh performance data when panel is expanded on page load
+      refreshPerf();
+    }, 50);
   }
 
   toggle.addEventListener('click', () => {
