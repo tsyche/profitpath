@@ -1,4 +1,4 @@
-.PHONY: help dev build preview test test-unit test-e2e test-e2e-headed lint lintfix clean fresh install
+.PHONY: help setup dev build preview test test-unit test-e2e test-e2e-headed lint lintfix clean node-clean fresh
 
 # Colors for output
 BLUE := \033[0;34m
@@ -7,6 +7,9 @@ NC := \033[0m # No Color
 
 help:
 	@echo "$(BLUE)ProfitPath - Available Commands$(NC)"
+	@echo ""
+	@echo "$(GREEN)Setup:$(NC)"
+	@echo "  make setup            Install dependencies (npm ci)"
 	@echo ""
 	@echo "$(GREEN)Development:$(NC)"
 	@echo "  make dev              Start dev server (Vite on localhost:5173)"
@@ -24,43 +27,46 @@ help:
 	@echo "  make lintfix          Auto-fix linting issues"
 	@echo ""
 	@echo "$(GREEN)Maintenance:$(NC)"
-	@echo "  make clean            Remove node_modules/.vite cache"
-	@echo "  make install          Install dependencies (npm ci)"
-	@echo "  make fresh            Full reset: clean + install + test + lintfix + dev"
+	@echo "  make clean            Remove build cache (.vite)"
+	@echo "  make node-clean       Remove node_modules"
+	@echo "  make fresh            Full reset: node-clean + setup + test + lintfix + dev"
 	@echo ""
 
-dev:
+setup:
+	npm ci
+
+dev: setup
 	npm run dev
 
-build:
+build: setup
 	npm run build
 
-preview:
+preview: setup
 	npm run preview
 
-test:
+test: setup
 	npm run test:run && npm run test:e2e
 
-test-unit:
+test-unit: setup
 	npm run test:run
 
-test-e2e:
+test-e2e: setup
 	npm run test:e2e
 
-test-e2e-headed:
+test-e2e-headed: setup
 	npm run test:e2e:headed
 
-lint:
+lint: setup
 	npm run lint
 
-lintfix:
+lintfix: setup
 	npm run lint:fix
 
 clean:
 	rm -rf node_modules/.vite
 
-install:
-	npm ci
+node-clean:
+	rm -rf node_modules
 
-fresh: clean install test lintfix dev
-	@echo "$(GREEN)✓ Fresh start complete: clean + install + test + lintfix + dev$(NC)"
+fresh: node-clean clean setup test lintfix dev
+	@echo "$(GREEN)✓ Fresh start complete: node-clean + clean + setup + test + lintfix + dev$(NC)"
