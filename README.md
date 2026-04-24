@@ -20,15 +20,15 @@ Client-side profitability and capacity simulator for recurring service businesse
 - **Collaboration**: Shareable URLs for sharing scenarios with stakeholders, automatic URL loading on page load
 - **Templates**: Industry-specific templates for consulting, cleaning, landscaping, handyman, fitness, and photography services
 - **UI/UX**: Responsive design, mobile-optimized layout, collapsible debug panel, utilization gauge, profit waterfall charts, polished visual design
-- **Test Coverage**: 202 tests (199 passing, 1 failing performance test, 2 skipped)
+- **Test Coverage**: Comprehensive unit and e2e tests with 34+ test files
 
 ## Quick Start
 
 1. Install dependencies and start development server:
 
 ```bash
-npm install
-npm run dev
+make setup
+make dev
 ```
 
 2. Open http://localhost:3000 in your browser.
@@ -38,13 +38,16 @@ npm run dev
 ### Common commands
 
 ```bash
-npm install          # Install dependencies
-npm run dev          # Start dev server with hot reload
-npm run test:run     # Run tests (202 tests)
-npm run lint         # Check code quality
-npm run build        # Production build
-npm run preview      # Preview production build
+make setup           # Install dependencies
+make dev             # Start dev server with hot reload (localhost:3000)
+make test            # Run all tests (unit + e2e)
+make lint            # Check code quality
+make build           # Production build
+make preview         # Preview production build
+make fresh           # Complete reset: clean dependencies, install, test, lint, dev
 ```
+
+For full list of available commands, run `make help`.
 
 ### Testing scenarios
 
