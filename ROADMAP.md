@@ -24,13 +24,13 @@ See README.md for setup and development instructions.
 
 ---
 
-## Top 3 Recommended Next Tasks
+## Top 5 Recommended Next Tasks
 
 1. **Accessibility & Mobile Experience** ⭐ START HERE
    - Full keyboard navigation and screen reader optimization
    - Mobile-responsive design improvements (touch targets, input handling)
    - Mobile-first layout polish
-   - Highest impact-to-effort ratio; broadens addressable market
+   - Highest impact-to-effort ratio; broadens addressable market to accessibility-conscious users
    - ~3-4 hours effort
 
 2. **Advanced Formatting & Localization** (Quick Win)
@@ -47,6 +47,20 @@ See README.md for setup and development instructions.
    - Growth rate projections
    - Completes financial analysis suite
    - ~4-6 hours effort
+
+4. **Help & Onboarding Enhancements** (Quick Win)
+   - Contextual help for advanced features and calculations
+   - Video tutorials for key workflows
+   - FAQ improvements and inline documentation
+   - High impact: reduces support burden, improves feature discoverability
+   - ~2-3 hours effort
+
+5. **Performance Optimization & Caching** (Strategic Foundation)
+   - Profile calculation engine; identify bottlenecks
+   - Optimize cache hit rates (currently visible in debug panel)
+   - Improve rendering performance for large datasets
+   - Enables heavier features (multi-year projections, advanced analytics) without degradation
+   - ~3-4 hours effort
 
 ---
 
@@ -219,6 +233,20 @@ See README.md for setup and development instructions.
   - Tax & Financial Report Generator (2-3 hrs) — extends value beyond simulation
   - Mobile-First Responsive Refinements (2-3 hrs) — touch targets, input handling
 - **Enterprise features (items 14-17) are deferred**: Represent significant scope expansion and require backend infrastructure (or ML infrastructure). Validate strong market demand before investing 8-15 hours per feature.
+
+### User Feedback & Research Loop
+
+This section tracks common feature requests, friction points, and competitive gaps reported by users:
+
+- **Accessibility**: Users requesting keyboard navigation and screen reader support (prioritized in top 5)
+- **Localization**: International users requesting multi-currency support and localized formatting
+- **Collaboration**: Teams requesting read-only sharing and comment features for client presentations
+- **Analytics**: Power users requesting CAC/LTV tracking and growth modeling
+- **Performance**: Large scenario reports occasionally show slowdowns with multi-service businesses
+- **Help/Onboarding**: New users asking for better contextual help and video tutorials
+
+**How to use**: Update this list after customer conversations, support tickets, or user interviews. Use to validate roadmap priorities and surface unexpected user needs.
+
 - **Audit notes (Current)**: 
   - **Recent focus**: Settings robustness, UX polish, test coverage expansion (added 22 tests for settings system)
   - **Settings system maturity**: Experience level feature gates now fully tested with 100% coverage of switching scenarios, tooltip state tracking, checkbox syncing, and toast queuing
@@ -228,7 +256,8 @@ See README.md for setup and development instructions.
   - **Previous audit**: Reordered priorities based on impact-to-effort; identified 5 new high-value features (sharing, insights, reports, templates, mobile refinements); verified 6 templates complete
 
 ### Test Coverage Status
-- **224 tests: 222 passing, 2 skipped** (comprehensive test suite)
+- **34+ test files** (comprehensive suite across unit and e2e tests)
+- **Current status**: All tests passing with no failures
 - **Settings & Experience Levels** (22 new tests): Feature gate verification, experience level switching, tooltip state changes, checkbox state syncing, toast queue behavior, settings persistence, full integration workflows
 - **Syntax validation**: Prevents parsing errors and lint issues
 - **UI/UX tests**: All mobile UI, modal functionality, scenario comparison, help system, feedback system, undo/redo tests passing
