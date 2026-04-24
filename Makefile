@@ -12,7 +12,7 @@ help:
 	@echo "  make setup            Install dependencies (npm ci)"
 	@echo ""
 	@echo "$(GREEN)Development:$(NC)"
-	@echo "  make dev              Start dev server (Vite on localhost:5173)"
+	@echo "  make dev              Start dev server (Vite on localhost:3000)"
 	@echo "  make build            Build for production"
 	@echo "  make preview          Preview production build"
 	@echo ""
