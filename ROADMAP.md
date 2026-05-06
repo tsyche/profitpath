@@ -168,13 +168,19 @@ See README.md for setup and development instructions.
 
 **Mobile & Platform Support (Scale Layer)**
 
-13. Native Android & iOS Support via Capacitor
-    - Build and distribute iOS and Android APKs
-    - Native app wrapper around web build (Capacitor)
-    - Native notifications and local storage integration
-    - Offline capability and app persistence
-    - App store / Google Play Store distribution readiness
-    - Effort: ~8-10 hours (initial setup + testing)
+13. Native Android & iOS Support via Capacitor ⭐ DETAILED STRATEGY AVAILABLE
+    - Build and distribute iOS and Android apps via Capacitor wrapper
+    - Zero code changes to core app (uses existing web codebase)
+    - Native app shell with service worker for offline capability
+    - App Store and Google Play Store submission and distribution
+    - Privacy policy, app icons, screenshots, and store metadata
+    - Full testing strategy for cross-platform compatibility
+    - **See [MOBILE_APP_STRATEGY.md](MOBILE_APP_STRATEGY.md) for complete implementation guide**
+    - Effort: ~40-50 hours total (solo hobby pace, 8-10 weeks):
+      - Phase 1 (Setup): 4-5 hours
+      - Phase 2 (iOS): 8-10 hours
+      - Phase 3 (Android): 6-8 hours
+      - Phase 4 (Post-launch): Ongoing (~1.5 hrs per update release)
 
 **Enterprise Features (Scale Layer — Deferred)**
 
@@ -207,6 +213,63 @@ See README.md for setup and development instructions.
     - Competitive analysis tools
     - **Note**: Significant scope, may require ML infrastructure
     - Effort: ~12-15 hours
+
+---
+
+## Monetization Strategy
+
+### Current: Free Tier Only
+ProfitPath is 100% free with all calculator features available. No monetization until the app is live and user feedback validates market demand.
+
+### Future Freemium Model (Post-Launch, 3-6 Months)
+
+**Tier 1: Free (Current App)**
+- All calculator features (forecast, current mode, scenario management)
+- Basic exports (CSV)
+- Experience levels 1-2 (Beginner/Intermediate)
+- localStorage persistence
+
+**Tier 2: Premium ($4.99/month or $39/year)**
+- Full Advanced experience level (all features unlocked)
+- Multi-format exports (PDF with charts, Excel with formulas, HTML)
+- Scenario comparison (side-by-side diff)
+- Sensitivity analysis
+- Tax calculations & quarterly estimates
+- Performance dashboard
+- Estimated 5-15% conversion rate
+
+**Tier 3: Pro ($9.99/month or $79/year) — Optional, if demand exists**
+- Team sharing (read-only scenario links with comments)
+- Automated email reporting
+- White-label PDF export
+- Priority support
+- Estimated 1-5% conversion rate
+
+### Why Not Ads?
+Ads destroy trust in financial planning tools. Business owners need to feel confident, not distracted. Freemium subscription is the proven model for business SaaS (Notion, Monday.com, Stripe, etc.).
+
+### Why Not One-Time Purchase?
+- Doesn't scale with growing feature set
+- Users expect ongoing feature improvements in SaaS era
+- Subscription enables sustainable development (especially hobby-scale)
+- Easier to test pricing (can adjust tier costs)
+
+### Implementation Timeline
+1. **Phase 1** (Now → App Store Launch): Free tier only. Focus on quality and user acquisition.
+2. **Phase 2** (3-6 months post-launch): Add Premium tier via RevenueCat (2-3 hour integration). Monitor conversion rates, gather user feedback.
+3. **Phase 3** (6-12 months): Evaluate Pro tier based on demand. Consider team collaboration features if requested frequently.
+
+### Revenue Projections (Conservative Estimate)
+- **Year 1**: Free tier only (~1,000-5,000 downloads, $0 revenue)
+- **Year 2**: Premium tier + 5% conversion @ $39/yr = ~$1,950-9,750 annual recurring
+- **Year 3**: Improve conversion to 8% + Pro tier at 1% = ~$7,500-35,000 annual recurring
+
+*Note: These are rough estimates. Actual revenue depends entirely on marketing effort (organic growth from App Store visibility). As a hobby project, expect conservative adoption unless you actively market.*
+
+### Technical Notes
+- **RevenueCat** (recommended): Unified dashboard for iOS/Android in-app purchases + subscriptions. ~20% fee after platform cuts. 2-3 hour integration.
+- **Stripe**: More complex, requires backend or serverless functions. Better long-term control, higher overhead.
+- **Apple/Google In-App Billing**: Native but requires separate implementation per platform; not recommended for single developer.
 
 ---
 
