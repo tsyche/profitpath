@@ -57,34 +57,40 @@ This document outlines the approach for packaging ProfitPath as native iOS and A
 
 ### Phase 1: Setup (Week 1) — 4-5 hours
 
-**1.1 Initialize Capacitor**
-```bash
-npm install @capacitor/core @capacitor/cli
-npx cap init profitpath "ProfitPath"
-```
+**1.1 Initialize Capacitor** ✅ Done
+- Capacitor v8.3.3 installed
+- `capacitor.config.ts` created and configured
 
-**1.2 Install Native Platforms**
-```bash
-npx cap add ios
-npx cap add android
-```
+**1.2 Install Native Platforms** ✅ Done
+- `ios/` — Xcode project created, plugins synced
+- `android/` — Gradle project created, plugins synced
 
-**1.3 Install Essential Plugins**
-- `@capacitor/keyboard` — Mobile keyboard handling
-- `@capacitor/status-bar` — Status bar customization
-- `@capacitor/splash-screen` — Launch screen
-- `@capacitor/storage` — localStorage fallback (optional, web version sufficient)
+**1.3 Install Essential Plugins** ✅ Done
+- `@capacitor/keyboard@8.0.3` — Mobile keyboard handling
+- `@capacitor/status-bar@8.0.2` — Status bar customization
+- `@capacitor/splash-screen@8.0.1` — Launch screen
 
-**1.4 Update Configuration**
-- `capacitor.config.ts` — App ID, version, iOS deployment target (14.0+), Android target API 34+
-- `package.json` — Bump version to 2.0.0 (major version bump for app stores)
+**1.4 Environment Setup** ✅ Done
+- Node 24.7.0 (required by Capacitor v8 — use `~/.asdf/installs/nodejs/24.7.0/bin/`)
+- Ruby 3.2.0 (required for CocoaPods — use `~/.asdf/installs/ruby/3.2.0/bin/`)
+- CocoaPods 1.16.2 installed
+
+**1.5 Pre-submission Configuration** (do before submitting)
+- Update `appId` in `capacitor.config.ts` to your unique bundle ID
+- Bump version to `2.0.0` in `package.json` for initial store release
 
 **Checklist:**
-- [ ] Capacitor CLI installed and verified
-- [ ] iOS and Android projects generated
-- [ ] capacitor.config.ts configured
-- [ ] Plugins installed and tested locally
-- [ ] Package.json updated with correct version
+- [x] Capacitor CLI installed and verified (v8.3.3)
+- [x] iOS and Android projects generated (`ios/` and `android/` created)
+- [x] capacitor.config.ts configured (SplashScreen, Keyboard, StatusBar plugins)
+- [x] Plugins installed (@capacitor/keyboard, @capacitor/splash-screen, @capacitor/status-bar)
+- [x] Node upgraded to 24.7.0 (required by Capacitor v8 — already installed via asdf)
+- [x] Ruby 3.2.0 added to .tool-versions (required for CocoaPods)
+- [x] CocoaPods 1.16.2 installed (via asdf Ruby 3.2.0)
+- [x] Both platforms sync successfully (`npx cap sync`)
+- [x] Makefile updated with `mobile-sync`, `mobile-ios`, `mobile-android` targets
+- [x] .gitignore updated (native build artifacts and signing keys excluded)
+- [ ] Version bumped to 2.0.0 in package.json before App Store submission
 
 ---
 

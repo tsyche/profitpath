@@ -98,3 +98,15 @@ test-audit-summary.md
 
 # Local Node.js installations (use asdf instead)
 node-*/
+
+# Capacitor — native build artifacts (not source-controlled)
+ios/App/Pods/
+ios/App/App.xcworkspace/
+ios/.DS_Store
+android/.gradle/
+android/app/build/
+android/build/
+
+# Capacitor signing keys — never commit these
+*.jks
+*.keystore
