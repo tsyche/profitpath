@@ -1,4 +1,4 @@
-.PHONY: help setup dev build preview test test-unit test-e2e test-e2e-headed lint lintfix clean node-clean fresh
+.PHONY: help setup dev build preview test test-unit test-e2e test-e2e-headed lint lintfix clean node-clean fresh mobile-sync mobile-ios mobile-android
 
 # Colors for output
 BLUE := \033[0;34m
@@ -30,6 +30,11 @@ help:
 	@echo "  make clean            Remove build cache (.vite)"
 	@echo "  make node-clean       Remove node_modules"
 	@echo "  make fresh            Full reset: node-clean + setup + test + lintfix + dev"
+	@echo ""
+	@echo "$(GREEN)Mobile:$(NC)"
+	@echo "  make mobile-sync      Build and sync web assets to iOS and Android"
+	@echo "  make mobile-ios       Sync and open Xcode (iOS)"
+	@echo "  make mobile-android   Sync and open Android Studio"
 	@echo ""
 
 setup:
@@ -70,3 +75,13 @@ node-clean:
 
 fresh: node-clean clean setup test lintfix dev
 	@echo "$(GREEN)✓ Fresh start complete: node-clean + clean + setup + test + lintfix + dev$(NC)"
+
+mobile-sync: build
+	npx cap sync
+	@echo "$(GREEN)✓ Web assets synced to iOS and Android$(NC)"
+
+mobile-ios: mobile-sync
+	npx cap open ios
+
+mobile-android: mobile-sync
+	npx cap open android
