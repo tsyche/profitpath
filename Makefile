@@ -78,6 +78,7 @@ fresh: node-clean clean setup test lintfix dev
 
 mobile-sync: build
 	npx cap sync
+	PATH="$$HOME/.asdf/installs/ruby/3.2.0/bin:$$PATH" pod install --project-directory=ios/App
 	@echo "$(GREEN)✓ Web assets synced to iOS and Android$(NC)"
 
 mobile-ios: mobile-sync
