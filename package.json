@@ -15,11 +15,12 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "lint": "eslint --no-ignore assets/app.jsx",
-    "lint:fix": "eslint --no-ignore assets/app.jsx --fix"
+    "lint:fix": "eslint --no-ignore assets/app.jsx --fix",
+    "postinstall": "find node_modules/@capacitor -name build.gradle -type f -exec sed -i '' \"s/proguard-android\\.txt/proguard-android-optimize.txt/g\" {} \\; 2>/dev/null || true"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.3.3",
-    "@capacitor/core": "^8.3.3",
+    "@capacitor/cli": "^5.7.8",
+    "@capacitor/core": "^5.7.8",
     "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@vitejs/plugin-legacy": "^7.2.1",
@@ -40,10 +41,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@capacitor/android": "^8.3.3",
-    "@capacitor/ios": "^8.3.3",
-    "@capacitor/keyboard": "^8.0.3",
-    "@capacitor/splash-screen": "^8.0.1",
-    "@capacitor/status-bar": "^8.0.2"
+    "@capacitor/android": "^5.7.8",
+    "@capacitor/ios": "^5.7.8",
+    "@capacitor/keyboard": "^5.0.9",
+    "@capacitor/splash-screen": "^5.0.8",
+    "@capacitor/status-bar": "^5.0.8"
   }
 }
