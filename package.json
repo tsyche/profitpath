@@ -1,6 +1,6 @@
 {
   "name": "profitpath",
-  "version": "1.3.2",
+  "version": "2.0.0",
   "description": "A lightweight client-side simulator for recurring service businesses",
   "type": "module",
   "main": "assets/app.jsx",
