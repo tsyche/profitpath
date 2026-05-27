@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/profitpath/',
+  base: process.env.GITHUB_PAGES ? '/profitpath/' : '/',
   esbuild: {
     loader: 'jsx',
     include: /assets\/app\.jsx$/,
