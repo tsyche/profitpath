@@ -16,7 +16,7 @@
     "test:e2e:headed": "playwright test --headed",
     "lint": "eslint --no-ignore assets/app.jsx",
     "lint:fix": "eslint --no-ignore assets/app.jsx --fix",
-    "postinstall": "find node_modules/@capacitor -name build.gradle -type f -exec sed -i '' \"s/proguard-android\\.txt/proguard-android-optimize.txt/g\" {} \\; 2>/dev/null || true"
+    "postinstall": "find node_modules/@capacitor -name build.gradle -type f -exec sed -i.bak \"s/proguard-android\\.txt/proguard-android-optimize.txt/g\" {} \\; && find node_modules/@capacitor -name '*.bak' -delete 2>/dev/null || true"
   },
   "devDependencies": {
     "@capacitor/cli": "^5.7.8",
