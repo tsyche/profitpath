@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +30,7 @@ jobs:
         run: npm ci
 
       - name: Build web app
-        run: npm run build
+        run: npm run build --omit=dev
 
       - name: Set up Capacitor
         run: npx cap sync android
