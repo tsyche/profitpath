@@ -8,9 +8,12 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    // Dedicated e2e port (strict) so tests never attach to an unrelated dev
+    // server that happens to be running on the default port 3000
+    baseURL: 'http://localhost:3173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
     actionTimeout: 10000,
   },
 
@@ -26,8 +29,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: 'npm run dev -- --port 3173 --strictPort',
+    url: 'http://localhost:3173',
     reuseExistingServer: !process.env.CI,
     timeout: 60000,
   },

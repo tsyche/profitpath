@@ -9,6 +9,18 @@ export const HOURS_PER_YEAR = 2080; // Standard paid hours per employee per year
 // Utility functions
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
+// Coerce to a finite number; non-finite values (NaN, ±Infinity) become the
+// fallback so hostile inputs can't propagate NaN through the results
+const toFinite = (value, fallback = 0) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+// Upper bounds for inputs so products of extreme-but-finite values
+// (e.g. 1e308 pay × employees) can't overflow to Infinity downstream
+const MAX_MONEY = 1e12;
+const MAX_COUNT = 1e6;
+
 // Calculation cache to avoid redundant computations
 const calculationCache = new Map();
 const CACHE_MAX_SIZE = 50;
@@ -49,7 +61,7 @@ function generateCacheKey(state) {
     monthlyCosts: state.monthlyCosts,
     productiveUtilizationPct: state.productiveUtilizationPct,
     targetUtilizationPct: state.targetUtilizationPct,
-    offerings: state.offerings.map(o => ({
+    offerings: (Array.isArray(state.offerings) ? state.offerings : []).filter(o => o && typeof o === 'object').map(o => ({
       name: o.name,
       priceMonthly: o.priceMonthly,
       sessionsPerYear: o.sessionsPerYear,
@@ -94,15 +106,16 @@ export function normalizeMix(offerings) {
  */
 function sanitizeOfferings(offerings) {
   return offerings
+    .filter((o) => o && typeof o === 'object')
     .map((o) => ({
       ...o,
-      name: (o.name || '').trim() || 'Offering',
-      priceMonthly: Math.max(0, Number(o.priceMonthly) || 0),
-      sessionsPerYear: Math.max(0, Number(o.sessionsPerYear) || 0),
-      hoursPerSession: Math.max(0, Number(o.hoursPerSession) || 0),
-      variableCostPerSession: Math.max(0, Number(o.variableCostPerSession) || 0),
-      mixPct: Math.max(0, Number(o.mixPct) || 0),
-      currentClients: Math.max(0, Math.floor(Number(o.currentClients) || 0)),
+      name: (typeof o.name === 'string' ? o.name : '').trim() || 'Offering',
+      priceMonthly: clamp(toFinite(o.priceMonthly), 0, MAX_MONEY),
+      sessionsPerYear: clamp(toFinite(o.sessionsPerYear), 0, MAX_COUNT),
+      hoursPerSession: clamp(toFinite(o.hoursPerSession), 0, MAX_COUNT),
+      variableCostPerSession: clamp(toFinite(o.variableCostPerSession), 0, MAX_MONEY),
+      mixPct: clamp(toFinite(o.mixPct), 0, 100),
+      currentClients: clamp(Math.floor(toFinite(o.currentClients)), 0, MAX_COUNT),
     }))
     .filter((o) => o.name.length > 0);
 }
@@ -409,10 +422,10 @@ export function calc(stateInput, options = {}) {
 
   if ('fullTimeEmployees' in s && 'partTimeEmployees' in s) {
     // New format
-    fullTimeEmployees = Math.max(0, Number(s.fullTimeEmployees) || 0);
-    partTimeEmployees = Math.max(0, Number(s.partTimeEmployees) || 0);
-    fullTimeEmployeePay = Math.max(0, Number(s.fullTimeEmployeePay) || 0);
-    partTimeEmployeePay = Math.max(0, Number(s.partTimeEmployeePay) || 0);
+    fullTimeEmployees = clamp(toFinite(s.fullTimeEmployees), 0, MAX_COUNT);
+    partTimeEmployees = clamp(toFinite(s.partTimeEmployees), 0, MAX_COUNT);
+    fullTimeEmployeePay = clamp(toFinite(s.fullTimeEmployeePay), 0, MAX_MONEY);
+    partTimeEmployeePay = clamp(toFinite(s.partTimeEmployeePay), 0, MAX_MONEY);
 
     const fullTimeHoursPerYear = 40 * 52; // 2080
     const partTimeHoursPerYear = 20 * 52; // 1040
@@ -420,9 +433,9 @@ export function calc(stateInput, options = {}) {
     totalPayroll = (fullTimeEmployees * fullTimeEmployeePay) + (partTimeEmployees * partTimeEmployeePay);
   } else {
     // Old format - convert to new format
-    const employees = Math.max(1, Number(s.employees) || 1);
-    const employeePay = Math.max(0, Number(s.employeePay) || 0);
-    const hoursPerWeek = Math.max(1, Number(s.hoursPerWeek) || 40);
+    const employees = clamp(toFinite(s.employees, 1), 1, MAX_COUNT);
+    const employeePay = clamp(toFinite(s.employeePay), 0, MAX_MONEY);
+    const hoursPerWeek = clamp(toFinite(s.hoursPerWeek, 40) || 40, 1, 168);
     const hoursPerYear = hoursPerWeek * 52;
 
     fullTimeEmployees = employees;
@@ -437,9 +450,9 @@ export function calc(stateInput, options = {}) {
   const employees = fullTimeEmployees + partTimeEmployees || 1; // At least 1 for calculations
   const employeePay = employees > 0 ? totalPayroll / employees : 0; // Average pay per employee
 
-  const monthlyCosts = Math.max(0, Number(s.monthlyCosts) || 0);
-  const productiveUtilizationPct = clamp(Number(s.productiveUtilizationPct) || 0, 0, 100);
-  const targetUtilizationPct = clamp(Number(s.targetUtilizationPct) || 0, 0, 150);
+  const monthlyCosts = clamp(toFinite(s.monthlyCosts), 0, MAX_MONEY);
+  const productiveUtilizationPct = clamp(toFinite(s.productiveUtilizationPct), 0, 100);
+  const targetUtilizationPct = clamp(toFinite(s.targetUtilizationPct), 0, 150);
 
   intermediate.sanitization = {
     fullTimeEmployees,
@@ -456,7 +469,7 @@ export function calc(stateInput, options = {}) {
   };
 
   // Sanitize offerings
-  const offerings = sanitizeOfferings(s.offerings);
+  const offerings = sanitizeOfferings(Array.isArray(s.offerings) ? s.offerings : []);
   intermediate.sanitization.offerings = offerings;
 
   const mode = s.mode;

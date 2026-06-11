@@ -1,5 +1,4 @@
-import { persistState, loadState } from "../services/stateManager";
-import { getAllScenarios, showNotification } from "./miscService";
+import { getAllScenarios, sanitizeScenarioState } from "./miscService";
 import { uuid } from "../utils/helpers";
 import { renderScenariosList } from "../components/UIHelpers";
 import { showConfirmationModal, showToast } from "./modalService";
@@ -119,20 +118,20 @@ export function performLoad(scenario) {
       return;
     }
 
-    const currentState = window.state;
+    // Sanitize and restore state from scenario. Handles both the current
+    // fullTime/partTime employee fields and the legacy employees/employeePay
+    // format saved by older versions.
+    const sanitized = sanitizeScenarioState(scenarioData);
+    if (!sanitized) {
+      console.error('Scenario data failed validation');
+      showToast('Scenario data is invalid', 'error');
+      return;
+    }
+    Object.assign(window.state, sanitized);
+    window.state.loadedTemplate = null; // Clear template badge when loading scenarios
 
-    // Restore state from scenario
-    window.state.mode = scenarioData.mode ?? window.state.mode;
-    window.state.offerings = scenarioData.offerings ?? window.state.offerings;
-    window.state.employees = scenarioData.employees ?? window.state.employees;
-    window.state.employeePay = scenarioData.employeePay ?? window.state.employeePay;
-    window.state.monthlyCosts = scenarioData.monthlyCosts ?? window.state.monthlyCosts;
-    window.state.productiveUtilizationPct = scenarioData.productiveUtilizationPct ?? window.state.productiveUtilizationPct;
-    window.state.targetUtilizationPct = scenarioData.targetUtilizationPct ?? window.state.targetUtilizationPct;
-    window.state.lockMix = scenarioData.lockMix ?? window.state.lockMix;
-    window.state.loadedTemplate = scenarioData.loadedTemplate ?? null; // Clear template badge when loading scenarios
-
-    persistState(); // Save loaded scenario as current state
+    // Save loaded scenario as current state (app.jsx's zero-arg persistState)
+    if (typeof window.persistState === 'function') window.persistState();
     window.render();
     // Don't close modal - let user continue working
 

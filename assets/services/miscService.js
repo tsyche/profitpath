@@ -28,6 +28,54 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
+// Coerce a value to a finite number within [min, max], or return fallback
+function toFiniteNumber(value, fallback, min, max) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return clamp(n, min, max);
+}
+
+const MAX_OFFERINGS = 50;
+const MAX_NAME_LENGTH = 120;
+
+// Sanitize untrusted scenario data (from URLs, localStorage, or imports) into a
+// safe state object containing only allowlisted fields with clamped values.
+// Returns null if the data is not a usable scenario. Handles the legacy
+// employees/employeePay format by mapping it onto fullTime fields.
+export function sanitizeScenarioState(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+
+  const rawOfferings = Array.isArray(data.offerings) ? data.offerings.slice(0, MAX_OFFERINGS) : [];
+  const offerings = rawOfferings
+    .filter((o) => o && typeof o === 'object')
+    .map((o, idx) => ({
+      id: typeof o.id === 'string' && o.id ? o.id.slice(0, 64) : uuid(),
+      name: (typeof o.name === 'string' ? o.name : '').trim().slice(0, MAX_NAME_LENGTH) || `Offering ${idx + 1}`,
+      priceMonthly: toFiniteNumber(o.priceMonthly, 100, 0, 1e9),
+      sessionsPerYear: Math.floor(toFiniteNumber(o.sessionsPerYear, 12, 1, 100000)),
+      hoursPerSession: toFiniteNumber(o.hoursPerSession, 1, 0.1, 10000),
+      variableCostPerSession: toFiniteNumber(o.variableCostPerSession, 0, 0, 1e9),
+      mixPct: toFiniteNumber(o.mixPct, 0, 0, 100),
+      currentClients: Math.floor(toFiniteNumber(o.currentClients, 0, 0, 1e7))
+    }));
+
+  if (offerings.length === 0) return null;
+
+  return {
+    mode: data.mode === 'current' ? 'current' : 'forecast',
+    offerings,
+    fullTimeEmployees: Math.floor(toFiniteNumber(data.fullTimeEmployees ?? data.employees, 1, 0, 100000)),
+    partTimeEmployees: Math.floor(toFiniteNumber(data.partTimeEmployees, 0, 0, 100000)),
+    fullTimeEmployeePay: toFiniteNumber(data.fullTimeEmployeePay ?? data.employeePay, 60000, 0, 1e9),
+    partTimeEmployeePay: toFiniteNumber(data.partTimeEmployeePay, 30000, 0, 1e9),
+    monthlyCosts: toFiniteNumber(data.monthlyCosts, 250, 0, 1e9),
+    productiveUtilizationPct: toFiniteNumber(data.productiveUtilizationPct, 80, 1, 100),
+    targetUtilizationPct: toFiniteNumber(data.targetUtilizationPct, 75, 1, 150),
+    lockMix: data.lockMix === true,
+    loadedTemplate: typeof data.loadedTemplate === 'string' ? data.loadedTemplate.slice(0, 100) : null
+  };
+}
+
 export function escapeHtml(str) {
   return String(str == null ? '' : str)
     .replaceAll('&', '&amp;')
@@ -79,6 +127,14 @@ export function shareScenario() {
   }
 }
 
+// Quote a CSV cell: double embedded quotes, and prefix a ' on values starting
+// with = + - @ so spreadsheet apps don't execute them as formulas
+function csvCell(value) {
+  let s = String(value == null ? '' : value);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replaceAll('"', '""') + '"';
+}
+
 export function exportAsCSV() {
   let results;
   try {
@@ -122,7 +178,7 @@ export function exportAsCSV() {
 
   state.offerings.forEach((o) => {
     lines.push(
-      '"' + (o.name) + '",' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients)
+      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients)
     );
   });
 
@@ -236,7 +292,9 @@ function updateSocialMetaTags(state) {
 export function encodeScenarioToURL(state) {
   try {
     const serialized = JSON.stringify(state);
-    const base64 = btoa(serialized);
+    // URI-encode before btoa so non-Latin1 characters (e.g. unicode offering
+    // names) don't make btoa throw
+    const base64 = btoa(encodeURIComponent(serialized));
     return window.location.origin + window.location.pathname + '?scenario=' + encodeURIComponent(base64);
   } catch (e) {
     console.error('Failed to encode scenario:', e);
@@ -250,9 +308,13 @@ export function decodeScenarioFromURL() {
   if (!scenarioParam) return null;
 
   try {
-    const base64 = decodeURIComponent(scenarioParam);
-    const serialized = atob(base64);
-    return JSON.parse(serialized);
+    const decoded = atob(decodeURIComponent(scenarioParam));
+    try {
+      return JSON.parse(decodeURIComponent(decoded));
+    } catch {
+      // Legacy links encoded raw JSON without the URI-encoding step
+      return JSON.parse(decoded);
+    }
   } catch (e) {
     console.error('Failed to decode scenario:', e);
     return null;
@@ -538,21 +600,20 @@ export function restoreScheduling() {
 }
 
 export function loadScenarioFromURL() {
-  const params = new URLSearchParams(window.location.search);
-  const scenarioParam = params.get('scenario');
-  if (!scenarioParam) return false;
-
   try {
-    const base64 = decodeURIComponent(scenarioParam);
-    const serialized = atob(base64);
-    const scenarioData = JSON.parse(serialized);
+    const scenarioData = decodeScenarioFromURL();
+    if (!scenarioData) return false;
 
-    // Load the scenario data
-    if (scenarioData) {
-      window.state = scenarioData;
-      if (typeof window.render === 'function') window.render();
-      return true;
-    }
+    // URL data is untrusted: allowlist + clamp every field before applying
+    const sanitized = sanitizeScenarioState(scenarioData);
+    if (!sanitized) return false;
+
+    // Mutate the existing state object in place — replacing window.state would
+    // orphan the reference app.jsx holds and the app would keep rendering the
+    // old state
+    Object.assign(window.state, sanitized);
+    if (typeof window.render === 'function') window.render();
+    return true;
   } catch (e) {
     console.error('Failed to load scenario from URL:', e);
   }
@@ -656,7 +717,7 @@ export function exportAsExcel() {
   const fmtPct = (n) => n.toFixed(1) + '%';
   const fmtNum = (n) => (Math.round(n * 100) / 100).toLocaleString();
 
-  let lines = [
+  const lines = [
     'ProfitPath Analysis Report',
     'Generated: ' + new Date().toLocaleString(),
     '',
@@ -674,7 +735,7 @@ export function exportAsExcel() {
 
   state.offerings.forEach((o) => {
     lines.push(
-      `"${o.name}",${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients}`
+      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients}`
     );
   });
 
@@ -709,9 +770,9 @@ export function exportAsPDF() {
     return;
   }
 
-  let offeringsHtml = state.offerings.map(o => `
+  const offeringsHtml = state.offerings.map(o => `
     <tr>
-      <td>${o.name}</td>
+      <td>${escapeHtml(o.name)}</td>
       <td>${fmtMoney0(o.priceMonthly)}</td>
       <td>${o.sessionsPerYear}</td>
       <td>${o.hoursPerSession}</td>
@@ -788,9 +849,9 @@ export function exportAsHTML() {
   const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString();
   const fmtPct = (n) => n.toFixed(1) + '%';
 
-  let offeringsHtml = state.offerings.map(o => `
+  const offeringsHtml = state.offerings.map(o => `
     <tr>
-      <td>${o.name}</td>
+      <td>${escapeHtml(o.name)}</td>
       <td>${fmtMoney0(o.priceMonthly)}</td>
       <td>${o.sessionsPerYear}</td>
       <td>${o.hoursPerSession}</td>
@@ -875,7 +936,7 @@ export function shareViaEmail() {
   const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
   const fmtPct = (n) => n.toFixed(1) + '%';
 
-  let offeringsText = state.offerings.map(o =>
+  const offeringsText = state.offerings.map(o =>
     `- ${o.name}: ${fmtMoney0(o.priceMonthly)}/month, ${o.sessionsPerYear} sessions/year, ${fmtPct(o.mixPct)} mix`
   ).join('\n');
 

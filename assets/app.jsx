@@ -2129,10 +2129,12 @@ window.exportComparisonAsPDF = function (id1, id2) {
   const metrics1 = calc(scenario1.data || scenario1.state);
   const metrics2 = calc(scenario2.data || scenario2.state);
 
+  const n1 = escapeHtml(scenario1.name);
+  const n2 = escapeHtml(scenario2.name);
   let printContent = `
     <html>
       <head>
-        <title>Scenario Comparison: ${scenario1.name} vs ${scenario2.name}</title>
+        <title>Scenario Comparison: ${n1} vs ${n2}</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
           h1 { color: #333; }
@@ -2145,9 +2147,9 @@ window.exportComparisonAsPDF = function (id1, id2) {
       </head>
       <body>
         <h1>Scenario Comparison</h1>
-        <h2>${scenario1.name} vs ${scenario2.name}</h2>
+        <h2>${n1} vs ${n2}</h2>
         <table>
-          <tr><th>Metric</th><th>${scenario1.name}</th><th>${scenario2.name}</th><th>Change</th></tr>
+          <tr><th>Metric</th><th>${n1}</th><th>${n2}</th><th>Change</th></tr>
   `;
 
   const metricsToCompare = [
@@ -2284,6 +2286,13 @@ if (compareBtn) {
 
 // Load scenario from URL first (if present), then localStorage
 const loadedFromURL = typeof loadScenarioFromURL === 'function' ? loadScenarioFromURL() : false;
+
+// Restore last session's state from localStorage (auto-save read-back)
+if (!loadedFromURL && typeof misc.loadState === 'function' && typeof misc.sanitizeScenarioState === 'function') {
+  const persisted = misc.loadState();
+  const sanitizedPersisted = persisted ? misc.sanitizeScenarioState(persisted) : null;
+  if (sanitizedPersisted) Object.assign(state, sanitizedPersisted);
+}
 
 // Check for test scenario loading
 if (typeof loadTestScenarios === 'function') loadTestScenarios();
