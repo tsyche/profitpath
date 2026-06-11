@@ -27,8 +27,8 @@ Client-side profitability and capacity simulator for recurring service businesse
 1. Install dependencies and start development server:
 
 ```bash
-make setup
-make dev
+just setup
+just dev
 ```
 
 2. Open http://localhost:3000 in your browser.
@@ -38,16 +38,16 @@ make dev
 ### Common commands
 
 ```bash
-make setup           # Install dependencies
-make dev             # Start dev server with hot reload (localhost:3000)
-make test            # Run all tests (unit + e2e)
-make lint            # Check code quality
-make build           # Production build
-make preview         # Preview production build
-make fresh           # Complete reset: clean dependencies, install, test, lint, dev
+just setup           # Install dependencies
+just dev             # Start dev server with hot reload (localhost:3000)
+just test            # Run all tests (unit + e2e)
+just lint            # Check code quality
+just build           # Production build
+just preview         # Preview production build
+just fresh           # Complete reset: clean dependencies, install, test, lint, dev
 ```
 
-For full list of available commands, run `make help`.
+For full list of available commands, run `just --list`.
 
 ### Testing scenarios
 
