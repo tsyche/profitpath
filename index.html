@@ -43,6 +43,9 @@
 </head>
 
 <body>
+  <!-- Skip link for keyboard navigation -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
   <header class="header">
     <div class="header-background"></div>
     <div class="header-content">
@@ -61,43 +64,43 @@
       </div>
 
       <!-- Nav: action buttons (hidden on mobile) -->
-      <nav class="header-nav">
-        <button class="btn small" id="desktopScenariosBtn" type="button" title="Manage Scenarios">💾 Scenarios</button>
-        <button class="btn small" id="shareBtn" type="button" title="Share current scenario">🔗 Share</button>
+      <nav class="header-nav" aria-label="Main navigation">
+        <button class="btn small" id="desktopScenariosBtn" type="button" title="Manage Scenarios" aria-label="Manage saved scenarios">💾 Scenarios</button>
+        <button class="btn small" id="shareBtn" type="button" title="Share current scenario" aria-label="Share current scenario via URL">🔗 Share</button>
         <div class="templates-dropdown">
-          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates">🏢
+          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates" aria-label="Load industry templates" aria-haspopup="menu" aria-expanded="false">🏢
             Templates</button>
-          <div class="templates-menu" id="templatesMenu">
-            <button class="template-option" data-template="consulting" title="Management consulting services">💼
+          <div class="templates-menu" id="templatesMenu" role="menu">
+            <button class="template-option" data-template="consulting" title="Management consulting services" role="menuitem">💼
               Consulting</button>
-            <button class="template-option" data-template="cleaning" title="House/office cleaning services">🧹
+            <button class="template-option" data-template="cleaning" title="House/office cleaning services" role="menuitem">🧹
               Cleaning</button>
-            <button class="template-option" data-template="landscaping" title="Lawn care and landscaping">🌳
+            <button class="template-option" data-template="landscaping" title="Lawn care and landscaping" role="menuitem">🌳
               Landscaping</button>
-            <button class="template-option" data-template="handyman" title="Home repair and maintenance">🔧
+            <button class="template-option" data-template="handyman" title="Home repair and maintenance" role="menuitem">🔧
               Handyman</button>
-            <button class="template-option" data-template="fitness" title="Personal training and fitness">💪
+            <button class="template-option" data-template="fitness" title="Personal training and fitness" role="menuitem">💪
               Fitness</button>
-            <button class="template-option" data-template="photography" title="Photography and media services">📸
+            <button class="template-option" data-template="photography" title="Photography and media services" role="menuitem">📸
               Photography</button>
           </div>
         </div>
-        <button class="btn small" id="importCSVBtn" type="button" title="Import settings from CSV">⬆ Import</button>
+        <button class="btn small" id="importCSVBtn" type="button" title="Import settings from CSV" aria-label="Import settings from CSV file">⬆ Import</button>
         <input type="file" id="csvFileInput" accept=".csv" style="display:none">
         <div class="export-dropdown">
-          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats">📄
+          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats" aria-label="Export report in various formats" aria-haspopup="menu" aria-expanded="false">📄
             Export</button>
-          <div class="export-menu" id="exportMenu">
-            <button class="export-option" data-format="csv" title="Export as CSV spreadsheet">📊 CSV
+          <div class="export-menu" id="exportMenu" role="menu">
+            <button class="export-option" data-format="csv" title="Export as CSV spreadsheet" role="menuitem">📊 CSV
               Spreadsheet</button>
-            <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas">📈
+            <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas" role="menuitem">📈
               Excel Workbook</button>
-            <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report">📋 PDF
+            <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report" role="menuitem">📋 PDF
               Report</button>
-            <button class="export-option advanced-feature" data-format="html" title="Export as HTML page">🌐 HTML
+            <button class="export-option advanced-feature" data-format="html" title="Export as HTML page" role="menuitem">🌐 HTML
               Page</button>
-            <button class="export-option" data-format="email" title="Share via email">📧 Email Report</button>
-            <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code">🔗 Embed
+            <button class="export-option" data-format="email" title="Share via email" role="menuitem">📧 Email Report</button>
+            <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code" role="menuitem">🔗 Embed
               Widget</button>
             <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto
               Schedule</button>
@@ -156,7 +159,7 @@
   </header>
   <div class="header-fade" aria-hidden="true"></div>
 
-  <div class="page">
+  <div class="page" id="main-content">
     <div class="file-warning hidden" id="fileWarning">
       This app must be served over <span class="mono">http://localhost</span> (module scripts are blocked on <span
         class="mono">file://</span>). Start a server and open <span class="mono">http://localhost:8000/</span>.
@@ -773,6 +776,10 @@
     // No-op here; logo is finalized as a single image.
   </script>
   <script type="module" src="/src/calculations/index.js"></script>
+  <script type="module">
+    import { initializeAccessibility } from '/assets/accessibility.js';
+    document.addEventListener('DOMContentLoaded', initializeAccessibility);
+  </script>
   <script type="module" src="/src/analytics/analytics.js"></script>
   <script type="module" src="/src/analytics/analytics-ui.js"></script>
   <script type="module" src="/src/analytics/feedback.js"></script>
