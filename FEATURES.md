@@ -62,7 +62,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Feedback System**: User feedback collection via modal dialog with submission support
 
 ### Developer Features
-- **Modern Development Stack**: Vite for fast development and optimized builds with JSX support, Makefile for simplified commands
+- **Modern Development Stack**: Vite for fast development and optimized builds with JSX support, justfile for simplified commands
 - **Comprehensive Testing**: Vitest unit tests with jsdom environment, plus Playwright E2E tests
 - **Syntax Validation**: Dedicated syntax test to prevent parsing errors and regressions
 - **Code Quality**: ESLint configuration with automated linting and CI integration
