@@ -20,6 +20,12 @@ export const DEFAULT_SETTINGS = {
   compactMode: false,
   showTooltips: true,
 
+  // Localization & Formatting
+  currency: 'USD', // 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD'
+  locale: 'en-US', // 'en-US' | 'de-DE' | 'en-GB' | 'en-CA' | 'en-AU'
+  decimalPrecision: 2, // 0-4 decimal places for metrics
+  thousandsSeparator: true,
+
   // Advanced features
   enableCaching: true,
   enableDebugMode: false,

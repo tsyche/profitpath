@@ -210,6 +210,31 @@
             <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
           </div>
         </div>
+        <div class="settings-section">
+          <h4>Localization</h4>
+          <div class="settings-options">
+            <label for="currencySelect" style="display: block; margin-bottom: 8px;">
+              <div style="font-size: 12px; margin-bottom: 4px; color: #6b7280;">Currency</div>
+              <select id="currencySelect" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--text); font-size: 13px;">
+                <option value="USD">USD - US Dollar ($)</option>
+                <option value="EUR">EUR - Euro (€)</option>
+                <option value="GBP">GBP - British Pound (£)</option>
+                <option value="CAD">CAD - Canadian Dollar ($)</option>
+                <option value="AUD">AUD - Australian Dollar ($)</option>
+              </select>
+            </label>
+            <label for="decimalPrecisionSelect" style="display: block;">
+              <div style="font-size: 12px; margin-bottom: 4px; color: #6b7280;">Decimal Precision</div>
+              <select id="decimalPrecisionSelect" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--text); font-size: 13px;">
+                <option value="0">0 decimals (e.g., $1,000)</option>
+                <option value="1">1 decimal (e.g., $1,000.0)</option>
+                <option value="2" selected>2 decimals (e.g., $1,000.00)</option>
+                <option value="3">3 decimals (e.g., $1,000.000)</option>
+                <option value="4">4 decimals (e.g., $1,000.0000)</option>
+              </select>
+            </label>
+          </div>
+        </div>
         <div class="settings-section" style="margin-bottom: 0;">
           <div class="settings-options">
             <button class="btn btn-secondary"
