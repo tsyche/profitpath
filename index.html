@@ -767,6 +767,15 @@
           </div>
         </div>
 
+        <!-- Customer Analytics Panel (Advanced feature) -->
+        <div class="customer-analytics-wrapper advanced-feature">
+          <button id="customerAnalyticsToggle" class="debug-toggle" aria-expanded="false" aria-controls="customerAnalyticsBody"
+            title="View customer acquisition cost, lifetime value, churn rate, and growth projections">▶ Customer Analytics</button>
+          <div id="customerAnalyticsBody" class="debug-body collapsed" aria-hidden="true">
+            <div id="customerAnalyticsPanel" class="customer-analytics-content"></div>
+          </div>
+        </div>
+
         <!-- Performance monitoring panel (collapsible) -->
         <div class="perf-wrapper expert-feature">
           <button id="perfToggle" class="debug-toggle" aria-expanded="false" aria-controls="perfBody"
@@ -805,6 +814,8 @@
     import { initializeAccessibility } from '/assets/accessibility.js';
     document.addEventListener('DOMContentLoaded', initializeAccessibility);
   </script>
+  <script type="module" src="/src/analytics/customer-analytics.js"></script>
+  <script type="module" src="/src/analytics/customer-ui.js"></script>
   <script type="module" src="/src/analytics/analytics.js"></script>
   <script type="module" src="/src/analytics/analytics-ui.js"></script>
   <script type="module" src="/src/analytics/feedback.js"></script>

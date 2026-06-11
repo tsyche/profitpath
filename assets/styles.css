@@ -4071,3 +4071,37 @@ input[type="checkbox"] {
 .analytics-disabled .btn {
   min-width: 140px;
 }
+
+/* Customer Analytics Panel */
+.customer-analytics-wrapper {
+  margin: 12px 0;
+}
+
+.customer-analytics-wrapper .debug-toggle {
+  background: rgba(94, 234, 212, 0.08);
+  border-color: rgba(94, 234, 212, 0.2);
+}
+
+.customer-analytics-wrapper .debug-toggle:hover {
+  background: rgba(94, 234, 212, 0.12);
+}
+
+.customer-analytics-content {
+  padding: 12px 0;
+}
+
+.customer-analytics-dashboard {
+  font-size: 12px;
+}
+
+.customer-analytics-dashboard h3 {
+  color: var(--text);
+}
+
+.customer-analytics-dashboard input[type="number"] {
+  min-height: 24px;
+}
+
+.customer-analytics-dashboard label {
+  color: var(--text);
+}
