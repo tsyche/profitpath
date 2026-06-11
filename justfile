@@ -54,6 +54,23 @@ lintfix: setup
 
 # --- Maintenance ---
 
+# Sync CLAUDE.md ↔ AGENTS.md (copy newer to older)
+sync-docs:
+    #!/usr/bin/env bash
+    if [ ! -f CLAUDE.md ] || [ ! -f AGENTS.md ]; then
+        printf '\033[0;31m✗ Both CLAUDE.md and AGENTS.md required\033[0m\n'
+        exit 1
+    fi
+    if [ CLAUDE.md -nt AGENTS.md ]; then
+        cp CLAUDE.md AGENTS.md
+        printf '\033[0;32m✓ Synced CLAUDE.md → AGENTS.md\033[0m\n'
+    elif [ AGENTS.md -nt CLAUDE.md ]; then
+        cp AGENTS.md CLAUDE.md
+        printf '\033[0;32m✓ Synced AGENTS.md → CLAUDE.md\033[0m\n'
+    else
+        printf '\033[0;32m✓ CLAUDE.md and AGENTS.md already in sync\033[0m\n'
+    fi
+
 # Remove build cache (.vite)
 clean:
     rm -rf node_modules/.vite
