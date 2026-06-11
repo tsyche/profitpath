@@ -235,7 +235,7 @@ class AnalyticsCollector {
 
   getScenarioCount() {
     try {
-      const scenarios = JSON.parse(localStorage.getItem('profitpath_scenarios') || '[]');
+      const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
       return scenarios.length;
     } catch (e) {
       return 0;

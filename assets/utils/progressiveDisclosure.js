@@ -33,8 +33,16 @@ export function initializeProgressiveDisclosure() {
     if (el && el.style) el.style.display = 'block';
   });
 
-  // Special handling for debug panel - show if user has enabled it regardless of level
-  const showDebugPanel = localStorage.getItem('showDebugPanel') === 'true';
+  // Special handling for debug panel - show if user has enabled it regardless of level.
+  // The flag lives inside profitpath-settings (same store as experienceLevel above),
+  // not as a standalone localStorage key.
+  let showDebugPanel = false;
+  try {
+    const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
+    showDebugPanel = settings.showDebugPanel === true;
+  } catch (e) {
+    // Default to hidden if settings can't be read
+  }
   if (showDebugPanel) {
     document.querySelectorAll('.debug-wrapper.expert-feature').forEach(el => {
       if (el && el.style) el.style.display = 'block';

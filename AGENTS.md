@@ -25,33 +25,36 @@ This document provides comprehensive information for AI agents and developers wo
 
 ```
 assets/
-├── app.jsx              # Main application logic and UI management
+├── app.jsx              # Main application logic and UI management (entry point)
 ├── styles.css           # Styling and responsive design
-├── constants.ts         # TypeScript constants and types
+├── accessibility.js     # Accessibility enhancements
 ├── components/          # UI components (Modal.js, UIHelpers.js)
 ├── hooks/              # Custom hooks (useTableFocus.js)
 ├── services/           # Business logic modules
 │   ├── businessLogic.js    # Core business rules and validation
-│   ├── miscService.js      # Utility functions and exports
+│   ├── miscService.js      # Utility functions, exports, scenario URL sharing
+│   ├── modalService.js     # Modal and toast handling
 │   ├── scenarioService.js  # Scenario management
-│   ├── stateManager.js     # State persistence
+│   ├── stateManager.js     # State persistence helpers
 │   └── visualizationService.js # Chart and visualization logic
-├── utils/              # Helper utilities
-│   ├── chartUtils.js       # Chart configuration and rendering
-│   ├── helpers.js          # General utility functions
-│   └── progressiveDisclosure.js # Feature gating logic
-└── render_function.js     # UI rendering logic
+└── utils/              # Helper utilities
+    ├── chartUtils.js       # Chart configuration and rendering
+    ├── helpers.js          # General utility functions
+    ├── progressiveDisclosure.js # Feature gating logic
+    └── tooltipManager.js   # Tooltip system
 
 src/
+├── analytics/          # Analytics, feedback, and dashboard modules
 ├── calculations/       # Modular calculation engine
 │   └── index.js          # Core calculation engine with caching
+├── localization/       # Localization & formatting infrastructure
 ├── settings/          # Experience levels and feature gating
 │   └── index.js          # Settings management and feature gates
-└── test/             # Test files
+└── test/             # Vitest unit/integration tests (incl. fuzz tests)
 
 index.html           # Main HTML structure
-sw.js               # Service worker for PWA functionality
-manifest.json       # PWA configuration
+public/sw.js         # Service worker for PWA functionality
+manifest.json        # PWA configuration
 ```
 
 ### Core Modules
@@ -180,15 +183,16 @@ http://localhost:3000/?testScenario=default
 
 ### Testing Strategy
 
-#### Test Coverage (159 tests passing)
+#### Test Coverage (270+ unit tests, 90 e2e tests passing)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
-- **Syntax Tests**: Template literal and parsing validation
+- **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.js`)
 - **Business Logic Tests**: Comprehensive calculation validation
+- **E2E Tests**: Playwright suites in `tests/e2e/` (chromium + firefox, dedicated port 3173)
 
 #### Test Files
 - `src/calculations/calculations.test.js` - Core calculation tests
-- `assets/app-syntax.test.js` - Syntax validation tests
+- `src/test/fuzz.test.js` - Fuzz/property tests for calc engine and sanitizers
 - Additional tests in `src/test/` directory
 
 #### Test Commands
@@ -223,8 +227,7 @@ npm run test:run     # Run tests in headless mode
 - Service worker integration for PWA features
 
 #### TypeScript Support
-- Gradual migration path available
-- Type definitions in `assets/constants.ts`
+- Gradual migration path available (tsconfig.json present)
 - Optional static typing for better development experience
 
 ## Integration Points

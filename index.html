@@ -808,6 +808,16 @@
       } catch (e) { }
     })();
     // No-op here; logo is finalized as a single image.
+
+    // Register the PWA service worker (relative path so it works under
+    // sub-path deployments like GitHub Pages)
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function (err) {
+          console.warn('Service worker registration failed:', err);
+        });
+      });
+    }
   </script>
   <script type="module" src="/src/calculations/index.js"></script>
   <script type="module">

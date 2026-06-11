@@ -3,12 +3,12 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-vi.mock('../assets/services/modalService.js', () => ({
+vi.mock('../../assets/services/modalService.js', () => ({
     showConfirmationModal: vi.fn(),
     showToast: vi.fn()
 }));
 
-vi.mock('../assets/components/UIHelpers.js', () => ({
+vi.mock('../../assets/components/UIHelpers.js', () => ({
     renderScenariosList: vi.fn(),
     populateComparisonDropdowns: vi.fn(),
     showDeleteConfirmation: vi.fn()
@@ -37,7 +37,7 @@ describe('Modal Bug Fixes', () => {
     describe('1. Modal Background Issues', () => {
         it('should not show dark blue box behind white modals', async () => {
             // Import the modal component
-            const { createModal } = await import('../assets/components/Modal.js');
+            const { createModal } = await import('../../assets/components/Modal.js');
 
             // Create a modal
             const modal = createModal({
@@ -61,7 +61,7 @@ describe('Modal Bug Fixes', () => {
         });
 
         it('should have modal content sit flush without visible background box', async () => {
-            const { createModal } = await import('../assets/components/Modal.js');
+            const { createModal } = await import('../../assets/components/Modal.js');
 
             const modal = createModal({
                 title: 'Test Modal',
@@ -81,7 +81,7 @@ describe('Modal Bug Fixes', () => {
 
     describe('2. Modal Size Optimization', () => {
         it('should have share modal with appropriate compact size', async () => {
-            const { createModal } = await import('../assets/components/Modal.js');
+            const { createModal } = await import('../../assets/components/Modal.js');
 
             const modal = createModal({
                 title: 'Share',
@@ -96,7 +96,7 @@ describe('Modal Bug Fixes', () => {
         });
 
         it('should have templates modal with appropriate compact size', async () => {
-            const { createModal } = await import('../assets/components/Modal.js');
+            const { createModal } = await import('../../assets/components/Modal.js');
 
             const modal = createModal({
                 title: 'Templates',
@@ -111,7 +111,7 @@ describe('Modal Bug Fixes', () => {
         });
 
         it('should have analytics modal with appropriate compact size', async () => {
-            const { createModal } = await import('../assets/components/Modal.js');
+            const { createModal } = await import('../../assets/components/Modal.js');
 
             const modal = createModal({
                 title: 'Analytics',
@@ -128,7 +128,7 @@ describe('Modal Bug Fixes', () => {
 
     describe('3. Modal Dismiss Behavior', () => {
         it('should dismiss modal when clicking X button', async () => {
-            const { createModal } = await import('../assets/components/Modal.js');
+            const { createModal } = await import('../../assets/components/Modal.js');
 
             const modal = createModal({
                 title: 'Test Modal',
@@ -145,7 +145,7 @@ describe('Modal Bug Fixes', () => {
         });
 
         it('should dismiss modal when clicking outside content', async () => {
-            const { createModal } = await import('../assets/components/Modal.js');
+            const { createModal } = await import('../../assets/components/Modal.js');
 
             const modal = createModal({
                 title: 'Test Modal',
@@ -162,7 +162,7 @@ describe('Modal Bug Fixes', () => {
         });
 
         it('should dismiss modal when pressing ESC key', async () => {
-            const { createModal } = await import('../assets/components/Modal.js');
+            const { createModal } = await import('../../assets/components/Modal.js');
 
             const modal = createModal({
                 title: 'Test Modal',

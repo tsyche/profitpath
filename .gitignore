@@ -71,9 +71,9 @@ jspm_packages/
 # Nuxt.js build / generate output
 .nuxt
 
-# Gatsby files
+# Gatsby files (note: do NOT ignore public/ — Vite serves static assets like
+# the service worker from there)
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -85,8 +85,11 @@ temp/
 
 # Old/unused files
 .eslintrc.js
-test/
+/test/
 vitest.config.js
+
+# Local audit marker (read by ~/.claude/scripts/audit-check.sh)
+.last-audit
 
 # Test artifacts
 test-results/

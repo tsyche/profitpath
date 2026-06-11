@@ -96,15 +96,16 @@ export function openScenarioModal() {
   const scenariosList = scenarios.map(s => {
     const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
     const ts = escapeHtml(s.timestamp || s.createdAt || '');
+    const id = escapeHtml(s.id);
     return `
-    <div class="scenario-item" data-scenario-id="${s.id}">
+    <div class="scenario-item" data-scenario-id="${id}">
       <div>
         <div class="scenario-item-name">${name}</div>
         <div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
       </div>
       <div class="scenario-item-actions">
-        <button class="btn small load-btn" data-scenario-id="${s.id}">📂 Load</button>
-        <button class="btn small danger delete-btn" data-scenario-id="${s.id}">🗑️ Delete</button>
+        <button class="btn small load-btn" data-scenario-id="${id}">📂 Load</button>
+        <button class="btn small danger delete-btn" data-scenario-id="${id}">🗑️ Delete</button>
       </div>
     </div>
   `;
@@ -419,10 +420,14 @@ export function performComparison(scenarioId1, scenarioId2, modal = null) {
 
   console.log('Performing comparison between scenarios:', scenario1.name, scenario2.name);
 
+  // Total headcount and FT pay, with fallback for legacy employees/employeePay scenarios
+  const totalEmployees = (s) => 'fullTimeEmployees' in s ? (s.fullTimeEmployees || 0) + (s.partTimeEmployees || 0) : (s.employees || 0);
+  const ftPay = (s) => s.fullTimeEmployeePay ?? s.employeePay ?? 0;
+
   // Generate comparison data
   const metrics = [
-    { label: 'Employees', value1: scenario1.state.employees, value2: scenario2.state.employees, format: 'number' },
-    { label: 'Employee Pay', value1: scenario1.state.employeePay, value2: scenario2.state.employeePay, format: 'currency' },
+    { label: 'Employees', value1: totalEmployees(scenario1.state), value2: totalEmployees(scenario2.state), format: 'number' },
+    { label: 'Employee Pay', value1: ftPay(scenario1.state), value2: ftPay(scenario2.state), format: 'currency' },
     { label: 'Monthly Costs', value1: scenario1.state.monthlyCosts, value2: scenario2.state.monthlyCosts, format: 'currency' },
     { label: 'Productive Utilization', value1: scenario1.state.productiveUtilizationPct, value2: scenario2.state.productiveUtilizationPct, format: 'percentage' },
     { label: 'Target Utilization', value1: scenario1.state.targetUtilizationPct, value2: scenario2.state.targetUtilizationPct, format: 'percentage' },
@@ -479,15 +484,16 @@ export function renderScenariosList() {
     listElement.innerHTML = scenarios.map(s => {
       const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
       const ts = escapeHtml(s.timestamp || s.createdAt || '');
+      const id = escapeHtml(s.id);
       return `
-        <div class="scenario-item" data-scenario-id="${s.id}">
+        <div class="scenario-item" data-scenario-id="${id}">
           <div>
             <div class="scenario-item-name">${name}</div>
             <div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
           </div>
           <div class="scenario-item-actions">
-            <button class="btn small load-btn" data-scenario-id="${s.id}">📂 Load</button>
-            <button class="btn small danger delete-btn" data-scenario-id="${s.id}">🗑️ Delete</button>
+            <button class="btn small load-btn" data-scenario-id="${id}">📂 Load</button>
+            <button class="btn small danger delete-btn" data-scenario-id="${id}">🗑️ Delete</button>
           </div>
         </div>
       `;

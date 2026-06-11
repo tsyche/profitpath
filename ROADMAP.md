@@ -66,6 +66,19 @@ See README.md for setup and development instructions.
 
 ## Fully Prioritized Backlog (high → low)
 
+**Code Quality (Deferred from June 2026 Audit)**
+
+0. Consolidate duplicate `escapeHtml` implementations
+   - Three copies exist: `miscService.js`, `visualizationService.js`, and a fallback delegate in `app.jsx`
+   - Extract to a single shared utility module; update all callers
+   - Risk: divergent implementations are a future XSS waiting to happen (one copy could get a bug fix the others miss)
+   - Effort: ~30 min
+
+0. Burn down 137 test-file lint warnings
+   - Majority are `no-unused-vars` (83) and `no-console` (54) in test files
+   - Zero errors; all warnings are pre-existing and low-risk
+   - Effort: ~1 hour
+
 **Immediate Next (Foundation & Quick Wins)**
 
 1. Accessibility & Mobile Experience

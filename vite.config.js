@@ -39,9 +39,11 @@ export default defineConfig({
     hideStackTrace: false,
     testTimeout: 10000,
     hookTimeout: 10000,
-    isolate: false,
-    pool: 'threads',
-    singleThread: true
+    // Isolate test files: shared module state (mocked document, window.state,
+    // localStorage) leaks between files otherwise and causes order-dependent
+    // failures
+    isolate: true,
+    pool: 'threads'
   },
   server: {
     port: 3000,
