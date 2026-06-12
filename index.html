@@ -4,6 +4,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <!-- Theme + palette init: set attributes BEFORE the stylesheet paints so
+       there's no flash of the wrong colors. Precedence: URL param > saved
+       choice > default (emerald palette / OS theme).
+       Try alternates without a rebuild:
+         ?theme=light|dark      ?palette=teal|emerald|indigo|amber
+       e.g. http://localhost:3000/?palette=amber&theme=light
+       Passing a param also persists it. To change the out-of-box default,
+       edit the `|| 'emerald'` fallback below. -->
+  <script>
+    (function () {
+      var el = document.documentElement;
+      try {
+        var qs = new URLSearchParams(location.search);
+        // Theme
+        var qpTheme = qs.get('theme');
+        if (qpTheme === 'light' || qpTheme === 'dark') localStorage.setItem('profitpath-theme', qpTheme);
+        var saved = localStorage.getItem('profitpath-theme');
+        var theme = (saved === 'light' || saved === 'dark') ? saved :
+          (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        el.setAttribute('data-theme', theme);
+        // Palette. Default is emerald; teal is the bare :root base (no attribute).
+        var palettes = { emerald: 1, indigo: 1, amber: 1, teal: 1 };
+        var qpPal = qs.get('palette');
+        if (qpPal && palettes[qpPal]) localStorage.setItem('profitpath-palette', qpPal);
+        var pal = localStorage.getItem('profitpath-palette') || 'emerald';
+        if (pal !== 'teal' && palettes[pal]) el.setAttribute('data-palette', pal);
+        else el.removeAttribute('data-palette');
+      } catch (e) {
+        el.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
   <meta name="description"
     content="ProfitPath — a lightweight client-side simulator for recurring-cadence service businesses. Plan pricing, forecast capacity, and optimize profitability." />
   <meta name="theme-color" content="#1f2937" />
@@ -13,10 +45,10 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="assets/styles.css?t=1766542976" />
-  <link rel="stylesheet" href="/src/analytics/analytics.css?t=1766542976" />
-  <link rel="stylesheet" href="/src/analytics/feedback.css?t=1766542976" />
-  <link rel="stylesheet" href="/src/analytics/advanced-dashboard.css?t=1766542976" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="/src/analytics/analytics.css" />
+  <link rel="stylesheet" href="/src/analytics/feedback.css" />
+  <link rel="stylesheet" href="/src/analytics/advanced-dashboard.css" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
@@ -139,6 +171,8 @@
 
           <!-- Utility buttons -->
           <div class="utility-row">
+            <button class="utility-btn" id="themeToggleBtn" type="button" title="Toggle light / dark theme"
+              aria-label="Toggle light or dark theme" onclick="toggleTheme()" data-tooltip-below>🌙</button>
             <button class="utility-btn" id="desktopFeedbackBtn" type="button" title="Send Feedback"
               data-tooltip-below>✉️</button>
             <button class="utility-btn" id="helpBtn" type="button" title="Help & Guided Tour"
@@ -809,14 +843,28 @@
     })();
     // No-op here; logo is finalized as a single image.
 
-    // Register the PWA service worker (relative path so it works under
-    // sub-path deployments like GitHub Pages)
+    // PWA service worker. It uses a cache-first strategy for static assets,
+    // which is correct in production (filenames are content-hashed and
+    // immutable) but breaks local dev: unhashed assets get pinned to their
+    // first-cached version, so normal refresh serves stale CSS/JS. So on
+    // localhost we DON'T register it — and we proactively unregister any
+    // existing worker + clear its caches to undo a previously-stuck one.
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('sw.js').catch(function (err) {
-          console.warn('Service worker registration failed:', err);
+      var isLocalDev = ['localhost', '127.0.0.1', '[::1]'].indexOf(location.hostname) !== -1;
+      if (isLocalDev) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          regs.forEach(function (r) { r.unregister(); });
         });
-      });
+        if (window.caches && caches.keys) {
+          caches.keys().then(function (keys) { keys.forEach(function (k) { caches.delete(k); }); });
+        }
+      } else {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('sw.js').catch(function (err) {
+            console.warn('Service worker registration failed:', err);
+          });
+        });
+      }
     }
   </script>
   <script type="module" src="/src/calculations/index.js"></script>
@@ -848,6 +896,27 @@
         alert('Analytics feature is loading...');
       }
     }
+
+    // Flip light/dark, persist the choice, and keep the toggle icon + browser
+    // theme-color in sync. Kept as a plain global so it needs no app.jsx wiring.
+    function applyThemeIcon(theme) {
+      var btn = document.getElementById('themeToggleBtn');
+      if (btn) {
+        btn.textContent = theme === 'light' ? '☀️' : '🌙';
+        btn.title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+      }
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', theme === 'light' ? '#f4f6f8' : '#0e1116');
+    }
+    function toggleTheme() {
+      var current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      var next = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('profitpath-theme', next); } catch (e) { }
+      applyThemeIcon(next);
+    }
+    // Sync the icon to whatever the no-flash init script already applied.
+    applyThemeIcon(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
   </script>
 </body>
 
