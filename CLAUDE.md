@@ -183,7 +183,7 @@ http://localhost:3000/?testScenario=default
 
 ### Testing Strategy
 
-#### Test Coverage (278 unit tests, 114 e2e tests passing)
+#### Test Coverage (282 unit tests, 122 e2e runs passing)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.js`)

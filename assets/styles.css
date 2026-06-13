@@ -2279,6 +2279,38 @@ input[type="checkbox"] {
   font-size: 14px;
 }
 
+.validation-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.validation-item {
+  touch-action: pan-y;
+}
+
+.validation-dismiss {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-left: 8px;
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--dur-1, 0.15s) ease, color var(--dur-1, 0.15s) ease;
+}
+
+.validation-dismiss:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
 .validation-suggestion {
   color: var(--muted);
   font-size: 12px;
@@ -3865,12 +3897,13 @@ input[type="checkbox"] {
   backdrop-filter: blur(4px);
 }
 
-/* FORCE all text in onboarding elements to be visible - highest priority */
+/* Keep onboarding text readable while respecting the active theme (these used to
+   be hardcoded dark colors, which disappeared on the dark surface). */
 .onboarding-dialog-overlay,
 .onboarding-dialog-overlay *,
 .onboarding-tooltip,
 .onboarding-tooltip * {
-  color: #333 !important;
+  color: var(--text);
 }
 
 .onboarding-dialog-overlay h1,
@@ -3881,8 +3914,8 @@ input[type="checkbox"] {
 .onboarding-tooltip h2,
 .onboarding-tooltip h3,
 .onboarding-tooltip h4 {
-  color: #222 !important;
-  font-weight: bold !important;
+  color: var(--text);
+  font-weight: bold;
 }
 
 .onboarding-dialog-overlay p,
@@ -3891,33 +3924,33 @@ input[type="checkbox"] {
 .onboarding-tooltip p,
 .onboarding-tooltip span,
 .onboarding-tooltip div {
-  color: #555 !important;
+  color: var(--text);
 }
 
 .onboarding-dialog-overlay button,
 .onboarding-tooltip button {
-  color: #333 !important;
+  color: var(--text);
 }
 
 /* Industry options get special styling */
 .onboarding-dialog-overlay .industry-option * {
-  color: #333 !important;
+  color: var(--text);
 }
 
 .onboarding-dialog-overlay .industry-name {
-  color: #222 !important;
-  font-weight: bold !important;
+  color: var(--text);
+  font-weight: bold;
 }
 
 .onboarding-dialog-overlay .industry-desc {
-  color: #666 !important;
+  color: var(--muted);
 }
 
 .onboarding-dialog-overlay .welcome-content,
 .onboarding-dialog-overlay .welcome-content *,
 .onboarding-dialog-overlay .success-content,
 .onboarding-dialog-overlay .success-content * {
-  color: #555 !important;
+  color: var(--text);
 }
 
 .industry-grid {
@@ -4401,7 +4434,12 @@ input[type="checkbox"] {
   .appbar .ab-word { display: none; }       /* drop the wordmark in the bar; drawer keeps it */
   .ab-undo, .ab-right { display: inline-flex; }  /* undo/redo + theme stay put */
   .bottombar { display: flex; }
-  .page { padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important; }
+  /* #main-content (.page) only holds hidden modals now — the real content is the
+     sibling .grid. Don't let its bottom padding reserve an empty 72px band right
+     under the header (that was the big gap). Put the bottom-bar scroll clearance
+     on .grid, which is the element that actually scrolls behind the bottom bar. */
+  #main-content.page { padding-bottom: 0 !important; }
+  .grid { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
 }
 @media (max-width: 430px) {
   .ab-badge .ab-badge-text { display: none; }   /* very narrow: mode toggle becomes a dot */
@@ -4454,6 +4492,12 @@ input[type="checkbox"] {
   .modal-content { width: 100% !important; max-width: 100% !important; max-height: 88vh !important;
     border-radius: 18px 18px 0 0 !important; border-bottom: none !important;
     margin: 0 !important; padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important; }
+
+  /* Help / onboarding dialog docks to the bottom like every other surface */
+  .onboarding-dialog-overlay { align-items: flex-end !important; justify-content: center !important; }
+  .onboarding-dialog-card { width: 100% !important; max-width: 100% !important; max-height: 88vh !important;
+    overflow-y: auto; border-radius: 18px 18px 0 0 !important; border-bottom: none !important;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important; }
 }
 
 /* ---- Templates grid ---- */
