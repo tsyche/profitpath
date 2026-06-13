@@ -10,27 +10,28 @@ See README.md for setup and development instructions.
 
 **Five Most Recent Completions (June 2026)**
 
-1. **Customer Acquisition & Growth Modeling** — CAC tracking, customer lifetime value (LTV), churn rate modeling, and growth projections; completes the financial analysis suite (`src/analytics/customer-analytics.js`, `customer-ui.js`)
-2. **Localization & Formatting Infrastructure** — Multi-currency support, localized number formatting, and configurable precision groundwork (`src/localization/index.js`)
-3. **Accessibility & Mobile Experience** — Keyboard navigation, screen-reader optimization, larger touch targets, and mobile-responsive input handling (`assets/accessibility.js`)
-4. **Code Audit & Repo Hardening** — Fixed export/print XSS and CSV formula-injection, corrected localStorage key drift (analytics scenario count, debug-panel toggle), removed ~8.5k lines of dead parallel implementation, fixed the broken PWA manifest icon, and brought the service worker + test suite under version control
-5. **Workflow Automation & CI/CD** — Migrated task runner from Makefile to justfile, automated APK builds via GitHub Actions, GitHub Pages deployment for the web UI, sync-docs recipe to keep CLAUDE.md/AGENTS.md aligned
+1. **Header/Menu App-Bar Redesign + All-Modals Theming** — Replaced the tall header with a slim app bar (hamburger drawer, inline Scenarios/Templates, at-a-glance KPIs, a Forecast/Current toggle badge synced to the mode select, fixed undo/redo + theme cluster), restored the original sun logo; made Scenarios/Templates/Settings/at-a-glance consistent modals that bottom-dock on mobile; themed **every** modal via design tokens (Modal.js, scenarios, analytics dashboard, feedback) so they match dark/light; un-gated all export formats in the menu; added a `header_redesign` e2e regression suite (`9e668c9`, branch `modernize-ui` — pending merge)
+2. **Light/Dark Theming + Material Refresh + Accent Palettes** — Material-influenced dark/light themes with no-flash toggle, self-hosted Inter font, elevation/motion system, `prefers-reduced-motion` guard, runtime accent palettes (`?palette=teal|emerald|indigo|amber`, emerald default) (`a8c4621`, branch `modernize-ui`)
+3. **Customer Acquisition & Growth Modeling** — CAC tracking, customer lifetime value (LTV), churn rate modeling, and growth projections; completes the financial analysis suite (`src/analytics/customer-analytics.js`, `customer-ui.js`)
+4. **Localization & Formatting Infrastructure** — Multi-currency support, localized number formatting, and configurable precision groundwork (`src/localization/index.js`)
+5. **Accessibility & Mobile Experience** — Keyboard navigation, screen-reader optimization, larger touch targets, and mobile-responsive input handling (`assets/accessibility.js`)
 
 **Earlier (April–May 2026)**
+- Code Audit & Repo Hardening — export/print XSS + CSV formula-injection fixes, localStorage key-drift fixes, ~8.5k lines of dead code removed, PWA manifest icon repaired, service worker + test suite version-controlled
+- Workflow Automation & CI/CD — Makefile→justfile migration, APK builds via GitHub Actions, GitHub Pages deployment, sync-docs recipe
 - Mobile App Infrastructure (Capacitor v5) for iOS/Android distribution; MOBILE_APP_STRATEGY.md
-- Settings & Experience Level polish (feature gating, toast queue, tab-style selector)
-- Comprehensive settings test suite (22 tests: level switching, gates, persistence)
+- Settings & Experience Level polish (feature gating, toast queue, tab-style selector) + 22-test suite
 - Interactive Scenario Comparison (side-by-side diff) with summary metrics and sharing
 
 ---
 
 ## Top 5 Recommended Next Tasks
 
-1. **Finish & merge UI Modernization** ⭐ IN PROGRESS (branch `modernize-ui`)
-   - Done: Material-influenced dark refresh, light/dark mode with no-flash toggle, self-hosted Inter font, elevation/motion system, `prefers-reduced-motion` guard, runtime accent palettes (`?palette=teal|emerald|indigo|amber`)
-   - Remaining: pick/promote a default palette, add theme toggle to the mobile menu, tokenize the leftover `#007bff` analytics buttons, optional tool-layout pass, then merge to main
-   - High impact, mostly built; cross-platform-safe (verified web + Android WebView widths)
-   - ~2-3 hours remaining
+1. **Merge UI Modernization + clear deferred cleanups** ⭐ BUILT & VERIFIED (branch `modernize-ui`)
+   - The full UI modernization is done: dark/light + no-flash toggle, emerald default palette + runtime palettes, self-hosted Inter, elevation/motion system, the header/menu app-bar redesign, all-modals theming, mode-toggle badge, and the `#007bff` analytics buttons are tokenized. Verified: 278 unit, 114 e2e (chromium + firefox), 0 lint errors, clean build, screenshots across web + mobile widths
+   - Remaining before/with merge (all small): theme `advanced-dashboard.css` analytics-dashboard internals (~20 light cards, only visible when analytics is enabled with data), remove ~80 dead `mobile*` no-op handler bindings in `app.jsx`, consolidate the three `escapeHtml` copies
+   - Action: merge `modernize-ui` → main (needs approval), then the cleanups above
+   - ~1.5-2 hours of cleanup + merge
 
 2. **Help & Onboarding Enhancements** (Quick Win)
    - Contextual help for advanced features and calculations
@@ -61,7 +62,17 @@ See README.md for setup and development instructions.
 
 ## Fully Prioritized Backlog (high → low)
 
-**Code Quality (Deferred from June 2026 Audit)**
+**Code Quality (Deferred from June 2026 Audits)**
+
+0. Theme the analytics-dashboard internals (`src/analytics/advanced-dashboard.css`)
+   - ~20 hardcoded-white card/chart backgrounds remain light in dark mode; only visible when analytics is enabled with data (the modal shell + empty state are already themed)
+   - Swap to design tokens (`--surface`, `--surface-2`, `--text`, `--border`); verify by enabling analytics
+   - Effort: ~45 min
+
+0. Remove ~80 dead `mobile*` handler bindings in `app.jsx`
+   - Guarded no-ops left over from the old mobile menu (now an app-bar drawer + bottom bar)
+   - Risk: none (they no-op), but they're dead weight and confuse future readers
+   - Effort: ~30 min
 
 0. Consolidate duplicate `escapeHtml` implementations
    - Three copies exist: `miscService.js`, `visualizationService.js`, and a fallback delegate in `app.jsx`
@@ -76,10 +87,10 @@ See README.md for setup and development instructions.
 
 **Immediate Next (Foundation & Quick Wins)**
 
-1. UI Modernization — finish & merge (branch `modernize-ui`)
-   - Material-influenced theme, light/dark mode, self-hosted font, motion system, accent palettes are built
-   - Remaining: default palette decision, mobile theme toggle, tokenize stray `#007bff` buttons, optional tool-layout pass, merge
-   - Effort: ~2-3 hours remaining
+1. UI Modernization — ✅ built & verified; merge `modernize-ui` → main (needs approval)
+   - Material theme, light/dark, emerald default + runtime palettes, self-hosted font, motion system, header/menu app-bar redesign, all-modals theming, mode-toggle badge, tokenized analytics buttons — all shipped on branch
+   - Remaining: the cleanups in the Code Quality block above (analytics-dashboard internals, dead `mobile*` bindings), then merge
+   - Effort: ~1.5-2 hours cleanup + merge
 
 2. Help & Onboarding Enhancements (Quick Win)
    - Contextual help for advanced features and calculations
@@ -266,7 +277,7 @@ Ads destroy trust in financial planning tools. Business owners need to feel conf
 
 ## Status & Notes
 
-- **Current status**: Application is fully functional with comprehensive test coverage (278 unit tests across 26 files, 1 skipped, plus Playwright e2e across chromium + firefox), dev server stable. Recent work (June 2026) focused on the customer-acquisition/growth analytics, localization & accessibility shipments, a full code audit (security + dead-code + PWA fixes), and an in-progress UI modernization (light/dark + Material refresh on branch `modernize-ui`). Settings system has 22 dedicated tests ensuring feature gates, toast queueing, and UI sync work correctly.
+- **Current status**: Application is fully functional with comprehensive test coverage (278 unit tests across 26 files, 1 skipped, plus 114 Playwright e2e across chromium + firefox), dev server stable. Recent work (June 2026) focused on the customer-acquisition/growth analytics, localization & accessibility shipments, a full code audit (security + dead-code + PWA fixes), and a now-complete UI modernization — light/dark + Material refresh, the header/menu app-bar redesign, and all-modals theming — on branch `modernize-ui`, verified and pending merge to main. Settings system has 22 dedicated tests ensuring feature gates, toast queueing, and UI sync work correctly.
 - **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard.
 - **Latest milestones**: 
   - Sensitivity Analysis: Interactive sliders for pricing, overhead, utilization, and employees with tornado impact charts
@@ -275,12 +286,12 @@ Ads destroy trust in financial planning tools. Business owners need to feel conf
   - Undo/Redo: Full 50-entry history stack with Ctrl+Z/Ctrl+Shift+Z shortcuts and debounced table edits
   - Performance Dashboard: Real-time cache hit rate, calculation timing, entry count (Advanced feature gate)
 - **Next priorities** (Reordered by impact/effort):
-  1. **Finish & merge UI Modernization** ⭐ — light/dark + Material refresh + palettes already built on `modernize-ui`; finish and ship
+  1. **Merge UI Modernization** ⭐ — light/dark + Material refresh + header redesign + all-modals theming built & verified on `modernize-ui`; do the small deferred cleanups, then merge to main
   2. **Help & Onboarding Enhancements** — quick win; contextual help + FAQ reduces support burden, improves discoverability
   3. **Read-only Scenario Sharing & Comments** — high-value feature enabling team workflows without backend complexity
   4. **Performance Optimization & Caching** — unblocks heavier features (multi-year projections); cache hit rates already visible in debug panel
   5. **Data Visualization & Visual Indicators** — progress rings/gauges + animated counters; pairs with the UI work in flight
-- **Strategic positioning**: Accessibility, localization, and customer-acquisition analytics shipped in June, completing the core financial-modeling + reach foundation. Focus now shifts to polish (UI modernization), discoverability (help/onboarding), and collaboration (read-only sharing) to drive retention. Enterprise features (backend integrations, full native app build-out) deferred until market demand validates investment.
+- **Strategic positioning**: Accessibility, localization, customer-acquisition analytics, and the UI modernization (light/dark, app-bar redesign, all-modals theming) all shipped in June, completing the core financial-modeling + reach + polish foundation. Focus now shifts to discoverability (help/onboarding), collaboration (read-only sharing), and visual indicators (progress rings/gauges) to drive retention. Enterprise features (backend integrations, full native app build-out) deferred until market demand validates investment.
 - **Quick wins available** (High-Value, Low Effort):
   - Help & Onboarding Enhancements (2-3 hrs) — contextual help, FAQ, discoverability
   - Read-only Scenario Sharing & Comments (2-3 hrs) — collaboration without backend
@@ -302,7 +313,7 @@ This section tracks common feature requests, friction points, and competitive ga
 **How to use**: Update this list after customer conversations, support tickets, or user interviews. Use to validate roadmap priorities and surface unexpected user needs.
 
 - **Audit notes (June 2026)**: 
-  - **Recent focus**: Shipped customer-acquisition/growth analytics, localization, and accessibility; ran a full code audit; began UI modernization (light/dark + Material) on `modernize-ui`
+  - **Recent focus**: Shipped customer-acquisition/growth analytics, localization, and accessibility; ran a full code audit; completed UI modernization (light/dark + Material, header/menu app-bar redesign, all-modals theming) on `modernize-ui` — verified, pending merge
   - **Code audit outcomes**: Fixed export/print XSS + CSV formula-injection, two localStorage key-drift bugs, removed ~8.5k lines of dead parallel implementation, repaired the PWA manifest icon, and brought the service worker + 24 test files under version control. Unit suite at 278 tests / 26 files (1 skipped), 0 lint errors.
   - **Known debt**: Capacitor is on v5.7.8, three majors behind latest (v8) — a deliberate upgrade decision pending a native-build test plan. Three `escapeHtml` copies and 137 test-file lint warnings remain (tracked in Code Quality backlog).
   - **Mobile app readiness**: Capacitor (v5) infrastructure complete, iOS/Android project structures created, MOBILE_APP_STRATEGY.md provides a detailed 40-50 hour implementation plan across 4 phases
@@ -314,10 +325,10 @@ This section tracks common feature requests, friction points, and competitive ga
   - **Note for Phase 4**: Remember to keep web and mobile versions in sync (same version numbers, synchronized releases)
 
 ### Test Coverage Status (June 2026 Audit)
-- **278 unit tests** across 26 files (1 skipped), plus Playwright e2e across chromium + firefox
-- **Pass rate**: 100% of unit tests passing (1 intentional skip); 0 lint errors
+- **278 unit tests** across 26 files (1 skipped), plus **114 Playwright e2e** across chromium + firefox
+- **Pass rate**: 100% of unit tests passing (1 intentional skip); 100% e2e passing; 0 lint errors
 - **Health score**: 8.8+/10 — production-ready with excellent feature gating and settings system validation
-- **Recent expansions**: Added tooltip system tests (50+), feature gating tests (45+), E2E scenario workflows (15+), E2E export tests (25+)
+- **Recent expansions**: Added the `header_redesign` e2e suite (modal theming, mode toggle, mobile drawer/bottom bar); reworked `export.spec`, `app.spec`, `regression_fixes` for the app-bar markup. Earlier: tooltip system tests (50+), feature gating tests (45+), E2E scenario workflows (15+)
 - **Settings & Experience Levels** (22 tests): Feature gate verification, experience level switching, tooltip state changes, checkbox state syncing, toast queue behavior, settings persistence, full integration workflows
 - **Key test areas**:
   - ✅ **Calculation Engine** (40+ tests): Mode switching, mix normalization, caching, edge cases

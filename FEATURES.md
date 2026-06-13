@@ -51,13 +51,13 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Experience Levels**: Beginner, Intermediate, and Advanced user modes with appropriate feature sets
 	- See `docs/experience-levels.md` for a full mapping of which features are visible at each level and guidance for maintainers.
 - **Feature Gating**: Advanced features unlocked via settings panel for power users
-- **Guided Onboarding**: Interactive step-by-step tour helping new users explore all features, accessible via ❓ button or "🎯 Take Tour" in mobile menu
+- **Guided Onboarding**: Interactive step-by-step tour helping new users explore all features, accessible via **Help & tour** in the menu drawer (☰)
 - **Industry Setup Wizards**: Tailored configuration wizards for different business types (consulting, cleaning, landscaping, fitness, photography)
 - **Contextual Help Tooltips**: Smart tooltips that appear on hover to explain features and provide inline guidance
 - **Help Center**: Comprehensive help system with guided tour and support documentation
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices
 - **Interactive Charts**: Hover tooltips, pinnable legends, detailed breakdowns with visual feedback
-- **Mobile Hamburger Menu**: Full feature access on mobile devices with collapsible menu navigation
+- **Mobile Navigation**: App bar with a slide-in menu drawer (☰) plus a thumb-reachable bottom bar (Scenarios, Templates, Settings, More) for full feature access on phones
 - **Accessibility**: Keyboard navigation, screen reader support, high contrast options
 - **Feedback System**: User feedback collection via modal dialog with submission support
 

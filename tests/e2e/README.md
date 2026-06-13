@@ -32,9 +32,13 @@ npx playwright test --project=firefox
 
 ## Test Structure
 
-- `basic.spec.js` - Core application functionality
-- `scenarios.spec.js` - Scenario management features
-- `export.spec.js` - Export and sharing features
+- `basic.spec.js` - Core application smoke checks
+- `app.spec.ts` / `app.spec.js` - App load, controls/outputs sections, settings modal
+- `scenarios.spec.js` - Scenario management, persistence, mode switching
+- `export.spec.js` - Export menu (drawer) and all formats
+- `regression_fixes.spec.js` - Targeted regression fixes (payroll, share, import)
+- `header_redesign.spec.js` - App-bar redesign: modal theming, mode toggle, mobile drawer/bottom bar
+- `helpers.js` - Shared helpers (page-ready waits, onboarding dismissal)
 
 ## Adding New Tests
 

@@ -10,7 +10,7 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Advanced calculations: OFF
   - Detailed breakdowns: OFF
   - Scenario comparison tools: OFF
-  - Export options (Excel/PDF/HTML/Embed): OFF
+  - Sensitivity analysis: OFF
   - Debug panel: OFF
   - Performance metrics: OFF
   - Tooltips: ON
@@ -19,7 +19,7 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Advanced calculations: ON
   - Detailed breakdowns: ON
   - Scenario comparison tools: ON
-  - Export options: OFF
+  - Sensitivity analysis: ON
   - Debug panel: OFF
   - Performance metrics: OFF
   - Tooltips: ON
@@ -28,10 +28,17 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Advanced calculations: ON
   - Detailed breakdowns: ON
   - Scenario comparison tools: ON
-  - Export options: ON
+  - Sensitivity analysis: ON
   - Debug panel: ON
   - Performance metrics: ON
-  - Tooltips: ON
+  - Tooltips: OFF (disabled by default for power users)
+
+> **Export formats are not gated by experience level.** `FEATURE_GATES` still
+> carries a `showExportOptions` flag, but `initializeProgressiveDisclosure()` in
+> `assets/utils/progressiveDisclosure.js` deliberately force-shows every export
+> option ("Always show all export options regardless of user level"). All
+> formats (CSV, Excel, PDF, HTML, Email, Embed, Schedule) are available at every
+> level — they are listed unconditionally in the menu's Export submenu.
 
 ## What UI elements are controlled
 
@@ -40,7 +47,7 @@ The app hides/shows elements by toggling display on selectors tied to feature ke
 - `.advanced-calculations` — advanced calculation controls and inputs
 - `.detailed-breakdown` — extra table rows, intermediate values, and chart breakdowns
 - `.comparison-tools` — UI to compare scenarios side-by-side
-- `.export-options` / `.advanced-feature` / `.expert-feature` — extra export formats and advanced export UI
+- `.advanced-feature` / `.expert-feature` — advanced/expert-only panels (e.g. sensitivity analysis, performance, debug). Note: `.export-option` elements carrying these classes are exempt — they are always shown (see note above).
 - `.debug-panel` — collapsible debug panel under Outputs
 
 When adding a new feature flag, update `FEATURE_GATES` in `src/settings/index.js` and ensure the corresponding DOM elements are toggled in `assets/app.jsx`'s `updateUIForSettings`.
