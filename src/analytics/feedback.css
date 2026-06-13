@@ -309,9 +309,17 @@
 
 /* Mobile responsive */
 @media (max-width: 640px) {
+  /* Dock to the bottom like every other surface (Scenarios/Templates/Settings) */
+  .feedback-modal {
+    align-items: flex-end;
+  }
+
   .feedback-content {
-    width: 95%;
-    max-height: 95vh;
+    width: 100%;
+    max-width: 100%;
+    max-height: 88vh;
+    border-radius: 18px 18px 0 0;
+    border-bottom: none;
   }
 
   .feedback-header {

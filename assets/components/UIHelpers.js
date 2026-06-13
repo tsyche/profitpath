@@ -149,9 +149,8 @@ export function openScenarioModal() {
     id: 'scenariosModal',
     title: '💾 Scenarios',
     content: content,
-    buttons: [
-      { text: 'Close', primary: false }
-    ],
+    // No footer "Close" button — the header X (and scrim/Esc) already closes it.
+    buttons: [],
     size: 'large'
   });
 

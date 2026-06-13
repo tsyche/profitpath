@@ -38,6 +38,7 @@ npx playwright test --project=firefox
 - `export.spec.js` - Export menu (drawer) and all formats
 - `regression_fixes.spec.js` - Targeted regression fixes (payroll, share, import)
 - `header_redesign.spec.js` - App-bar redesign: modal theming, mode toggle, mobile drawer/bottom bar
+- `mobile_layout.spec.js` - Mobile viewport: header/content gap, Feedback & Help bottom-sheet docking + theming, Scenarios modal close affordance
 - `helpers.js` - Shared helpers (page-ready waits, onboarding dismissal)
 
 ## Adding New Tests
