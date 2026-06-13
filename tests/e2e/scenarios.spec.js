@@ -3,6 +3,11 @@ import { waitForPageReady } from './helpers';
 
 test.describe('Scenario Workflows - E2E', () => {
   test.beforeEach(async ({ page }) => {
+    // Skip the first-run onboarding so it can't re-appear after page.reload()
+    // and intercept clicks (notably flaky on Firefox).
+    await page.addInitScript(() => {
+      try { localStorage.setItem('onboardingCompleted', 'true'); } catch { /* ignore */ }
+    });
     await page.goto('/');
     await waitForPageReady(page);
   });

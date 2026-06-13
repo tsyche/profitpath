@@ -2461,11 +2461,13 @@ input[type="checkbox"] {
 }
 
 .modal-content {
-  background: white;
-  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
   padding: 24px;
   width: 90%;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--elev-4, 0 8px 32px rgba(0, 0, 0, 0.2));
   max-height: 80vh;
   overflow-y: auto;
   position: relative;
@@ -2500,7 +2502,7 @@ input[type="checkbox"] {
 .modal-header h3 {
   margin: 0;
   font-size: 20px;
-  color: #333;
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -2509,7 +2511,7 @@ input[type="checkbox"] {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #666;
+  color: var(--muted);
   padding: 0;
   width: 24px;
   height: 24px;
@@ -2521,13 +2523,13 @@ input[type="checkbox"] {
 }
 
 .modal-close:hover {
-  background: #f8f9fa;
-  color: #333;
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 /* Modal body */
 .modal-body {
-  color: #666;
+  color: var(--text);
   line-height: 1.5;
 }
 
@@ -2542,25 +2544,25 @@ input[type="checkbox"] {
 /* Modal buttons */
 .modal-btn {
   padding: 8px 16px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  color: #333 !important;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text) !important;
   cursor: pointer;
   font-weight: normal;
   transition: all 0.2s ease;
 }
 
 .modal-btn.primary {
-  border-color: #007bff;
-  background: #007bff;
-  color: white !important;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #06231a !important;
   font-weight: bold;
 }
 
 .modal-btn.secondary {
-  background: white;
-  color: #333 !important;
+  background: var(--surface-2);
+  color: var(--text) !important;
 }
 
 .modal-btn.danger {
@@ -2616,9 +2618,9 @@ input[type="checkbox"] {
 
 /* Dropdown styling */
 .scenario-select {
-  background: white !important;
-  color: #333 !important;
-  border: 1px solid #ddd !important;
+  background: var(--input-bg, var(--surface-2)) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
   padding: 8px 12px !important;
   border-radius: 6px !important;
   min-width: 200px !important;
@@ -2626,13 +2628,13 @@ input[type="checkbox"] {
 }
 
 .scenario-select option {
-  background: white !important;
-  color: #333 !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
   padding: 8px !important;
 }
 
 .scenario-select:focus {
-  border-color: #007bff !important;
+  border-color: var(--accent) !important;
   outline: none !important;
 }
 
@@ -2679,11 +2681,11 @@ input[type="checkbox"] {
 .modal-content input,
 .modal-content select,
 .modal-content textarea {
-  background: white !important;
-  color: #333 !important;
+  background: var(--input-bg, var(--surface-2)) !important;
+  color: var(--text) !important;
   padding: 8px 12px !important;
   border-radius: 6px !important;
-  border: 1px solid #ddd !important;
+  border: 1px solid var(--border) !important;
 }
 
 
@@ -2711,53 +2713,55 @@ input[type="checkbox"] {
 
 #scenariosModal .scenarios-section h4 {
   font-size: 18px !important;
-  color: #333 !important;
+  color: var(--text) !important;
   margin: 0 0 12px 0 !important;
   font-weight: normal !important;
   letter-spacing: normal !important;
 }
 
 #scenariosModal .modal-body {
-  color: #333 !important;
+  color: var(--text) !important;
   line-height: 1.5 !important;
 }
 
-#scenariosModal .modal-body * {
-  color: #333 !important;
+/* Generic text inside the body follows the theme, but leave the coloured
+   action buttons (.btn) alone so primary/danger keep their own palette. */
+#scenariosModal .modal-body *:not(.btn):not([class*="btn"]) {
+  color: var(--text) !important;
 }
 
 #scenariosModal .empty-state {
-  color: #666 !important;
+  color: var(--muted) !important;
 }
 
 #scenariosModal input {
-  background: white !important;
-  border: 1px solid #dee2e6 !important;
-  color: #333 !important;
+  background: var(--input-bg, var(--surface-2)) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
   padding: 8px 12px !important;
   border-radius: 6px !important;
 }
 
 #scenariosModal select {
-  background: white !important;
-  border: 1px solid #dee2e6 !important;
-  color: #333 !important;
+  background: var(--input-bg, var(--surface-2)) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
   padding: 8px 12px !important;
   border-radius: 6px !important;
 }
 
 #scenariosModal .scenario-item {
-  background: #f8f9fa !important;
-  border: 1px solid #dee2e6 !important;
-  color: #333 !important;
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
 }
 
 #scenariosModal .scenario-name {
-  color: #333 !important;
+  color: var(--text) !important;
 }
 
 #scenariosModal .scenario-meta {
-  color: #666 !important;
+  color: var(--muted) !important;
 }
 
 /* Make horizontal scrolling more obvious on mobile */
@@ -2902,24 +2906,24 @@ input[type="checkbox"] {
 .comparison-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: var(--surface);
 }
 
 .comparison-table th,
 .comparison-table td {
   padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--border);
 }
 
 .comparison-table th {
-  background: #f8f9fa;
+  background: var(--surface-2);
   font-weight: 600;
-  color: black !important;
+  color: var(--text) !important;
 }
 
 .comparison-table td {
-  color: black !important;
+  color: var(--text) !important;
 }
 
 .comparison-table .positive {
@@ -2936,41 +2940,41 @@ input[type="checkbox"] {
 @media (max-width: 768px) {
   .comparison-results {
     margin-top: 12px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: white;
+    background: var(--surface);
   }
 
   .comparison-table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
+    background: var(--surface);
     font-size: 13px;
   }
 
   .comparison-table th {
-    background: #f3f4f6;
+    background: var(--surface-2);
     font-weight: 700;
-    color: #1f2937;
+    color: var(--text);
     padding: 10px 8px;
-    border-bottom: 2px solid #d1d5db;
+    border-bottom: 2px solid var(--border-strong);
     text-align: left;
     font-size: 12px;
   }
 
   .comparison-table td {
     padding: 10px 8px;
-    border-bottom: 1px solid #e5e7eb;
-    color: #1f2937;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
   }
 
   .comparison-table tbody tr:hover {
-    background: #f9fafb;
+    background: var(--surface-2);
   }
 
   .metric-name {
     font-weight: 600;
-    color: #111827;
+    color: var(--text);
     min-width: 140px;
   }
 
@@ -3194,16 +3198,9 @@ input[type="checkbox"] {
   font-size: 11px;
 }
 
-/* Experience Level Tab Styling */
-.settings-section label input[type="radio"]:checked {
-  accent-color: #007bff;
-}
-
-.settings-section label:has(input[type="radio"]:checked) {
-  background: white !important;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+/* Experience-level styling now lives in the .exp-seg/.exp-card block (settings
+   modal). The old `label:has(input:checked){background:white}` rule was removed
+   when the inline selector was replaced. */
 
 /* Desktop Settings Cog Button */
 .settings-cog-btn {
@@ -3703,11 +3700,11 @@ input[type="checkbox"] {
 }
 
 .modal-content .scenario-diff-row:nth-child(even) {
-  background: #fafafa !important;
+  background: var(--surface-2) !important;
 }
 
 .modal-content .scenario-diff-row:nth-child(odd) {
-  background: white !important;
+  background: var(--surface) !important;
 }
 
 @media (max-width: 600px) {
@@ -4287,3 +4284,227 @@ input[type="checkbox"] {
     scroll-behavior: auto !important;
   }
 }
+/* ===========================================================================
+   APP BAR + UNIFIED DRAWER + BOTTOM BAR  (header redesign — "the blend")
+   Slim fixed top bar with at-a-glance KPIs in the chrome; one theme-aware
+   drawer (left) for all actions; thumb-reachable bottom bar on phones.
+   =========================================================================== */
+:root { --appbar-h: 56px; }
+
+.appbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1001;
+  display: flex; align-items: center; gap: 8px;
+  height: calc(var(--appbar-h) + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) clamp(10px, 2vw, 20px) 0;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  background-image: radial-gradient(600px 180px at 16% -120%, rgba(var(--accent-rgb), .18), transparent 70%);
+}
+/* push page content below the fixed bar (overrides the old tall-header offsets) */
+.page { margin-top: calc(var(--appbar-h) + env(safe-area-inset-top) + 8px) !important; }
+
+.ab-icon { display: inline-grid; place-items: center; width: 40px; height: 40px; flex: none;
+  border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted);
+  cursor: pointer; transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
+.ab-icon:hover { background: var(--surface-2); color: var(--text); }
+.ab-icon svg { width: 20px; height: 20px; }
+
+.ab-logo { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; flex: none; }
+.ab-sun { height: 26px; width: auto; display: block; }
+.ab-word { font-weight: 800; font-size: 16px; letter-spacing: -.02em;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+.ab-primary { display: inline-flex; align-items: center; gap: 2px; margin-left: 6px; }
+.ab-btn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px;
+  border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--text);
+  font: inherit; font-size: 13.5px; font-weight: 550; cursor: pointer; white-space: nowrap;
+  transition: background var(--dur-1) var(--ease); }
+.ab-btn:hover { background: var(--surface-2); }
+.ab-btn svg { width: 16px; height: 16px; opacity: .85; }
+.ab-btn[aria-expanded="true"] { background: var(--surface-2); }
+
+.ab-spacer { flex: 1 1 auto; }
+
+/* At-a-glance cluster is a button (tap to expand to the full metric set) */
+.ab-kpis { display: inline-flex; align-items: center; gap: 0; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 11px; padding: 3px 2px; flex: none;
+  font: inherit; color: inherit; cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease); }
+.ab-kpis:hover { border-color: rgba(var(--accent-rgb), .5); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .10); }
+.ab-kpi { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.04; padding: 3px 12px; white-space: nowrap; }
+.ab-kpi + .ab-kpi { border-left: 1px solid var(--border); }
+.ab-kpi i { font-style: normal; font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.ab-kpi b { font-size: 14px; font-weight: 750; letter-spacing: -.01em; margin-top: 2px; font-family: var(--mono); color: var(--text); }
+.ab-kpi.k-net b { color: var(--accent-ink); }
+
+/* Mode toggle (Forecast <-> Current) */
+.ab-badge { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; flex: none;
+  border-radius: 999px; background: rgba(var(--accent-rgb), .12); border: 1px solid rgba(var(--accent-rgb), .30);
+  color: var(--accent-ink); font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; white-space: nowrap;
+  transition: background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease); }
+.ab-badge:hover { background: rgba(var(--accent-rgb), .20); }
+.ab-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+/* Current mode: switch to a neutral/cyan-leaning treatment so the toggle reads as a state */
+.ab-badge.is-current { background: color-mix(in srgb, #38bdf8 16%, transparent); border-color: color-mix(in srgb, #38bdf8 42%, transparent); color: #0ea5e9; }
+.ab-badge.is-current .dot { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
+
+/* Fixed control cluster: undo/redo + theme always together, at every width */
+.ab-right { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+.ab-undo { display: inline-flex; }
+
+/* ---- unified drawer ---- */
+.drawer-scrim { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,.5);
+  opacity: 0; visibility: hidden; transition: opacity var(--dur-2) var(--ease), visibility var(--dur-2); }
+.drawer-scrim.show { opacity: 1; visibility: visible; }
+.app-drawer { position: fixed; top: 0; bottom: 0; left: 0; z-index: 1101; width: 290px; max-width: 84vw;
+  background: var(--surface); border-right: 1px solid var(--border-strong); box-shadow: var(--elev-4);
+  display: flex; flex-direction: column; transform: translateX(-102%);
+  transition: transform var(--dur-3) var(--ease); padding-top: env(safe-area-inset-top); }
+.app-drawer.open { transform: translateX(0); }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 10px; border-bottom: 1px solid var(--border); }
+.drawer-body { flex: 1; overflow-y: auto; padding: 8px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+.drawer-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 12px; border: none;
+  border-radius: 10px; background: transparent; color: var(--text); font: inherit; font-size: 14px; font-weight: 500;
+  cursor: pointer; text-align: left; transition: background var(--dur-1) var(--ease); }
+.drawer-item:hover { background: var(--surface-2); }
+.drawer-item svg { width: 18px; height: 18px; opacity: .8; flex: none; }
+.drawer-item .chev { margin-left: auto; opacity: .5; width: 16px; height: 16px; transition: transform var(--dur-2) var(--ease); }
+.drawer-item.expanded .chev { transform: rotate(90deg); }
+.drawer-sub { display: none; padding: 2px 0 6px 14px; margin-left: 12px; border-left: 1px solid var(--border); }
+.drawer-sub.open { display: block; }
+.drawer-subitem { display: block; width: 100%; padding: 9px 12px; border: none; border-radius: 8px;
+  background: transparent; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; text-align: left;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
+.drawer-subitem:hover { background: var(--surface-2); color: var(--text); }
+.drawer-divider { height: 1px; background: var(--border); margin: 8px 10px; }
+
+/* ---- bottom action bar (mobile only) ---- */
+.bottombar { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1001;
+  height: calc(60px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);
+  background: color-mix(in srgb, var(--surface) 92%, transparent); border-top: 1px solid var(--border);
+  backdrop-filter: blur(10px); }
+.bb-item { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; border: none; background: transparent; color: var(--muted); font: inherit; font-size: 10.5px; font-weight: 600; cursor: pointer; }
+.bb-item svg { width: 22px; height: 22px; }
+.bb-item.is-active { color: var(--accent); }
+.bb-item.is-active::before { content: ""; position: absolute; top: 0; width: 26px; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+
+/* ---- responsive: desktop shows inline nav + full KPIs; phone shows bottom bar + compact KPI ---- */
+@media (max-width: 860px) {
+  .ab-kpi.k-rev, .ab-kpi.k-util { display: none; }       /* keep just Net income on narrow */
+  .ab-kpi.k-net { border-left: none; }
+}
+@media (max-width: 768px) {
+  .appbar { gap: 6px; padding-left: 8px; padding-right: 8px; }
+  .ab-primary { display: none; }            /* Scenarios/Templates live in the bottom bar */
+  .appbar .ab-word { display: none; }       /* drop the wordmark in the bar; drawer keeps it */
+  .ab-undo, .ab-right { display: inline-flex; }  /* undo/redo + theme stay put */
+  .bottombar { display: flex; }
+  .page { padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important; }
+}
+@media (max-width: 430px) {
+  .ab-badge .ab-badge-text { display: none; }   /* very narrow: mode toggle becomes a dot */
+  .ab-badge { padding: 0 9px; }
+}
+@media (min-width: 769px) {
+  .app-drawer { top: calc(var(--appbar-h) + env(safe-area-inset-top)); width: 300px; box-shadow: var(--elev-3); }
+  .drawer-scrim { top: calc(var(--appbar-h) + env(safe-area-inset-top)); }
+}
+
+/* ===========================================================================
+   UNIFIED MODALS (pp-sheet) — Templates, Settings, At-a-glance all share this.
+   Theme-aware, centered, with a scrim. Consistent with the Scenarios modal.
+   =========================================================================== */
+.pp-sheet { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; }
+.pp-sheet[hidden] { display: none; }
+.pp-sheet-scrim { position: absolute; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+  opacity: 0; transition: opacity var(--dur-2) var(--ease); }
+.pp-sheet.open .pp-sheet-scrim { opacity: 1; }
+.pp-sheet-card { position: relative; width: min(560px, 94vw); max-height: min(86vh, 720px);
+  display: flex; flex-direction: column; background: var(--surface); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: 16px; box-shadow: var(--elev-4); overflow: hidden;
+  transform: translateY(8px) scale(.985); opacity: 0;
+  transition: transform var(--dur-3) var(--ease), opacity var(--dur-2) var(--ease); }
+.pp-sheet.open .pp-sheet-card { transform: none; opacity: 1; }
+.pp-sheet-card--narrow { width: min(420px, 94vw); }
+.pp-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.pp-sheet-head h3 { margin: 0; font-size: 17px; font-weight: 750; letter-spacing: -.01em; }
+.pp-sheet-x { display: inline-grid; place-items: center; width: 34px; height: 34px; flex: none;
+  border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
+.pp-sheet-x:hover { background: var(--surface-2); color: var(--text); }
+.pp-sheet-x svg { width: 18px; height: 18px; }
+.pp-sheet-body { padding: 18px 18px 22px; overflow-y: auto; }
+.pp-sheet-note { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+
+/* Mobile: every sheet (and the legacy .modal-content modals) docks to the bottom
+   and rises up — one consistent presentation across all modals. */
+@media (max-width: 600px) {
+  .pp-sheet { place-items: end center; }
+  .pp-sheet-card, .pp-sheet-card--narrow { width: 100vw; max-height: 88vh;
+    border-radius: 18px 18px 0 0; border-bottom: none;
+    transform: translateY(14px); }
+  .pp-sheet.open .pp-sheet-card { transform: none; }
+  .pp-sheet-body { padding-bottom: calc(22px + env(safe-area-inset-bottom)); }
+
+  /* Legacy dynamic modals (Scenarios, confirms, analytics) match the sheet look */
+  .modal-overlay { align-items: flex-end !important; justify-content: center !important; }
+  .modal-content { width: 100% !important; max-width: 100% !important; max-height: 88vh !important;
+    border-radius: 18px 18px 0 0 !important; border-bottom: none !important;
+    margin: 0 !important; padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important; }
+}
+
+/* ---- Templates grid ---- */
+.tmpl-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.tmpl-card { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left;
+  padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2);
+  color: var(--text); cursor: pointer; font: inherit;
+  transition: border-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease); }
+.tmpl-card:hover { border-color: rgba(var(--accent-rgb), .55); transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(var(--accent-rgb), .14); }
+.tmpl-emoji { font-size: 22px; line-height: 1; }
+.tmpl-name { font-weight: 700; font-size: 14px; margin-top: 2px; }
+.tmpl-sub { font-size: 11.5px; color: var(--muted); }
+@media (max-width: 420px) { .tmpl-grid { grid-template-columns: 1fr; } }
+
+/* ---- At-a-glance grid ---- */
+.glance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.glance-tile { display: flex; flex-direction: column; gap: 3px; padding: 14px;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); }
+.glance-tile--wide { grid-column: 1 / -1; }
+.glance-tile i { font-style: normal; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.glance-tile b { font-size: 22px; font-weight: 760; letter-spacing: -.02em; font-family: var(--mono); color: var(--text); }
+.glance-tile small { font-size: 11px; color: var(--muted); }
+
+/* ---- Settings modal content (theme-aware; replaces old inline-styled dropdown) ---- */
+/* Override the legacy `.settings-options label { color:#111 }` bleed (it outranks
+   a bare class), and strip its padding so our cards/labels lay out cleanly. */
+#settingsMenu .settings-options label { color: var(--text); padding: 0; background: none; }
+#settingsMenu .settings-options label:hover { background: none; }
+#settingsMenu .exp-opt { border-radius: 10px; }
+#settingsMenu .settings-section { margin-bottom: 18px; }
+#settingsMenu .settings-section > h4 { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--muted); }
+.exp-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.exp-opt { position: relative; display: block; cursor: pointer; }
+.exp-opt input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.exp-card { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
+  width: 100%; box-sizing: border-box; min-height: 100%;
+  padding: 10px 6px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2);
+  transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease); }
+.exp-card b { font-size: 12.5px; font-weight: 650; color: var(--text); }
+.exp-card small { font-size: 10.5px; color: var(--muted); }
+.exp-opt:hover .exp-card { border-color: rgba(var(--accent-rgb), .4); }
+.exp-opt input:checked + .exp-card { border-color: var(--accent); background: rgba(var(--accent-rgb), .12); }
+.exp-opt input:checked + .exp-card b { color: var(--accent-ink); }
+.exp-opt input:focus-visible + .exp-card { outline: 2px solid var(--accent); outline-offset: 2px; }
+.settings-level-description { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--muted); line-height: 1.45; }
+.settings-check { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--text); cursor: pointer; }
+.settings-select-label { display: block; margin-bottom: 12px; }
+.settings-select-label:last-child { margin-bottom: 0; }
+.settings-select-label > span { display: block; margin-bottom: 5px; font-size: 12px; color: var(--muted); }
+#settingsMenu select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px;
+  background: var(--input-bg, var(--surface-2)); color: var(--text); font: inherit; font-size: 13px; }

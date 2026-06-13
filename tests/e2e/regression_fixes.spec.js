@@ -19,10 +19,9 @@ test.describe('Regression Fixes - UI & Logic', () => {
   });
 
   test('Share Scenario should copy link and show success toast', async ({ page }) => {
-    const shareBtn = page.locator('#shareBtn');
-    await expect(shareBtn).toBeVisible();
-
-    await shareBtn.click();
+    // Share now lives in the menu drawer
+    await page.locator('#appMenuBtn').click();
+    await page.locator('.app-drawer .drawer-item', { hasText: 'Share' }).click();
 
     // Check for success toast
     const toast = page.locator('.toast.toast-success');
@@ -42,10 +41,13 @@ test.describe('Regression Fixes - UI & Logic', () => {
     await expect(undoSvg).toBeVisible();
   });
 
+  async function openImportFromDrawer(page) {
+    await page.locator('#appMenuBtn').click();
+    await page.locator('.app-drawer .drawer-item', { hasText: 'Import CSV' }).click();
+  }
+
   test('Import Modal should close in one click', async ({ page }) => {
-    const importBtn = page.locator('#importCSVBtn');
-    await importBtn.waitFor({ state: 'visible' });
-    await importBtn.click({ force: true });
+    await openImportFromDrawer(page);
 
     const modal = page.locator('.modal-overlay');
     await expect(modal).toBeVisible({ timeout: 20000 });
@@ -58,9 +60,7 @@ test.describe('Regression Fixes - UI & Logic', () => {
   });
 
   test('Import Modal dropzone should trigger file input', async ({ page }) => {
-    const importBtn = page.locator('#importCSVBtn');
-    await importBtn.waitFor({ state: 'visible' });
-    await importBtn.click({ force: true });
+    await openImportFromDrawer(page);
 
     const modal = page.locator('.modal-overlay');
     await expect(modal).toBeVisible({ timeout: 15000 });

@@ -531,33 +531,18 @@ function render() {
     const el = $('#modeSelect'); if (el) el.value = state.mode;
   }
 
-  // Update simulator badge text and color based on mode (desktop)
+  // Sync the appbar mode toggle (Forecast <-> Current) with current state.
   {
-    const badge = $('.simulator-badge');
+    const badge = $('#modeBadgeBtn');
     if (badge) {
-      const muted = badge.querySelector('.muted');
-      if (muted) {
-        muted.textContent = state.mode === 'forecast' ? 'forecast mode' : 'active customers';
-      }
-      const dot = badge.querySelector('.dot');
-      if (dot) {
-        dot.className = 'dot ' + (state.mode === 'forecast' ? 'dot-forecast' : 'dot-active');
-      }
-    }
-  }
-
-  // Update simulator badge text and color based on mode (mobile)
-  {
-    const badge = $('.mobile-menu-badge');
-    if (badge) {
-      const modeSpan = badge.querySelectorAll('span')[1];
-      if (modeSpan) {
-        modeSpan.textContent = state.mode === 'forecast' ? 'forecast mode' : 'active customers';
-      }
-      const dot = badge.querySelector('.dot');
-      if (dot) {
-        dot.className = 'dot ' + (state.mode === 'forecast' ? 'dot-forecast' : 'dot-active');
-      }
+      const isForecastMode = state.mode === 'forecast';
+      const label = badge.querySelector('.ab-badge-text');
+      if (label) label.textContent = isForecastMode ? 'Forecast' : 'Current';
+      badge.classList.toggle('is-current', !isForecastMode);
+      badge.setAttribute('aria-pressed', isForecastMode ? 'false' : 'true');
+      badge.title = isForecastMode
+        ? 'Forecast mode — tap to switch to Current'
+        : 'Current mode — tap to switch to Forecast';
     }
   }
 
@@ -832,25 +817,8 @@ $$('#controls select').forEach((el) => {
   if (btn) btn.addEventListener('click', resetDefaults);
 }
 
-// Templates dropdown functionality
-const templatesBtn = $('#templatesBtn');
-if (templatesBtn) {
-  templatesBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const dropdown = templatesBtn.closest('.templates-dropdown');
-    const menu = $('#templatesMenu');
-    if (!dropdown || !menu) return;
-
-    // If this menu is already active, just close it
-    if (menu.style.display === 'block') {
-      menu.style.display = 'none';
-    } else {
-      // Close other dropdowns and open this one
-      closeAllDropdowns();
-      menu.style.display = 'block';
-    }
-  });
-}
+// Templates now open the #templatesModal (via inline ppOpenModal in the markup);
+// the modal's cards delegate to the hidden .template-option handlers below.
 
 // Function to refresh desktop settings dropdown with current values
 function refreshDesktopSettings() {
@@ -883,55 +851,14 @@ window.addEventListener('settingsChanged', () => {
 // Initialize desktop settings on page load
 setTimeout(refreshDesktopSettings, 100);
 
-// Desktop Settings Cog Button
+// Settings Cog Button — opens the #settingsModal (consistent with Scenarios /
+// Templates). Refresh values first so radios/checkboxes reflect saved settings.
 const settingsCogBtn = $('#settingsCogBtn');
 if (settingsCogBtn) {
   settingsCogBtn.addEventListener('click', (e) => {
     e.preventDefault();
-    const dropdown = document.querySelector('.settings-dropdown');
-    if (!dropdown) {
-      console.error('Settings dropdown not found');
-      return;
-    }
-    // If this dropdown is already active, just close it
-    if (dropdown.classList.contains('active')) {
-      dropdown.classList.remove('active');
-    } else {
-      // Close other dropdowns and open this one
-      closeAllDropdowns();
-      // Refresh settings values before showing
-      refreshDesktopSettings();
-
-      // Position the menu directly under the cog button
-      const menu = dropdown.querySelector('.settings-menu');
-      if (menu) {
-        const buttonRect = settingsCogBtn.getBoundingClientRect();
-        const menuWidth = 320; // max-width from CSS
-        const viewportWidth = window.innerWidth;
-
-        menu.style.position = 'fixed';
-        menu.style.top = (buttonRect.bottom + 4) + 'px';
-
-        // Calculate left position, ensuring menu stays on screen
-        let leftPos = buttonRect.left + buttonRect.width / 2;
-        const menuHalfWidth = menuWidth / 2;
-
-        // If centering would put menu off left edge
-        if (leftPos - menuHalfWidth < 10) {
-          leftPos = menuHalfWidth + 10;
-        }
-        // If centering would put menu off right edge
-        else if (leftPos + menuHalfWidth > viewportWidth - 10) {
-          leftPos = viewportWidth - menuHalfWidth - 10;
-        }
-
-        menu.style.left = leftPos + 'px';
-        menu.style.transform = 'translateX(-50%)';
-        menu.style.right = 'auto';
-      }
-
-      dropdown.classList.add('active');
-    }
+    refreshDesktopSettings();
+    if (typeof window.ppOpenModal === 'function') window.ppOpenModal('settingsModal');
   });
 }
 
@@ -1654,25 +1581,23 @@ function updateKeyMetrics() {
   try {
     const metrics = calc(state);
 
-    // Full screen key metrics (Revenue, Net Income, Clients, Annual Sessions, Utilization)
-    const fullScreenIds = ['keyMetricsRevenue', 'keyMetricsIncome', 'keyMetricsClients', 'keyMetricsAnnualSessions', 'keyMetricsUtilization'];
-    const fullScreenValues = [metrics.revenue || 0, metrics.income || 0, metrics.clients || 0, metrics.totalSessions || 0, metrics.capacityPct || 0];
-    const formatters = [fmtMoney0, fmtMoney0, fmtInt, fmtInt, fmtPct1];
+    // Appbar at-a-glance chips (Revenue, Net income, Utilization). Net income
+    // is the only one kept on narrow widths; tapping opens the glance modal.
+    const setText = (id, val) => { const el = $('#' + id); if (el) el.textContent = val; };
+    const revenue = fmtMoney0(metrics.revenue || 0);
+    const income = fmtMoney0(metrics.income || 0);
+    const util = fmtPct1(metrics.capacityPct || 0);
+    setText('abkRevenue', revenue);
+    setText('abkIncome', income);
+    setText('abkUtil', util);
 
-    fullScreenIds.forEach((id, idx) => {
-      const el = $('#' + id);
-      if (el) el.textContent = formatters[idx](fullScreenValues[idx]);
-    });
-
-    // Mobile key metrics (Revenue, Net Income, Clients, Annual Sessions, Utilization - same as full screen)
-    const mobileIds = ['mobileKeyMetricsRevenue', 'mobileKeyMetricsIncome', 'mobileKeyMetricsClients', 'mobileKeyMetricsAnnualSessions', 'mobileKeyMetricsUtilization'];
-    const mobileValues = [metrics.revenue || 0, metrics.income || 0, metrics.clients || 0, metrics.totalSessions || 0, metrics.capacityPct || 0];
-    const mobileFormatters = [fmtMoney0, fmtMoney0, fmtInt, fmtInt, fmtPct1];
-
-    mobileIds.forEach((id, idx) => {
-      const el = $('#' + id);
-      if (el) el.textContent = mobileFormatters[idx](mobileValues[idx]);
-    });
+    // At-a-glance modal: full default set (Revenue, Net income, Clients,
+    // Annual sessions, Utilization).
+    setText('glRevenue', revenue);
+    setText('glIncome', income);
+    setText('glClients', fmtInt(metrics.clients || 0));
+    setText('glSessions', fmtInt(metrics.totalSessions || 0));
+    setText('glUtil', util);
   } catch (e) {
     console.error('Error updating key metrics:', e);
   }
@@ -1770,7 +1695,9 @@ if (document.readyState === 'loading') {
 
 // Close modal on Escape key
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !$('#scenariosModal').classList.contains('hidden')) {
+  if (e.key !== 'Escape') return;
+  const modal = $('#scenariosModal');
+  if (modal && !modal.classList.contains('hidden')) {
     closeScenarioModal();
   }
 });
