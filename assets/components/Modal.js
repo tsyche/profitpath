@@ -33,11 +33,12 @@ export function createModal({ title, content, buttons = [], size = 'medium', id 
   };
 
   modal.style.cssText = `
-    background: white;
-    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
     padding: 24px;
     width: 90%;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--elev-4, 0 8px 32px rgba(0, 0, 0, 0.2));
     max-height: 80vh;
     overflow-y: auto;
     position: relative;
@@ -57,13 +58,13 @@ export function createModal({ title, content, buttons = [], size = 'medium', id 
     modal.style.maxWidth = sizeWidths[size];
   }
 
-  // Modal HTML structure
+  // Modal HTML structure (colors come from theme tokens so it matches dark/light)
   modal.innerHTML = `
     <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <h3 style="margin: 0; color: black !important; font-size: 20px;">${title}</h3>
-      <button class="modal-close" style="background: none; border: none; font-size: 24px; cursor: pointer; color: black !important; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">&times;</button>
+      <h3 style="margin: 0; color: var(--text); font-size: 20px;">${title}</h3>
+      <button class="modal-close" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
-    <div class="modal-body" style="color: black !important; line-height: 1.5;">
+    <div class="modal-body" style="color: var(--text); line-height: 1.5;">
       ${content}
     </div>
     ${buttons.length > 0 ? `

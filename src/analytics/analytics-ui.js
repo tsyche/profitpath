@@ -145,11 +145,11 @@ class AnalyticsUI {
     const modal = document.createElement('div');
     modal.className = 'modal-content';
     modal.innerHTML = `
-      <div class="modal-header" style="background-color: white !important; border-bottom: 1px solid #e5e7eb !important;">
-        <h3 style="color: #000000 !important; font-weight: 600 !important; margin: 0 !important; font-size: 18px !important;">Analytics Dashboard</h3>
-        <button class="btn-close" style="color: #000000 !important; background: none !important; border: none !important; font-size: 24px !important; cursor: pointer !important; padding: 0 !important;">&times;</button>
+      <div class="modal-header" style="border-bottom: 1px solid var(--border) !important;">
+        <h3 style="color: var(--text) !important; font-weight: 600 !important; margin: 0 !important; font-size: 18px !important;">Analytics Dashboard</h3>
+        <button class="btn-close" style="color: var(--muted) !important; background: none !important; border: none !important; font-size: 24px !important; cursor: pointer !important; padding: 0 !important;">&times;</button>
       </div>
-      <div class="modal-body" style="color: #000000 !important;">
+      <div class="modal-body" style="color: var(--text) !important;">
         ${this.renderDashboard(summary, events)}
       </div>
     `;
@@ -249,15 +249,15 @@ class AnalyticsUI {
       return `
         <div class="analytics-empty">
           <div style="text-align: center; padding: 40px 20px;">
-            <h3 style="color: #374151; margin-bottom: 20px;">📊 Analytics is Disabled</h3>
-            <p style="color: #6b7280; margin-bottom: 30px; line-height: 1.5;">
+            <h3 style="color: var(--text); margin-bottom: 20px;">📊 Analytics is Disabled</h3>
+            <p style="color: var(--muted); margin-bottom: 30px; line-height: 1.5;">
               Enable analytics to track your usage patterns and gain insights into your business performance.
             </p>
             <div style="margin-bottom: 20px;">
-              <button id="enableAnalyticsBtn" class="btn btn-primary" style="margin-right: 10px; color: black !important; background-color: white !important; border: 1px solid black !important;">
+              <button id="enableAnalyticsBtn" class="btn btn-primary" style="margin-right: 10px; color: #06231a !important; background-color: var(--accent) !important; border: 1px solid var(--accent) !important;">
                 📊 Enable Analytics
               </button>
-              <button id="closeAnalyticsBtn" class="btn btn-secondary" style="color: black !important; background-color: white !important; border: 1px solid black !important;">
+              <button id="closeAnalyticsBtn" class="btn btn-secondary" style="color: var(--text) !important; background-color: var(--surface-2) !important; border: 1px solid var(--border) !important;">
                 ❌ Close
               </button>
             </div>
