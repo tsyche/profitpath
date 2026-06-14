@@ -71,6 +71,58 @@ test.describe('Mobile layout & modal consistency', () => {
     await expect(page.locator('.onboarding-dialog-card')).toHaveCount(0);
   });
 
+  test('Change Industry cards are legible (dark card, light text) in dark mode', async ({ page }) => {
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await page.evaluate(() => document.getElementById('helpBtn').click());
+    await page.waitForSelector('.help-menu-btn[data-action="industry"]', { timeout: 5000 });
+    // The help-menu button's click handler is wired via a 100ms setTimeout — wait for it.
+    await page.waitForTimeout(200);
+    await page.evaluate(() => document.querySelector('.help-menu-btn[data-action="industry"]').click());
+    await page.waitForSelector('.industry-option', { timeout: 5000 });
+    const c = await page.evaluate(() => {
+      const lum = (s) => { const m = s.match(/\d+/g).map(Number); return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255; };
+      const opt = document.querySelector('.industry-option');
+      const name = document.querySelector('.industry-name');
+      return { bgLum: lum(getComputedStyle(opt).backgroundColor), textLum: lum(getComputedStyle(name).color) };
+    });
+    expect(c.bgLum).toBeLessThan(0.3);        // dark card
+    expect(c.textLum).toBeGreaterThan(0.6);   // light text
+    expect(c.textLum - c.bgLum).toBeGreaterThan(0.4); // legible contrast
+  });
+
+  test('Advanced analytics dashboard follows the modal pattern (themed, corner X)', async ({ page }) => {
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await page.waitForFunction(() => !!window.profitPathAnalyticsUI, { timeout: 5000 });
+    await page.evaluate(() => window.profitPathAnalyticsUI.showAdvancedDashboard());
+    await page.waitForSelector('#advancedDashboardModal .modal-close', { timeout: 5000 });
+    const info = await page.evaluate(() => {
+      const lum = (s) => { const m = s.match(/\d+/g).map(Number); return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255; };
+      const modal = document.getElementById('advancedDashboardModal');
+      const hdr = modal.querySelector('.modal-header');
+      const x = modal.querySelector('.modal-close');
+      const card = modal.querySelector('.stat-card');
+      const hr = hdr.getBoundingClientRect();
+      const xr = x.getBoundingClientRect();
+      // Header bg may be transparent (inherits modal surface) — fall back to the content bg.
+      const hbg = getComputedStyle(hdr).backgroundColor;
+      const headerBg = hbg.includes('rgba(0, 0, 0, 0)') ? getComputedStyle(modal.querySelector('.modal-content')).backgroundColor : hbg;
+      return {
+        usesStandardX: x.className === 'modal-close',
+        xRightInset: Math.round(hr.right - xr.right),
+        headerBgLum: lum(headerBg),
+        cardBgLum: lum(getComputedStyle(card).backgroundColor),
+      };
+    });
+    expect(info.usesStandardX).toBe(true);
+    expect(info.xRightInset).toBeLessThan(24);   // tight in the corner
+    expect(info.headerBgLum).toBeLessThan(0.3);  // themed dark, not a white strip
+    expect(info.cardBgLum).toBeLessThan(0.3);    // stat cards themed too
+
+    // Close returns to the basic dashboard (standard back behavior).
+    await page.evaluate(() => document.querySelector('#advancedDashboardModal .modal-close').click());
+    await expect(page.locator('#advancedDashboardModal')).toHaveCount(0);
+  });
+
   test('Scenarios modal has the X but no redundant footer Close button', async ({ page }) => {
     await page.evaluate(() => document.getElementById('desktopScenariosBtn').click());
     await page.waitForSelector('#scenariosModal', { timeout: 5000 });
