@@ -147,7 +147,7 @@ class AnalyticsUI {
     modal.innerHTML = `
       <div class="modal-header" style="border-bottom: 1px solid var(--border) !important;">
         <h3 style="color: var(--text) !important; font-weight: 600 !important; margin: 0 !important; font-size: 18px !important;">Analytics Dashboard</h3>
-        <button class="btn-close" style="color: var(--muted) !important; background: none !important; border: none !important; font-size: 24px !important; cursor: pointer !important; padding: 0 !important;">&times;</button>
+        <button class="modal-close" aria-label="Close">&times;</button>
       </div>
       <div class="modal-body" style="color: var(--text) !important;">
         ${this.renderDashboard(summary, events)}
@@ -163,7 +163,7 @@ class AnalyticsUI {
     modalOverlay.classList.remove('hidden');
 
     // Close handlers
-    const closeBtn = modal.querySelector('.btn-close');
+    const closeBtn = modal.querySelector('.modal-close');
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
         modalOverlay.classList.add('hidden');
@@ -640,49 +640,49 @@ class AnalyticsUI {
 
     modal.innerHTML = `
       <div class="modal-content" style="max-width: 900px;">
-        <div class="modal-header" style="background-color: white !important; border-bottom: 1px solid #e5e7eb !important;">
-          <h3 style="color: #000000 !important; font-weight: 600 !important;">Advanced Analytics Dashboard</h3>
-          <button class="btn-close" style="color: #000000 !important;">&times;</button>
+        <div class="modal-header">
+          <h3 style="font-weight: 600; margin: 0;">Advanced Analytics Dashboard</h3>
+          <button class="modal-close" aria-label="Close">&times;</button>
         </div>
-        <div class="modal-body" style="color: #000000 !important; padding: 20px; max-height: 70vh; overflow-y: auto;">
+        <div class="modal-body" style="color: var(--text); padding: 20px; max-height: 70vh; overflow-y: auto;">
           <div class="analytics-section" style="margin-bottom: 30px;">
-            <h4 style="color: #000000 !important; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">📊 Detailed Statistics</h4>
+            <h4 style="color: var(--text); margin-bottom: 15px; border-bottom: 2px solid var(--border); padding-bottom: 8px;">📊 Detailed Statistics</h4>
             <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-              <div class="stat-card" style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
-                <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Total Events</div>
-                <div style="color: #000; font-size: 24px; font-weight: bold;">${summary.totalEvents || 0}</div>
+              <div class="stat-card" style="background: var(--surface-2); padding: 15px; border-radius: 8px;">
+                <div style="color: var(--muted); font-size: 12px; margin-bottom: 5px;">Total Events</div>
+                <div style="color: var(--text); font-size: 24px; font-weight: bold;">${summary.totalEvents || 0}</div>
               </div>
-              <div class="stat-card" style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
-                <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Total Sessions</div>
-                <div style="color: #000; font-size: 24px; font-weight: bold;">${summary.totalSessions || 0}</div>
+              <div class="stat-card" style="background: var(--surface-2); padding: 15px; border-radius: 8px;">
+                <div style="color: var(--muted); font-size: 12px; margin-bottom: 5px;">Total Sessions</div>
+                <div style="color: var(--text); font-size: 24px; font-weight: bold;">${summary.totalSessions || 0}</div>
               </div>
-              <div class="stat-card" style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
-                <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Avg Events/Session</div>
-                <div style="color: #000; font-size: 24px; font-weight: bold;">${summary.totalSessions ? Math.round(summary.totalEvents / summary.totalSessions) : 0}</div>
+              <div class="stat-card" style="background: var(--surface-2); padding: 15px; border-radius: 8px;">
+                <div style="color: var(--muted); font-size: 12px; margin-bottom: 5px;">Avg Events/Session</div>
+                <div style="color: var(--text); font-size: 24px; font-weight: bold;">${summary.totalSessions ? Math.round(summary.totalEvents / summary.totalSessions) : 0}</div>
               </div>
-              <div class="stat-card" style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
-                <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Data Range</div>
-                <div style="color: #000; font-size: 14px; font-weight: bold;">${summary.dateRange?.start ? new Date(summary.dateRange.start).toLocaleDateString() : 'No data'} - ${summary.dateRange?.end ? new Date(summary.dateRange.end).toLocaleDateString() : ''}</div>
+              <div class="stat-card" style="background: var(--surface-2); padding: 15px; border-radius: 8px;">
+                <div style="color: var(--muted); font-size: 12px; margin-bottom: 5px;">Data Range</div>
+                <div style="color: var(--text); font-size: 14px; font-weight: bold;">${summary.dateRange?.start ? new Date(summary.dateRange.start).toLocaleDateString() : 'No data'} - ${summary.dateRange?.end ? new Date(summary.dateRange.end).toLocaleDateString() : ''}</div>
               </div>
             </div>
           </div>
-          
+
           <div class="analytics-section" style="margin-bottom: 30px;">
-            <h4 style="color: #000000 !important; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">🎯 Feature Usage</h4>
-            <div class="feature-list" style="background: #f9fafb; padding: 15px; border-radius: 8px;">
+            <h4 style="color: var(--text); margin-bottom: 15px; border-bottom: 2px solid var(--border); padding-bottom: 8px;">🎯 Feature Usage</h4>
+            <div class="feature-list" style="background: var(--surface-2); padding: 15px; border-radius: 8px;">
               ${this.renderFeatureUsage(events)}
             </div>
           </div>
-          
+
           <div class="analytics-section">
-            <h4 style="color: #000000 !important; margin-bottom: 15px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">📈 Recent Activity</h4>
-            <div class="activity-list" style="background: #f9fafb; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto;">
+            <h4 style="color: var(--text); margin-bottom: 15px; border-bottom: 2px solid var(--border); padding-bottom: 8px;">📈 Recent Activity</h4>
+            <div class="activity-list" style="background: var(--surface-2); padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto;">
               ${this.renderRecentActivity(events)}
             </div>
           </div>
         </div>
-        <div class="modal-footer" style="padding: 15px; border-top: 1px solid #e5e7eb; text-align: right;">
-          <button class="btn btn-secondary" id="backToBasicBtn" style="color: black !important; background-color: white !important; border: 1px solid black !important;">Back to Basic View</button>
+        <div class="modal-footer" style="padding: 15px; border-top: 1px solid var(--border); text-align: right;">
+          <button class="btn btn-secondary" id="backToBasicBtn" style="color: var(--text); background-color: var(--surface-2); border: 1px solid var(--border);">Back to Basic View</button>
         </div>
       </div>
     `;
@@ -690,7 +690,7 @@ class AnalyticsUI {
     document.body.appendChild(modal);
 
     // Add event listeners
-    const closeBtn = modal.querySelector('.btn-close');
+    const closeBtn = modal.querySelector('.modal-close');
     const backBtn = modal.querySelector('#backToBasicBtn');
 
     const closeAdvanced = () => {
