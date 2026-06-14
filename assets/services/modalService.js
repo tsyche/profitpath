@@ -390,9 +390,18 @@ function removeToast(toast) {
     }, 300);
 }
 
+// Cap how many toasts can wait in line. In verbose mode a burst of actions can
+// flood the queue; keep only the most recent ones and drop the oldest.
+const MAX_TOAST_QUEUE = 5;
+
 export function showToast(message, type = 'info', duration = 3000) {
     // Add toast to queue
     toastQueue.push({ message, type, duration });
+
+    // Enforce the queue cap, dropping the oldest pending toast(s) first.
+    while (toastQueue.length > MAX_TOAST_QUEUE) {
+        toastQueue.shift();
+    }
 
     // Try to show it if nothing is currently displayed
     showNextToast();

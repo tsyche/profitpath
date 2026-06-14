@@ -10,63 +10,69 @@ See README.md for setup and development instructions.
 
 **Five Most Recent Completions (June 2026)**
 
-1. **Workflow Automation & CI/CD** — Migrated task runner from Makefile to justfile (modern task orchestration), automated APK builds via GitHub Actions, GitHub Pages deployment for web UI, sync-docs recipe to keep CLAUDE.md/AGENTS.md in sync
-2. **Mobile App Infrastructure (Capacitor)** — Bootstrapped Capacitor v8 for iOS and Android app store distribution, configured native platform layers, setup cross-platform build pipeline, documented complete MOBILE_APP_STRATEGY.md with 40-50 hour timeline
-3. **Documentation Consolidation & Audit** — Consolidated CLAUDE.md/AGENTS.md alignment, created comprehensive FEATURES.md, audited and updated test counts (493 tests across 34 files), fixed stale documentation references
-4. **Settings & Experience Level Polish** (April 2026) — Fixed feature gating for tooltips by level, implemented toast queuing system, tab-style UI for experience selector, prevented duplicate event listeners and toasts
-5. **Comprehensive Settings Test Suite** (April 2026) — Added 22 new tests covering experience level switching, feature gates, tooltip state changes, checkbox updates, persistence, and toast behavior
+1. **Header/Menu App-Bar Redesign + All-Modals Theming** — Replaced the tall header with a slim app bar (hamburger drawer, inline Scenarios/Templates, at-a-glance KPIs, a Forecast/Current toggle badge synced to the mode select, fixed undo/redo + theme cluster), restored the original sun logo; made Scenarios/Templates/Settings/at-a-glance consistent modals that bottom-dock on mobile; themed **every** modal via design tokens (Modal.js, scenarios, analytics dashboard, feedback) so they match dark/light; un-gated all export formats in the menu; added a `header_redesign` e2e regression suite (`9e668c9`, branch `modernize-ui` — pending merge)
+2. **Light/Dark Theming + Material Refresh + Accent Palettes** — Material-influenced dark/light themes with no-flash toggle, self-hosted Inter font, elevation/motion system, `prefers-reduced-motion` guard, runtime accent palettes (`?palette=teal|emerald|indigo|amber`, emerald default) (`a8c4621`, branch `modernize-ui`)
+3. **Customer Acquisition & Growth Modeling** — CAC tracking, customer lifetime value (LTV), churn rate modeling, and growth projections; completes the financial analysis suite (`src/analytics/customer-analytics.js`, `customer-ui.js`)
+4. **Localization & Formatting Infrastructure** — Multi-currency support, localized number formatting, and configurable precision groundwork (`src/localization/index.js`)
+5. **Accessibility & Mobile Experience** — Keyboard navigation, screen-reader optimization, larger touch targets, and mobile-responsive input handling (`assets/accessibility.js`)
 
-**Supporting Improvements**
-- Interactive Scenario Comparison (Side-by-Side Diff) with summary metrics and export/sharing
-- Experience Level gating system with visual restriction badges and explanatory panels
-- Toast queue system that displays notifications sequentially instead of all at once
-- Bug fixes: Modal text contrast, tooltip positioning, mode switch UX, redundant toasts, checkbox syncing
+**Earlier (April–May 2026)**
+- Code Audit & Repo Hardening — export/print XSS + CSV formula-injection fixes, localStorage key-drift fixes, ~8.5k lines of dead code removed, PWA manifest icon repaired, service worker + test suite version-controlled
+- Workflow Automation & CI/CD — Makefile→justfile migration, APK builds via GitHub Actions, GitHub Pages deployment, sync-docs recipe
+- Mobile App Infrastructure (Capacitor v5) for iOS/Android distribution; MOBILE_APP_STRATEGY.md
+- Settings & Experience Level polish (feature gating, toast queue, tab-style selector) + 22-test suite
+- Interactive Scenario Comparison (side-by-side diff) with summary metrics and sharing
 
 ---
 
 ## Top 5 Recommended Next Tasks
 
-1. **Accessibility & Mobile Experience** ⭐ START HERE
-   - Full keyboard navigation and screen reader optimization
-   - Mobile-responsive design improvements (touch targets, input handling)
-   - Mobile-first layout polish
-   - Highest impact-to-effort ratio; broadens addressable market to accessibility-conscious users
-   - ~3-4 hours effort
+1. **Merge UI Modernization + clear deferred cleanups** ⭐ BUILT & VERIFIED (branch `modernize-ui`)
+   - The full UI modernization is done: dark/light + no-flash toggle, emerald default palette + runtime palettes, self-hosted Inter, elevation/motion system, the header/menu app-bar redesign, all-modals theming, mode-toggle badge, and the `#007bff` analytics buttons are tokenized. Verified: 278 unit, 114 e2e (chromium + firefox), 0 lint errors, clean build, screenshots across web + mobile widths
+   - Remaining before/with merge (all small): theme `advanced-dashboard.css` analytics-dashboard internals (~20 light cards, only visible when analytics is enabled with data), remove ~80 dead `mobile*` no-op handler bindings in `app.jsx`, consolidate the three `escapeHtml` copies
+   - Action: merge `modernize-ui` → main (needs approval), then the cleanups above
+   - ~1.5-2 hours of cleanup + merge
 
-2. **Advanced Formatting & Localization** (Quick Win)
-   - Multi-currency support (EUR, GBP, CAD, AUD)
-   - Localized number formatting
-   - Configurable decimal precision per metric
-   - Enables international expansion with minimal effort
-   - ~2 hours effort
-
-3. **Customer Acquisition & Growth Modeling** (Core Analytics)
-   - Customer acquisition cost (CAC) tracking
-   - Customer lifetime value (LTV) calculations
-   - Churn rate modeling
-   - Growth rate projections
-   - Completes financial analysis suite
-   - ~4-6 hours effort
-
-4. **Help & Onboarding Enhancements** (Quick Win)
+2. **Help & Onboarding Enhancements** (Quick Win)
    - Contextual help for advanced features and calculations
-   - Video tutorials for key workflows
    - FAQ improvements and inline documentation
    - High impact: reduces support burden, improves feature discoverability
    - ~2-3 hours effort
 
-5. **Performance Optimization & Caching** (Strategic Foundation)
+3. **Read-only Scenario Sharing & Collaborative Comments**
+   - Shareable read-only links (builds on the existing URL-encode share path in `miscService.js`)
+   - Annotation/comment system on calculations and offerings; client presentation mode
+   - Enables team workflows and client collaboration
+   - ~2-3 hours effort
+
+4. **Performance Optimization & Caching** (Strategic Foundation)
    - Profile calculation engine; identify bottlenecks
    - Optimize cache hit rates (currently visible in debug panel)
    - Improve rendering performance for large datasets
    - Enables heavier features (multi-year projections, advanced analytics) without degradation
    - ~3-4 hours effort
 
+5. **Data Visualization & Visual Indicators** (Flashy Quick Win)
+   - Replace text-only KPIs with progress rings / gauges for utilization and break-even
+   - Animated KPI counters on recalculation; danger/warning/success states
+   - Pairs naturally with the UI modernization already in flight
+   - ~4-5 hours effort
+
 ---
 
 ## Fully Prioritized Backlog (high → low)
 
-**Code Quality (Deferred from June 2026 Audit)**
+**Code Quality (Deferred from June 2026 Audits)**
+
+0. Theme the analytics-dashboard internals (`src/analytics/advanced-dashboard.css`)
+   - ~20 hardcoded-white card/chart backgrounds remain light in dark mode; only visible when analytics is enabled with data (the modal shell + empty state are already themed)
+   - Swap to design tokens (`--surface`, `--surface-2`, `--text`, `--border`); verify by enabling analytics
+   - Effort: ~45 min
+
+0. Remove ~80 dead `mobile*` handler bindings in `app.jsx`
+   - Guarded no-ops left over from the old mobile menu (now an app-bar drawer + bottom bar)
+   - Risk: none (they no-op), but they're dead weight and confuse future readers
+   - Effort: ~30 min
 
 0. Consolidate duplicate `escapeHtml` implementations
    - Three copies exist: `miscService.js`, `visualizationService.js`, and a fallback delegate in `app.jsx`
@@ -81,40 +87,27 @@ See README.md for setup and development instructions.
 
 **Immediate Next (Foundation & Quick Wins)**
 
-1. Accessibility & Mobile Experience
-   - Full keyboard navigation and screen reader optimization
-   - Mobile-responsive design improvements (touch targets, input handling)
-   - Touch gesture support and mobile-first layout polish
-   - Impact: Broadens addressable market, enables accessibility features
-   - Effort: ~3-4 hours
+1. UI Modernization — ✅ built & verified; merge `modernize-ui` → main (needs approval)
+   - Material theme, light/dark, emerald default + runtime palettes, self-hosted font, motion system, header/menu app-bar redesign, all-modals theming, mode-toggle badge, tokenized analytics buttons — all shipped on branch
+   - Remaining: the cleanups in the Code Quality block above (analytics-dashboard internals, dead `mobile*` bindings), then merge
+   - Effort: ~1.5-2 hours cleanup + merge
 
-2. Advanced Formatting & Localization (Quick Win)
-    - Multi-currency support (EUR, GBP, CAD, AUD)
-    - Localized number formatting (1,000 vs 1.000 vs 1000)
-    - Configurable decimal precision per metric
-    - Impact: Enables international expansion
-    - Effort: ~2 hours
+2. Help & Onboarding Enhancements (Quick Win)
+   - Contextual help for advanced features and calculations
+   - FAQ improvements and inline documentation
+   - Impact: Reduces support burden, improves feature discoverability
+   - Effort: ~2-3 hours
 
-**Core Analytics Expansion**
+**Collaboration & Insights (High-Value Additions)**
 
-3. Customer Acquisition & Growth Modeling
-   - Customer acquisition cost (CAC) tracking
-   - Customer lifetime value (LTV) calculations
-   - Churn rate modeling
-   - Growth rate projections
-   - Impact: Completes financial analysis suite
-   - Effort: ~4-6 hours
-
-**New: Collaboration & Insights (High-Value Additions)**
-
-4. Read-only Scenario Sharing & Collaborative Comments
+3. Read-only Scenario Sharing & Collaborative Comments
    - Generate shareable read-only links for scenarios
    - Annotation/comment system on calculations and offerings
    - Client presentation mode without editing risk
    - Impact: Enables team workflows and client collaboration
    - Effort: ~2-3 hours
 
-5. AI-Powered Profitability Insights Engine
+4. AI-Powered Profitability Insights Engine
    - Rules-based optimization suggestions ("increase price X by 10%")
    - Automated alerts for declining utilization
    - Competitive pricing recommendations
@@ -124,22 +117,18 @@ See README.md for setup and development instructions.
 
 **Visual Design & Cutting-Edge Polish**
 
-6. Micro-interactions & Animation Polish
-   - Smooth number animations for KPI values (animated counters)
-   - Enhanced button/input focus states with visual feedback
-   - Hover effects revealing additional context
-   - Subtle scale transforms and transitions
-   - Smoother modal/toast entrance animations
-   - Effort: ~3-4 hours
+5. Micro-interactions & Animation Polish
+   - ✅ Partially done in UI Modernization: spring button press, card/KPI hover lift, motion easing system, `prefers-reduced-motion` guard
+   - Remaining: animated KPI counters (numbers rolling up on recalculation), CSS ripple on buttons, smoother modal/toast entrance
+   - Effort: ~2 hours remaining
 
-7. Modern Visual Effects & Color Enhancement
-   - Glassmorphism effects on modals, cards, overlays (backdrop blur)
-   - Subtle gradient layers on KPI boxes and section headers
-   - Enhanced color contrast and accent color usage
-   - Refined typography hierarchy and visual rhythm
-   - Effort: ~2-3 hours
+6. Modern Visual Effects & Color Enhancement
+   - ✅ Done in UI Modernization: light/dark mode, runtime accent palettes, self-hosted Inter type, elevation scale
+   - Note: glassmorphism intentionally dropped for Material-style tonal surfaces (cleaner, less iOS, better low-end Android perf)
+   - Remaining: subtle gradient layers on KPI boxes/section headers, typography rhythm pass
+   - Effort: ~1-2 hours
 
-8. Data Visualization & Visual Indicators
+7. Data Visualization & Visual Indicators
     - Replace text-only KPI displays with visual indicators (progress rings, gauges)
     - Animated progress circles for utilization percentages
     - Visual break-even indicators (danger/warning/success states)
@@ -148,14 +137,14 @@ See README.md for setup and development instructions.
 
 **Advanced Analytics (4-6 Hour Tasks)**
 
-9. Advanced Chart Types
+8. Advanced Chart Types
     - Heat maps for multi-variable sensitivity analysis
     - Radar charts for balanced scorecard views
     - Funnel charts for customer journey
     - Geographic pricing maps
     - Effort: ~4-6 hours
 
-10. Tax & Financial Report Generator
+9. Tax & Financial Report Generator
     - Quarterly income projection summaries
     - Tax liability report with itemization
     - Business performance summary for loan applications
@@ -165,14 +154,14 @@ See README.md for setup and development instructions.
 
 **Industry Intelligence & Competitive Positioning**
 
-11. Industry Benchmarks & Competitive Pricing
+10. Industry Benchmarks & Competitive Pricing
     - ✅ Templates complete (consulting, cleaning, landscaping, fitness, photography, handyman)
     - Industry benchmark comparisons and regional pricing data
     - Success metric tracking and performance standards
     - Regional pricing variations by market
     - Effort: ~4-6 hours (templates done; focus on benchmarking)
 
-12. Seasonal & Market Adjustments
+11. Seasonal & Market Adjustments
     - Seasonal demand modeling with monthly/quarterly variations
     - Geographic pricing variations by region
     - Market rate comparisons and competitive pricing
@@ -181,7 +170,7 @@ See README.md for setup and development instructions.
 
 **Mobile & Platform Support (Scale Layer)**
 
-13. Native Android & iOS Support via Capacitor ⭐ DETAILED STRATEGY AVAILABLE
+12. Native Android & iOS Support via Capacitor ⭐ DETAILED STRATEGY AVAILABLE
     - Build and distribute iOS and Android apps via Capacitor wrapper
     - Zero code changes to core app (uses existing web codebase)
     - Native app shell with service worker for offline capability
@@ -197,14 +186,14 @@ See README.md for setup and development instructions.
 
 **Enterprise Features (Scale Layer — Deferred)**
 
-14. Advanced Scenario Management
+13. Advanced Scenario Management
     - Scenario versioning and history tracking
     - Bulk import/export operations
     - Scenario templates and inheritance
     - Team sharing and permissions (requires backend infrastructure)
     - Effort: ~8-10 hours
 
-15. Integration & Automation
+14. Integration & Automation
     - API for third-party integrations
     - Webhook notifications for key metrics
     - Automated data syncing with external services
@@ -212,14 +201,14 @@ See README.md for setup and development instructions.
     - **Note**: Requires backend infrastructure
     - Effort: ~10-12 hours
 
-16. Multi-Year Strategic Planning
+15. Multi-Year Strategic Planning
     - 3-5 year financial projections
     - Hiring and scaling recommendations
     - Investment payback analysis
     - Strategic milestone tracking
     - Effort: ~8-10 hours
 
-17. Optimizer Mode & AI Insights
+16. Optimizer Mode & AI Insights
     - Automated optimization suggestions based on business data
     - Machine learning price optimization
     - Predictive analytics for business outcomes
@@ -288,7 +277,7 @@ Ads destroy trust in financial planning tools. Business owners need to feel conf
 
 ## Status & Notes
 
-- **Current status**: Application is fully functional with comprehensive test coverage (493 tests across 34 files), dev server stable. Recent work (June 2026) focused on workflow automation (justfile migration, GitHub Actions CI/CD, documentation audits) and mobile app infrastructure (Capacitor setup for iOS/Android). Settings system has 22 dedicated tests ensuring feature gates, toast queueing, and UI sync work correctly.
+- **Current status**: Application is fully functional with comprehensive test coverage (278 unit tests across 26 files, 1 skipped, plus 114 Playwright e2e across chromium + firefox), dev server stable. Recent work (June 2026) focused on the customer-acquisition/growth analytics, localization & accessibility shipments, a full code audit (security + dead-code + PWA fixes), and a now-complete UI modernization — light/dark + Material refresh, the header/menu app-bar redesign, and all-modals theming — on branch `modernize-ui`, verified and pending merge to main. Settings system has 22 dedicated tests ensuring feature gates, toast queueing, and UI sync work correctly.
 - **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard.
 - **Latest milestones**: 
   - Sensitivity Analysis: Interactive sliders for pricing, overhead, utilization, and employees with tornado impact charts
@@ -297,17 +286,17 @@ Ads destroy trust in financial planning tools. Business owners need to feel conf
   - Undo/Redo: Full 50-entry history stack with Ctrl+Z/Ctrl+Shift+Z shortcuts and debounced table edits
   - Performance Dashboard: Real-time cache hit rate, calculation timing, entry count (Advanced feature gate)
 - **Next priorities** (Reordered by impact/effort):
-  1. **Accessibility & Mobile Experience** ⭐ — Highest impact-to-effort ratio; broadens addressable market to accessibility-conscious users and mobile-first business owners
-  2. **Advanced Formatting & Localization** — Quick 2-hour win; enables international expansion (EUR, GBP, CAD, AUD support)
-  3. **Customer Acquisition & Growth Modeling** — Completes financial analysis suite with CAC, LTV, and churn tracking
-  4. **Read-only Scenario Sharing & Comments** — New high-value feature enabling team workflows without backend complexity
-  5. **AI-Powered Profitability Insights** — Transforms calculator into strategic advisor with rules-based optimization suggestions
-- **Strategic positioning**: Sensitivity analysis, tax calculations, and CSV import create a powerful financial modeling foundation. Reordering priorities to accessibility-first because: (1) expands market to accessibility-conscious segments, (2) enables screen reader users, (3) improves mobile experience for on-the-go usage, (4) higher impact than micro-interactions. Quick wins (localization, insights) keep momentum. Enterprise features (mobile app, backend integrations) deferred until market demand validates investment.
+  1. **Merge UI Modernization** ⭐ — light/dark + Material refresh + header redesign + all-modals theming built & verified on `modernize-ui`; do the small deferred cleanups, then merge to main
+  2. **Help & Onboarding Enhancements** — quick win; contextual help + FAQ reduces support burden, improves discoverability
+  3. **Read-only Scenario Sharing & Comments** — high-value feature enabling team workflows without backend complexity
+  4. **Performance Optimization & Caching** — unblocks heavier features (multi-year projections); cache hit rates already visible in debug panel
+  5. **Data Visualization & Visual Indicators** — progress rings/gauges + animated counters; pairs with the UI work in flight
+- **Strategic positioning**: Accessibility, localization, customer-acquisition analytics, and the UI modernization (light/dark, app-bar redesign, all-modals theming) all shipped in June, completing the core financial-modeling + reach + polish foundation. Focus now shifts to discoverability (help/onboarding), collaboration (read-only sharing), and visual indicators (progress rings/gauges) to drive retention. Enterprise features (backend integrations, full native app build-out) deferred until market demand validates investment.
 - **Quick wins available** (High-Value, Low Effort):
-  - Advanced Formatting & Localization (2 hrs) — multi-currency support, international expansion
+  - Help & Onboarding Enhancements (2-3 hrs) — contextual help, FAQ, discoverability
   - Read-only Scenario Sharing & Comments (2-3 hrs) — collaboration without backend
   - Tax & Financial Report Generator (2-3 hrs) — extends value beyond simulation
-  - Mobile-First Responsive Refinements (2-3 hrs) — touch targets, input handling
+  - Consolidate `escapeHtml` + clear lint warnings (1.5 hrs) — code-quality debt from the June audit
 - **Enterprise features (items 14-17) are deferred**: Represent significant scope expansion and require backend infrastructure (or ML infrastructure). Validate strong market demand before investing 8-15 hours per feature.
 
 ### User Feedback & Research Loop
@@ -324,10 +313,10 @@ This section tracks common feature requests, friction points, and competitive ga
 **How to use**: Update this list after customer conversations, support tickets, or user interviews. Use to validate roadmap priorities and surface unexpected user needs.
 
 - **Audit notes (June 2026)**: 
-  - **Recent focus**: Workflow automation (Makefile → justfile migration, GitHub Actions setup), mobile app infrastructure (Capacitor v8 iOS/Android), documentation consolidation and test count audit
-  - **Significant growth**: Test suite grew from 224 tests (April) to 493 tests (June) — 120% increase in coverage
-  - **Mobile app readiness**: Capacitor infrastructure complete, iOS/Android project structures created, MOBILE_APP_STRATEGY.md provides detailed 40-50 hour implementation plan across 4 phases
-  - **Documentation maturity**: CLAUDE.md/AGENTS.md aligned, FEATURES.md comprehensive, MOBILE_APP_STRATEGY.md detailed with testing checklists and implementation guides
+  - **Recent focus**: Shipped customer-acquisition/growth analytics, localization, and accessibility; ran a full code audit; completed UI modernization (light/dark + Material, header/menu app-bar redesign, all-modals theming) on `modernize-ui` — verified, pending merge
+  - **Code audit outcomes**: Fixed export/print XSS + CSV formula-injection, two localStorage key-drift bugs, removed ~8.5k lines of dead parallel implementation, repaired the PWA manifest icon, and brought the service worker + 24 test files under version control. Unit suite at 278 tests / 26 files (1 skipped), 0 lint errors.
+  - **Known debt**: Capacitor is on v5.7.8, three majors behind latest (v8) — a deliberate upgrade decision pending a native-build test plan. Three `escapeHtml` copies and 137 test-file lint warnings remain (tracked in Code Quality backlog).
+  - **Mobile app readiness**: Capacitor (v5) infrastructure complete, iOS/Android project structures created, MOBILE_APP_STRATEGY.md provides a detailed 40-50 hour implementation plan across 4 phases
   - **CI/CD foundation**: GitHub Actions configured for APK builds, GitHub Pages deployment, automated testing pipeline in place
   - **Next focus areas**: 
     1. **Immediate**: Mobile app Phase 1-2 (Capacitor setup validation, iOS TestFlight, ~12-15 hours)
@@ -336,10 +325,10 @@ This section tracks common feature requests, friction points, and competitive ga
   - **Note for Phase 4**: Remember to keep web and mobile versions in sync (same version numbers, synchronized releases)
 
 ### Test Coverage Status (June 2026 Audit)
-- **493 tests** across 34 test files (comprehensive suite: unit, integration, and e2e)
-- **Pass rate**: ~99.6% (491+ passing, minimal skips)
+- **278 unit tests** across 26 files (1 skipped), plus **114 Playwright e2e** across chromium + firefox
+- **Pass rate**: 100% of unit tests passing (1 intentional skip); 100% e2e passing; 0 lint errors
 - **Health score**: 8.8+/10 — production-ready with excellent feature gating and settings system validation
-- **Recent expansions**: Added tooltip system tests (50+), feature gating tests (45+), E2E scenario workflows (15+), E2E export tests (25+)
+- **Recent expansions**: Added the `header_redesign` e2e suite (modal theming, mode toggle, mobile drawer/bottom bar); reworked `export.spec`, `app.spec`, `regression_fixes` for the app-bar markup. Earlier: tooltip system tests (50+), feature gating tests (45+), E2E scenario workflows (15+)
 - **Settings & Experience Levels** (22 tests): Feature gate verification, experience level switching, tooltip state changes, checkbox state syncing, toast queue behavior, settings persistence, full integration workflows
 - **Key test areas**:
   - ✅ **Calculation Engine** (40+ tests): Mode switching, mix normalization, caching, edge cases

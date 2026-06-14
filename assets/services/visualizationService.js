@@ -1,4 +1,5 @@
 import { lazyLoadChart } from "../utils/chartUtils";
+import { escapeHtml } from "./miscService";
 
 // Import formatting utilities
 const DEFAULT_CURRENCY = 'USD';
@@ -10,16 +11,6 @@ const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 })
 const $ = (selector) => {
   if (typeof document === 'undefined') return null;
   return document.querySelector(selector);
-};
-
-// HTML escape helper
-const escapeHtml = (str) => {
-  return String(str == null ? '' : str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
 };
 
 // Visualization Services

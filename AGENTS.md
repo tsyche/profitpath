@@ -80,10 +80,10 @@ manifest.json        # PWA configuration
 #### 3. Settings & Feature Gating (`src/settings/index.js`)
 - **Purpose**: Manages user preferences and progressive disclosure
 - **Experience Levels**:
-  - **Beginner**: Basic features only (calculations, simple exports)
-  - **Intermediate**: Advanced calculations, detailed breakdowns, scenario comparison
-  - **Advanced**: All features including debug panel, performance metrics, full export suite
-- **Feature Gates**: Automatic feature enablement based on experience level
+  - **Beginner**: Basic features only (core calculations, scenario management)
+  - **Intermediate**: Advanced calculations, detailed breakdowns, scenario comparison, sensitivity analysis
+  - **Advanced**: All features including debug panel, performance metrics, sensitivity analysis
+- **Feature Gates**: Automatic feature enablement based on experience level. Note: export formats are always available regardless of level (see `docs/experience-levels.md`).
 
 #### 4. State Management
 - **Global State**: Single `state` object containing all application data
@@ -183,7 +183,7 @@ http://localhost:3000/?testScenario=default
 
 ### Testing Strategy
 
-#### Test Coverage (270+ unit tests, 90 e2e tests passing)
+#### Test Coverage (291 unit tests, 134 e2e runs passing)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.js`)

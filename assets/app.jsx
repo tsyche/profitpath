@@ -8,8 +8,9 @@ import * as businessLogic from './services/businessLogic';
 import { saveScenario, loadScenario, deleteScenario } from './services/scenarioService';
 import { closeScenarioModal, createModal } from './components/Modal.js';
 import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL } from './services/miscService';
-import { uuid } from './utils/helpers';
+import { uuid, clamp } from './utils/helpers';
 import { showToast } from './services/modalService.js';
+import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui.js';
 
 // Test scenarios for development
 const TEST_SCENARIOS = {
@@ -26,8 +27,7 @@ const TEST_SCENARIOS = {
   }
 };
 
-// wrappers around miscService mobile menu helpers to avoid ReferenceErrors in test env
-const closeMobileMenu = (...args) => (misc && typeof misc.closeMobileMenu === 'function') ? misc.closeMobileMenu(...args) : undefined;
+// wrapper around miscService helper to avoid ReferenceErrors in test env
 const restoreScheduling = (...args) => (misc && typeof misc.restoreScheduling === 'function') ? misc.restoreScheduling(...args) : undefined;
 
 // HTML escape helper
@@ -225,7 +225,6 @@ const lazyLoadChart = (...args) => (misc && typeof misc.lazyLoadChart === 'funct
 const updateRichVisualizations = (...args) => (misc && typeof misc.updateRichVisualizations === 'function') ? misc.updateRichVisualizations(...args) : undefined;
 
 // Utility functions
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
 // Settings and UI function wrappers
 const DEFAULT_CURRENCY = 'USD';
@@ -531,33 +530,18 @@ function render() {
     const el = $('#modeSelect'); if (el) el.value = state.mode;
   }
 
-  // Update simulator badge text and color based on mode (desktop)
+  // Sync the appbar mode toggle (Forecast <-> Current) with current state.
   {
-    const badge = $('.simulator-badge');
+    const badge = $('#modeBadgeBtn');
     if (badge) {
-      const muted = badge.querySelector('.muted');
-      if (muted) {
-        muted.textContent = state.mode === 'forecast' ? 'forecast mode' : 'active customers';
-      }
-      const dot = badge.querySelector('.dot');
-      if (dot) {
-        dot.className = 'dot ' + (state.mode === 'forecast' ? 'dot-forecast' : 'dot-active');
-      }
-    }
-  }
-
-  // Update simulator badge text and color based on mode (mobile)
-  {
-    const badge = $('.mobile-menu-badge');
-    if (badge) {
-      const modeSpan = badge.querySelectorAll('span')[1];
-      if (modeSpan) {
-        modeSpan.textContent = state.mode === 'forecast' ? 'forecast mode' : 'active customers';
-      }
-      const dot = badge.querySelector('.dot');
-      if (dot) {
-        dot.className = 'dot ' + (state.mode === 'forecast' ? 'dot-forecast' : 'dot-active');
-      }
+      const isForecastMode = state.mode === 'forecast';
+      const label = badge.querySelector('.ab-badge-text');
+      if (label) label.textContent = isForecastMode ? 'Forecast' : 'Current';
+      badge.classList.toggle('is-current', !isForecastMode);
+      badge.setAttribute('aria-pressed', isForecastMode ? 'false' : 'true');
+      badge.title = isForecastMode
+        ? 'Forecast mode — tap to switch to Current'
+        : 'Current mode — tap to switch to Forecast';
     }
   }
 
@@ -832,25 +816,8 @@ $$('#controls select').forEach((el) => {
   if (btn) btn.addEventListener('click', resetDefaults);
 }
 
-// Templates dropdown functionality
-const templatesBtn = $('#templatesBtn');
-if (templatesBtn) {
-  templatesBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const dropdown = templatesBtn.closest('.templates-dropdown');
-    const menu = $('#templatesMenu');
-    if (!dropdown || !menu) return;
-
-    // If this menu is already active, just close it
-    if (menu.style.display === 'block') {
-      menu.style.display = 'none';
-    } else {
-      // Close other dropdowns and open this one
-      closeAllDropdowns();
-      menu.style.display = 'block';
-    }
-  });
-}
+// Templates now open the #templatesModal (via inline ppOpenModal in the markup);
+// the modal's cards delegate to the hidden .template-option handlers below.
 
 // Function to refresh desktop settings dropdown with current values
 function refreshDesktopSettings() {
@@ -883,55 +850,14 @@ window.addEventListener('settingsChanged', () => {
 // Initialize desktop settings on page load
 setTimeout(refreshDesktopSettings, 100);
 
-// Desktop Settings Cog Button
+// Settings Cog Button — opens the #settingsModal (consistent with Scenarios /
+// Templates). Refresh values first so radios/checkboxes reflect saved settings.
 const settingsCogBtn = $('#settingsCogBtn');
 if (settingsCogBtn) {
   settingsCogBtn.addEventListener('click', (e) => {
     e.preventDefault();
-    const dropdown = document.querySelector('.settings-dropdown');
-    if (!dropdown) {
-      console.error('Settings dropdown not found');
-      return;
-    }
-    // If this dropdown is already active, just close it
-    if (dropdown.classList.contains('active')) {
-      dropdown.classList.remove('active');
-    } else {
-      // Close other dropdowns and open this one
-      closeAllDropdowns();
-      // Refresh settings values before showing
-      refreshDesktopSettings();
-
-      // Position the menu directly under the cog button
-      const menu = dropdown.querySelector('.settings-menu');
-      if (menu) {
-        const buttonRect = settingsCogBtn.getBoundingClientRect();
-        const menuWidth = 320; // max-width from CSS
-        const viewportWidth = window.innerWidth;
-
-        menu.style.position = 'fixed';
-        menu.style.top = (buttonRect.bottom + 4) + 'px';
-
-        // Calculate left position, ensuring menu stays on screen
-        let leftPos = buttonRect.left + buttonRect.width / 2;
-        const menuHalfWidth = menuWidth / 2;
-
-        // If centering would put menu off left edge
-        if (leftPos - menuHalfWidth < 10) {
-          leftPos = menuHalfWidth + 10;
-        }
-        // If centering would put menu off right edge
-        else if (leftPos + menuHalfWidth > viewportWidth - 10) {
-          leftPos = viewportWidth - menuHalfWidth - 10;
-        }
-
-        menu.style.left = leftPos + 'px';
-        menu.style.transform = 'translateX(-50%)';
-        menu.style.right = 'auto';
-      }
-
-      dropdown.classList.add('active');
-    }
+    refreshDesktopSettings();
+    if (typeof window.ppOpenModal === 'function') window.ppOpenModal('settingsModal');
   });
 }
 
@@ -1254,425 +1180,28 @@ document.querySelectorAll('.export-option').forEach(option => {
   if (btn) btn.addEventListener('click', shareScenario);
 }
 
-// Hamburger menu
-const hamburgerBtn = $('#hamburgerBtn');
-const mobileMenuOverlay = $('#mobileMenuOverlay');
-const mobileMenuClose = $('#mobileMenuClose');
-const _mobileExportBtn = $('#mobileExportBtn');
-const _mobileShareBtn = $('#mobileShareBtn');
-const _mobileScenariosBtn = $('#mobileScenariosBtn');
-
-// Mobile menu functionality
-function setupMobileMenuObserver(mobileMenuOverlay) {
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-        if (mobileMenuOverlay.classList.contains('active')) {
-          setupMobileMenuHandlers();
-        }
-      }
-    });
-  });
-
-  observer.observe(mobileMenuOverlay, { attributes: true, attributeFilter: ['class'] });
-  return observer;
-}
-
-// Immediately initialize observer after defining function so it is
-// available in all environments (avoids reference errors if the call is
-// executed from a different lexical scope).
-if (mobileMenuOverlay) {
-  setupMobileMenuObserver(mobileMenuOverlay);
-}
-
-// Basic mobile menu event listeners (must be in same scope as the
-// variables above so the identifiers exist when evaluated)
-if (hamburgerBtn) {
-  // misc.toggleMobileMenu may not exist in test environment, guard accordingly
-  const handler = misc && typeof misc.toggleMobileMenu === 'function' ? misc.toggleMobileMenu : () => { };
-  hamburgerBtn.addEventListener('click', handler);
-}
-if (mobileMenuOverlay) {
-  mobileMenuOverlay.addEventListener('click', (e) => {
-    if (e.target === mobileMenuOverlay) {
-      closeMobileMenu();
-    }
-  });
-}
-if (mobileMenuClose) {
-  mobileMenuClose.addEventListener('click', closeMobileMenu);
-}
-
-function setupMobileMenuHandlers() {
-  // Mobile Tour Button
-  const mobileTourBtn = $('#mobileTourBtn');
-  if (mobileTourBtn && !mobileTourBtn._handlerAttached) {
-    mobileTourBtn._handlerAttached = true;
-    mobileTourBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      startGuidedTour();
-      // Close mobile menu after starting tour
-      setTimeout(() => {
-        const overlay = $('#mobileMenuOverlay');
-        const hamburger = $('#hamburgerBtn');
-        if (overlay && hamburger) {
-          overlay.classList.remove('active');
-          hamburger.classList.remove('active');
-        }
-      }, 100);
-    });
-  }
-
-  // Mobile Settings Button
-  const mobileSettingsBtn = $('#mobileSettingsBtn');
-  if (mobileSettingsBtn && !mobileSettingsBtn._settingsHandlerAttached) {
-    mobileSettingsBtn._settingsHandlerAttached = true;
-    mobileSettingsBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleMobileSettings();
-    });
-  }
-
-  // Mobile Export Button
-  const _mobileExportBtn = $('#mobileExportBtn');
-  if (_mobileExportBtn) {
-    setTimeout(() => {
-      setupMobileExportHandlers();
-    }, 100);
-  }
-}
-
-function toggleMobileSettings() {
-  // Toggle existing mobile settings sections
-  const settingsSections = document.querySelectorAll('.mobile-settings-section');
-  const isCurrentlyHidden = settingsSections[0]?.style.display === 'none';
-
-  settingsSections.forEach(section => {
-    section.style.display = isCurrentlyHidden ? 'block' : 'none';
-  });
-
-  if (!isCurrentlyHidden) {
-    return; // Sections are being hidden, no need to update radios
-  }
-
-  // Update settings when opening
-  const experienceSection = settingsSections[0];
-  const preferencesSection = settingsSections[1];
-
-  // Initialize settings after a short delay to ensure DOM is ready
-  const currentSettings = loadSettings ? loadSettings() : {};
-  const experienceRadios = experienceSection.querySelectorAll('input[name="mobileExperienceLevel"]');
-  experienceRadios.forEach(radio => {
-    radio.checked = radio.value === currentSettings.experienceLevel;
-    radio.addEventListener('change', (e) => {
-      if (setExperienceLevel) setExperienceLevel(e.target.value);
-      if (updateUIForSettings) updateUIForSettings();
-      // Refresh mobile checkboxes to reflect new feature gates
-      setTimeout(() => {
-        const currentSettings = loadSettings ? loadSettings() : {};
-        const mobileCheckboxes = document.querySelectorAll('.mobile-menu input[type="checkbox"]');
-        mobileCheckboxes.forEach(checkbox => {
-          const settingKey = checkbox.id.replace('mobile', '').replace(/^\w/, c => c.toLowerCase());
-          checkbox.checked = currentSettings[settingKey];
-        });
-      }, 10);
-    });
-  });
-
-  const preferencesCheckboxes = preferencesSection.querySelectorAll('input[type="checkbox"]');
-  preferencesCheckboxes.forEach(checkbox => {
-    const settingKey = checkbox.id.replace('mobile', '').replace(/^\w/, c => c.toLowerCase());
-    checkbox.checked = currentSettings[settingKey];
-    checkbox.addEventListener('change', (e) => {
-      if (updateSetting) updateSetting(settingKey, e.target.checked);
-    });
-  });
-  if (updateUIForSettings) updateUIForSettings();
-}
-
-function setupMobileExportHandlers() {
-  // Function to refresh mobile checkboxes after settings change
-  const _refreshMobileCheckboxes = () => {
-    const currentSettings = loadSettings ? loadSettings() : {};
-    const mobileCheckboxes = document.querySelectorAll('.mobile-menu input[type="checkbox"]');
-    mobileCheckboxes.forEach(checkbox => {
-      const settingKey = checkbox.id.replace('mobile', '').replace(/^\w/, c => c.toLowerCase());
-      checkbox.checked = currentSettings[settingKey];
-    });
-    // Also refresh experience level radios
-    const mobileRadios = document.querySelectorAll('.mobile-menu input[name="mobileExperienceLevel"]');
-    mobileRadios.forEach(radio => {
-      radio.checked = radio.value === currentSettings.experienceLevel;
-    });
-  };
-}
-const _mobileExportEmbed = $('#mobileExportEmbed');
-
-{
-  const mobileExportCsv = $('#mobileExportCsv');
-  if (mobileExportCsv) {
-    mobileExportCsv.addEventListener('click', () => {
-      exportAsCSV();
-      closeMobileMenu();
-    });
-  }
-}
-
-{
-  const mobileExportExcel = $('#mobileExportExcel');
-  if (mobileExportExcel) {
-    mobileExportExcel.addEventListener('click', () => {
-      exportAsExcel();
-      closeMobileMenu();
-    });
-  }
-}
-
-{
-  const mobileExportPdf = $('#mobileExportPdf');
-  if (mobileExportPdf) {
-    mobileExportPdf.addEventListener('click', () => {
-      exportAsPDF();
-      closeMobileMenu();
-    });
-  }
-}
-
-{
-  const mobileExportHtml = $('#mobileExportHtml');
-  if (mobileExportHtml) {
-    mobileExportHtml.addEventListener('click', () => {
-      exportAsHTML();
-      closeMobileMenu();
-    });
-  }
-}
-
-{
-  const mobileExportEmail = $('#mobileExportEmail');
-  if (mobileExportEmail) {
-    mobileExportEmail.addEventListener('click', () => {
-      shareViaEmail();
-      closeMobileMenu();
-    });
-  }
-}
-
-{
-  const mobileExportEmbedElem = $('#mobileExportEmbed');
-  if (mobileExportEmbedElem) {
-    mobileExportEmbedElem.addEventListener('click', () => {
-      showEmbedCode();
-      closeMobileMenu();
-    });
-  }
-}
-
-{
-  const mobileExportScheduleElem = $('#mobileExportSchedule');
-  if (mobileExportScheduleElem) {
-    mobileExportScheduleElem.addEventListener('click', () => {
-      // Schedule functionality - for now just show notification
-      showNotification('Auto-schedule feature coming soon!', 'info');
-      closeMobileMenu();
-    });
-  }
-}
-
-// Mobile share button - wrap in DOM ready check
-function setupMobileShareButton() {
-  const mobileShareBtn = $('#mobileShareBtn');
-  if (mobileShareBtn) {
-    mobileShareBtn.addEventListener('click', () => {
-      misc.shareScenario();
-      closeMobileMenu();
-    });
-  }
-}
-
-// Setup after DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', setupMobileShareButton);
-} else {
-  setupMobileShareButton();
-}
-
-const mobileExportBtn = $('#mobileExportBtn');
-if (mobileExportBtn) {
-  mobileExportBtn.addEventListener('click', () => {
-    const options = $('#mobileExportOptions');
-    if (options) {
-      const isOpen = options.style.display === 'flex';
-      _closeAllMobileSubmenus();
-      if (!isOpen) {
-        options.style.display = 'flex';
-      }
-    }
-  });
-}
-
-const mobileTemplatesBtn = $('#mobileTemplatesBtn');
-if (mobileTemplatesBtn) {
-  mobileTemplatesBtn.addEventListener('click', () => {
-    const options = $('#mobileTemplatesOptions');
-    if (options) {
-      const isOpen = options.style.display === 'flex';
-      _closeAllMobileSubmenus();
-      if (!isOpen) {
-        options.style.display = 'flex';
-      }
-    }
-  });
-}
-
-// Close any open mobile submenus
-function _closeAllMobileSubmenus() {
-  try {
-    document.querySelectorAll('.mobile-submenu').forEach(el => {
-      if (el && el.style) el.style.display = 'none';
-    });
-    // Also hide known submenu containers
-    const containers = ['#mobileTemplatesOptions', '#mobileExportOptions', '#mobileShareOptions'];
-    containers.forEach(sel => {
-      const c = document.querySelector(sel);
-      if (c && c.style) c.style.display = 'none';
-    });
-  } catch {
-    // Fail silently in environments without DOM
-  }
-}
-
-document.querySelectorAll('.mobile-templates-options .mobile-submenu-btn').forEach(option => {
-  option.addEventListener('click', (e) => {
-    e.preventDefault();
-    const template = e.target.dataset.template;
-    const menu = $('#mobileTemplatesOptions');
-    if (menu) menu.style.display = 'none';
-
-    // Track template usage
-    if (window.profitPathAnalytics) {
-      window.profitPathAnalytics.trackTemplateUsage(template, e.target.textContent.trim());
-    }
-
-    loadIndustryTemplate(template);
-    closeMobileMenu(); // Close mobile menu after loading template
-  });
-});
-
-const mobileScenariosBtn = $('#mobileScenariosBtn');
-
-if (mobileScenariosBtn) {
-  mobileScenariosBtn.addEventListener('click', () => {
-    openScenarioModal();
-    closeMobileMenu();
-  });
-}
-
-// Mobile analytics button - use event delegation since button is inside hidden menu initially
-function setupMobileAnalyticsButton() {
-  // Use event delegation on document body
-  document.body.addEventListener('click', (e) => {
-    const btn = e.target.closest('#mobileAnalyticsBtn');
-    if (btn) {
-      // More robust check for analytics UI
-      const checkAnalyticsUI = () => {
-        if (window.profitPathAnalyticsUI) {
-          // Check if method exists on instance or prototype
-          if (typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
-            window.profitPathAnalyticsUI.showAnalyticsDashboard();
-          } else if (typeof window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard === 'function') {
-            // Call via prototype if instance method not available
-            window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard.call(window.profitPathAnalyticsUI);
-          } else {
-            setTimeout(checkAnalyticsUI, 100);
-          }
-        } else {
-          setTimeout(checkAnalyticsUI, 100);
-        }
-      };
-      checkAnalyticsUI();
-      closeMobileMenu();
-    }
-  });
-}
-
-// Setup after DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', setupMobileAnalyticsButton);
-} else {
-  setupMobileAnalyticsButton();
-}
-
-const mobileFeedbackBtn = $('#mobileFeedbackBtn');
-if (mobileFeedbackBtn) {
-  mobileFeedbackBtn.addEventListener('click', () => {
-    // More robust check for feedback UI
-    const checkFeedbackUI = () => {
-      if (window.feedbackUI) {
-        // Check if method exists on instance or prototype
-        if (typeof window.feedbackUI.openFeedbackModal === 'function') {
-          window.feedbackUI.openFeedbackModal();
-        } else if (typeof window.feedbackUI.constructor.prototype.openFeedbackModal === 'function') {
-          // Call via prototype if instance method not available
-          window.feedbackUI.constructor.prototype.openFeedbackModal.call(window.feedbackUI);
-        } else {
-          setTimeout(checkFeedbackUI, 100);
-        }
-      } else {
-        setTimeout(checkFeedbackUI, 100);
-      }
-    };
-    checkFeedbackUI();
-    closeMobileMenu();
-  });
-}
-
-const mobileHelpBtn = $('#mobileHelpBtn');
-if (mobileHelpBtn) {
-  mobileHelpBtn.addEventListener('click', () => {
-    // Call the same help menu function as desktop
-    if (typeof showHelpMenu === 'function') {
-      showHelpMenu();
-    }
-    closeMobileMenu();
-  });
-}
-
-
-// Mobile Analytics button
-const mobileAnalyticsBtn = $('#mobileAnalyticsBtn');
-if (mobileAnalyticsBtn) {
-  mobileAnalyticsBtn.addEventListener('click', () => {
-    showToast('Analytics dashboard will be available in the next update!', 'info', 2000);
-  });
-}
-
 // Update key metrics for both full screen and mobile
 function updateKeyMetrics() {
   try {
     const metrics = calc(state);
 
-    // Full screen key metrics (Revenue, Net Income, Clients, Annual Sessions, Utilization)
-    const fullScreenIds = ['keyMetricsRevenue', 'keyMetricsIncome', 'keyMetricsClients', 'keyMetricsAnnualSessions', 'keyMetricsUtilization'];
-    const fullScreenValues = [metrics.revenue || 0, metrics.income || 0, metrics.clients || 0, metrics.totalSessions || 0, metrics.capacityPct || 0];
-    const formatters = [fmtMoney0, fmtMoney0, fmtInt, fmtInt, fmtPct1];
+    // Appbar at-a-glance chips (Revenue, Net income, Utilization). Net income
+    // is the only one kept on narrow widths; tapping opens the glance modal.
+    const setText = (id, val) => { const el = $('#' + id); if (el) el.textContent = val; };
+    const revenue = fmtMoney0(metrics.revenue || 0);
+    const income = fmtMoney0(metrics.income || 0);
+    const util = fmtPct1(metrics.capacityPct || 0);
+    setText('abkRevenue', revenue);
+    setText('abkIncome', income);
+    setText('abkUtil', util);
 
-    fullScreenIds.forEach((id, idx) => {
-      const el = $('#' + id);
-      if (el) el.textContent = formatters[idx](fullScreenValues[idx]);
-    });
-
-    // Mobile key metrics (Revenue, Net Income, Clients, Annual Sessions, Utilization - same as full screen)
-    const mobileIds = ['mobileKeyMetricsRevenue', 'mobileKeyMetricsIncome', 'mobileKeyMetricsClients', 'mobileKeyMetricsAnnualSessions', 'mobileKeyMetricsUtilization'];
-    const mobileValues = [metrics.revenue || 0, metrics.income || 0, metrics.clients || 0, metrics.totalSessions || 0, metrics.capacityPct || 0];
-    const mobileFormatters = [fmtMoney0, fmtMoney0, fmtInt, fmtInt, fmtPct1];
-
-    mobileIds.forEach((id, idx) => {
-      const el = $('#' + id);
-      if (el) el.textContent = mobileFormatters[idx](mobileValues[idx]);
-    });
+    // At-a-glance modal: full default set (Revenue, Net income, Clients,
+    // Annual sessions, Utilization).
+    setText('glRevenue', revenue);
+    setText('glIncome', income);
+    setText('glClients', fmtInt(metrics.clients || 0));
+    setText('glSessions', fmtInt(metrics.totalSessions || 0));
+    setText('glUtil', util);
   } catch (e) {
     console.error('Error updating key metrics:', e);
   }
@@ -1770,7 +1299,9 @@ if (document.readyState === 'loading') {
 
 // Close modal on Escape key
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !$('#scenariosModal').classList.contains('hidden')) {
+  if (e.key !== 'Escape') return;
+  const modal = $('#scenariosModal');
+  if (modal && !modal.classList.contains('hidden')) {
     closeScenarioModal();
   }
 });
@@ -1929,8 +1460,8 @@ function showScenarioComparisonDiff(id1, id2) {
   let contentHtml = '<div class="scenario-diff-wrap">';
   contentHtml += '<div class="scenario-diff-header">';
   contentHtml += '<div class="diff-col-label"></div>';
-  contentHtml += '<div class="diff-col-s1"><strong>' + scenario1.name + '</strong><span class="diff-date">' + scenario1.timestamp + '</span></div>';
-  contentHtml += '<div class="diff-col-s2"><strong>' + scenario2.name + '</strong><span class="diff-date">' + scenario2.timestamp + '</span></div>';
+  contentHtml += '<div class="diff-col-s1"><strong>' + escapeHtml(scenario1.name) + '</strong><span class="diff-date">' + escapeHtml(scenario1.timestamp) + '</span></div>';
+  contentHtml += '<div class="diff-col-s2"><strong>' + escapeHtml(scenario2.name) + '</strong><span class="diff-date">' + escapeHtml(scenario2.timestamp) + '</span></div>';
   contentHtml += '<div class="diff-col-delta">Change</div>';
   contentHtml += '</div>';
 
@@ -1983,7 +1514,7 @@ function showScenarioComparisonDiff(id1, id2) {
       metrics1.offeringMetrics.forEach((off1, idx) => {
         const off2 = metrics2.offeringMetrics[idx];
         contentHtml += '<div class="scenario-diff-offering">';
-        contentHtml += '<div class="scenario-diff-offering-name">' + off1.name + '</div>';
+        contentHtml += '<div class="scenario-diff-offering-name">' + escapeHtml(off1.name) + '</div>';
         contentHtml += '<div class="scenario-diff-table">';
 
         // Revenue
@@ -2028,7 +1559,7 @@ function showScenarioComparisonDiff(id1, id2) {
 
   // Create and show modal with onClose callback to return to scenarios
   createModal({
-    title: 'Scenario Comparison: ' + scenario1.name + ' vs ' + scenario2.name,
+    title: 'Scenario Comparison: ' + escapeHtml(scenario1.name) + ' vs ' + escapeHtml(scenario2.name),
     content: contentHtml,
     size: 'full',
     onClose: () => openScenarioModal()
@@ -2049,8 +1580,10 @@ window.exportComparisonAsCSV = function (id1, id2) {
   const metrics1 = calc(scenario1.data || scenario1.state);
   const metrics2 = calc(scenario2.data || scenario2.state);
 
-  // Create CSV content
-  let csvContent = 'Metric,' + scenario1.name + ',' + scenario2.name + ',Change\n';
+  // Create CSV content. Every cell goes through csvCell so untrusted names and
+  // negative numbers (which start with '-') can't be executed as spreadsheet formulas.
+  const cell = misc.csvCell;
+  let csvContent = ['Metric', cell(scenario1.name), cell(scenario2.name), 'Change'].join(',') + '\n';
 
   const metricsToCompare = [
     { label: 'Clients', key: 'clients', format: fmtInt },
@@ -2069,7 +1602,7 @@ window.exportComparisonAsCSV = function (id1, id2) {
     const delta = val2 - val1;
     const sign = delta > 0 ? '+' : '';
 
-    csvContent += m.label + ',' + m.format(val1) + ',' + m.format(val2) + ',' + sign + m.format(delta) + '\n';
+    csvContent += [cell(m.label), cell(m.format(val1)), cell(m.format(val2)), cell(sign + m.format(delta))].join(',') + '\n';
   });
 
   // Download CSV
@@ -2077,7 +1610,9 @@ window.exportComparisonAsCSV = function (id1, id2) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `scenario-comparison-${scenario1.name}-vs-${scenario2.name}.csv`;
+  // Strip characters that don't belong in a filename (names can be untrusted).
+  const safeFileName = (n) => String(n || 'scenario').replace(/[^a-z0-9 _-]+/gi, '').trim().slice(0, 60) || 'scenario';
+  a.download = `scenario-comparison-${safeFileName(scenario1.name)}-vs-${safeFileName(scenario2.name)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 };
@@ -2309,10 +1844,13 @@ if (compareStatesParam) {
   try {
     const payload = JSON.parse(atob(decodeURIComponent(compareStatesParam)));
     if (payload.s1 && payload.s2) {
+      // Names come from an untrusted share link — coerce to a bounded string.
+      // (They are also escaped at render time; this just caps storage size.)
+      const safeName = (n) => String(n == null ? 'Shared scenario' : n).slice(0, 120);
       // Create temporary comparison scenarios in localStorage
       const tempScenarios = [
-        { id: 'temp-s1', name: payload.s1.name, timestamp: new Date().toLocaleString(), state: payload.s1.state },
-        { id: 'temp-s2', name: payload.s2.name, timestamp: new Date().toLocaleString(), state: payload.s2.state }
+        { id: 'temp-s1', name: safeName(payload.s1.name), timestamp: new Date().toLocaleString(), state: payload.s1.state },
+        { id: 'temp-s2', name: safeName(payload.s2.name), timestamp: new Date().toLocaleString(), state: payload.s2.state }
       ];
       localStorage.setItem('profitpath-temp-compare', JSON.stringify(tempScenarios));
     }
@@ -2490,6 +2028,35 @@ function initSensitivityPanel() {
   $('#sensitivityReset')?.addEventListener('click', () => {
     resetSliders();
     updateSensitivity();
+  });
+}
+
+// Customer Analytics twisty (advanced feature). The markup existed but was never
+// wired, so the toggle did nothing — connect it and render on expand.
+function initCustomerAnalyticsPanel() {
+  const toggle = $('#customerAnalyticsToggle');
+  const body = $('#customerAnalyticsBody');
+  const panel = $('#customerAnalyticsPanel');
+  if (!toggle || !body || !panel) return;
+
+  const renderPanel = () => {
+    try {
+      const m = calc(state);
+      const metrics = { ...m, totalClients: m.totalClients ?? m.clients ?? 0 };
+      panel.innerHTML = renderCustomerAnalyticsDashboard(metrics, {}).html;
+    } catch (e) {
+      console.warn('Customer analytics render failed:', e);
+      panel.innerHTML = '<p style="color: var(--muted); text-align: center;">Unable to load customer analytics.</p>';
+    }
+  };
+
+  toggle.addEventListener('click', () => {
+    const isCollapsed = body.classList.toggle('collapsed');
+    const expandedNow = !isCollapsed;
+    body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+    toggle.setAttribute('aria-expanded', expandedNow ? 'true' : 'false');
+    toggle.textContent = (expandedNow ? '▼' : '▶') + toggle.textContent.slice(1);
+    if (expandedNow) renderPanel();
   });
 }
 
@@ -2864,6 +2431,7 @@ try {
   initDebugPanel();
   initPerfPanel();
   initSensitivityPanel();
+  initCustomerAnalyticsPanel();
 } catch {
   try {
     persistState();
@@ -3010,7 +2578,7 @@ function addOnboardingHelpButton() {
 function showWelcomeDialog() {
   const dialog = createOnboardingDialog({
     title: 'Welcome to ProfitPath! 🎉',
-    content: '<div class="welcome-content"><p>Get started with your profitability analysis in just a few minutes.</p><p>Would you like a quick guided tour of the key features?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="welcome-btn" data-action="tour" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Take Tour</button><button class="welcome-btn" data-action="industry" style="background:#f8f9fa;color:#333;border:1px solid #dee2e6;padding:10px 20px;border-radius:6px;cursor:pointer;">Choose Industry</button><button class="welcome-btn" data-action="skip" style="background:transparent;color:#666;border:none;padding:10px 20px;cursor:pointer;">Skip for Now</button></div>',
+    content: '<div class="welcome-content"><p>Get started with your profitability analysis in just a few minutes.</p><p>Would you like a quick guided tour of the key features?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="welcome-btn" data-action="tour" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Take Tour</button><button class="welcome-btn" data-action="industry" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:6px;cursor:pointer;">Choose Industry</button><button class="welcome-btn" data-action="skip" style="background:transparent;color:var(--muted);border:none;padding:10px 20px;cursor:pointer;">Skip for Now</button></div>',
     buttons: [] // We'll handle buttons manually
   });
 
@@ -3085,7 +2653,7 @@ function selectIndustry(industryId, dialog) {
 
   const successDialog = createOnboardingDialog({
     title: 'Great choice! 🎯',
-    content: '<div class="success-content"><p>We\'ve loaded a template configuration for your industry.</p><p>Would you like to take a quick tour to learn how to customize it?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="success-btn" data-action="tour" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Show Me How</button><button class="success-btn" data-action="explore" style="background:#f8f9fa;color:#333;border:1px solid #dee2e6;padding:10px 20px;border-radius:6px;cursor:pointer;">Explore on My Own</button></div>',
+    content: '<div class="success-content"><p>We\'ve loaded a template configuration for your industry.</p><p>Would you like to take a quick tour to learn how to customize it?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="success-btn" data-action="tour" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Show Me How</button><button class="success-btn" data-action="explore" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:6px;cursor:pointer;">Explore on My Own</button></div>',
     buttons: [] // We'll handle buttons manually
   });
 
@@ -3183,7 +2751,7 @@ function createGuidedTour() {
       target: 'aside.card .card-h',
       title: 'Key Profitability Metric',
       content: 'This shows your net income after all expenses. Green indicates profitability, red indicates losses.',
-      position: 'top'
+      position: 'left'
     },
     {
       target: 'aside.card .capacity',
@@ -3201,7 +2769,7 @@ function createGuidedTour() {
       target: '.charts-visualizations-container',
       title: 'Charts & Visualizations',
       content: 'Explore interactive charts and graphs that help visualize your business metrics and financial analysis.',
-      position: 'top'
+      position: 'left'
     },
     {
       target: isMobile ? '#hamburgerBtn' : '.header-actions',
@@ -3447,10 +3015,10 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   // Create tooltip (initially hidden to measure actual height)
   const tooltip = document.createElement('div');
   tooltip.className = 'onboarding-tooltip';
-  tooltip.style.cssText = 'position: fixed;z-index: 10000;background: white;border: 2px solid #007bff;border-radius: 8px;padding: 16px;box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);max-width: ' + (isMobile ? '280px' : '300px') + ';pointer-events: auto;font-size: ' + (isMobile ? '14px' : '16px') + ';visibility: hidden;opacity: 0;transition: opacity 0.3s ease-out;left: 0;top: 0;transform: translate(0, 0);';
+  tooltip.style.cssText = 'position: fixed;z-index: 10000;background: var(--surface);color: var(--text);border: 2px solid var(--accent, #007bff);border-radius: 8px;padding: 16px;box-shadow: var(--elev-4, 0 4px 12px rgba(0, 0, 0, 0.15));max-width: ' + (isMobile ? '280px' : '300px') + ';pointer-events: auto;font-size: ' + (isMobile ? '14px' : '16px') + ';visibility: hidden;opacity: 0;transition: opacity 0.3s ease-out;left: 0;top: 0;transform: translate(0, 0);';
 
   // Set content before measuring
-  tooltip.innerHTML = '<div style="position:relative;padding-right:24px;"><button class="tour-exit-btn" style="position:absolute;top:0;right:0;background:transparent;border:none;font-size:16px;cursor:pointer;color:var(--text, #666);padding:4px;line-height:1;">✕</button><div style="font-weight:bold;margin-bottom:8px;color:var(--text, #007bff);">' + step.title + '</div><div style="margin-bottom:16px;color:var(--text, #333);line-height:1.4;">' + step.content + '</div><div style="display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;"><div class="tour-navigation" style="display:flex;align-items:center;">' + (stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:18px;line-height:1;">‹</button>' : '<div style="width:32px;"></div>') + '<div class="tour-dots" style="display:flex;align-items:center;">' + progressDots + '</div>' + (stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background:#007bff;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:18px;line-height:1;">›</button>' : '<button class="tour-finish-btn" style="background:#28a745;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:16px;line-height:1;">✓</button>') + '</div></div></div>';
+  tooltip.innerHTML = '<div style="position:relative;padding-right:24px;"><button class="tour-exit-btn" style="position:absolute;top:0;right:0;background:transparent;border:none;font-size:16px;cursor:pointer;color:var(--text, #666);padding:4px;line-height:1;">✕</button><div style="font-weight:bold;margin-bottom:8px;color:var(--text, #007bff);">' + step.title + '</div><div style="margin-bottom:16px;color:var(--text, #333);line-height:1.4;">' + step.content + '</div><div style="display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;"><div class="tour-navigation" style="display:flex;align-items:center;">' + (stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background:var(--surface-2);border:1px solid var(--border);border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:18px;line-height:1;">‹</button>' : '<div style="width:32px;"></div>') + '<div class="tour-dots" style="display:flex;align-items:center;">' + progressDots + '</div>' + (stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background:#007bff;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:18px;line-height:1;">›</button>' : '<button class="tour-finish-btn" style="background:#28a745;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:16px;line-height:1;">✓</button>') + '</div></div></div>';
 
   // Append to DOM (invisible) and measure actual height
   document.body.appendChild(tooltip);
@@ -3458,22 +3026,33 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
 
   // Now recalculate position with actual height
   let finalTop = top;
-  let finalTransform = transform;
+  const finalTransform = transform;
 
-  if (left < 10) {
-    left = 10;
-  }
-  if (left + tooltipWidth > window.innerWidth - 10) {
-    left = window.innerWidth - tooltipWidth - 10;
-  }
-  if (finalTop - tooltipHeight < 10) {
-    finalTop = tooltipHeight + 10;
-    if (!isMobile) finalTransform = finalTransform.replace('-100%', '0');
-  }
-  if (finalTop + tooltipHeight > window.innerHeight - 10) {
-    finalTop = window.innerHeight - tooltipHeight - 10;
-    if (!isMobile) finalTransform = finalTransform.replace('0', '-100%');
-  }
+  // Clamp to the viewport in a transform-aware way. `left`/`finalTop` are the
+  // anchor point; the transform shifts the box by a fraction of its own size
+  // (e.g. translate(-100%) for a tooltip placed to the left of the target). The
+  // old clamp ignored the transform, so 'left'/'right'/'top' tooltips got shoved
+  // back on top of the element they were pointing at.
+  const fracOf = (axis) => {
+    const m = finalTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+    if (!m) return 0;
+    const v = (axis === 'x' ? m[1] : m[2]).trim();
+    if (v.includes('-100%')) return -1;
+    if (v.includes('-50%')) return -0.5;
+    return 0;
+  };
+  // Horizontal: keep the rendered box (left + fx*width .. + width) on screen.
+  const fx = fracOf('x');
+  let renderedLeft = left + fx * tooltipWidth;
+  if (renderedLeft < 10) renderedLeft = 10;
+  if (renderedLeft + tooltipWidth > window.innerWidth - 10) renderedLeft = window.innerWidth - tooltipWidth - 10;
+  left = renderedLeft - fx * tooltipWidth;
+  // Vertical: same, for the rendered top.
+  const fy = fracOf('y');
+  let renderedTop = finalTop + fy * tooltipHeight;
+  if (renderedTop < 10) renderedTop = 10;
+  if (renderedTop + tooltipHeight > window.innerHeight - 10) renderedTop = window.innerHeight - tooltipHeight - 10;
+  finalTop = renderedTop - fy * tooltipHeight;
 
   // Set final position while still invisible (prevents jump)
   tooltip.style.left = left + 'px';
@@ -3606,9 +3185,21 @@ function createOnboardingDialog({ title, content, buttons }) {
   dialog.style.cssText = 'position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(0, 0, 0, 0.6);display: flex;align-items: center;justify-content: center;z-index: 10001;';
 
   const dialogContent = document.createElement('div');
-  dialogContent.style.cssText = 'background: white;border-radius: 12px;padding: 24px;max-width: 500px;width: 90%;box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);';
+  // Theme-aware surface (was hardcoded white, which broke in dark mode).
+  dialogContent.className = 'onboarding-dialog-card';
+  dialogContent.style.cssText = 'background: var(--surface);color: var(--text);border: 1px solid var(--border-strong);border-radius: 16px;padding: 24px;max-width: 500px;width: 90%;box-shadow: var(--elev-4, 0 8px 32px rgba(0, 0, 0, 0.2));';
 
-  dialogContent.innerHTML = '<h2 style="margin:0 0 16px 0;color:var(--text, #333);font-size:24px;">' + title + '</h2><div style="color:var(--text, #666);line-height:1.5;">' + content + '</div><div style="margin-top:24px;text-align:right;display:flex;gap:8px;justify-content:flex-end;">' + buttons.map((btn, index) => '<button class="dialog-btn" data-action="' + index + '" data-primary="' + (btn.primary ? 'true' : 'false') + '" style="padding:8px 16px;border:' + (btn.primary ? 'none' : '1px solid #ddd') + ';border-radius:6px;background:' + (btn.primary ? '#007bff' : 'white') + ';color:' + (btn.primary ? 'white' : '#333') + ';cursor:pointer;font-weight:' + (btn.primary ? 'bold' : 'normal') + ';">' + btn.text + '</button>').join('') + '</div>';
+  dialogContent.innerHTML = '<h2 style="margin:0 0 16px 0;color:var(--text);font-size:24px;">' + title + '</h2><div style="color:var(--text);line-height:1.5;">' + content + '</div><div style="margin-top:24px;text-align:right;display:flex;gap:8px;justify-content:flex-end;">' + buttons.map((btn, index) => '<button class="dialog-btn ' + (btn.primary ? 'primary' : 'secondary') + '" data-action="' + index + '" data-primary="' + (btn.primary ? 'true' : 'false') + '" style="padding:8px 16px;border:' + (btn.primary ? 'none' : '1px solid var(--border)') + ';border-radius:8px;background:' + (btn.primary ? 'var(--accent)' : 'var(--surface-2)') + ';color:' + (btn.primary ? 'var(--accent-contrast, #fff)' : 'var(--text)') + ';cursor:pointer;font-weight:' + (btn.primary ? '700' : '550') + ';">' + btn.text + '</button>').join('') + '</div>';
+
+  // Shared close that also tears down the Escape listener. Parity with the rest
+  // of the app's modals/sheets, which all close on Esc and on scrim click.
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  const close = () => {
+    dialog.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  document.addEventListener('keydown', onKey);
+  dialog.addEventListener('click', (e) => { if (e.target === dialog) close(); });
 
   // Add event listeners for dialog buttons
   setTimeout(() => {
@@ -3616,7 +3207,7 @@ function createOnboardingDialog({ title, content, buttons }) {
     dialogBtns.forEach((btn, index) => {
       btn.addEventListener('click', () => {
         const action = buttons[index]?.action;
-        dialog.remove();
+        close();
         if (action && typeof action === 'function') {
           action();
         }
@@ -3629,9 +3220,20 @@ function createOnboardingDialog({ title, content, buttons }) {
 }
 
 function showHelpMenu() {
+  // Reflect the current tooltip state so the option toggles (Enable <-> Disable)
+  // rather than always offering to enable.
+  let tipsOn = true;
+  try {
+    tipsOn = JSON.parse(localStorage.getItem('profitpath-settings') || '{}').showTooltips !== false;
+  } catch { /* default on */ }
+  const btnStyle = 'display:block;width:100%;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;text-align:left;cursor:pointer;';
+  const tooltipsBtn = tipsOn
+    ? '<button class="help-menu-btn" data-action="tooltips" style="' + btnStyle + '">🚫 <strong>Disable Tooltips</strong><br><small>Turn off contextual help throughout the app</small></button>'
+    : '<button class="help-menu-btn" data-action="tooltips" style="' + btnStyle + '">💡 <strong>Show Tooltips</strong><br><small>Enable contextual help throughout the app</small></button>';
+
   const helpDialog = createOnboardingDialog({
     title: 'Help & Learning Center',
-    content: '<div style="display:grid;gap:12px;"><button class="help-menu-btn" data-action="tour" style="display:block;width:100%;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;text-align:left;cursor:pointer;">🎯 <strong>Take Guided Tour</strong><br><small>Step-by-step walkthrough of key features</small></button><button class="help-menu-btn" data-action="industry" style="display:block;width:100%;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;text-align:left;cursor:pointer;">🏢 <strong>Change Industry</strong><br><small>Switch to a different business template</small></button><button class="help-menu-btn" data-action="tooltips" style="display:block;width:100%;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;text-align:left;cursor:pointer;">💡 <strong>Show Tooltips</strong><br><small>Enable contextual help throughout the app</small></button></div>',
+    content: '<div style="display:grid;gap:12px;"><button class="help-menu-btn" data-action="tour" style="' + btnStyle + '">🎯 <strong>Take Guided Tour</strong><br><small>Step-by-step walkthrough of key features</small></button><button class="help-menu-btn" data-action="industry" style="' + btnStyle + '">🏢 <strong>Change Industry</strong><br><small>Switch to a different business template</small></button>' + tooltipsBtn + '</div>',
     buttons: [
       { text: 'Close', action: () => { } }
     ]
@@ -3650,7 +3252,8 @@ function showHelpMenu() {
           } else if (action === 'industry') {
             showIndustrySelector();
           } else if (action === 'tooltips') {
-            showContextualHelp();
+            // Toggle based on the state captured when the menu opened.
+            if (tipsOn) hideContextualHelp(); else showContextualHelp();
           }
         }, 100);
       });
