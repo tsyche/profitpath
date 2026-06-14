@@ -4,6 +4,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <!-- Theme + palette init: set attributes BEFORE the stylesheet paints so
+       there's no flash of the wrong colors. Precedence: URL param > saved
+       choice > default (emerald palette / OS theme).
+       Try alternates without a rebuild:
+         ?theme=light|dark      ?palette=teal|emerald|indigo|amber
+       e.g. http://localhost:3000/?palette=amber&theme=light
+       Passing a param also persists it. To change the out-of-box default,
+       edit the `|| 'emerald'` fallback below. -->
+  <script>
+    (function () {
+      var el = document.documentElement;
+      try {
+        var qs = new URLSearchParams(location.search);
+        // Theme
+        var qpTheme = qs.get('theme');
+        if (qpTheme === 'light' || qpTheme === 'dark') localStorage.setItem('profitpath-theme', qpTheme);
+        var saved = localStorage.getItem('profitpath-theme');
+        var theme = (saved === 'light' || saved === 'dark') ? saved :
+          (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        el.setAttribute('data-theme', theme);
+        // Palette. Default is emerald; teal is the bare :root base (no attribute).
+        var palettes = { emerald: 1, indigo: 1, amber: 1, teal: 1 };
+        var qpPal = qs.get('palette');
+        if (qpPal && palettes[qpPal]) localStorage.setItem('profitpath-palette', qpPal);
+        var pal = localStorage.getItem('profitpath-palette') || 'emerald';
+        if (pal !== 'teal' && palettes[pal]) el.setAttribute('data-palette', pal);
+        else el.removeAttribute('data-palette');
+      } catch (e) {
+        el.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
   <meta name="description"
     content="ProfitPath — a lightweight client-side simulator for recurring-cadence service businesses. Plan pricing, forecast capacity, and optimize profitability." />
   <meta name="theme-color" content="#1f2937" />
@@ -13,10 +45,10 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <link rel="stylesheet" href="assets/styles.css?t=1766542976" />
-  <link rel="stylesheet" href="/src/analytics/analytics.css?t=1766542976" />
-  <link rel="stylesheet" href="/src/analytics/feedback.css?t=1766542976" />
-  <link rel="stylesheet" href="/src/analytics/advanced-dashboard.css?t=1766542976" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="/src/analytics/analytics.css" />
+  <link rel="stylesheet" href="/src/analytics/feedback.css" />
+  <link rel="stylesheet" href="/src/analytics/advanced-dashboard.css" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
@@ -46,118 +78,167 @@
   <!-- Skip link for keyboard navigation -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <header class="header">
-    <div class="header-background"></div>
-    <div class="header-content">
-      <!-- Logo -->
-      <div class="header-logo">
-        <a href="/" class="logo-link">
-          <div class="logo" id="logo">
-            <div class="logo-with-name">
-              <img src="assets/pp-logo2-final.svg" class="logo-final" alt="ProfitPath logo" />
-              <span class="logo-name">ProfitPath</span>
-            </div>
-            <div class="subtitle">A lightweight simulator for recurring-cadence<br>service businesses (no backend, no
-              build step).</div>
-          </div>
-        </a>
-      </div>
+  <!-- ===== icon sprite (chrome icons) ===== -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <g id="ic-menu"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g>
+    <g id="ic-scenarios"><path d="M6 3h9l3 3v15l-6-3-6 3V3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></g>
+    <g id="ic-share"><circle cx="6" cy="12" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="6" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="18" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 11l8-4M8 13l8 4" stroke="currentColor" stroke-width="1.7"/></g>
+    <g id="ic-templates"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/></g>
+    <g id="ic-import"><path d="M12 15V4m0 0L8 8m4-4l4 4M5 18h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="ic-export"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="ic-settings"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1M18.7 18.7l-2.1-2.1M7.4 7.4L5.3 5.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></g>
+    <g id="ic-help"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.4 9.2a2.7 2.7 0 015.2 1c0 1.8-2.6 2.3-2.6 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="17.4" r="1.05" fill="currentColor"/></g>
+    <g id="ic-feedback"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></g>
+    <g id="ic-moon"><path d="M20 14.5A8 8 0 119.5 4a6.3 6.3 0 1010.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></g>
+    <g id="ic-chev"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g id="ic-close"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g>
+    <g id="ic-more"><circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/></g>
+  </defs></svg>
 
-      <!-- Nav: action buttons (hidden on mobile) -->
-      <nav class="header-nav" aria-label="Main navigation">
-        <button class="btn small" id="desktopScenariosBtn" type="button" title="Manage Scenarios" aria-label="Manage saved scenarios">💾 Scenarios</button>
-        <button class="btn small" id="shareBtn" type="button" title="Share current scenario" aria-label="Share current scenario via URL">🔗 Share</button>
-        <div class="templates-dropdown">
-          <button class="btn small" id="templatesBtn" type="button" title="Load industry templates" aria-label="Load industry templates" aria-haspopup="menu" aria-expanded="false">🏢
-            Templates</button>
-          <div class="templates-menu" id="templatesMenu" role="menu">
-            <button class="template-option" data-template="consulting" title="Management consulting services" role="menuitem">💼
-              Consulting</button>
-            <button class="template-option" data-template="cleaning" title="House/office cleaning services" role="menuitem">🧹
-              Cleaning</button>
-            <button class="template-option" data-template="landscaping" title="Lawn care and landscaping" role="menuitem">🌳
-              Landscaping</button>
-            <button class="template-option" data-template="handyman" title="Home repair and maintenance" role="menuitem">🔧
-              Handyman</button>
-            <button class="template-option" data-template="fitness" title="Personal training and fitness" role="menuitem">💪
-              Fitness</button>
-            <button class="template-option" data-template="photography" title="Photography and media services" role="menuitem">📸
-              Photography</button>
-          </div>
-        </div>
-        <button class="btn small" id="importCSVBtn" type="button" title="Import settings from CSV" aria-label="Import settings from CSV file">⬆ Import</button>
-        <input type="file" id="csvFileInput" accept=".csv" style="display:none">
-        <div class="export-dropdown">
-          <button class="btn small" id="exportBtn" type="button" title="Export report in various formats" aria-label="Export report in various formats" aria-haspopup="menu" aria-expanded="false">📄
-            Export</button>
-          <div class="export-menu" id="exportMenu" role="menu">
-            <button class="export-option" data-format="csv" title="Export as CSV spreadsheet" role="menuitem">📊 CSV
-              Spreadsheet</button>
-            <button class="export-option advanced-feature" data-format="excel" title="Export as Excel with formulas" role="menuitem">📈
-              Excel Workbook</button>
-            <button class="export-option advanced-feature" data-format="pdf" title="Export as PDF report" role="menuitem">📋 PDF
-              Report</button>
-            <button class="export-option advanced-feature" data-format="html" title="Export as HTML page" role="menuitem">🌐 HTML
-              Page</button>
-            <button class="export-option" data-format="email" title="Share via email" role="menuitem">📧 Email Report</button>
-            <button class="export-option expert-feature" data-format="embed" title="Get embeddable widget code" role="menuitem">🔗 Embed
-              Widget</button>
-            <button class="export-option" data-format="schedule" title="Set up automated report scheduling">⏰ Auto
-              Schedule</button>
-          </div>
-        </div>
-      </nav>
+  <!-- ===== app bar (hamburger-left · logo · inline primary · at-a-glance · mode toggle · fixed undo/redo+theme) ===== -->
+  <header class="appbar" id="appbar">
+    <button class="ab-icon" id="appMenuBtn" type="button" aria-label="Open menu" onclick="toggleDrawer()"><svg viewBox="0 0 24 24"><use href="#ic-menu"/></svg></button>
+    <a href="/" class="ab-logo" aria-label="ProfitPath home"><img class="ab-sun" src="/assets/pp-logo2-final.svg" alt="" /><span class="ab-word">ProfitPath</span></a>
 
-      <!-- Right controls: vertical stack of simulator badge, undo/redo, utility icons + hamburger button -->
-      <div class="header-controls">
-        <!-- Control panel (hidden on mobile) -->
-        <div class="control-panel">
-          <!-- Simulator badge with undo/redo buttons -->
-          <div class="simulator-badge-group">
-            <div class="simulator-badge">
-              <span class="dot"></span>
-              <span class="muted">static simulator</span>
-            </div>
-            <div class="undo-redo-compact">
-              <button id="undoBtn" class="undo-redo-icon-btn" type="button" title="Undo (Ctrl+Z)" disabled>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 7v6h6" />
-                  <path d="M21 17a9 9 0 0 0-15.5-6L3 13" />
-                </svg>
-              </button>
-              <div class="undo-redo-divider"></div>
-              <button id="redoBtn" class="undo-redo-icon-btn" type="button" title="Redo (Ctrl+Y)" disabled>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 7v6h-6" />
-                  <path d="M3 17a9 9 0 0 1 15.5-6L21 13" />
-                </svg>
-              </button>
-            </div>
-          </div>
+    <nav class="ab-primary" aria-label="Primary actions">
+      <button class="ab-btn" id="desktopScenariosBtn" type="button" title="Manage Scenarios" aria-label="Manage saved scenarios"><svg viewBox="0 0 24 24"><use href="#ic-scenarios"/></svg>Scenarios</button>
+      <button class="ab-btn" id="templatesBtn" type="button" title="Load industry templates" onclick="ppOpenModal('templatesModal')"><svg viewBox="0 0 24 24"><use href="#ic-templates"/></svg>Templates</button>
+    </nav>
 
-          <!-- Utility buttons -->
-          <div class="utility-row">
-            <button class="utility-btn" id="desktopFeedbackBtn" type="button" title="Send Feedback"
-              data-tooltip-below>✉️</button>
-            <button class="utility-btn" id="helpBtn" type="button" title="Help & Guided Tour"
-              data-tooltip-below>❓</button>
-            <button class="utility-btn" id="settingsCogBtn" type="button" title="App settings and preferences"
-              aria-label="Settings" data-tooltip-below>⚙️</button>
-          </div>
-        </div>
+    <span class="ab-spacer"></span>
 
-        <!-- Hamburger button (hidden on desktop) -->
-        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
-          <span></span>
-          <span></span>
-          <span></span>
+    <!-- At a glance: tap to expand to the full set (ids populated by updateKeyMetrics) -->
+    <button class="ab-kpis" type="button" aria-label="Show full at-a-glance metrics" title="Tap for full at-a-glance" onclick="ppOpenModal('glanceModal')">
+      <span class="ab-kpi k-rev"><i>Revenue</i><b id="abkRevenue">—</b></span>
+      <span class="ab-kpi k-net"><i>Net income</i><b id="abkIncome">—</b></span>
+      <span class="ab-kpi k-util"><i>Utilization</i><b id="abkUtil">—</b></span>
+    </button>
+
+    <button class="ab-badge" id="modeBadgeBtn" type="button" aria-pressed="false" title="Switch between Forecast and Current modes" onclick="ppToggleMode()"><span class="dot"></span><span class="ab-badge-text">Forecast</span></button>
+
+    <!-- Fixed control cluster: undo/redo + theme stay together at every width -->
+    <div class="ab-right">
+      <div class="undo-redo-compact ab-undo">
+        <button id="undoBtn" class="undo-redo-icon-btn" type="button" title="Undo (Ctrl+Z)" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-15.5-6L3 13" /></svg>
+        </button>
+        <div class="undo-redo-divider"></div>
+        <button id="redoBtn" class="undo-redo-icon-btn" type="button" title="Redo (Ctrl+Y)" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 15.5-6L21 13" /></svg>
         </button>
       </div>
+      <button class="ab-icon" id="themeToggleBtn" type="button" title="Toggle light / dark theme" aria-label="Toggle light or dark theme" onclick="toggleTheme()"><svg viewBox="0 0 24 24"><use href="#ic-moon"/></svg></button>
     </div>
   </header>
-  <div class="header-fade" aria-hidden="true"></div>
+
+  <!-- ===== hidden action sources (real wired buttons; drawer/bottom-bar drive these via .click()) ===== -->
+  <div id="actionSources" hidden aria-hidden="true">
+    <button id="shareBtn" type="button">Share</button>
+    <button id="importCSVBtn" type="button">Import</button>
+    <input type="file" id="csvFileInput" accept=".csv" style="display:none">
+    <div class="export-dropdown">
+      <button id="exportBtn" type="button" aria-haspopup="menu" aria-expanded="false">Export</button>
+      <div class="export-menu" id="exportMenu" role="menu">
+        <button class="export-option" data-format="csv" role="menuitem">CSV</button>
+        <button class="export-option advanced-feature" data-format="excel" role="menuitem">Excel</button>
+        <button class="export-option advanced-feature" data-format="pdf" role="menuitem">PDF</button>
+        <button class="export-option advanced-feature" data-format="html" role="menuitem">HTML</button>
+        <button class="export-option" data-format="email" role="menuitem">Email</button>
+        <button class="export-option expert-feature" data-format="embed" role="menuitem">Embed</button>
+        <button class="export-option" data-format="schedule">Schedule</button>
+      </div>
+    </div>
+    <button id="desktopFeedbackBtn" type="button">Feedback</button>
+    <button id="helpBtn" type="button">Help</button>
+    <button id="settingsCogBtn" type="button" aria-label="Settings">Settings</button>
+    <!-- real template handlers (templates modal delegates here via .click()) -->
+    <button class="template-option" data-template="consulting" type="button">Consulting</button>
+    <button class="template-option" data-template="cleaning" type="button">Cleaning</button>
+    <button class="template-option" data-template="landscaping" type="button">Landscaping</button>
+    <button class="template-option" data-template="handyman" type="button">Handyman</button>
+    <button class="template-option" data-template="fitness" type="button">Fitness</button>
+    <button class="template-option" data-template="photography" type="button">Photography</button>
+  </div>
+
+  <!-- ===== unified drawer (desktop dropdown-from-left + mobile slide-in; one source of truth) ===== -->
+  <div class="drawer-scrim" id="drawerScrim" onclick="closeDrawer()"></div>
+  <aside class="app-drawer" id="appDrawer" aria-hidden="true" aria-label="Menu">
+    <div class="drawer-head">
+      <span class="ab-logo"><img class="ab-sun" src="/assets/pp-logo2-final.svg" alt="" /><span class="ab-word">ProfitPath</span></span>
+      <button class="ab-icon" type="button" aria-label="Close menu" onclick="closeDrawer()"><svg viewBox="0 0 24 24"><use href="#ic-close"/></svg></button>
+    </div>
+    <div class="drawer-body">
+      <button class="drawer-item" type="button" onclick="ppDelegate('desktopScenariosBtn')"><svg viewBox="0 0 24 24"><use href="#ic-scenarios"/></svg>Scenarios</button>
+      <button class="drawer-item" type="button" onclick="closeDrawer(); ppOpenModal('templatesModal')"><svg viewBox="0 0 24 24"><use href="#ic-templates"/></svg>Templates</button>
+      <button class="drawer-item" type="button" onclick="ppDelegate('shareBtn')"><svg viewBox="0 0 24 24"><use href="#ic-share"/></svg>Share</button>
+      <button class="drawer-item" type="button" onclick="ppDelegate('importCSVBtn')"><svg viewBox="0 0 24 24"><use href="#ic-import"/></svg>Import CSV</button>
+      <button class="drawer-item" type="button" aria-expanded="false" onclick="ppToggleSub(this,'dwExport')"><svg viewBox="0 0 24 24"><use href="#ic-export"/></svg>Export<svg class="chev" viewBox="0 0 24 24"><use href="#ic-chev"/></svg></button>
+      <div class="drawer-sub" id="dwExport">
+        <button class="drawer-subitem" onclick="ppDelegateSel('.export-option[data-format=&quot;csv&quot;]')">📊 CSV Spreadsheet</button>
+        <button class="drawer-subitem" onclick="ppDelegateSel('.export-option[data-format=&quot;excel&quot;]')">📈 Excel Workbook</button>
+        <button class="drawer-subitem" onclick="ppDelegateSel('.export-option[data-format=&quot;pdf&quot;]')">📋 PDF Report</button>
+        <button class="drawer-subitem" onclick="ppDelegateSel('.export-option[data-format=&quot;html&quot;]')">🌐 HTML Page</button>
+        <button class="drawer-subitem" onclick="ppDelegateSel('.export-option[data-format=&quot;email&quot;]')">📧 Email Report</button>
+        <button class="drawer-subitem" onclick="ppDelegateSel('.export-option[data-format=&quot;embed&quot;]')">🔗 Embed Widget</button>
+        <button class="drawer-subitem" onclick="ppDelegateSel('.export-option[data-format=&quot;schedule&quot;]')">⏰ Auto Schedule</button>
+      </div>
+      <div class="drawer-divider"></div>
+      <button class="drawer-item" type="button" onclick="ppDelegate('settingsCogBtn')"><svg viewBox="0 0 24 24"><use href="#ic-settings"/></svg>Settings</button>
+      <button class="drawer-item" type="button" onclick="ppDelegate('helpBtn')"><svg viewBox="0 0 24 24"><use href="#ic-help"/></svg>Help &amp; tour</button>
+      <button class="drawer-item" type="button" onclick="ppDelegate('desktopFeedbackBtn')"><svg viewBox="0 0 24 24"><use href="#ic-feedback"/></svg>Give feedback</button>
+      <button class="drawer-item" type="button" onclick="toggleTheme()"><svg viewBox="0 0 24 24"><use href="#ic-moon"/></svg>Toggle theme</button>
+    </div>
+  </aside>
+
+  <!-- ===== mobile bottom action bar (each tab opens its surface directly) ===== -->
+  <nav class="bottombar" aria-label="Quick actions">
+    <button class="bb-item" type="button" onclick="ppDelegate('desktopScenariosBtn')"><svg viewBox="0 0 24 24"><use href="#ic-scenarios"/></svg><span>Scenarios</span></button>
+    <button class="bb-item" type="button" onclick="ppOpenModal('templatesModal')"><svg viewBox="0 0 24 24"><use href="#ic-templates"/></svg><span>Templates</span></button>
+    <button class="bb-item" type="button" onclick="ppDelegate('settingsCogBtn')"><svg viewBox="0 0 24 24"><use href="#ic-settings"/></svg><span>Settings</span></button>
+    <button class="bb-item" type="button" onclick="toggleDrawer()"><svg viewBox="0 0 24 24"><use href="#ic-more"/></svg><span>More</span></button>
+  </nav>
+
+  <!-- ===== templates modal (consistent with Scenarios) ===== -->
+  <div class="pp-sheet" id="templatesModal" hidden>
+    <div class="pp-sheet-scrim" onclick="ppCloseModal('templatesModal')"></div>
+    <div class="pp-sheet-card" role="dialog" aria-modal="true" aria-label="Industry templates">
+      <div class="pp-sheet-head">
+        <h3>Industry templates</h3>
+        <button class="pp-sheet-x" type="button" aria-label="Close" onclick="ppCloseModal('templatesModal')"><svg viewBox="0 0 24 24"><use href="#ic-close"/></svg></button>
+      </div>
+      <div class="pp-sheet-body">
+        <p class="pp-sheet-note">Load a starting point, then tweak it. This replaces your current inputs.</p>
+        <div class="tmpl-grid">
+          <button class="tmpl-card" type="button" onclick="ppPickTemplate('consulting')"><span class="tmpl-emoji">💼</span><span class="tmpl-name">Consulting</span><span class="tmpl-sub">High-value, low-volume</span></button>
+          <button class="tmpl-card" type="button" onclick="ppPickTemplate('cleaning')"><span class="tmpl-emoji">🧹</span><span class="tmpl-name">Cleaning</span><span class="tmpl-sub">High-frequency, standardized</span></button>
+          <button class="tmpl-card" type="button" onclick="ppPickTemplate('landscaping')"><span class="tmpl-emoji">🌳</span><span class="tmpl-name">Landscaping</span><span class="tmpl-sub">Seasonal, outdoor</span></button>
+          <button class="tmpl-card" type="button" onclick="ppPickTemplate('handyman')"><span class="tmpl-emoji">🔧</span><span class="tmpl-name">Handyman</span><span class="tmpl-sub">Home repair & maintenance</span></button>
+          <button class="tmpl-card" type="button" onclick="ppPickTemplate('fitness')"><span class="tmpl-emoji">💪</span><span class="tmpl-name">Fitness</span><span class="tmpl-sub">Training & group classes</span></button>
+          <button class="tmpl-card" type="button" onclick="ppPickTemplate('photography')"><span class="tmpl-emoji">📸</span><span class="tmpl-name">Photography</span><span class="tmpl-sub">Event & portrait sessions</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== at-a-glance modal (full metric set) ===== -->
+  <div class="pp-sheet" id="glanceModal" hidden>
+    <div class="pp-sheet-scrim" onclick="ppCloseModal('glanceModal')"></div>
+    <div class="pp-sheet-card pp-sheet-card--narrow" role="dialog" aria-modal="true" aria-label="At a glance">
+      <div class="pp-sheet-head">
+        <h3>At a glance</h3>
+        <button class="pp-sheet-x" type="button" aria-label="Close" onclick="ppCloseModal('glanceModal')"><svg viewBox="0 0 24 24"><use href="#ic-close"/></svg></button>
+      </div>
+      <div class="pp-sheet-body">
+        <div class="glance-grid">
+          <div class="glance-tile"><i>Revenue</i><b id="glRevenue">—</b><small>Annual (gross)</small></div>
+          <div class="glance-tile"><i>Net income</i><b id="glIncome">—</b><small>After costs</small></div>
+          <div class="glance-tile"><i>Clients</i><b id="glClients">—</b><small>Across offerings</small></div>
+          <div class="glance-tile"><i>Annual sessions</i><b id="glSessions">—</b><small>Total per year</small></div>
+          <div class="glance-tile glance-tile--wide"><i>Utilization</i><b id="glUtil">—</b><small>Of productive hours</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="page" id="main-content">
     <div class="file-warning hidden" id="fileWarning">
@@ -165,231 +246,79 @@
         class="mono">file://</span>). Start a server and open <span class="mono">http://localhost:8000/</span>.
     </div>
 
-    <!-- Settings dropdown menu -->
-    <div class="settings-dropdown">
-      <div class="settings-menu" id="settingsMenu">
-        <div class="settings-section">
-          <h4>Experience Level</h4>
-          <div class="settings-options">
-            <div
-              style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin: 4px 0; background: #e5e7eb; padding: 2px; border-radius: 4px;">
-              <label
-                style="display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 6px 4px; border: none; border-radius: 3px; background: transparent; text-align: center; transition: all 0.2s ease;">
-                <input type="radio" name="experienceLevel" value="beginner" style="margin: 0;">
-                <div>
-                  <div style="font-weight: 600; color: #000000; font-size: 11px;">Beginner</div>
-                  <div style="font-size: 10px; color: #374151; line-height: 1.1;">Basic</div>
-                </div>
-              </label>
-              <label
-                style="display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 6px 4px; border: none; border-radius: 3px; background: transparent; text-align: center; transition: all 0.2s ease;">
-                <input type="radio" name="experienceLevel" value="intermediate" style="margin: 0;">
-                <div>
-                  <div style="font-weight: 600; color: #000000; font-size: 11px;">Intermediate</div>
-                  <div style="font-size: 10px; color: #374151; line-height: 1.1;">Advanced</div>
-                </div>
-              </label>
-              <label
-                style="display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 6px 4px; border: none; border-radius: 3px; background: transparent; text-align: center; transition: all 0.2s ease;">
-                <input type="radio" name="experienceLevel" value="advanced" style="margin: 0;">
-                <div>
-                  <div style="font-weight: 600; color: #000000; font-size: 11px;">Advanced</div>
-                  <div style="font-size: 10px; color: #374151; line-height: 1.1;">All</div>
-                </div>
-              </label>
-            </div>
-            <div id="levelDescription" class="settings-level-description"
-              style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border, #e5e7eb); font-size: 11px;">
-              <!-- populated dynamically by JS -->
+    <!-- Settings modal (consistent with Scenarios / Templates) -->
+    <div class="pp-sheet" id="settingsModal" hidden>
+      <div class="pp-sheet-scrim" onclick="ppCloseModal('settingsModal')"></div>
+      <div class="pp-sheet-card pp-sheet-card--narrow" role="dialog" aria-modal="true" aria-label="Settings">
+        <div class="pp-sheet-head">
+          <h3>Settings</h3>
+          <button class="pp-sheet-x" type="button" aria-label="Close" onclick="ppCloseModal('settingsModal')"><svg viewBox="0 0 24 24"><use href="#ic-close"/></svg></button>
+        </div>
+        <div class="pp-sheet-body" id="settingsMenu">
+          <div class="settings-section">
+            <h4>Experience Level</h4>
+            <div class="settings-options">
+              <div class="exp-seg" role="radiogroup" aria-label="Experience level">
+                <label class="exp-opt">
+                  <input type="radio" name="experienceLevel" value="beginner">
+                  <span class="exp-card"><b>Beginner</b><small>Basic</small></span>
+                </label>
+                <label class="exp-opt">
+                  <input type="radio" name="experienceLevel" value="intermediate">
+                  <span class="exp-card"><b>Intermediate</b><small>Advanced</small></span>
+                </label>
+                <label class="exp-opt">
+                  <input type="radio" name="experienceLevel" value="advanced">
+                  <span class="exp-card"><b>Advanced</b><small>All</small></span>
+                </label>
+              </div>
+              <div id="levelDescription" class="settings-level-description">
+                <!-- populated dynamically by JS -->
+              </div>
             </div>
           </div>
-        </div>
-        <div class="settings-section">
-          <h4>Preferences</h4>
-          <div class="settings-options">
-            <label><input type="checkbox" id="showTooltips"> Show tooltips</label>
+          <div class="settings-section">
+            <h4>Preferences</h4>
+            <div class="settings-options">
+              <label class="settings-check"><input type="checkbox" id="showTooltips"> Show tooltips</label>
+            </div>
           </div>
-        </div>
-        <div class="settings-section">
-          <h4>Localization</h4>
-          <div class="settings-options">
-            <label for="currencySelect" style="display: block; margin-bottom: 8px;">
-              <div style="font-size: 12px; margin-bottom: 4px; color: #6b7280;">Currency</div>
-              <select id="currencySelect" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--text); font-size: 13px;">
-                <option value="USD">USD - US Dollar ($)</option>
-                <option value="EUR">EUR - Euro (€)</option>
-                <option value="GBP">GBP - British Pound (£)</option>
-                <option value="CAD">CAD - Canadian Dollar ($)</option>
-                <option value="AUD">AUD - Australian Dollar ($)</option>
-              </select>
-            </label>
-            <label for="decimalPrecisionSelect" style="display: block;">
-              <div style="font-size: 12px; margin-bottom: 4px; color: #6b7280;">Decimal Precision</div>
-              <select id="decimalPrecisionSelect" style="width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--text); font-size: 13px;">
-                <option value="0">0 decimals (e.g., $1,000)</option>
-                <option value="1">1 decimal (e.g., $1,000.0)</option>
-                <option value="2" selected>2 decimals (e.g., $1,000.00)</option>
-                <option value="3">3 decimals (e.g., $1,000.000)</option>
-                <option value="4">4 decimals (e.g., $1,000.0000)</option>
-              </select>
-            </label>
+          <div class="settings-section">
+            <h4>Localization</h4>
+            <div class="settings-options">
+              <label class="settings-select-label" for="currencySelect">
+                <span>Currency</span>
+                <select id="currencySelect">
+                  <option value="USD">USD - US Dollar ($)</option>
+                  <option value="EUR">EUR - Euro (€)</option>
+                  <option value="GBP">GBP - British Pound (£)</option>
+                  <option value="CAD">CAD - Canadian Dollar ($)</option>
+                  <option value="AUD">AUD - Australian Dollar ($)</option>
+                </select>
+              </label>
+              <label class="settings-select-label" for="decimalPrecisionSelect">
+                <span>Decimal Precision</span>
+                <select id="decimalPrecisionSelect">
+                  <option value="0">0 decimals (e.g., $1,000)</option>
+                  <option value="1">1 decimal (e.g., $1,000.0)</option>
+                  <option value="2" selected>2 decimals (e.g., $1,000.00)</option>
+                  <option value="3">3 decimals (e.g., $1,000.000)</option>
+                  <option value="4">4 decimals (e.g., $1,000.0000)</option>
+                </select>
+              </label>
+            </div>
           </div>
-        </div>
-        <div class="settings-section" style="margin-bottom: 0;">
-          <div class="settings-options">
-            <button class="btn btn-secondary"
-              onclick="if(window.profitPathAnalyticsUI) window.profitPathAnalyticsUI.showAnalyticsDashboard()"
-              style="color: #000000; width: 100%;">📊 View Analytics</button>
+          <div class="settings-section" style="margin-bottom: 0;">
+            <div class="settings-options">
+              <button class="btn btn-secondary" style="width: 100%;"
+                onclick="ppCloseModal('settingsModal'); showAnalyticsDashboard()">📊 View Analytics</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
   </div>
-  </div>
-
-  <!-- Mobile Menu -->
-  <div class="mobile-menu-overlay" id="mobileMenuOverlay">
-    <div class="mobile-menu" id="mobileMenu">
-      <div class="mobile-menu-header">
-        <div class="mobile-menu-badge">
-          <span class="dot"></span>
-          <span style="color: #1f2937; font-size: 12px; font-weight: 500;">forecast mode</span>
-        </div>
-        <div style="display: flex; gap: 4px;">
-          <button id="mobileUndoBtn" class="undo-redo-icon-btn" type="button" title="Undo (Ctrl+Z)" disabled>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 7v6h6" />
-              <path d="M21 17a9 9 0 0 0-15.5-6L3 13" />
-            </svg>
-          </button>
-          <button id="mobileRedoBtn" class="undo-redo-icon-btn" type="button" title="Redo (Ctrl+Y)" disabled>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 7v6h-6" />
-              <path d="M3 17a9 9 0 0 1 15.5-6L21 13" />
-            </svg>
-          </button>
-        </div>
-        <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
-      </div>
-      <div class="mobile-menu-content" style="max-height: 70vh; overflow-y: auto;">
-        <!-- Key Metrics Card - Always Visible -->
-        <div style="padding: 12px 8px; border-bottom: 2px solid #e5e7eb; margin-bottom: 12px;">
-          <h3
-            style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px;">
-            At a Glance</h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
-            <div
-              style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;"
-              data-tooltip="Total income from all clients across all service offerings">
-              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Revenue
-              </div>
-              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;"
-                id="mobileKeyMetricsRevenue">—</div>
-            </div>
-            <div
-              style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;"
-              data-tooltip="Revenue minus all fixed costs and variable costs — your bottom line profit">
-              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Net Income
-              </div>
-              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;"
-                id="mobileKeyMetricsIncome">—</div>
-            </div>
-            <div
-              style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;"
-              data-tooltip="Number of active clients (current mode) or forecasted clients (forecast mode)">
-              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Clients
-              </div>
-              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;"
-                id="mobileKeyMetricsClients">—</div>
-            </div>
-            <div
-              style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;"
-              data-tooltip="Total number of service sessions delivered per year across all offerings">
-              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Sessions
-              </div>
-              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;"
-                id="mobileKeyMetricsAnnualSessions">—</div>
-            </div>
-            <div
-              style="display: flex; flex-direction: column; gap: 3px; padding: 8px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; grid-column: 1 / -1;"
-              data-tooltip="Percentage of available capacity being used (100% = at target, >100% = overbooked)">
-              <div style="color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
-                Utilization</div>
-              <div style="font-size: 13px; font-weight: 600; font-family: var(--mono); color: #1f2937;"
-                id="mobileKeyMetricsUtilization">—</div>
-            </div>
-          </div>
-        </div>
-        <button class="btn mobile-menu-btn" id="mobileScenariosBtn">💾 Manage Scenarios</button>
-        <button class="btn mobile-menu-btn" id="mobileShareBtn">🔗 Share Scenario</button>
-        <div class="mobile-templates-section">
-          <button class="btn mobile-menu-btn" id="mobileTemplatesBtn">🏢 Templates</button>
-          <div class="mobile-templates-options" id="mobileTemplatesOptions"
-            style="display: none; max-height: 50vh; overflow-y: auto;">
-            <button class="btn mobile-submenu-btn" id="mobileTemplateConsulting" data-template="consulting">💼
-              Consulting</button>
-            <button class="btn mobile-submenu-btn" id="mobileTemplateCleaning" data-template="cleaning">🧹
-              Cleaning</button>
-            <button class="btn mobile-submenu-btn" id="mobileTemplateLandscaping" data-template="landscaping">🌳
-              Landscaping</button>
-            <button class="btn mobile-submenu-btn" id="mobileTemplateHandyman" data-template="handyman">🔧
-              Handyman</button>
-            <button class="btn mobile-submenu-btn" id="mobileTemplateFitness" data-template="fitness">💪
-              Fitness</button>
-            <button class="btn mobile-submenu-btn" id="mobileTemplatePhotography" data-template="photography">📸
-              Photography</button>
-          </div>
-        </div>
-        <div class="mobile-export-section">
-          <button class="btn mobile-menu-btn" id="mobileExportBtn">📄 Export</button>
-          <div class="mobile-export-options" id="mobileExportOptions"
-            style="display: none; max-height: 50vh; overflow-y: auto;">
-            <button class="btn mobile-submenu-btn" id="mobileExportCsv">📊 CSV Spreadsheet</button>
-            <button class="btn mobile-submenu-btn" id="mobileExportExcel">📈 Excel Workbook</button>
-            <button class="btn mobile-submenu-btn" id="mobileExportPdf">📋 PDF Report</button>
-            <button class="btn mobile-submenu-btn" id="mobileExportHtml">🌐 HTML Page</button>
-            <button class="btn mobile-submenu-btn" id="mobileExportEmail">📧 Email Report</button>
-            <button class="btn mobile-submenu-btn expert-feature" id="mobileExportEmbed">🔗 Embed Widget</button>
-            <button class="btn mobile-submenu-btn" id="mobileExportSchedule">⏰ Auto Schedule</button>
-          </div>
-        </div>
-        <button class="btn mobile-menu-btn" id="mobileFeedbackBtn">✉️ Give Feedback</button>
-        <button class="btn mobile-menu-btn" id="mobileHelpBtn">❓ Help & Tour</button>
-        <button class="btn mobile-menu-btn" id="mobileSettingsBtn">⚙️ Settings</button>
-        <div class="mobile-settings-section"
-          style="display: none; padding: 8px; max-height: 60vh; overflow-y: auto; width: 100%; box-sizing: border-box;">
-          <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1f2937;">Experience Level</h4>
-          <div class="settings-options" style="display: flex; flex-direction: column; gap: 10px;">
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel"
-                  value="beginner">
-                Beginner</label>
-              <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">Core features active.</div>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel"
-                  value="intermediate">
-                Intermediate</label>
-              <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">Advanced calculations and scenario tools
-                unlocked.</div>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-              <label style="font-size: 13px; color: #1f2937;"><input type="radio" name="mobileExperienceLevel"
-                  value="advanced">
-                Advanced</label>
-              <div style="font-size: 12px; color: #4b5563; margin-left: 20px;">All features enabled, including export
-                suite and debug panel.</div>
-            </div>
-          </div>
-          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-            <button class="btn mobile-submenu-btn" id="mobileAnalyticsBtn">📊 Analytics</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Feedback Modal -->
@@ -413,53 +342,6 @@
 
 
   <div class="grid">
-    <!-- Key Metrics Overview Card -->
-    <section class="card" id="keyMetricsCard" style="grid-column: 1 / -1; display: none;" class="desktop-only">
-      <div class="card-h">
-        <h2>At a Glance (Key Metrics)</h2>
-      </div>
-      <div class="card-b">
-        <div
-          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; font-size: 14px;">
-          <div style="display: flex; flex-direction: column; gap: 4px;"
-            data-tooltip="Total income from all clients across all service offerings">
-            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Revenue
-            </div>
-            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);"
-              id="keyMetricsRevenue">—</div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;"
-            data-tooltip="Revenue minus all fixed costs and variable costs — your bottom line profit">
-            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Net
-              Income</div>
-            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);"
-              id="keyMetricsIncome">—</div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;"
-            data-tooltip="Number of active clients (current mode) or forecasted clients (forecast mode)">
-            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Clients
-            </div>
-            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);"
-              id="keyMetricsClients">—</div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;"
-            data-tooltip="Total number of service sessions delivered per year across all offerings">
-            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Annual
-              Sessions</div>
-            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);"
-              id="keyMetricsAnnualSessions">—</div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 4px;"
-            data-tooltip="Percentage of available capacity being used (100% = at target, >100% = overbooked)">
-            <div style="color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
-              Utilization</div>
-            <div style="font-size: 18px; font-weight: 600; font-family: var(--mono); color: var(--text);"
-              id="keyMetricsUtilization">—</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Validation Messages -->
     <div class="validation-container" id="validationContainer" style="display: none; grid-column: 1 / -1;"></div>
 
@@ -809,14 +691,28 @@
     })();
     // No-op here; logo is finalized as a single image.
 
-    // Register the PWA service worker (relative path so it works under
-    // sub-path deployments like GitHub Pages)
+    // PWA service worker. It uses a cache-first strategy for static assets,
+    // which is correct in production (filenames are content-hashed and
+    // immutable) but breaks local dev: unhashed assets get pinned to their
+    // first-cached version, so normal refresh serves stale CSS/JS. So on
+    // localhost we DON'T register it — and we proactively unregister any
+    // existing worker + clear its caches to undo a previously-stuck one.
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('sw.js').catch(function (err) {
-          console.warn('Service worker registration failed:', err);
+      var isLocalDev = ['localhost', '127.0.0.1', '[::1]'].indexOf(location.hostname) !== -1;
+      if (isLocalDev) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          regs.forEach(function (r) { r.unregister(); });
         });
-      });
+        if (window.caches && caches.keys) {
+          caches.keys().then(function (keys) { keys.forEach(function (k) { caches.delete(k); }); });
+        }
+      } else {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('sw.js').catch(function (err) {
+            console.warn('Service worker registration failed:', err);
+          });
+        });
+      }
     }
   </script>
   <script type="module" src="/src/calculations/index.js"></script>
@@ -848,6 +744,109 @@
         alert('Analytics feature is loading...');
       }
     }
+
+    // Flip light/dark, persist the choice, and keep the toggle icon + browser
+    // theme-color in sync. Kept as a plain global so it needs no app.jsx wiring.
+    function applyThemeIcon(theme) {
+      var btn = document.getElementById('themeToggleBtn');
+      if (btn) {
+        btn.textContent = theme === 'light' ? '☀️' : '🌙';
+        btn.title = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+      }
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', theme === 'light' ? '#f4f6f8' : '#0e1116');
+    }
+    function toggleTheme() {
+      var current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      var next = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('profitpath-theme', next); } catch (e) { }
+      applyThemeIcon(next);
+    }
+    // Sync the icon to whatever the no-flash init script already applied.
+    applyThemeIcon(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+
+    // ===== Unified drawer + delegation =====
+    // The drawer and bottom bar don't own any logic — they drive the real
+    // (hidden) action buttons via .click(), so every existing handler keeps
+    // working untouched.
+    function openDrawer() {
+      document.getElementById('appDrawer').classList.add('open');
+      document.getElementById('drawerScrim').classList.add('show');
+      document.getElementById('appDrawer').setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      document.getElementById('appDrawer').classList.remove('open');
+      document.getElementById('drawerScrim').classList.remove('show');
+      document.getElementById('appDrawer').setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+    // Tapping the hamburger again should close an open drawer.
+    function toggleDrawer() {
+      if (document.getElementById('appDrawer').classList.contains('open')) closeDrawer();
+      else openDrawer();
+    }
+    function ppDelegate(id) {
+      var el = document.getElementById(id);
+      if (el) el.click();
+      closeDrawer();
+    }
+    function ppDelegateSel(sel) {
+      var el = document.querySelector(sel);
+      if (el) el.click();
+      closeDrawer();
+    }
+    function ppToggleSub(btn, id) {
+      var sub = document.getElementById(id);
+      if (!sub) return;
+      var open = sub.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.classList.toggle('expanded', open);
+    }
+
+    // ===== unified modal helpers (Scenarios/Templates/Settings/At-a-glance all behave alike) =====
+    function ppOpenModal(id) {
+      closeDrawer();
+      var m = document.getElementById(id);
+      if (!m) return;
+      m.hidden = false;
+      // next frame so the transition runs
+      requestAnimationFrame(function () { m.classList.add('open'); });
+      document.body.style.overflow = 'hidden';
+    }
+    function ppCloseModal(id) {
+      var m = document.getElementById(id);
+      if (!m) return;
+      m.classList.remove('open');
+      document.body.style.overflow = '';
+      var done = function () { m.hidden = true; m.removeEventListener('transitionend', done); };
+      // fall back in case transitionend doesn't fire
+      m.addEventListener('transitionend', done);
+      setTimeout(function () { if (!m.classList.contains('open')) m.hidden = true; }, 260);
+    }
+    function ppCloseAllSheets() {
+      document.querySelectorAll('.pp-sheet.open').forEach(function (m) { ppCloseModal(m.id); });
+    }
+    // Load an industry template via its hidden real handler, then close the modal.
+    function ppPickTemplate(key) {
+      var btn = document.querySelector('.template-option[data-template="' + key + '"]');
+      if (btn) btn.click();
+      ppCloseModal('templatesModal');
+    }
+    // Flip Forecast <-> Current by driving the real #modeSelect (keeps everything in sync).
+    function ppToggleMode() {
+      var sel = document.getElementById('modeSelect');
+      if (!sel) return;
+      sel.value = sel.value === 'forecast' ? 'current' : 'forecast';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    // Close drawer + any open sheet on Escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      closeDrawer();
+      ppCloseAllSheets();
+    });
   </script>
 </body>
 

@@ -13,6 +13,12 @@ export function safeParseNumber(value, defaultValue = 0) {
   return isNaN(parsed) ? defaultValue : parsed;
 }
 
+// Clamp a number into [min, max]. Single source of truth — previously copy-pasted
+// into four modules, and one missing copy silently broke the Auto-balance Mix % feature.
+export function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
 export function cssEscape(str) {
   return str.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, '\\$&');
 }

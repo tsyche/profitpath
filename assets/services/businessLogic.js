@@ -1,5 +1,5 @@
 // Business Logic
-import { uuid } from '../utils/helpers';
+import { uuid, clamp } from '../utils/helpers';
 
 // Formatting utilities
 const DEFAULT_CURRENCY = 'USD';
@@ -350,11 +350,77 @@ export function defaultOfferings() {
   ];
 }
 
+// Validation messages the user has dismissed this session. Keyed by severity+message
+// so the same message stays hidden across re-renders (validation re-runs on every
+// input change). Keys for messages that no longer apply are pruned, so a condition
+// that clears and later recurs will surface again.
+const dismissedValidationKeys = new Set();
+
+function validationKey(item) {
+  return (item.severity || '') + '::' + (item.message || '');
+}
+
+function buildValidationItem(item, icon) {
+  const key = validationKey(item);
+  const el = document.createElement('div');
+  el.className = 'validation-item validation-' + (item.severity);
+  el.dataset.vkey = key;
+  el.innerHTML =
+    '<div class="validation-message"><strong>' + icon + '</strong>' +
+    '<span class="validation-text">' + (item.message) + '</span>' +
+    '<button class="validation-dismiss" type="button" aria-label="Dismiss message">&times;</button>' +
+    '</div><div class="validation-suggestion">' + (item.suggestion) + '</div>';
+
+  el.querySelector('.validation-dismiss').addEventListener('click', () => {
+    dismissedValidationKeys.add(key);
+    updateValidationDisplay();
+  });
+  attachSwipeToDismiss(el, key);
+  return el;
+}
+
+// Lightweight horizontal swipe-to-dismiss for touch devices.
+function attachSwipeToDismiss(el, key) {
+  let startX = 0, dx = 0, dragging = false;
+  el.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX; dx = 0; dragging = true;
+    el.style.transition = 'none';
+  }, { passive: true });
+  el.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    dx = e.touches[0].clientX - startX;
+    el.style.transform = 'translateX(' + dx + 'px)';
+    el.style.opacity = String(Math.max(0, 1 - Math.abs(dx) / 200));
+  }, { passive: true });
+  el.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    el.style.transition = '';
+    if (Math.abs(dx) > 80) {
+      dismissedValidationKeys.add(key);
+      updateValidationDisplay();
+    } else {
+      el.style.transform = '';
+      el.style.opacity = '';
+    }
+  });
+}
+
 export function updateValidationDisplay() {
   const validationContainer = $('#validationContainer');
   if (!validationContainer) return;
 
   const { issues, warnings } = validateBusinessLogic();
+
+  // Prune dismissed keys whose message no longer applies, so a recurring issue
+  // can resurface rather than staying hidden forever.
+  const activeKeys = new Set([...issues, ...warnings].map(validationKey));
+  for (const k of dismissedValidationKeys) {
+    if (!activeKeys.has(k)) dismissedValidationKeys.delete(k);
+  }
+
+  const visibleIssues = issues.filter(i => !dismissedValidationKeys.has(validationKey(i)));
+  const visibleWarnings = warnings.filter(w => !dismissedValidationKeys.has(validationKey(w)));
 
   // Always clear existing messages first
   validationContainer.innerHTML = '';
@@ -363,39 +429,28 @@ export function updateValidationDisplay() {
   let hasMessages = false;
 
   // Create error messages (for structural/critical errors)
-  if (issues.length > 0) {
+  if (visibleIssues.length > 0) {
     hasMessages = true;
     const errorsEl = document.createElement('div');
     errorsEl.className = 'validation-errors';
 
-    issues.forEach(issue => {
-      const errorEl = document.createElement('div');
-      errorEl.className = 'validation-item validation-' + (issue.severity);
-      errorEl.innerHTML = '<div class="validation-message"><strong>' + (issue.severity === 'error' ? '⚠️' : 'ℹ️') + '</strong>' + (issue.message) + '</div><div class="validation-suggestion">' + (issue.suggestion) + '</div>';
-      errorsEl.appendChild(errorEl);
+    visibleIssues.forEach(issue => {
+      errorsEl.appendChild(buildValidationItem(issue, issue.severity === 'error' ? '⚠️' : 'ℹ️'));
     });
 
     validationContainer.appendChild(errorsEl);
   }
 
   // Create warning messages (for business logic issues and info)
-  if (warnings.length > 0) {
+  if (visibleWarnings.length > 0) {
     hasMessages = true;
     const warningsEl = document.createElement('div');
     warningsEl.className = 'validation-warnings';
 
-    warnings.forEach(warning => {
-      const warningEl = document.createElement('div');
-      warningEl.className = 'validation-item validation-' + (warning.severity);
+    visibleWarnings.forEach(warning => {
       // Show appropriate icon based on severity
-      let icon = '💡';
-      if (warning.severity === 'error') {
-        icon = '⚠️';
-      } else if (warning.severity === 'warning') {
-        icon = '⚠️';
-      }
-      warningEl.innerHTML = '<div class="validation-message"><strong>' + icon + '</strong>' + (warning.message) + '</div><div class="validation-suggestion">' + (warning.suggestion) + '</div>';
-      warningsEl.appendChild(warningEl);
+      const icon = (warning.severity === 'error' || warning.severity === 'warning') ? '⚠️' : '💡';
+      warningsEl.appendChild(buildValidationItem(warning, icon));
     });
 
     validationContainer.appendChild(warningsEl);

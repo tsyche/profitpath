@@ -3,11 +3,28 @@
  * Handles user feedback submission, storage, and analysis
  */
 
+// Remote feedback delivery via Web3Forms (https://web3forms.com). This is a
+// static, server-less app, so feedback can't reach the maintainer on its own —
+// Web3Forms accepts a client-side POST and emails each submission to you.
+// To enable: create a free access key (just enter your email at web3forms.com)
+// and paste it below. It's a public submit-only key, safe to ship in the bundle.
+// Leave blank to keep the previous local-only + mailto behavior.
+const WEB3FORMS_ACCESS_KEY = '';
+const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
+
 class FeedbackCollector {
   constructor() {
     this.storageKey = 'profitpath_feedback';
     this.maxFeedbackItems = 1000;
+    this.remoteEndpoint = WEB3FORMS_ENDPOINT;
+    this.remoteAccessKey = WEB3FORMS_ACCESS_KEY;
     this.initializeStorage();
+    // Retry anything that was saved while offline / before a key was configured.
+    this.flushUnsyncedFeedback();
+  }
+
+  remoteEnabled() {
+    return typeof this.remoteAccessKey === 'string' && this.remoteAccessKey.length > 0;
   }
 
   initializeStorage() {
@@ -29,6 +46,7 @@ class FeedbackCollector {
       id: this.generateId(),
       timestamp: new Date().toISOString(),
       sessionId: this.getSessionId(),
+      synced: false, // flips true once delivered to the remote endpoint
       ...this.sanitizeFeedback(feedbackData)
     };
 
@@ -37,7 +55,7 @@ class FeedbackCollector {
       throw new Error('Rating and category are required');
     }
 
-    // Store feedback
+    // Store feedback (also acts as an offline buffer / retry queue)
     const allFeedback = this.getAllFeedback();
     allFeedback.push(feedback);
 
@@ -48,8 +66,11 @@ class FeedbackCollector {
 
     localStorage.setItem(this.storageKey, JSON.stringify(allFeedback));
 
-    // Attempt to send email if contact allowed
-    if (feedback.allowContact && feedback.comment) {
+    // Deliver it. Prefer the remote endpoint when configured; otherwise fall
+    // back to the opt-in mailto so behavior is unchanged until a key is added.
+    if (this.remoteEnabled()) {
+      this.sendToRemote(feedback);
+    } else if (feedback.allowContact && feedback.comment) {
       this.sendEmailNotification(feedback);
     }
 
@@ -100,6 +121,60 @@ This feedback was submitted via the ProfitPath feedback form.
     } catch (error) {
       console.error('Failed to send email notification:', error);
     }
+  }
+
+  /**
+   * Deliver one feedback item to the remote endpoint (Web3Forms). On success the
+   * stored copy is marked synced; on failure it stays queued for a later retry.
+   */
+  async sendToRemote(feedback) {
+    if (!this.remoteEnabled()) return false;
+    try {
+      const payload = {
+        access_key: this.remoteAccessKey,
+        subject: `ProfitPath Feedback: ${feedback.rating}★ ${feedback.category}`,
+        from_name: 'ProfitPath Feedback',
+        rating: feedback.rating,
+        category: feedback.category,
+        comment: feedback.comment || '(none)',
+        allow_contact: feedback.allowContact ? 'yes' : 'no',
+        page: feedback.url || '',
+        user_agent: feedback.userAgent || '',
+        context: feedback.context ? JSON.stringify(feedback.context) : '',
+        submitted_at: feedback.timestamp
+      };
+      const res = await fetch(this.remoteEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        this.markSynced(feedback.id);
+        return true;
+      }
+      console.warn('Remote feedback rejected:', data.message || res.status);
+    } catch (error) {
+      console.warn('Failed to send feedback to remote endpoint:', error);
+    }
+    return false;
+  }
+
+  /** Mark a stored feedback item as delivered. */
+  markSynced(id) {
+    const all = this.getAllFeedback();
+    const item = all.find((f) => f.id === id);
+    if (item) {
+      item.synced = true;
+      localStorage.setItem(this.storageKey, JSON.stringify(all));
+    }
+  }
+
+  /** Retry delivery for any feedback saved while offline or before a key existed. */
+  flushUnsyncedFeedback() {
+    if (!this.remoteEnabled()) return;
+    const unsent = this.getAllFeedback().filter((f) => f.synced === false);
+    unsent.forEach((f) => this.sendToRemote(f));
   }
 
   /**

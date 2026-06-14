@@ -3,11 +3,10 @@
  * Handles all business logic calculations with caching and debugging support
  */
 
+import { clamp } from '../../assets/utils/helpers';
+
 // Constants
 export const HOURS_PER_YEAR = 2080; // Standard paid hours per employee per year
-
-// Utility functions
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
 // Coerce to a finite number; non-finite values (NaN, ±Infinity) become the
 // fallback so hostile inputs can't propagate NaN through the results

@@ -7,12 +7,11 @@ export async function waitForPageReady(page) {
   // Wait for DOM to be ready
   await page.waitForLoadState('domcontentloaded');
 
-  // Wait for key elements to be visible
+  // Wait for key elements to be visible (current markup: app bar + inputs)
   try {
     await Promise.race([
-      page.waitForSelector('#employees', { timeout: 5000 }),
-      page.waitForSelector('.logo-link', { timeout: 5000 }),
-      page.waitForSelector('h1', { timeout: 5000 })
+      page.waitForSelector('.appbar', { timeout: 5000 }),
+      page.waitForSelector('#fullTimeEmployees', { timeout: 5000 })
     ]);
   } catch (e) {
     // If elements aren't found, wait a bit and continue

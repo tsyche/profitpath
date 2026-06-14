@@ -20,7 +20,7 @@ Client-side profitability and capacity simulator for recurring service businesse
 - **Collaboration**: Shareable URLs for sharing scenarios with stakeholders, automatic URL loading on page load
 - **Templates**: Industry-specific templates for consulting, cleaning, landscaping, handyman, fitness, and photography services
 - **UI/UX**: Responsive design, mobile-optimized layout, collapsible debug panel, utilization gauge, profit waterfall charts, polished visual design
-- **Test Coverage**: 270+ unit tests (including fuzz tests) and 90 e2e tests across chromium and firefox
+- **Test Coverage**: 291 unit tests (including fuzz tests) and 134 e2e runs across chromium and firefox
 
 ## Quick Start
 
@@ -64,7 +64,7 @@ Load test data via URL parameters:
 
 ## Guided Tour
 
-ProfitPath includes a 9-step interactive tour helping new users explore all features. Access via the ❓ help button in the top-right corner or "🎯 Take Tour" in the mobile menu. The tour covers:
+ProfitPath includes a 9-step interactive tour helping new users explore all features. Access it via **Help & tour** in the menu drawer (the ☰ button in the app bar). The tour covers:
 
 1. Welcome & dashboard overview
 2. Forecast vs. Current mode selection

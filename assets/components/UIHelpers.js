@@ -6,76 +6,14 @@ import { createModal } from "../components/Modal";
 // UI Components and Helpers
 
 export function showDeleteConfirmation(scenarioId, onConfirm) {
-  // Create a simple confirmation without blur effect
-  const confirmModal = createModal({
+  createModal({
     title: '🗑️ Confirm Delete',
     content: 'Are you sure you want to delete this scenario? This action cannot be undone.',
     buttons: [
-      {
-        text: '❌ Cancel', action: () => {
-          // Only remove the confirmation modal's overlay (highest z-index)
-          const overlays = document.querySelectorAll('.modal-overlay');
-          overlays.forEach(overlay => {
-            if (overlay.style.zIndex === '15000') {
-              overlay.remove();
-            }
-          });
-          // Clear blur from document.body
-          document.body.style.backdropFilter = '';
-        }, primary: false
-      },
-      {
-        text: '🗑️ Delete', action: () => {
-          if (onConfirm) onConfirm();
-          // Only remove the confirmation modal's overlay (highest z-index)
-          const overlays = document.querySelectorAll('.modal-overlay');
-          overlays.forEach(overlay => {
-            if (overlay.style.zIndex === '15000') {
-              overlay.remove();
-            }
-          });
-          // Clear blur from document.body
-          document.body.style.backdropFilter = '';
-        }, primary: true
-      }
+      { text: '❌ Cancel', primary: false },
+      { text: '🗑️ Delete', primary: true, action: () => { if (onConfirm) onConfirm(); } }
     ],
     size: 'small'
-  });
-
-  // Create overlay without blur effect
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 15000; display: flex; align-items: center; justify-content: center;';
-  overlay.appendChild(confirmModal);
-  document.body.appendChild(overlay);
-
-  // Add close handler for X button
-  const closeBtn = confirmModal.querySelector('.modal-close');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      // Remove blur effect from document.body
-      document.body.style.backdropFilter = '';
-      overlay.remove();
-    });
-  }
-
-  confirmModal.querySelector('.modal-btn[data-index="0"]').addEventListener('click', () => {
-    // Remove blur effect from document.body
-    document.body.style.backdropFilter = '';
-    const confirmationModal = document.querySelector('.modal-header h3')?.parentElement?.parentElement?.parentElement;
-    if (confirmationModal?.parentElement?.classList.contains('modal-overlay')) {
-      confirmationModal.parentElement.remove();
-    }
-  });
-
-  confirmModal.querySelector('.modal-btn[data-index="1"]').addEventListener('click', () => {
-    if (onConfirm) onConfirm();
-    // Remove blur effect from document.body
-    document.body.style.backdropFilter = '';
-    const confirmationModal = document.querySelector('.modal-header h3')?.parentElement?.parentElement?.parentElement;
-    if (confirmationModal?.parentElement?.classList.contains('modal-overlay')) {
-      confirmationModal.parentElement.remove();
-    }
   });
 }
 
@@ -149,9 +87,8 @@ export function openScenarioModal() {
     id: 'scenariosModal',
     title: '💾 Scenarios',
     content: content,
-    buttons: [
-      { text: 'Close', primary: false }
-    ],
+    // No footer "Close" button — the header X (and scrim/Esc) already closes it.
+    buttons: [],
     size: 'large'
   });
 
@@ -211,62 +148,28 @@ export function openScenarioModal() {
     if (!scenarioId) return;
 
     if (btn.classList.contains('load-btn')) {
-      // Show load confirmation modal
       const scenario = scenarios.find(s => s.id === scenarioId);
-      const scenarioName = scenario?.name || scenario?.description || 'Unknown scenario';
+      const scenarioName = escapeHtml(scenario?.name || scenario?.description || 'Unknown scenario');
 
-      const confirmModal = createModal({
+      createModal({
         title: '📂 Confirm Load',
         content: `Are you sure you want to load "${scenarioName}"? This will replace your current configuration with the saved scenario.`,
         buttons: [
+          { text: '❌ Cancel', primary: false },
           {
-            text: '❌ Cancel', action: () => {
-              // Only remove the confirmation modal's overlay (highest z-index)
-              const overlays = document.querySelectorAll('.modal-overlay');
-              overlays.forEach(overlay => {
-                if (overlay.style.zIndex === '15000') {
-                  overlay.remove();
-                }
-              });
-              // Clear blur from document.body
-              document.body.style.backdropFilter = '';
-            }, primary: false
-          },
-          {
-            text: '📂 Load', action: async () => {
-              // Call the scenario service directly (it will bypass confirmation now)
+            text: '📂 Load', primary: true, action: async () => {
               const scenarioService = await import('../services/scenarioService.js');
               await scenarioService.loadScenario(scenarioId);
-              // Refresh scenarios list and dropdowns after loading
-              refreshScenariosList(modal);
-              // Only remove the confirmation modal's overlay (highest z-index)
-              const overlays = document.querySelectorAll('.modal-overlay');
-              overlays.forEach(overlay => {
-                if (overlay.style.zIndex === '15000') {
-                  overlay.remove();
-                }
-              });
-              // Clear blur from document.body
-              document.body.style.backdropFilter = '';
-            }, primary: true
+              renderScenariosList();
+            }
           }
         ]
       });
-      confirmModal.style.zIndex = '15000';
-      document.body.appendChild(confirmModal);
-      // Add blur effect
-      document.body.style.backdropFilter = 'blur(4px)';
     } else if (btn.classList.contains('delete-btn')) {
-      // Ask for confirmation before deleting
       showDeleteConfirmation(scenarioId, async () => {
         await deleteScenario(scenarioId);
-        // Refresh scenarios list and dropdowns after deleting
-        setTimeout(() => {
-          refreshScenariosList(modal);
-        }, 50);
+        setTimeout(() => { renderScenariosList(); }, 50);
       });
-      // Don't close modal after delete confirmation
-      return;
     }
   });
 
@@ -278,51 +181,21 @@ export function openScenarioModal() {
       const input = modal.querySelector('#scenarioNameInput');
       if (input && input.value.trim()) {
         const scenarioName = input.value.trim();
-
-        // Show save confirmation modal
-        const confirmModal = createModal({
+        createModal({
           title: '💾 Confirm Save',
-          content: `Save current configuration as "${scenarioName}"? This will save your current calculations and settings.`,
+          content: `Save current configuration as "${escapeHtml(scenarioName)}"? This will save your current calculations and settings.`,
           buttons: [
+            { text: '❌ Cancel', primary: false },
             {
-              text: '❌ Cancel', action: () => {
-                // Only remove the confirmation modal's overlay (highest z-index)
-                const overlays = document.querySelectorAll('.modal-overlay');
-                overlays.forEach(overlay => {
-                  if (overlay.style.zIndex === '15000') {
-                    overlay.remove();
-                  }
-                });
-                // Clear blur from document.body
-                document.body.style.backdropFilter = '';
-              }, primary: false
-            },
-            {
-              text: '💾 Save', action: async () => {
-                // Call the scenario service directly (it will bypass confirmation now)
+              text: '💾 Save', primary: true, action: async () => {
                 const scenarioService = await import('../services/scenarioService.js');
                 await scenarioService.saveScenario(scenarioName);
-                // Clear input
                 input.value = '';
-                // Refresh modal content after saving (now with updated data)
-                refreshScenariosList(modal);
-                // Only remove the confirmation modal's overlay (highest z-index)
-                const overlays = document.querySelectorAll('.modal-overlay');
-                overlays.forEach(overlay => {
-                  if (overlay.style.zIndex === '15000') {
-                    overlay.remove();
-                  }
-                });
-                // Clear blur from document.body
-                document.body.style.backdropFilter = '';
-              }, primary: true
+                renderScenariosList();
+              }
             }
           ]
         });
-        confirmModal.style.zIndex = '15000';
-        document.body.appendChild(confirmModal);
-        // Add blur effect
-        document.body.style.backdropFilter = 'blur(4px)';
       }
     });
   }
