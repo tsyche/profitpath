@@ -8,8 +8,9 @@ import * as businessLogic from './services/businessLogic';
 import { saveScenario, loadScenario, deleteScenario } from './services/scenarioService';
 import { closeScenarioModal, createModal } from './components/Modal.js';
 import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL } from './services/miscService';
-import { uuid } from './utils/helpers';
+import { uuid, clamp } from './utils/helpers';
 import { showToast } from './services/modalService.js';
+import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui.js';
 
 // Test scenarios for development
 const TEST_SCENARIOS = {
@@ -225,7 +226,6 @@ const lazyLoadChart = (...args) => (misc && typeof misc.lazyLoadChart === 'funct
 const updateRichVisualizations = (...args) => (misc && typeof misc.updateRichVisualizations === 'function') ? misc.updateRichVisualizations(...args) : undefined;
 
 // Utility functions
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
 // Settings and UI function wrappers
 const DEFAULT_CURRENCY = 'USD';
@@ -1856,8 +1856,8 @@ function showScenarioComparisonDiff(id1, id2) {
   let contentHtml = '<div class="scenario-diff-wrap">';
   contentHtml += '<div class="scenario-diff-header">';
   contentHtml += '<div class="diff-col-label"></div>';
-  contentHtml += '<div class="diff-col-s1"><strong>' + scenario1.name + '</strong><span class="diff-date">' + scenario1.timestamp + '</span></div>';
-  contentHtml += '<div class="diff-col-s2"><strong>' + scenario2.name + '</strong><span class="diff-date">' + scenario2.timestamp + '</span></div>';
+  contentHtml += '<div class="diff-col-s1"><strong>' + escapeHtml(scenario1.name) + '</strong><span class="diff-date">' + escapeHtml(scenario1.timestamp) + '</span></div>';
+  contentHtml += '<div class="diff-col-s2"><strong>' + escapeHtml(scenario2.name) + '</strong><span class="diff-date">' + escapeHtml(scenario2.timestamp) + '</span></div>';
   contentHtml += '<div class="diff-col-delta">Change</div>';
   contentHtml += '</div>';
 
@@ -1910,7 +1910,7 @@ function showScenarioComparisonDiff(id1, id2) {
       metrics1.offeringMetrics.forEach((off1, idx) => {
         const off2 = metrics2.offeringMetrics[idx];
         contentHtml += '<div class="scenario-diff-offering">';
-        contentHtml += '<div class="scenario-diff-offering-name">' + off1.name + '</div>';
+        contentHtml += '<div class="scenario-diff-offering-name">' + escapeHtml(off1.name) + '</div>';
         contentHtml += '<div class="scenario-diff-table">';
 
         // Revenue
@@ -1955,7 +1955,7 @@ function showScenarioComparisonDiff(id1, id2) {
 
   // Create and show modal with onClose callback to return to scenarios
   createModal({
-    title: 'Scenario Comparison: ' + scenario1.name + ' vs ' + scenario2.name,
+    title: 'Scenario Comparison: ' + escapeHtml(scenario1.name) + ' vs ' + escapeHtml(scenario2.name),
     content: contentHtml,
     size: 'full',
     onClose: () => openScenarioModal()
@@ -1976,8 +1976,10 @@ window.exportComparisonAsCSV = function (id1, id2) {
   const metrics1 = calc(scenario1.data || scenario1.state);
   const metrics2 = calc(scenario2.data || scenario2.state);
 
-  // Create CSV content
-  let csvContent = 'Metric,' + scenario1.name + ',' + scenario2.name + ',Change\n';
+  // Create CSV content. Every cell goes through csvCell so untrusted names and
+  // negative numbers (which start with '-') can't be executed as spreadsheet formulas.
+  const cell = misc.csvCell;
+  let csvContent = ['Metric', cell(scenario1.name), cell(scenario2.name), 'Change'].join(',') + '\n';
 
   const metricsToCompare = [
     { label: 'Clients', key: 'clients', format: fmtInt },
@@ -1996,7 +1998,7 @@ window.exportComparisonAsCSV = function (id1, id2) {
     const delta = val2 - val1;
     const sign = delta > 0 ? '+' : '';
 
-    csvContent += m.label + ',' + m.format(val1) + ',' + m.format(val2) + ',' + sign + m.format(delta) + '\n';
+    csvContent += [cell(m.label), cell(m.format(val1)), cell(m.format(val2)), cell(sign + m.format(delta))].join(',') + '\n';
   });
 
   // Download CSV
@@ -2004,7 +2006,9 @@ window.exportComparisonAsCSV = function (id1, id2) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `scenario-comparison-${scenario1.name}-vs-${scenario2.name}.csv`;
+  // Strip characters that don't belong in a filename (names can be untrusted).
+  const safeFileName = (n) => String(n || 'scenario').replace(/[^a-z0-9 _-]+/gi, '').trim().slice(0, 60) || 'scenario';
+  a.download = `scenario-comparison-${safeFileName(scenario1.name)}-vs-${safeFileName(scenario2.name)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 };
@@ -2236,10 +2240,13 @@ if (compareStatesParam) {
   try {
     const payload = JSON.parse(atob(decodeURIComponent(compareStatesParam)));
     if (payload.s1 && payload.s2) {
+      // Names come from an untrusted share link — coerce to a bounded string.
+      // (They are also escaped at render time; this just caps storage size.)
+      const safeName = (n) => String(n == null ? 'Shared scenario' : n).slice(0, 120);
       // Create temporary comparison scenarios in localStorage
       const tempScenarios = [
-        { id: 'temp-s1', name: payload.s1.name, timestamp: new Date().toLocaleString(), state: payload.s1.state },
-        { id: 'temp-s2', name: payload.s2.name, timestamp: new Date().toLocaleString(), state: payload.s2.state }
+        { id: 'temp-s1', name: safeName(payload.s1.name), timestamp: new Date().toLocaleString(), state: payload.s1.state },
+        { id: 'temp-s2', name: safeName(payload.s2.name), timestamp: new Date().toLocaleString(), state: payload.s2.state }
       ];
       localStorage.setItem('profitpath-temp-compare', JSON.stringify(tempScenarios));
     }
@@ -2417,6 +2424,35 @@ function initSensitivityPanel() {
   $('#sensitivityReset')?.addEventListener('click', () => {
     resetSliders();
     updateSensitivity();
+  });
+}
+
+// Customer Analytics twisty (advanced feature). The markup existed but was never
+// wired, so the toggle did nothing — connect it and render on expand.
+function initCustomerAnalyticsPanel() {
+  const toggle = $('#customerAnalyticsToggle');
+  const body = $('#customerAnalyticsBody');
+  const panel = $('#customerAnalyticsPanel');
+  if (!toggle || !body || !panel) return;
+
+  const renderPanel = () => {
+    try {
+      const m = calc(state);
+      const metrics = { ...m, totalClients: m.totalClients ?? m.clients ?? 0 };
+      panel.innerHTML = renderCustomerAnalyticsDashboard(metrics, {}).html;
+    } catch (e) {
+      console.warn('Customer analytics render failed:', e);
+      panel.innerHTML = '<p style="color: var(--muted); text-align: center;">Unable to load customer analytics.</p>';
+    }
+  };
+
+  toggle.addEventListener('click', () => {
+    const isCollapsed = body.classList.toggle('collapsed');
+    const expandedNow = !isCollapsed;
+    body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+    toggle.setAttribute('aria-expanded', expandedNow ? 'true' : 'false');
+    toggle.textContent = (expandedNow ? '▼' : '▶') + toggle.textContent.slice(1);
+    if (expandedNow) renderPanel();
   });
 }
 
@@ -2791,6 +2827,7 @@ try {
   initDebugPanel();
   initPerfPanel();
   initSensitivityPanel();
+  initCustomerAnalyticsPanel();
 } catch {
   try {
     persistState();
@@ -3110,7 +3147,7 @@ function createGuidedTour() {
       target: 'aside.card .card-h',
       title: 'Key Profitability Metric',
       content: 'This shows your net income after all expenses. Green indicates profitability, red indicates losses.',
-      position: 'top'
+      position: 'left'
     },
     {
       target: 'aside.card .capacity',
@@ -3128,7 +3165,7 @@ function createGuidedTour() {
       target: '.charts-visualizations-container',
       title: 'Charts & Visualizations',
       content: 'Explore interactive charts and graphs that help visualize your business metrics and financial analysis.',
-      position: 'top'
+      position: 'left'
     },
     {
       target: isMobile ? '#hamburgerBtn' : '.header-actions',
@@ -3374,7 +3411,7 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
   // Create tooltip (initially hidden to measure actual height)
   const tooltip = document.createElement('div');
   tooltip.className = 'onboarding-tooltip';
-  tooltip.style.cssText = 'position: fixed;z-index: 10000;background: white;border: 2px solid #007bff;border-radius: 8px;padding: 16px;box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);max-width: ' + (isMobile ? '280px' : '300px') + ';pointer-events: auto;font-size: ' + (isMobile ? '14px' : '16px') + ';visibility: hidden;opacity: 0;transition: opacity 0.3s ease-out;left: 0;top: 0;transform: translate(0, 0);';
+  tooltip.style.cssText = 'position: fixed;z-index: 10000;background: var(--surface);color: var(--text);border: 2px solid var(--accent, #007bff);border-radius: 8px;padding: 16px;box-shadow: var(--elev-4, 0 4px 12px rgba(0, 0, 0, 0.15));max-width: ' + (isMobile ? '280px' : '300px') + ';pointer-events: auto;font-size: ' + (isMobile ? '14px' : '16px') + ';visibility: hidden;opacity: 0;transition: opacity 0.3s ease-out;left: 0;top: 0;transform: translate(0, 0);';
 
   // Set content before measuring
   tooltip.innerHTML = '<div style="position:relative;padding-right:24px;"><button class="tour-exit-btn" style="position:absolute;top:0;right:0;background:transparent;border:none;font-size:16px;cursor:pointer;color:var(--text, #666);padding:4px;line-height:1;">✕</button><div style="font-weight:bold;margin-bottom:8px;color:var(--text, #007bff);">' + step.title + '</div><div style="margin-bottom:16px;color:var(--text, #333);line-height:1.4;">' + step.content + '</div><div style="display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;"><div class="tour-navigation" style="display:flex;align-items:center;">' + (stepIndex > 0 ? '<button class="tour-arrow tour-arrow-prev" data-direction="prev" style="background:var(--surface-2);border:1px solid var(--border);border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:8px;font-size:18px;line-height:1;">‹</button>' : '<div style="width:32px;"></div>') + '<div class="tour-dots" style="display:flex;align-items:center;">' + progressDots + '</div>' + (stepIndex < steps.length - 1 ? '<button class="tour-arrow tour-arrow-next" data-direction="next" style="background:#007bff;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:18px;line-height:1;">›</button>' : '<button class="tour-finish-btn" style="background:#28a745;color:white;border:none;border-radius:4px;width:24px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:8px;font-size:16px;line-height:1;">✓</button>') + '</div></div></div>';
@@ -3385,22 +3422,33 @@ function createTooltip(step, target, onNext, stepIndex, steps) {
 
   // Now recalculate position with actual height
   let finalTop = top;
-  let finalTransform = transform;
+  const finalTransform = transform;
 
-  if (left < 10) {
-    left = 10;
-  }
-  if (left + tooltipWidth > window.innerWidth - 10) {
-    left = window.innerWidth - tooltipWidth - 10;
-  }
-  if (finalTop - tooltipHeight < 10) {
-    finalTop = tooltipHeight + 10;
-    if (!isMobile) finalTransform = finalTransform.replace('-100%', '0');
-  }
-  if (finalTop + tooltipHeight > window.innerHeight - 10) {
-    finalTop = window.innerHeight - tooltipHeight - 10;
-    if (!isMobile) finalTransform = finalTransform.replace('0', '-100%');
-  }
+  // Clamp to the viewport in a transform-aware way. `left`/`finalTop` are the
+  // anchor point; the transform shifts the box by a fraction of its own size
+  // (e.g. translate(-100%) for a tooltip placed to the left of the target). The
+  // old clamp ignored the transform, so 'left'/'right'/'top' tooltips got shoved
+  // back on top of the element they were pointing at.
+  const fracOf = (axis) => {
+    const m = finalTransform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+    if (!m) return 0;
+    const v = (axis === 'x' ? m[1] : m[2]).trim();
+    if (v.includes('-100%')) return -1;
+    if (v.includes('-50%')) return -0.5;
+    return 0;
+  };
+  // Horizontal: keep the rendered box (left + fx*width .. + width) on screen.
+  const fx = fracOf('x');
+  let renderedLeft = left + fx * tooltipWidth;
+  if (renderedLeft < 10) renderedLeft = 10;
+  if (renderedLeft + tooltipWidth > window.innerWidth - 10) renderedLeft = window.innerWidth - tooltipWidth - 10;
+  left = renderedLeft - fx * tooltipWidth;
+  // Vertical: same, for the rendered top.
+  const fy = fracOf('y');
+  let renderedTop = finalTop + fy * tooltipHeight;
+  if (renderedTop < 10) renderedTop = 10;
+  if (renderedTop + tooltipHeight > window.innerHeight - 10) renderedTop = window.innerHeight - tooltipHeight - 10;
+  finalTop = renderedTop - fy * tooltipHeight;
 
   // Set final position while still invisible (prevents jump)
   tooltip.style.left = left + 'px';
@@ -3568,9 +3616,20 @@ function createOnboardingDialog({ title, content, buttons }) {
 }
 
 function showHelpMenu() {
+  // Reflect the current tooltip state so the option toggles (Enable <-> Disable)
+  // rather than always offering to enable.
+  let tipsOn = true;
+  try {
+    tipsOn = JSON.parse(localStorage.getItem('profitpath-settings') || '{}').showTooltips !== false;
+  } catch { /* default on */ }
+  const btnStyle = 'display:block;width:100%;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;text-align:left;cursor:pointer;';
+  const tooltipsBtn = tipsOn
+    ? '<button class="help-menu-btn" data-action="tooltips" style="' + btnStyle + '">🚫 <strong>Disable Tooltips</strong><br><small>Turn off contextual help throughout the app</small></button>'
+    : '<button class="help-menu-btn" data-action="tooltips" style="' + btnStyle + '">💡 <strong>Show Tooltips</strong><br><small>Enable contextual help throughout the app</small></button>';
+
   const helpDialog = createOnboardingDialog({
     title: 'Help & Learning Center',
-    content: '<div style="display:grid;gap:12px;"><button class="help-menu-btn" data-action="tour" style="display:block;width:100%;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;text-align:left;cursor:pointer;">🎯 <strong>Take Guided Tour</strong><br><small>Step-by-step walkthrough of key features</small></button><button class="help-menu-btn" data-action="industry" style="display:block;width:100%;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;text-align:left;cursor:pointer;">🏢 <strong>Change Industry</strong><br><small>Switch to a different business template</small></button><button class="help-menu-btn" data-action="tooltips" style="display:block;width:100%;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;text-align:left;cursor:pointer;">💡 <strong>Show Tooltips</strong><br><small>Enable contextual help throughout the app</small></button></div>',
+    content: '<div style="display:grid;gap:12px;"><button class="help-menu-btn" data-action="tour" style="' + btnStyle + '">🎯 <strong>Take Guided Tour</strong><br><small>Step-by-step walkthrough of key features</small></button><button class="help-menu-btn" data-action="industry" style="' + btnStyle + '">🏢 <strong>Change Industry</strong><br><small>Switch to a different business template</small></button>' + tooltipsBtn + '</div>',
     buttons: [
       { text: 'Close', action: () => { } }
     ]
@@ -3589,7 +3648,8 @@ function showHelpMenu() {
           } else if (action === 'industry') {
             showIndustrySelector();
           } else if (action === 'tooltips') {
-            showContextualHelp();
+            // Toggle based on the state captured when the menu opened.
+            if (tipsOn) hideContextualHelp(); else showContextualHelp();
           }
         }, 100);
       });

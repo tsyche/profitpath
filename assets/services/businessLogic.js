@@ -1,10 +1,5 @@
 // Business Logic
-import { uuid } from '../utils/helpers';
-
-// Clamp a number into [min, max]. Defined locally because rebalanceMix needs it
-// and businessLogic.js runs as its own module (a bare `clamp` reference threw,
-// silently breaking the forecast Auto-balance Mix % feature).
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+import { uuid, clamp } from '../utils/helpers';
 
 // Formatting utilities
 const DEFAULT_CURRENCY = 'USD';

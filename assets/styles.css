@@ -4185,27 +4185,23 @@ input[type="checkbox"] {
   padding: 20px 0;
 }
 
-.analytics-dashboard * {
-  color: black !important;
-}
-
 .analytics-dashboard h3 {
   margin: 0 0 20px 0;
-  color: #1f2937 !important;
+  color: var(--text);
   font-size: 1.5rem;
   font-weight: 600;
 }
 
 .analytics-dashboard h4 {
   margin: 0 0 10px 0;
-  color: #374151 !important;
+  color: var(--text);
   font-size: 1.1rem;
   font-weight: 500;
 }
 
 .analytics-dashboard p {
   margin: 0 0 20px 0;
-  color: #6b7280 !important;
+  color: var(--muted);
   line-height: 1.5;
 }
 
@@ -4224,8 +4220,8 @@ input[type="checkbox"] {
 }
 
 .stat-card {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 20px;
   text-align: center;
@@ -4233,7 +4229,7 @@ input[type="checkbox"] {
 
 .stat-card h4 {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--muted);
   margin: 0 0 8px 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -4242,7 +4238,7 @@ input[type="checkbox"] {
 .stat-value {
   font-size: 2rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text);
 }
 
 .analytics-disabled {
@@ -4252,13 +4248,13 @@ input[type="checkbox"] {
 
 .analytics-disabled h3 {
   margin: 0 0 20px 0;
-  color: #374151;
+  color: var(--text);
   font-size: 1.3rem;
 }
 
 .analytics-disabled p {
   margin: 0 0 30px 0;
-  color: #6b7280;
+  color: var(--muted);
   max-width: 400px;
   margin-left: auto;
   margin-right: auto;

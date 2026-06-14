@@ -97,7 +97,7 @@
 
   <!-- ===== app bar (hamburger-left · logo · inline primary · at-a-glance · mode toggle · fixed undo/redo+theme) ===== -->
   <header class="appbar" id="appbar">
-    <button class="ab-icon" id="appMenuBtn" type="button" aria-label="Open menu" onclick="openDrawer()"><svg viewBox="0 0 24 24"><use href="#ic-menu"/></svg></button>
+    <button class="ab-icon" id="appMenuBtn" type="button" aria-label="Open menu" onclick="toggleDrawer()"><svg viewBox="0 0 24 24"><use href="#ic-menu"/></svg></button>
     <a href="/" class="ab-logo" aria-label="ProfitPath home"><img class="ab-sun" src="/assets/pp-logo2-final.svg" alt="" /><span class="ab-word">ProfitPath</span></a>
 
     <nav class="ab-primary" aria-label="Primary actions">
@@ -195,7 +195,7 @@
     <button class="bb-item" type="button" onclick="ppDelegate('desktopScenariosBtn')"><svg viewBox="0 0 24 24"><use href="#ic-scenarios"/></svg><span>Scenarios</span></button>
     <button class="bb-item" type="button" onclick="ppOpenModal('templatesModal')"><svg viewBox="0 0 24 24"><use href="#ic-templates"/></svg><span>Templates</span></button>
     <button class="bb-item" type="button" onclick="ppDelegate('settingsCogBtn')"><svg viewBox="0 0 24 24"><use href="#ic-settings"/></svg><span>Settings</span></button>
-    <button class="bb-item" type="button" onclick="openDrawer()"><svg viewBox="0 0 24 24"><use href="#ic-more"/></svg><span>More</span></button>
+    <button class="bb-item" type="button" onclick="toggleDrawer()"><svg viewBox="0 0 24 24"><use href="#ic-more"/></svg><span>More</span></button>
   </nav>
 
   <!-- ===== templates modal (consistent with Scenarios) ===== -->
@@ -781,6 +781,11 @@
       document.getElementById('drawerScrim').classList.remove('show');
       document.getElementById('appDrawer').setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
+    }
+    // Tapping the hamburger again should close an open drawer.
+    function toggleDrawer() {
+      if (document.getElementById('appDrawer').classList.contains('open')) closeDrawer();
+      else openDrawer();
     }
     function ppDelegate(id) {
       var el = document.getElementById(id);
