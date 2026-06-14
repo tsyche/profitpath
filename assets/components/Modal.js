@@ -1,7 +1,5 @@
 // Consistent Modal Component for ProfitPath
 export function createModal({ title, content, buttons = [], size = 'medium', id = '', onClose = null }) {
-  // Prevent stacked modals by closing any existing ones first
-  closeCurrentModal();
 
   // Create overlay
   const overlay = document.createElement('div');

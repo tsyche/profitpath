@@ -269,9 +269,9 @@ class AnalyticsUI {
     return `
       <div class="analytics-dashboard">
         <div class="analytics-actions">
-          <button id="exportAnalyticsBtn" class="btn btn-secondary" style="color: black !important; background-color: white !important; border: 1px solid black !important;">Export Data</button>
-          <button id="clearAnalyticsBtn" class="btn btn-danger" style="color: black !important; background-color: white !important; border: 1px solid black !important;">Clear Data</button>
-          <button id="advancedDashboardBtn" class="btn btn-primary" style="color: black !important; background-color: white !important; border: 1px solid black !important;">Advanced Dashboard</button>
+          <button id="exportAnalyticsBtn" class="btn btn-secondary" style="color: var(--text) !important; background-color: var(--surface-2) !important; border: 1px solid var(--border) !important;">Export Data</button>
+          <button id="clearAnalyticsBtn" class="btn btn-danger" style="color: white !important; background-color: #dc2634 !important; border: 1px solid #dc2634 !important;">Clear Data</button>
+          <button id="advancedDashboardBtn" class="btn btn-primary" style="color: #06231a !important; background-color: var(--accent) !important; border: 1px solid var(--accent) !important;">Advanced Dashboard</button>
         </div>
         
         <div class="analytics-summary">
@@ -548,19 +548,19 @@ class AnalyticsUI {
     modal.id = 'clearAnalyticsConfirmModal';
     modal.style.cssText = 'z-index: 10002; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; pointer-events: auto;';
     modal.innerHTML = `
-      <div class="modal-content" style="max-width: 500px; z-index: 10003; position: relative; pointer-events: auto;">
-        <div class="modal-header" style="background-color: white !important; border-bottom: 1px solid #e5e7eb !important; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
-          <h3 style="color: #000000 !important; font-weight: 600 !important; margin: 0;">Clear Analytics Data</h3>
-          <button class="btn-close" style="color: #000000 !important; background: none !important; border: none !important; font-size: 24px !important; cursor: pointer !important; padding: 0 !important; pointer-events: auto !important;">&times;</button>
+      <div class="modal-content" style="max-width: 500px; z-index: 10003; position: relative; pointer-events: auto; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 16px;">
+        <div class="modal-header" style="border-bottom: 1px solid var(--border) !important; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
+          <h3 style="color: var(--text) !important; font-weight: 600 !important; margin: 0;">Clear Analytics Data</h3>
+          <button class="modal-close" style="background: none !important; border: none !important; font-size: 24px !important; cursor: pointer !important; padding: 0 !important; pointer-events: auto !important; color: var(--muted) !important;">&times;</button>
         </div>
-        <div class="modal-body" style="color: #000000 !important; padding: 20px;">
+        <div class="modal-body" style="color: var(--text) !important; padding: 20px;">
           <p style="margin-bottom: 20px;">Are you sure you want to clear all analytics data? This action cannot be undone.</p>
           <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 6px; padding: 12px; margin-bottom: 20px;">
             <strong style="color: #92400e;">⚠️ Warning:</strong>
             <p style="color: #92400e; margin: 8px 0 0 0;">This will permanently delete all usage tracking data, session history, and feedback records.</p>
           </div>
           <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button class="btn btn-secondary" id="cancelClearBtn" style="color: black !important; background-color: white !important; border: 1px solid black !important; cursor: pointer !important; pointer-events: auto !important;">Cancel</button>
+            <button class="btn btn-secondary" id="cancelClearBtn" style="color: var(--text) !important; background-color: var(--surface-2) !important; border: 1px solid var(--border) !important; cursor: pointer !important; pointer-events: auto !important;">Cancel</button>
             <button class="btn btn-danger" id="confirmClearBtn" style="color: white !important; background-color: #dc2634 !important; border: 1px solid #dc2634 !important; cursor: pointer !important; pointer-events: auto !important;">Clear All Data</button>
           </div>
         </div>
@@ -570,7 +570,7 @@ class AnalyticsUI {
     document.body.appendChild(modal);
 
     const self = this;
-    const closeBtn = modal.querySelector('.btn-close');
+    const closeBtn = modal.querySelector('.modal-close');
     const cancelBtn = modal.querySelector('#cancelClearBtn');
     const confirmBtn = modal.querySelector('#confirmClearBtn');
 
@@ -718,13 +718,13 @@ class AnalyticsUI {
     const sorted = Object.entries(featureCounts).sort((a, b) => b[1] - a[1]);
 
     if (sorted.length === 0) {
-      return '<p style="color: #6b7280; text-align: center;">No feature usage data yet</p>';
+      return '<p style="color: var(--muted); text-align: center;">No feature usage data yet</p>';
     }
 
     return sorted.map(([feature, count]) => `
-      <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-        <span style="color: #374151;">${feature}</span>
-        <span style="color: #000; font-weight: bold;">${count}</span>
+      <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+        <span style="color: var(--text);">${feature}</span>
+        <span style="color: var(--text); font-weight: bold;">${count}</span>
       </div>
     `).join('');
   }
@@ -733,13 +733,13 @@ class AnalyticsUI {
     const recent = events.slice(-20).reverse();
 
     if (recent.length === 0) {
-      return '<p style="color: #6b7280; text-align: center;">No recent activity</p>';
+      return '<p style="color: var(--muted); text-align: center;">No recent activity</p>';
     }
 
     return recent.map(event => `
-      <div style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-size: 13px;">
-        <div style="color: #374151;">${event.type || event.action || 'Action'}</div>
-        <div style="color: #6b7280; font-size: 11px;">${new Date(event.timestamp).toLocaleString()}</div>
+      <div style="padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;">
+        <div style="color: var(--text);">${event.type || event.action || 'Action'}</div>
+        <div style="color: var(--muted); font-size: 11px;">${new Date(event.timestamp).toLocaleString()}</div>
       </div>
     `).join('');
   }

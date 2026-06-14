@@ -137,4 +137,53 @@ test.describe('Mobile layout & modal consistency', () => {
     expect(info.hasX).toBe(true);
     expect(info.footerCloseButtons).toBe(0);
   });
+
+  test('Main analytics dashboard action buttons are legible in dark mode', async ({ page }) => {
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await page.waitForFunction(() => !!window.profitPathAnalyticsUI, { timeout: 5000 });
+    await page.evaluate(() => {
+      window.profitPathAnalytics.saveSettings({ enabled: true });
+      window.profitPathAnalyticsUI.showAnalyticsDashboard();
+    });
+    await page.waitForSelector('#exportAnalyticsBtn', { timeout: 5000 });
+    const info = await page.evaluate(() => {
+      const lum = (s) => { const m = s.match(/\d+/g).map(Number); return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255; };
+      const exportBtn = document.getElementById('exportAnalyticsBtn');
+      const advBtn = document.getElementById('advancedDashboardBtn');
+      const statCard = document.querySelector('.stat-card');
+      return {
+        exportBgLum: lum(getComputedStyle(exportBtn).backgroundColor),
+        advBgLum: lum(getComputedStyle(advBtn).backgroundColor),
+        cardBgLum: statCard ? lum(getComputedStyle(statCard).backgroundColor) : null,
+      };
+    });
+    // Export button should not be white in dark mode (was black-on-white before fix)
+    expect(info.exportBgLum).toBeLessThan(0.5);
+    // Advanced (CTA) button uses the accent color — just confirm it's not pure white
+    expect(info.advBgLum).toBeLessThan(0.9);
+    // Stat cards should use a themed surface, not glaring white
+    if (info.cardBgLum !== null) expect(info.cardBgLum).toBeLessThan(0.5);
+  });
+
+  test('Clear analytics confirmation modal is legible in dark mode', async ({ page }) => {
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    await page.waitForFunction(() => !!window.profitPathAnalyticsUI, { timeout: 5000 });
+    await page.evaluate(() => {
+      window.profitPathAnalytics.saveSettings({ enabled: true });
+      window.profitPathAnalyticsUI.showClearAnalyticsConfirmation();
+    });
+    await page.waitForSelector('#clearAnalyticsConfirmModal', { timeout: 5000 });
+    const info = await page.evaluate(() => {
+      const lum = (s) => { const m = s.match(/\d+/g).map(Number); return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255; };
+      const modal = document.getElementById('clearAnalyticsConfirmModal');
+      const content = modal.querySelector('.modal-content');
+      const h3 = modal.querySelector('h3');
+      return {
+        bgLum: lum(getComputedStyle(content).backgroundColor),
+        textLum: lum(getComputedStyle(h3).color),
+      };
+    });
+    expect(info.bgLum).toBeLessThan(0.4);      // dark surface, not white
+    expect(info.textLum).toBeGreaterThan(0.6); // legible light text
+  });
 });

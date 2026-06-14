@@ -1,6 +1,6 @@
 // Miscellaneous Helpers and UI Logic
 /* global render calc updateOutputs updateValidationDisplay Chart */
-import { safeParseNumber } from '../utils/helpers';
+import { safeParseNumber, clamp } from '../utils/helpers';
 import { showToast } from './modalService.js';
 import { createModal, closeCurrentModal } from '../components/Modal.js';
 import { persistState } from './stateManager.js';
@@ -24,10 +24,6 @@ const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 
 // Utility function to clamp values between min and max
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
-
 // Coerce a value to a finite number within [min, max], or return fallback
 function toFiniteNumber(value, fallback, min, max) {
   const n = Number(value);
@@ -129,7 +125,7 @@ export function shareScenario() {
 
 // Quote a CSV cell: double embedded quotes, and prefix a ' on values starting
 // with = + - @ so spreadsheet apps don't execute them as formulas
-function csvCell(value) {
+export function csvCell(value) {
   let s = String(value == null ? '' : value);
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
   return '"' + s.replaceAll('"', '""') + '"';
