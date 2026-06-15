@@ -467,12 +467,16 @@ function addOffering() {
 
 function resetDefaults() {
   state.offerings = businessLogic.defaultOfferings();
-  state.employees = 1;
-  state.employeePay = 60000;
+  state.fullTimeEmployees = 1;
+  state.partTimeEmployees = 0;
+  state.fullTimeEmployeePay = 60000;
+  state.partTimeEmployeePay = 30000;
   state.monthlyCosts = 250;
   state.productiveUtilizationPct = 80;
   state.targetUtilizationPct = 75;
   state.mode = 'forecast';
+  state.lockMix = false;
+  state.loadedTemplate = null;
   localStorage.removeItem('profitpath-state');
   render();
 }

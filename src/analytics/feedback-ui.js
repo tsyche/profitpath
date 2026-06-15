@@ -286,9 +286,43 @@ class FeedbackUI {
     const form = event.target;
     const formData = new FormData(form);
 
+    // Read rating from hidden input; fall back to counting active stars in case
+    // the hidden input wasn't updated (e.g. touch events on mobile WebView)
+    let rating = parseInt(formData.get('rating'));
+    if (isNaN(rating) || rating < 1) {
+      const activeStars = form.querySelectorAll('.rating-star.active');
+      rating = activeStars.length || 0;
+    }
+
+    const category = formData.get('category') || '';
+
+    // Show inline validation rather than silently failing
+    const ratingContainer = form.querySelector('.rating-container');
+    const categorySelect = form.querySelector('#feedbackCategory');
+    let valid = true;
+
+    if (!rating || rating < 1) {
+      if (ratingContainer) ratingContainer.style.outline = '2px solid var(--bad, #ef4444)';
+      valid = false;
+    } else {
+      if (ratingContainer) ratingContainer.style.outline = '';
+    }
+
+    if (!category) {
+      if (categorySelect) categorySelect.style.borderColor = 'var(--bad, #ef4444)';
+      valid = false;
+    } else {
+      if (categorySelect) categorySelect.style.borderColor = '';
+    }
+
+    if (!valid) {
+      this.showNotification('Please select a star rating and category.', 'error');
+      return;
+    }
+
     const feedbackData = {
-      rating: parseInt(formData.get('rating')),
-      category: formData.get('category'),
+      rating,
+      category,
       comment: formData.get('comment') || null,
       allowContact: formData.has('allowContact'),
       context: formData.get('context') ? JSON.parse(formData.get('context')) : null,

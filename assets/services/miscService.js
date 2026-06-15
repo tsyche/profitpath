@@ -963,38 +963,13 @@ export function showEmbedCode() {
 
 export function showScheduleDialog() {
   createModal({
-    title: '📅 Schedule Reports',
+    title: 'Schedule Reports',
     content: `
-      <p style="margin-top: 0;">Set up automatic report delivery:</p>
-      <form id="scheduleForm">
-        <div style="margin: 12px 0;">
-          <label style="display: block; margin-bottom: 4px; font-weight: 500;">Frequency:</label>
-          <select id="scheduleFrequency" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;">
-            <option>Daily</option>
-            <option>Weekly</option>
-            <option>Monthly</option>
-          </select>
-        </div>
-        <div style="margin: 12px 0;">
-          <label style="display: block; margin-bottom: 4px; font-weight: 500;">Email:</label>
-          <input id="scheduleEmail" type="email" placeholder="your@email.com" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box;">
-        </div>
-        <button type="submit" class="btn primary" style="margin-top: 8px; width: 100%;">Set Schedule</button>
-      </form>
+      <p style="margin-top: 0; color: var(--muted);">Automated report scheduling requires a server-side component and is not yet available in this version.</p>
+      <p style="color: var(--muted);">In the meantime, use <strong style="color: var(--text)">Export → Email</strong> to manually send your current report whenever you need it.</p>
     `,
     size: 'small'
   });
-
-  const form = document.getElementById('scheduleForm');
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const frequency = document.getElementById('scheduleFrequency').value;
-      const email = document.getElementById('scheduleEmail').value;
-      closeCurrentModal();
-      showToast(`Reports scheduled ${frequency} to ${email}!`, 'success', 3000);
-    });
-  }
 }
 
 export function loadTestScenarios() {
