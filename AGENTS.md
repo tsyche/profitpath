@@ -143,6 +143,22 @@ Each template includes appropriate pricing, frequency, and cost structures.
 - Modern browser with ES6+ support
 - Git for version control
 
+### Git Workflow
+
+CI auto-bumps the patch version on every push to `main` (commits back with `[skip ci]`). This means the remote is always 1 commit ahead by the time you're ready to push. Always rebase before committing or pushing:
+
+```bash
+git pull --rebase
+git commit -am "your message"
+git push
+```
+
+Or if you've already committed locally:
+
+```bash
+git pull --rebase && git push
+```
+
 ### Setup Commands
 
 Use `just` as the primary workflow (run `just --list` to see all recipes):
