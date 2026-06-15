@@ -542,7 +542,7 @@ function render() {
       if (label) label.textContent = isForecastMode ? 'Forecast' : 'Current';
       badge.classList.toggle('is-current', !isForecastMode);
       badge.setAttribute('aria-pressed', isForecastMode ? 'false' : 'true');
-      badge.title = isForecastMode
+      badge.dataset.tooltip = isForecastMode
         ? 'Forecast mode — tap to switch to Current'
         : 'Current mode — tap to switch to Forecast';
     }
@@ -725,7 +725,7 @@ function updateBreakEvenBar(cardEl, clients, beClients) {
   const color = clients >= beClients ? 'var(--good)' : ratio > 0.7 ? 'var(--warn)' : 'var(--bad)';
   const fill = bar.querySelector('.kpi-be-bar-fill');
   if (fill) fill.style.cssText = `width:${(ratio * 100).toFixed(1)}%;background:${color}`;
-  bar.title = `${fmtInt(clients)} of ${fmtInt(beClients)} clients needed to break even`;
+  bar.dataset.tooltip = `${fmtInt(clients)} of ${fmtInt(beClients)} clients needed to break even`;
 }
 
 function updateOutputs(metrics) {
@@ -2424,13 +2424,13 @@ function initDebugPanel() {
     try {
       const res = calc(state);
       pre.textContent = JSON.stringify(res, null, 2);
-      pre.title = 'Raw calculation engine output showing all computed metrics (for troubleshooting)';
+      pre.dataset.tooltip = 'Raw calculation engine output showing all computed metrics (for troubleshooting)';
       const isExpanded = !body.classList.contains('collapsed');
       const arrow = isExpanded ? '▼' : '▶';
       toggle.textContent = `${arrow} Debug — clients: ${res.clients || 0}, revenue: ${fmtMoney0(res.revenue || 0)}`;
     } catch (e) {
       pre.textContent = 'Error generating debug: ' + (e && e.stack ? e.stack : String(e));
-      pre.title = 'Error generating debug output';
+      pre.dataset.tooltip = 'Error generating debug output';
       const isExpanded = !body.classList.contains('collapsed');
       const arrow = isExpanded ? '▼' : '▶';
       toggle.textContent = `${arrow} Debug — error`;
@@ -3429,7 +3429,7 @@ function initializeContextualTooltips() {
   tooltipElements.forEach(({ selector, content }) => {
     const element = document.querySelector(selector);
     if (element) {
-      element.title = content; // Basic tooltip
+      element.dataset.tooltip = content;
     }
   });
 }

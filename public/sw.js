@@ -1,7 +1,7 @@
 // Service Worker for ProfitPath PWA
 // Lives in public/ so Vite copies it to the dist root. All paths are relative
 // so the worker also works under a sub-path deployment (GitHub Pages).
-const CACHE_NAME = 'profitpath-v1.1.0';
+const CACHE_NAME = 'profitpath-v0.8.0-beta';
 
 // Precache the app shell. Built JS/CSS get hashed filenames, so they're
 // cached at runtime by the fetch handler instead of being listed here.
