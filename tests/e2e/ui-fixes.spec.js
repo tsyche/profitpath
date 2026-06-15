@@ -231,7 +231,11 @@ test.describe('UI fixes', () => {
       if (typeof window.openScenarioModal === 'function') window.openScenarioModal();
       else document.getElementById('desktopScenariosBtn')?.click();
     });
-    await page.waitForSelector('#compareScenario1', { timeout: 5000 });
+    // Wait for dropdown to be populated with scenario options (async import race on Chromium)
+    await page.waitForFunction(() => {
+      const sel = document.getElementById('compareScenario1');
+      return sel && sel.options.length > 1;
+    }, { timeout: 5000 });
 
     // Select both scenarios
     await page.evaluate(() => {
