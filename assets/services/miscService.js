@@ -213,32 +213,23 @@ function showShareErrorModal() {
 }
 
 function showShareSuccessModal(shareUrl) {
-  // Auto-copy to clipboard immediately
-  navigator.clipboard.writeText(shareUrl).then(() => {
-    showNotification('Direct share link copied to clipboard!', 'success');
-  }).catch(() => {
-    // Silent fail - user can manually copy
-  });
-
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.innerHTML = `
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Share Success</h3>
+        <h3>Share Link</h3>
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <p>Direct share link with unique UUID copied to clipboard!</p>
-        <p><strong>Shareable URL:</strong></p>
-        <input type="text" id="shareUrlInput" value="${shareUrl}" readonly class="copy-on-click" title="Click to copy" style="width: 100%; padding: 5px; margin-bottom: 10px;">
-        <button onclick="copyToClipboard(document.getElementById('shareUrlInput').value); showNotification('Link copied!', 'success');">Copy to Clipboard</button>
+        <p>Shareable link for this scenario:</p>
+        <input type="text" id="shareUrlInput" value="${shareUrl}" readonly class="copy-on-click" style="width:100%;padding:5px;margin-bottom:6px;box-sizing:border-box;">
+        <p class="copy-field-hint">Click the field to copy</p>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
 
-  // Add close button handler
   modal.querySelector('.modal-close').addEventListener('click', () => {
     document.body.removeChild(modal);
   });
@@ -962,23 +953,11 @@ export function showEmbedCode() {
   createModal({
     title: '📋 Embed Widget',
     content: `
-      <p>Copy this code to embed ProfitPath on your website:</p>
-      <textarea id="embedCodeText" readonly class="copy-on-click" title="Click to copy" style="width:100%;height:100px;padding:10px;margin:10px 0;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--text);box-sizing:border-box;">${embedCode}</textarea>
+      <p>Embed code for ProfitPath:</p>
+      <textarea id="embedCodeText" readonly class="copy-on-click" style="width:100%;height:100px;padding:10px;margin:10px 0;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--text);box-sizing:border-box;">${embedCode}</textarea>
+      <p class="copy-field-hint">Click the field to copy</p>
     `,
-    size: 'medium',
-    buttons: [
-      {
-        text: 'Copy to Clipboard',
-        primary: true,
-        action: () => {
-          navigator.clipboard.writeText(embedCode).then(() => {
-            showToast('Embed code copied to clipboard!', 'success', 2000);
-          }).catch(() => {
-            showToast('Copy failed — select the code above and copy manually.', 'error', 3000);
-          });
-        }
-      }
-    ]
+    size: 'medium'
   });
 }
 

@@ -199,6 +199,9 @@ const assignGlobalFunctions = () => {
     if (misc && misc.exportAsExcel) {
       window.exportAsExcel = misc.exportAsExcel;
     }
+    if (misc && misc.showEmbedCode) {
+      window.showEmbedCode = misc.showEmbedCode;
+    }
     if (typeof hideContextualHelp === 'function') {
       window.hideContextualHelp = hideContextualHelp;
     }
@@ -1694,7 +1697,7 @@ window.shareComparison = function (id1, id2) {
   const showFallbackModal = () => {
     createModal({
       title: '🔗 Share Comparison',
-      content: `<p style="color:var(--text);margin-bottom:8px;">Copy this link to share your comparison:</p><textarea readonly class="copy-on-click" title="Click to copy" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;min-height:80px;word-break:break-all;">${shareUrl}</textarea>`,
+      content: `<p style="color:var(--text);margin-bottom:8px;">Shareable link for this comparison:</p><textarea readonly class="copy-on-click" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;min-height:80px;word-break:break-all;box-sizing:border-box;">${shareUrl}</textarea><p class="copy-field-hint">Click the field to copy</p>`,
       size: 'medium'
     });
   };
@@ -1796,15 +1799,13 @@ window.getComparisonEmbedCode = function (id1, id2) {
   const overlay = createModal({
     title: '📋 Embed Comparison',
     content: `
-      <p style="color:var(--text);margin-bottom:8px;">Copy this embed code to add the comparison to your website:</p>
-      <textarea readonly class="copy-on-click" title="Click to copy" style="width:100%;height:100px;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;">${embedCode}</textarea>
-      <p style="margin-top:10px;font-size:12px;color:var(--muted);">Preview: <a href="${embedUrl}" target="_blank" style="color:var(--accent);">Open in new tab</a></p>
+      <p style="color:var(--text);margin-bottom:8px;">Embed code for this comparison:</p>
+      <textarea readonly class="copy-on-click" style="width:100%;height:100px;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;">${embedCode}</textarea>
+      <p class="copy-field-hint">Click the field to copy</p>
+      <p style="margin-top:6px;font-size:12px;color:var(--muted);">Preview: <a href="${embedUrl}" target="_blank" style="color:var(--accent);">Open in new tab</a></p>
     `,
     size: 'medium'
   });
-
-  const textarea = overlay.querySelector('textarea');
-  if (textarea) textarea.select();
 };
 
 // Update scenarios list and comparison dropdowns when modal opens

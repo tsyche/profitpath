@@ -219,6 +219,96 @@ test.describe('UI fixes', () => {
     expect(toastText.toLowerCase()).toContain('cop');
   });
 
+  test('Copy fields are not pre-selected on modal open and all show a "Click to copy" hint', async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('onboardingCompleted', 'true');
+        const s = [
+          { id: 'hint-1', name: 'HintA', timestamp: new Date().toISOString(), state: {} },
+          { id: 'hint-2', name: 'HintB', timestamp: new Date().toISOString(), state: {} }
+        ];
+        localStorage.setItem('profitpath-scenarios', JSON.stringify(s));
+      } catch { /* */ }
+    });
+    await page.goto('/');
+    await page.waitForTimeout(300);
+
+    // --- comparison embed modal ---
+    await page.evaluate(() => window.getComparisonEmbedCode('hint-1', 'hint-2'));
+    await page.waitForSelector('.copy-on-click', { timeout: 5000 });
+
+    // No text should be pre-selected on open
+    const selectionLength = await page.evaluate(() => {
+      const el = document.querySelector('.copy-on-click');
+      if (!el) return -1;
+      const start = el.selectionStart ?? 0;
+      const end = el.selectionEnd ?? 0;
+      return end - start;
+    });
+    expect(selectionLength).toBe(0);
+
+    // Hint text must be visible
+    const embedHint = page.locator('.copy-field-hint').first();
+    await expect(embedHint).toBeVisible();
+    const embedHintText = await embedHint.innerText();
+    expect(embedHintText.toLowerCase()).toContain('click');
+
+    // Close the modal
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+
+    // --- showEmbedCode modal ---
+    await page.evaluate(() => {
+      if (typeof window.showEmbedCode === 'function') window.showEmbedCode();
+    });
+    await page.waitForSelector('.copy-on-click', { timeout: 5000 });
+
+    const embedCodeSelLen = await page.evaluate(() => {
+      const el = document.querySelector('.copy-on-click');
+      if (!el) return -1;
+      return (el.selectionEnd ?? 0) - (el.selectionStart ?? 0);
+    });
+    expect(embedCodeSelLen).toBe(0);
+
+    const widgetHint = page.locator('.copy-field-hint').first();
+    await expect(widgetHint).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  });
+
+  test('Clicking a copy field shows a toast and does not require a separate button', async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('onboardingCompleted', 'true');
+        const s = [
+          { id: 'btn-1', name: 'BtnA', timestamp: new Date().toISOString(), state: {} },
+          { id: 'btn-2', name: 'BtnB', timestamp: new Date().toISOString(), state: {} }
+        ];
+        localStorage.setItem('profitpath-scenarios', JSON.stringify(s));
+      } catch { /* */ }
+    });
+    await page.goto('/');
+    await page.waitForTimeout(300);
+
+    // showEmbedCode should have no extra "Copy to Clipboard" button
+    await page.evaluate(() => {
+      if (typeof window.showEmbedCode === 'function') window.showEmbedCode();
+    });
+    await page.waitForSelector('.copy-on-click', { timeout: 5000 });
+    const extraBtnCount = await page.evaluate(() =>
+      [...document.querySelectorAll('.modal-overlay button')].filter(b =>
+        b.textContent.toLowerCase().includes('copy to clipboard')
+      ).length
+    );
+    expect(extraBtnCount).toBe(0);
+
+    // Click the field → toast should appear
+    await page.click('.copy-on-click');
+    await page.waitForSelector('.toast', { timeout: 3000 });
+    const toastText = await page.locator('.toast').first().innerText();
+    expect(toastText.toLowerCase()).toContain('cop');
+  });
+
   test('Scenario compare does not remove document.body (white screen bug)', async ({ page }) => {
     await page.addInitScript(() => {
       try {
