@@ -1624,28 +1624,40 @@ window.shareComparison = function (id1, id2) {
   const scenario2 = scenarios.find(s => s.id === id2);
 
   if (!scenario1 || !scenario2) {
-    alert('Unable to load scenarios for sharing');
+    showToast('Unable to load scenarios for sharing', 'error');
     return;
   }
 
-  // Encode both scenario states into URL as base64 JSON
-  const statePayload = btoa(JSON.stringify({
-    s1: { name: scenario1.name, state: scenario1.state },
-    s2: { name: scenario2.name, state: scenario2.state }
-  }));
-  const shareUrl = window.location.origin + window.location.pathname + '?compareStates=' + encodeURIComponent(statePayload);
+  let shareUrl;
+  try {
+    // unicode-safe base64: encodeURIComponent handles multi-byte chars
+    const json = JSON.stringify({
+      s1: { name: scenario1.name, state: scenario1.state },
+      s2: { name: scenario2.name, state: scenario2.state }
+    });
+    const statePayload = btoa(unescape(encodeURIComponent(json)));
+    shareUrl = window.location.origin + window.location.pathname + '?compareStates=' + encodeURIComponent(statePayload);
+  } catch (e) {
+    showToast('Unable to generate share link', 'error');
+    return;
+  }
 
-  // Copy to clipboard
-  navigator.clipboard.writeText(shareUrl).then(() => {
-    showToast('Comparison link copied to clipboard!');
-  }).catch(() => {
-    // Fallback: show modal with link to copy manually
+  const showFallbackModal = () => {
     createModal({
-      title: 'Share Comparison',
-      content: `<p>Share this comparison link:</p><textarea readonly style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 12px; min-height: 80px; word-break: break-all;">${shareUrl}</textarea>`,
+      title: '🔗 Share Comparison',
+      content: `<p style="color:var(--text);margin-bottom:8px;">Copy this link to share your comparison:</p><textarea readonly style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;min-height:80px;word-break:break-all;">${shareUrl}</textarea>`,
       size: 'medium'
     });
-  });
+  };
+
+  if (!navigator.clipboard) {
+    showFallbackModal();
+    return;
+  }
+
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    showToast('Comparison link copied to clipboard!');
+  }).catch(showFallbackModal);
 };
 
 // Export comparison as PDF
@@ -1731,29 +1743,19 @@ window.getComparisonEmbedCode = function (id1, id2) {
   const embedUrl = window.location.origin + window.location.pathname + '?compare=' + id1 + ',' + id2 + '&embed=true';
   const embedCode = `<iframe src="${embedUrl}" width="800" height="600" frameborder="0"></iframe>`;
 
-  const modal = createModal({
-    title: 'Embed Comparison',
+  // createModal already appends to body and wires close-on-scrim + ESC
+  const overlay = createModal({
+    title: '📋 Embed Comparison',
     content: `
-      <p>Copy this embed code to add the comparison to your website:</p>
-      <textarea readonly style="width: 100%; height: 100px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;">${embedCode}</textarea>
-      <p style="margin-top: 10px; font-size: 12px; color: #666;">Preview: <a href="${embedUrl}" target="_blank">Open in new tab</a></p>
+      <p style="color:var(--text);margin-bottom:8px;">Copy this embed code to add the comparison to your website:</p>
+      <textarea readonly style="width:100%;height:100px;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;">${embedCode}</textarea>
+      <p style="margin-top:10px;font-size:12px;color:var(--muted);">Preview: <a href="${embedUrl}" target="_blank" style="color:var(--accent);">Open in new tab</a></p>
     `,
     size: 'medium'
   });
 
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.appendChild(modal);
-  document.body.appendChild(overlay);
-
-  // Select the textarea text
   const textarea = overlay.querySelector('textarea');
-  textarea.select();
-
-  // Close handlers
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.remove();
-  });
+  if (textarea) textarea.select();
 };
 
 // Update scenarios list and comparison dropdowns when modal opens
@@ -1842,7 +1844,7 @@ if (typeof loadSpecificTestScenario === 'function') {
 const compareStatesParam = new URLSearchParams(window.location.search).get('compareStates');
 if (compareStatesParam) {
   try {
-    const payload = JSON.parse(atob(decodeURIComponent(compareStatesParam)));
+    const payload = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(compareStatesParam)))));
     if (payload.s1 && payload.s2) {
       // Names come from an untrusted share link — coerce to a bounded string.
       // (They are also escaped at render time; this just caps storage size.)

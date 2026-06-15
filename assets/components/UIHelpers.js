@@ -246,10 +246,7 @@ export function performComparisonInModal(scenarioId1, scenarioId2, modal) {
   // Delegate to the new full-width diff modal
   if (typeof window.showScenarioComparisonDiff === 'function') {
     window.showScenarioComparisonDiff(scenarioId1, scenarioId2);
-    // Close the current modal
-    if (modal && modal.parentNode) {
-      modal.parentNode.remove();
-    }
+    if (modal) modal.remove();
   } else {
     console.error('showScenarioComparisonDiff is not available');
   }
