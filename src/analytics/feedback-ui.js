@@ -334,17 +334,7 @@ class FeedbackUI {
       // Submit feedback
       const feedback = this.feedbackCollector.submitFeedback(feedbackData);
 
-      // Show success message that matches how it was actually delivered.
-      let successMessage = 'Thank you for your feedback!';
-      if (this.feedbackCollector.remoteEnabled && this.feedbackCollector.remoteEnabled()) {
-        successMessage += ' It has been sent to the team.';
-      } else if (feedbackData.allowContact && feedbackData.comment) {
-        successMessage += ' Your feedback has been saved and an email draft has been opened for you to send.';
-      } else {
-        successMessage += ' Your feedback has been saved locally.';
-      }
-
-      this.showNotification(successMessage, 'success');
+      this.showNotification('Thank you for your feedback!', 'success');
 
       // Close modal
       this.closeFeedbackModal();

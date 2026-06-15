@@ -9,7 +9,7 @@
 // To enable: create a free access key (just enter your email at web3forms.com)
 // and paste it below. It's a public submit-only key, safe to ship in the bundle.
 // Leave blank to keep the previous local-only + mailto behavior.
-const WEB3FORMS_ACCESS_KEY = '';
+const WEB3FORMS_ACCESS_KEY = 'faddffa2-870d-4e8c-84a9-33224347365a';
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
 
 class FeedbackCollector {
