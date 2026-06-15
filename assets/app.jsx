@@ -690,6 +690,41 @@ function render() {
   updateTemplateBadge();
 }
 
+// Build an inline SVG progress ring for the utilization KPI card
+function buildUtilizationRing(pct) {
+  const r = 16;
+  const circ = +(2 * Math.PI * r).toFixed(2);
+  const fill = Math.min(clamp(pct, 0, 150) / 150, 1);
+  const offset = +(circ * (1 - fill)).toFixed(2);
+  const color = pct > 100 ? 'var(--bad)' : pct > 75 ? 'var(--warn)' : 'var(--good)';
+  return `<div class="kpi-ring-wrap"><svg width="40" height="40" viewBox="0 0 40 40" class="kpi-ring" aria-hidden="true"><circle cx="20" cy="20" r="${r}" fill="none" stroke="var(--border)" stroke-width="3.5"/><circle cx="20" cy="20" r="${r}" fill="none" stroke="${color}" stroke-width="3.5" stroke-dasharray="${circ}" stroke-dashoffset="${offset}" transform="rotate(-90 20 20)" stroke-linecap="round"/></svg><span style="color:${color}">${fmtPct1(pct)}</span></div>`;
+}
+
+// Apply a status class (good/warn/danger) to the nearest .kpi ancestor of a value element
+function applyKpiStatus(valueEl, status) {
+  const card = valueEl?.closest('.kpi');
+  if (!card) return;
+  card.classList.remove('kpi--good', 'kpi--warn', 'kpi--danger');
+  if (status) card.classList.add('kpi--' + status);
+}
+
+// Inject or update the break-even progress bar inside a KPI card
+function updateBreakEvenBar(cardEl, clients, beClients) {
+  if (!cardEl || !Number.isFinite(beClients) || beClients <= 0) return;
+  let bar = cardEl.querySelector('.kpi-be-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.className = 'kpi-be-bar';
+    bar.innerHTML = '<div class="kpi-be-bar-fill"></div>';
+    cardEl.appendChild(bar);
+  }
+  const ratio = Math.min(1, clients / beClients);
+  const color = clients >= beClients ? 'var(--good)' : ratio > 0.7 ? 'var(--warn)' : 'var(--bad)';
+  const fill = bar.querySelector('.kpi-be-bar-fill');
+  if (fill) fill.style.cssText = `width:${(ratio * 100).toFixed(1)}%;background:${color}`;
+  bar.title = `${fmtInt(clients)} of ${fmtInt(beClients)} clients needed to break even`;
+}
+
 function updateOutputs(metrics) {
   try {
     // Cache DOM elements to avoid repeated queries
@@ -712,7 +747,10 @@ function updateOutputs(metrics) {
     if (kpiClients) kpiClients.textContent = fmtInt(metrics.clients);
     if (kpiSessions) kpiSessions.textContent = fmtInt(metrics.totalSessions);
     if (kpiServiceHours) kpiServiceHours.textContent = fmtInt(metrics.serviceHours);
-    if (kpiCapacity) kpiCapacity.textContent = fmtPct1(metrics.capacityPct);
+    if (kpiCapacity) {
+      kpiCapacity.innerHTML = buildUtilizationRing(metrics.capacityPct);
+      applyKpiStatus(kpiCapacity, metrics.capacityPct > 100 ? 'danger' : metrics.capacityPct > 75 ? 'warn' : 'good');
+    }
     if (kpiRevenue) kpiRevenue.textContent = fmtMoney0(metrics.revenue);
     if (kpiFixedCosts) kpiFixedCosts.textContent = fmtMoney0(metrics.annualFixedCosts);
     if (kpiPayroll) kpiPayroll.textContent = fmtMoney0(metrics.annualPayroll);
@@ -726,16 +764,27 @@ function updateOutputs(metrics) {
 
     if (kpiBreakEvenClients) {
       kpiBreakEvenClients.textContent = breakEvenClients;
-      kpiBreakEvenClients.style.color = metrics.clients >= metrics.breakEvenClients ? 'var(--good)' : 'var(--bad)';
+      const beStatus = metrics.clients >= metrics.breakEvenClients ? 'good' : 'danger';
+      kpiBreakEvenClients.style.color = beStatus === 'good' ? 'var(--good)' : 'var(--bad)';
+      applyKpiStatus(kpiBreakEvenClients, beStatus);
+      updateBreakEvenBar(kpiBreakEvenClients.closest('.kpi'), metrics.clients, metrics.breakEvenClients);
     }
     if (kpiBreakEvenRevenue) kpiBreakEvenRevenue.textContent = breakEvenRevenue;
     if (kpiContributionMargin) {
       kpiContributionMargin.textContent = contributionMargin;
-      kpiContributionMargin.style.color = metrics.contributionMarginPerClient > 0 ? 'var(--good)' : 'var(--bad)';
+      const cmStatus = metrics.contributionMarginPerClient > 0 ? 'good' : 'danger';
+      kpiContributionMargin.style.color = cmStatus === 'good' ? 'var(--good)' : 'var(--bad)';
+      applyKpiStatus(kpiContributionMargin, cmStatus);
     }
     if (kpiIncome) {
       kpiIncome.textContent = income;
-      kpiIncome.style.color = metrics.income >= 60000 ? 'var(--good)' : metrics.income >= 0 ? 'var(--warn)' : 'var(--bad)';
+      const incomeStatus = metrics.income >= 60000 ? 'good' : metrics.income >= 0 ? 'warn' : 'danger';
+      kpiIncome.style.color = incomeStatus === 'good' ? 'var(--good)' : incomeStatus === 'warn' ? 'var(--warn)' : 'var(--bad)';
+      const pill = kpiIncome.closest('.pill');
+      if (pill) {
+        pill.classList.remove('pill--good', 'pill--warn', 'pill--danger');
+        pill.classList.add('pill--' + incomeStatus);
+      }
     }
 
     // Tax estimates

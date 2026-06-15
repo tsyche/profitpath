@@ -212,3 +212,52 @@ test.describe('Header redesign — export options & mobile drawer', () => {
     expect(align).toBe('end');
   });
 });
+
+test.describe('KPI visual indicators', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      try { localStorage.setItem('onboardingCompleted', 'true'); } catch { /* */ }
+    });
+    await page.goto('/');
+    await page.waitForFunction(() => !!document.getElementById('kpiCapacity'), { timeout: 5000 });
+  });
+
+  test('Utilization KPI renders an SVG ring, not plain text', async ({ page }) => {
+    const info = await page.evaluate(() => {
+      const v = document.getElementById('kpiCapacity');
+      return {
+        hasSvg: !!v.querySelector('svg'),
+        hasRingWrap: !!v.querySelector('.kpi-ring-wrap'),
+      };
+    });
+    expect(info.hasSvg).toBe(true);
+    expect(info.hasRingWrap).toBe(true);
+  });
+
+  test('KPI card status classes applied (utilization and break-even)', async ({ page }) => {
+    // Load a scenario with known utilization > 0
+    await page.evaluate(() => {
+      const s = document.getElementById('employees');
+      if (s) { s.value = '2'; s.dispatchEvent(new Event('input', { bubbles: true })); }
+      const c = document.getElementById('targetClients');
+      if (c) { c.value = '20'; c.dispatchEvent(new Event('input', { bubbles: true })); }
+    });
+    await page.waitForTimeout(300);
+
+    const info = await page.evaluate(() => {
+      const capCard = document.getElementById('kpiCapacity')?.closest('.kpi');
+      const beCard = document.getElementById('kpiBreakEvenClients')?.closest('.kpi');
+      const pill = document.getElementById('kpiIncome')?.closest('.pill');
+      return {
+        capHasStatus: capCard ? [...capCard.classList].some(c => c.startsWith('kpi--')) : false,
+        beHasStatus: beCard ? [...beCard.classList].some(c => c.startsWith('kpi--')) : false,
+        pillHasStatus: pill ? [...pill.classList].some(c => c.startsWith('pill--')) : false,
+        beBarExists: !!beCard?.querySelector('.kpi-be-bar'),
+      };
+    });
+    expect(info.capHasStatus).toBe(true);
+    expect(info.beHasStatus).toBe(true);
+    expect(info.pillHasStatus).toBe(true);
+    expect(info.beBarExists).toBe(true);
+  });
+});
