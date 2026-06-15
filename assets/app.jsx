@@ -3326,6 +3326,7 @@ function createOnboardingDialog({ title, content, buttons }) {
   const close = () => {
     dialog.remove();
     document.removeEventListener('keydown', onKey);
+    window.releaseScrollLock?.();
   };
   document.addEventListener('keydown', onKey);
   dialog.addEventListener('click', (e) => { if (e.target === dialog) close(); });
@@ -3345,6 +3346,7 @@ function createOnboardingDialog({ title, content, buttons }) {
   }, 10);
 
   dialog.appendChild(dialogContent);
+  window.acquireScrollLock?.();
   return dialog;
 }
 
@@ -3379,6 +3381,7 @@ function showHelpMenu() {
     if (!btn) return;
     const action = btn.dataset.action;
     helpDialog.remove();
+    window.releaseScrollLock?.();
     if (action === 'tour') startGuidedTour();
     else if (action === 'faq') showQuickReference();
     else if (action === 'industry') showIndustrySelector();
