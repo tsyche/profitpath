@@ -1687,7 +1687,7 @@ window.shareComparison = function (id1, id2) {
       s1: { name: scenario1.name, state: scenario1.state },
       s2: { name: scenario2.name, state: scenario2.state }
     });
-    const statePayload = btoa(unescape(encodeURIComponent(json)));
+    const statePayload = btoa(encodeURIComponent(json).replace(/%([0-9A-F]{2})/gi, (_, p) => String.fromCharCode(parseInt(p, 16))));
     shareUrl = window.location.origin + window.location.pathname + '?compareStates=' + encodeURIComponent(statePayload);
   } catch (e) {
     showToast('Unable to generate share link', 'error');
@@ -1959,7 +1959,7 @@ if (typeof loadSpecificTestScenario === 'function') {
 const compareStatesParam = new URLSearchParams(window.location.search).get('compareStates');
 if (compareStatesParam) {
   try {
-    const payload = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(compareStatesParam)))));
+    const payload = JSON.parse(decodeURIComponent(atob(decodeURIComponent(compareStatesParam)).replace(/[^A-Za-z0-9@*_+\-.\/]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'))));
     if (payload.s1 && payload.s2) {
       // Names come from an untrusted share link — coerce to a bounded string.
       // (They are also escaped at render time; this just caps storage size.)
@@ -2494,7 +2494,7 @@ function initPerfPanel() {
       const arrow = isExpanded ? '▼' : '▶';
       toggle.textContent = `${arrow} Performance — ${stats.hitRate}% hit rate`;
     } catch (e) {
-      panel.innerHTML = `<div>Error: ${e.message}</div>`;
+      panel.innerHTML = '<div>Error: ' + escapeHtml(e.message) + '</div>';
       const isExpanded = !body.classList.contains('collapsed');
       const arrow = isExpanded ? '▼' : '▶';
       toggle.textContent = `${arrow} Performance — error`;
@@ -2597,10 +2597,25 @@ if ('serviceWorker' in navigator) {
 }
       */
 
+// Migrate legacy unprefixed localStorage keys to profitpath- namespace (one-time, silent)
+(function _migrateLegacyKeys() {
+  const migrations = [
+    ['onboardingCompleted', 'profitpath-onboarding-completed'],
+    ['selectedIndustry',    'profitpath-selected-industry'],
+  ];
+  for (const [oldKey, newKey] of migrations) {
+    const val = localStorage.getItem(oldKey);
+    if (val !== null && localStorage.getItem(newKey) === null) {
+      localStorage.setItem(newKey, val);
+    }
+    if (val !== null) localStorage.removeItem(oldKey);
+  }
+})();
+
 // Onboarding system for guided experience
 const _initializeOnboarding = () => {
   // Check if user has completed onboarding
-  const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
+  const onboardingCompleted = localStorage.getItem('profitpath-onboarding-completed') === 'true';
 
   // Always show help button (users can access help anytime)
   addOnboardingHelpButton();
@@ -2760,7 +2775,7 @@ function showIndustrySelector() {
 
 function selectIndustry(industryId, dialog) {
   // Save selected industry
-  localStorage.setItem('selectedIndustry', industryId);
+  localStorage.setItem('profitpath-selected-industry', industryId);
 
   // Load industry-specific template
   loadOnboardingIndustryTemplate(industryId);
@@ -3066,7 +3081,7 @@ function completeTour() {
   tourActive = false;
   // Unlock scrolling when the tour completes
   unlockScrollForTour();
-  localStorage.setItem('onboardingCompleted', 'true');
+  localStorage.setItem('profitpath-onboarding-completed', 'true');
 
   const completionDialog = createOnboardingDialog({
     title: 'Tour Complete! 🎉',

@@ -418,7 +418,7 @@ describe('AdvancedAnalyticsDashboard', () => {
     it('should generate insights report with analytics data', () => {
       // Mock analytics collector
       dashboard.analyticsCollector = {
-        getSummary: vi.fn(() => ({
+        getAnalyticsSummary: vi.fn(() => ({
           totalSessions: 100,
           exportStats: { total: 50 }
         }))

@@ -536,6 +536,47 @@ class AnalyticsUI {
     }
   }
 
+  sendReportEmail(summary, events) {
+    const dateStr = new Date().toLocaleDateString();
+    const rangeStart = summary.dateRange?.start ? new Date(summary.dateRange.start).toLocaleDateString() : 'N/A';
+    const rangeEnd = summary.dateRange?.end ? new Date(summary.dateRange.end).toLocaleDateString() : 'N/A';
+
+    const featureCounts = {};
+    events.forEach(event => {
+      if (event.event === 'feature_usage' && event.data?.feature) {
+        const f = event.data.feature;
+        featureCounts[f] = (featureCounts[f] || 0) + 1;
+      }
+    });
+    const topFeatures = Object.entries(featureCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([f, n]) => `  - ${this.formatEventName(f)}: ${n}`)
+      .join('\n');
+
+    const recentEvents = events.slice(-10).reverse()
+      .map(e => `  - ${this.formatEventName(e.event)} (${new Date(e.timestamp).toLocaleString()})`)
+      .join('\n');
+
+    const subject = encodeURIComponent(`ProfitPath Analytics Report — ${dateStr}`);
+    const body = encodeURIComponent([
+      `ProfitPath Analytics Report`,
+      `Generated: ${dateStr}`,
+      `Data Range: ${rangeStart} – ${rangeEnd}`,
+      '',
+      `SUMMARY`,
+      `Total Events:    ${summary.totalEvents || 0}`,
+      `Total Sessions:  ${summary.totalSessions || 0}`,
+      `Avg Events/Ses:  ${summary.totalSessions ? Math.round(summary.totalEvents / summary.totalSessions) : 0}`,
+      '',
+      topFeatures ? `TOP FEATURES\n${topFeatures}` : 'TOP FEATURES\n  No feature usage recorded yet',
+      '',
+      recentEvents ? `RECENT ACTIVITY (last 10)\n${recentEvents}` : 'RECENT ACTIVITY\n  No events yet',
+    ].join('\n'));
+
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  }
+
   clearAnalytics() {
     // Show confirmation modal first
     this.showClearAnalyticsConfirmation();
@@ -635,7 +676,7 @@ class AnalyticsUI {
     modal.className = 'modal-overlay';
     modal.id = 'advancedDashboardModal';
 
-    const summary = this.analytics.getSummaryStats ? this.analytics.getSummaryStats() : {};
+    const summary = this.analytics.getAnalyticsSummary ? this.analytics.getAnalyticsSummary() : {};
     const events = this.analytics.getAllEvents ? this.analytics.getAllEvents() : [];
 
     modal.innerHTML = `
@@ -681,7 +722,8 @@ class AnalyticsUI {
             </div>
           </div>
         </div>
-        <div class="modal-footer" style="padding: 15px; border-top: 1px solid var(--border); text-align: right;">
+        <div class="modal-footer" style="padding: 15px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <button class="btn btn-secondary" id="emailReportBtn" style="color: var(--text); background-color: var(--surface-2); border: 1px solid var(--border);">📧 Email Report</button>
           <button class="btn btn-secondary" id="backToBasicBtn" style="color: var(--text); background-color: var(--surface-2); border: 1px solid var(--border);">Back to Basic View</button>
         </div>
       </div>
@@ -692,6 +734,7 @@ class AnalyticsUI {
     // Add event listeners
     const closeBtn = modal.querySelector('.modal-close');
     const backBtn = modal.querySelector('#backToBasicBtn');
+    const emailBtn = modal.querySelector('#emailReportBtn');
 
     const closeAdvanced = () => {
       modal.remove();
@@ -704,14 +747,23 @@ class AnalyticsUI {
       if (e.target === modal) closeAdvanced();
     });
 
+    if (emailBtn) {
+      emailBtn.addEventListener('click', () => this.sendReportEmail(summary, events));
+    }
+
     this.analytics.trackFeatureUsage('advanced_dashboard_opened');
+  }
+
+  formatEventName(name) {
+    return (name || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   renderFeatureUsage(events) {
     const featureCounts = {};
     events.forEach(event => {
-      if (event.type === 'feature_used') {
-        featureCounts[event.feature] = (featureCounts[event.feature] || 0) + 1;
+      if (event.event === 'feature_usage' && event.data?.feature) {
+        const f = event.data.feature;
+        featureCounts[f] = (featureCounts[f] || 0) + 1;
       }
     });
 
@@ -723,7 +775,7 @@ class AnalyticsUI {
 
     return sorted.map(([feature, count]) => `
       <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
-        <span style="color: var(--text);">${feature}</span>
+        <span style="color: var(--text);">${this.formatEventName(feature)}</span>
         <span style="color: var(--text); font-weight: bold;">${count}</span>
       </div>
     `).join('');
@@ -738,7 +790,7 @@ class AnalyticsUI {
 
     return recent.map(event => `
       <div style="padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;">
-        <div style="color: var(--text);">${event.type || event.action || 'Action'}</div>
+        <div style="color: var(--text);">${this.formatEventName(event.event)}</div>
         <div style="color: var(--muted); font-size: 11px;">${new Date(event.timestamp).toLocaleString()}</div>
       </div>
     `).join('');

@@ -40,7 +40,7 @@ This document outlines the approach for packaging ProfitPath as native iOS and A
 - **State**: localStorage (client-only)
 
 ### New Mobile Layer
-- **Framework**: Capacitor 6.x (latest)
+- **Framework**: Capacitor 5.x (v5.7.8 installed; v8 is latest but upgrade deferred — see ROADMAP.md)
 - **iOS**: Xcode 15+ (Mac required)
 - **Android**: Android Studio (any OS)
 - **Native plugins**: Capacitor plugins for Keyboard, StatusBar, SplashScreen
@@ -58,7 +58,7 @@ This document outlines the approach for packaging ProfitPath as native iOS and A
 ### Phase 1: Setup (Week 1) — 4-5 hours
 
 **1.1 Initialize Capacitor** ✅ Done
-- Capacitor v8.3.3 installed
+- Capacitor v5.7.8 installed (v8 upgrade deferred pending native-build test plan — see ROADMAP.md)
 - `capacitor.config.ts` created and configured
 
 **1.2 Install Native Platforms** ✅ Done
@@ -66,12 +66,12 @@ This document outlines the approach for packaging ProfitPath as native iOS and A
 - `android/` — Gradle project created, plugins synced
 
 **1.3 Install Essential Plugins** ✅ Done
-- `@capacitor/keyboard@8.0.3` — Mobile keyboard handling
-- `@capacitor/status-bar@8.0.2` — Status bar customization
-- `@capacitor/splash-screen@8.0.1` — Launch screen
+- `@capacitor/keyboard@5.0.9` — Mobile keyboard handling
+- `@capacitor/status-bar@5.0.8` — Status bar customization
+- `@capacitor/splash-screen@5.0.8` — Launch screen
 
 **1.4 Environment Setup** ✅ Done
-- Node 24.7.0 (required by Capacitor v8 — use `~/.asdf/installs/nodejs/24.7.0/bin/`)
+- Node 20+ (Capacitor v5 compatible)
 - Ruby 3.2.0 (required for CocoaPods — use `~/.asdf/installs/ruby/3.2.0/bin/`)
 - CocoaPods 1.16.2 installed
 
@@ -80,15 +80,14 @@ This document outlines the approach for packaging ProfitPath as native iOS and A
 - Bump version to `2.0.0` in `package.json` for initial store release
 
 **Checklist:**
-- [x] Capacitor CLI installed and verified (v8.3.3)
+- [x] Capacitor CLI installed and verified (v5.7.8)
 - [x] iOS and Android projects generated (`ios/` and `android/` created)
 - [x] capacitor.config.ts configured (SplashScreen, Keyboard, StatusBar plugins)
-- [x] Plugins installed (@capacitor/keyboard, @capacitor/splash-screen, @capacitor/status-bar)
-- [x] Node upgraded to 24.7.0 (required by Capacitor v8 — already installed via asdf)
+- [x] Plugins installed (@capacitor/keyboard@5.0.9, @capacitor/splash-screen@5.0.8, @capacitor/status-bar@5.0.8)
 - [x] Ruby 3.2.0 added to .tool-versions (required for CocoaPods)
 - [x] CocoaPods 1.16.2 installed (via asdf Ruby 3.2.0)
 - [x] Both platforms sync successfully (`npx cap sync`)
-- [x] Makefile updated with `mobile-sync`, `mobile-ios`, `mobile-android` targets
+- [x] justfile updated with `mobile-sync`, `mobile-ios`, `mobile-android` targets
 - [x] .gitignore updated (native build artifacts and signing keys excluded)
 - [ ] Version bumped to 2.0.0 in package.json before App Store submission
 
@@ -630,5 +629,5 @@ Update all three platforms (web, iOS, Android) together.
 
 ---
 
-**Last updated**: May 5, 2026  
-**Status**: Ready for Phase 1 implementation
+**Last updated**: June 15, 2026  
+**Status**: Phase 1 complete (Capacitor v5.7.8 installed; v8 upgrade deferred — see ROADMAP.md)
