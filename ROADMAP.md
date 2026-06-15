@@ -33,11 +33,7 @@ See README.md for setup and development instructions.
    - Action: merge `modernize-ui` → main (needs approval), then the cleanups above
    - ~1.5-2 hours of cleanup + merge
 
-2. **Help & Onboarding Enhancements** (Quick Win)
-   - Contextual help for advanced features and calculations
-   - FAQ improvements and inline documentation
-   - High impact: reduces support burden, improves feature discoverability
-   - ~2-3 hours effort
+2. ✅ **Help & Onboarding Enhancements** — contextual '?' help on KPI cards, Quick Reference modal, guided tour selector fixes, welcome dialog theming (`0c7a945`)
 
 3. **Read-only Scenario Sharing & Collaborative Comments**
    - Shareable read-only links (builds on the existing URL-encode share path in `miscService.js`)
@@ -52,11 +48,7 @@ See README.md for setup and development instructions.
    - Enables heavier features (multi-year projections, advanced analytics) without degradation
    - ~3-4 hours effort
 
-5. **Data Visualization & Visual Indicators** (Flashy Quick Win)
-   - Replace text-only KPIs with progress rings / gauges for utilization and break-even
-   - Animated KPI counters on recalculation; danger/warning/success states
-   - Pairs naturally with the UI modernization already in flight
-   - ~4-5 hours effort
+5. ✅ **Data Visualization & Visual Indicators** — SVG utilization ring, KPI status border tints, break-even progress bar (`f112a7a`)
 
 ---
 
@@ -92,11 +84,7 @@ See README.md for setup and development instructions.
    - Remaining: the cleanups in the Code Quality block above (analytics-dashboard internals, dead `mobile*` bindings), then merge
    - Effort: ~1.5-2 hours cleanup + merge
 
-2. Help & Onboarding Enhancements (Quick Win)
-   - Contextual help for advanced features and calculations
-   - FAQ improvements and inline documentation
-   - Impact: Reduces support burden, improves feature discoverability
-   - Effort: ~2-3 hours
+2. ✅ Help & Onboarding Enhancements — contextual KPI help buttons, Quick Reference modal, tour fixes (`0c7a945`, June 2026)
 
 **Collaboration & Insights (High-Value Additions)**
 
@@ -128,12 +116,7 @@ See README.md for setup and development instructions.
    - Remaining: subtle gradient layers on KPI boxes/section headers, typography rhythm pass
    - Effort: ~1-2 hours
 
-7. Data Visualization & Visual Indicators
-    - Replace text-only KPI displays with visual indicators (progress rings, gauges)
-    - Animated progress circles for utilization percentages
-    - Visual break-even indicators (danger/warning/success states)
-    - Smooth transitions on data updates
-    - Effort: ~4-5 hours
+7. ✅ Data Visualization & Visual Indicators — SVG progress ring for utilization, KPI status border tints, break-even mini-bar (`f112a7a`, June 2026)
 
 **Advanced Analytics (4-6 Hour Tasks)**
 
@@ -277,23 +260,20 @@ Ads destroy trust in financial planning tools. Business owners need to feel conf
 
 ## Status & Notes
 
-- **Current status**: Application is fully functional with comprehensive test coverage (278 unit tests across 26 files, 1 skipped, plus 114 Playwright e2e across chromium + firefox), dev server stable. Recent work (June 2026) focused on the customer-acquisition/growth analytics, localization & accessibility shipments, a full code audit (security + dead-code + PWA fixes), and a now-complete UI modernization — light/dark + Material refresh, the header/menu app-bar redesign, and all-modals theming — on branch `modernize-ui`, verified and pending merge to main. Settings system has 22 dedicated tests ensuring feature gates, toast queueing, and UI sync work correctly.
-- **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard.
-- **Latest milestones**: 
-  - Sensitivity Analysis: Interactive sliders for pricing, overhead, utilization, and employees with tornado impact charts
-  - Tax Calculations: 2024 US self-employment tax, federal income tax brackets, quarterly estimates, and take-home calculations
-  - CSV Import: Template download, drag-and-drop file upload, full business settings + offerings parsing with validation
-  - Undo/Redo: Full 50-entry history stack with Ctrl+Z/Ctrl+Shift+Z shortcuts and debounced table edits
-  - Performance Dashboard: Real-time cache hit rate, calculation timing, entry count (Advanced feature gate)
-- **Next priorities** (Reordered by impact/effort):
-  1. **Merge UI Modernization** ⭐ — light/dark + Material refresh + header redesign + all-modals theming built & verified on `modernize-ui`; do the small deferred cleanups, then merge to main
-  2. **Help & Onboarding Enhancements** — quick win; contextual help + FAQ reduces support burden, improves discoverability
-  3. **Read-only Scenario Sharing & Comments** — high-value feature enabling team workflows without backend complexity
-  4. **Performance Optimization & Caching** — unblocks heavier features (multi-year projections); cache hit rates already visible in debug panel
-  5. **Data Visualization & Visual Indicators** — progress rings/gauges + animated counters; pairs with the UI work in flight
-- **Strategic positioning**: Accessibility, localization, customer-acquisition analytics, and the UI modernization (light/dark, app-bar redesign, all-modals theming) all shipped in June, completing the core financial-modeling + reach + polish foundation. Focus now shifts to discoverability (help/onboarding), collaboration (read-only sharing), and visual indicators (progress rings/gauges) to drive retention. Enterprise features (backend integrations, full native app build-out) deferred until market demand validates investment.
+- **Current status**: Application is fully functional with comprehensive test coverage (295 unit tests across 31 files, 1 skipped, plus 170 Playwright e2e across chromium + firefox), dev server stable. June 2026: completed UI modernization (merged to main), data visualization KPI indicators, help & onboarding enhancements, compare/share bug fixes, and the click-to-copy UX improvement. Settings system has 22 dedicated tests ensuring feature gates, toast queueing, and UI sync work correctly.
+- **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard, ✅ data visualization KPI indicators, ✅ help & onboarding enhancements.
+- **Latest milestones** (June 2026):
+  - UI Modernization: Dark/light themes, Material refresh, app-bar redesign, all-modals theming, runtime accent palettes — merged to main
+  - Data Visualization: SVG utilization ring, KPI status border tints (good/warn/danger), break-even progress bar
+  - Help & Onboarding: Contextual '?' help on complex KPIs, Quick Reference modal, fixed guided tour selectors
+  - Compare & Share fixes: White-screen bug, share link unicode encoding, embed modal blur, dark mode text legibility
+  - Click-to-copy on all shareable URL and embed code fields
+- **Next priorities**:
+  1. **Read-only Scenario Sharing & Comments** — high-value feature enabling team workflows without backend complexity (~2-3 hrs)
+  2. **Performance Optimization & Caching** — profile calc engine, optimize cache hit rates; unblocks heavier features (~3-4 hrs)
+  3. **Tax & Financial Report Generator** — quarterly income projections, tax liability, PDF export (~2-3 hrs)
+- **Strategic positioning**: Core financial-modeling + reach + polish foundation is complete. Focus now shifts to collaboration (read-only sharing), performance headroom (caching optimization), and extending app value (financial reporting). Enterprise features (backend integrations, full native app build-out) deferred until market demand validates investment.
 - **Quick wins available** (High-Value, Low Effort):
-  - Help & Onboarding Enhancements (2-3 hrs) — contextual help, FAQ, discoverability
   - Read-only Scenario Sharing & Comments (2-3 hrs) — collaboration without backend
   - Tax & Financial Report Generator (2-3 hrs) — extends value beyond simulation
   - Consolidate `escapeHtml` + clear lint warnings (1.5 hrs) — code-quality debt from the June audit
@@ -324,11 +304,11 @@ This section tracks common feature requests, friction points, and competitive ga
     3. **Strategic**: Evaluate CAC/LTV analytics after mobile launch gets user feedback
   - **Note for Phase 4**: Remember to keep web and mobile versions in sync (same version numbers, synchronized releases)
 
-### Test Coverage Status (June 2026 Audit)
-- **278 unit tests** across 26 files (1 skipped), plus **114 Playwright e2e** across chromium + firefox
+### Test Coverage Status (June 2026)
+- **295 unit tests** across 31 files (1 skipped), plus **170 Playwright e2e** across chromium + firefox
 - **Pass rate**: 100% of unit tests passing (1 intentional skip); 100% e2e passing; 0 lint errors
-- **Health score**: 8.8+/10 — production-ready with excellent feature gating and settings system validation
-- **Recent expansions**: Added the `header_redesign` e2e suite (modal theming, mode toggle, mobile drawer/bottom bar); reworked `export.spec`, `app.spec`, `regression_fixes` for the app-bar markup. Earlier: tooltip system tests (50+), feature gating tests (45+), E2E scenario workflows (15+)
+- **Health score**: 9/10 — production-ready with excellent feature gating, UI regression, and help/onboarding coverage
+- **Recent expansions**: `help_onboarding.spec.js` (8 tests), KPI visual indicator tests in `header_redesign.spec.js`, compare/share/embed/copy-on-click tests in `ui-fixes.spec.js`, dark mode legibility tests in `mobile_layout.spec.js`
 - **Settings & Experience Levels** (22 tests): Feature gate verification, experience level switching, tooltip state changes, checkbox state syncing, toast queue behavior, settings persistence, full integration workflows
 - **Key test areas**:
   - ✅ **Calculation Engine** (40+ tests): Mode switching, mix normalization, caching, edge cases
