@@ -9,6 +9,7 @@ default:
 # Install dependencies (npm ci)
 setup:
     npm ci
+    npx playwright install chromium firefox
 
 # --- Development ---
 
