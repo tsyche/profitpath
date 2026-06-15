@@ -4545,6 +4545,34 @@ input[type="checkbox"] {
 #settingsMenu select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px;
   background: var(--input-bg, var(--surface-2)); color: var(--text); font: inherit; font-size: 13px; }
 
+/* KPI card status states */
+.kpi--good { border-color: rgba(52, 211, 153, 0.35); }
+.kpi--warn { border-color: rgba(251, 191, 36, 0.35); }
+.kpi--danger { border-color: rgba(251, 113, 133, 0.35); }
+
+/* Income pill status */
+.pill--good { border-color: rgba(52, 211, 153, 0.45); }
+.pill--warn { border-color: rgba(251, 191, 36, 0.45); }
+.pill--danger { border-color: rgba(251, 113, 133, 0.45); }
+
+/* Inline utilization ring inside .kpi .v */
+.kpi-ring-wrap { display: flex; align-items: center; gap: 10px; }
+.kpi-ring { flex-shrink: 0; }
+
+/* Break-even progress mini-bar */
+.kpi-be-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin-top: 8px;
+  overflow: hidden;
+}
+.kpi-be-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease, background 0.3s ease;
+}
+
 /* Click-to-copy fields */
 .copy-on-click { cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
 .copy-on-click:hover { border-color: var(--accent) !important; }
