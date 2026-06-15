@@ -132,12 +132,7 @@ export function openScenarioModal() {
     }
   };
 
-  // Try immediately
   populateDropdowns();
-
-  // And try again after delay
-  setTimeout(populateDropdowns, 100);
-  setTimeout(populateDropdowns, 500);
 
   // Set up event delegation for scenario buttons
   modal.addEventListener('click', (e) => {
