@@ -357,7 +357,7 @@ class AdvancedAnalyticsDashboard {
   refreshOverview() {
     if (!this.analyticsCollector) return;
 
-    const summary = this.analyticsCollector.getSummary();
+    const summary = this.analyticsCollector.getAnalyticsSummary();
     const feedbackAnalytics = this.feedbackCollector ? this.feedbackCollector.getFeedbackAnalytics() : null;
 
     // Update metric cards
@@ -490,9 +490,9 @@ class AdvancedAnalyticsDashboard {
       grouped[dateKey] = 0;
     }
     
-    // Count events per date
+    // Count events per date (timestamps are epoch ms numbers)
     events.forEach(event => {
-      const dateKey = event.timestamp.split('T')[0];
+      const dateKey = new Date(event.timestamp).toISOString().split('T')[0];
       if (grouped.hasOwnProperty(dateKey)) {
         grouped[dateKey]++;
       }
@@ -587,7 +587,7 @@ class AdvancedAnalyticsDashboard {
     const insights = [];
     
     if (this.analyticsCollector) {
-      const summary = this.analyticsCollector.getSummary();
+      const summary = this.analyticsCollector.getAnalyticsSummary();
       
       // Usage patterns
       if (summary.totalSessions > 0) {

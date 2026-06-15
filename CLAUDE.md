@@ -139,21 +139,30 @@ Each template includes appropriate pricing, frequency, and cost structures.
 ## Development Workflow
 
 ### Prerequisites
-- Node.js (v18+ recommended)
+- Node.js (v24, pinned in `.tool-versions`)
 - Modern browser with ES6+ support
 - Git for version control
 
 ### Setup Commands
-```bash
-# Complete clean development setup (cache clear, install, test, lint, start)
-rm -rf node_modules/.vite && npm install && npm run test:run && npm run lint:fix && npm run dev
 
-# Individual commands
-npm install     # Install dependencies
-npm run dev     # Start development server (http://localhost:3000)
-npm run build   # Production build
-npm run test:run # Run all tests
-npm run lint    # Check code quality
+Use `just` as the primary workflow (run `just --list` to see all recipes):
+
+```bash
+just fresh           # Complete reset: clean, install, test, lint, start
+just setup           # Install dependencies (npm ci)
+just dev             # Start dev server (localhost:3000)
+just test            # Run all tests (unit + e2e)
+just lint            # Check code quality
+just build           # Production build
+```
+
+Underlying npm commands (for reference):
+```bash
+npm ci               # Install dependencies
+npm run dev          # Start development server (http://localhost:3000)
+npm run build        # Production build
+npm run test:run     # Run unit tests (headless)
+npm run lint         # Check code quality
 ```
 
 ### Testing Scenarios
@@ -183,7 +192,7 @@ http://localhost:3000/?testScenario=default
 
 ### Testing Strategy
 
-#### Test Coverage (291 unit tests, 134 e2e runs passing)
+#### Test Coverage (315 unit tests, 170 e2e runs passing)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.js`)
@@ -197,9 +206,8 @@ http://localhost:3000/?testScenario=default
 
 #### Test Commands
 ```bash
-npm run test:run     # Run all tests
+npm run test:run     # Run all tests (headless)
 npm run test:ui      # Run tests with UI interface
-npm run test:run     # Run tests in headless mode
 ```
 
 ### Code Quality
@@ -394,14 +402,14 @@ updateSetting('key', 'value');
 ### Development Team
 - **Primary maintainer**: [Project maintainer information]
 - **Issue tracking**: GitHub Issues
-- **Documentation**: README.md and DEVELOPER.md
+- **Documentation**: README.md and CLAUDE.md
 - **Community**: [Link to community resources]
 
 ### Getting Help
-- **Documentation**: Start with README.md and DEVELOPER.md
+- **Documentation**: Start with README.md and CLAUDE.md
 - **Issues**: Search existing issues before creating new ones
 - **Discussions**: Use GitHub Discussions for questions
-- **Contributing**: Follow contribution guidelines in CONTRIBUTING.md
+- **Contributing**: Create a feature branch, make focused commits, open a pull request
 
 ---
 
