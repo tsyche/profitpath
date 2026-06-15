@@ -96,7 +96,6 @@ jobs:
           tag_name: v${{ steps.resolved.outputs.value }}
           name: v${{ steps.resolved.outputs.value }}
           body: "Beta release — v${{ steps.resolved.outputs.value }}"
-          prerelease: true
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
