@@ -62,8 +62,17 @@ jobs:
       - name: Set up Capacitor
         run: npx cap sync android
 
+      - name: Restore signing keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/profitpath-debug.keystore
+
       - name: Build APK
         run: cd android && ./gradlew assembleDebug
+        env:
+          KEYSTORE_PATH: profitpath-debug.keystore
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEYSTORE_PASSWORD: android
+          KEY_PASSWORD: android
 
       - name: Resolve version
         id: resolved
