@@ -1870,6 +1870,46 @@ if (compareBtn) {
   compareBtn.addEventListener('click', handleComparison);
 }
 
+// Contextual help content for KPI "?" buttons
+const KPI_HELP = {
+  'utilization': {
+    title: 'Capacity Utilization',
+    content: '<p>Utilization measures what percentage of your team\'s available billable hours are actually being used for client work.</p>' +
+      '<p><strong>Formula:</strong> Service hours required ÷ (Employees × 2,080 hrs/yr × Productive utilization %)</p>' +
+      '<ul style="margin:8px 0 0 16px;line-height:1.8">' +
+      '<li><strong style="color:var(--good)">0–75%</strong> — Healthy, room to grow</li>' +
+      '<li><strong style="color:var(--warn)">75–100%</strong> — Strong but approaching capacity</li>' +
+      '<li><strong style="color:var(--bad)">&gt;100%</strong> — Over-committed; add staff or reduce clients</li>' +
+      '</ul>' +
+      '<p style="margin-top:8px;color:var(--muted);font-size:13px;">Tip: aim for 80–90% as your steady-state target — enough buffer to handle growth without burning out your team.</p>'
+  },
+  'contribution-margin': {
+    title: 'Contribution Margin',
+    content: '<p>Contribution margin is how much revenue each client contributes toward covering your fixed costs (rent, payroll, insurance) <em>after</em> paying the direct costs to serve them.</p>' +
+      '<p><strong>Formula:</strong> (Client revenue per year) − (Variable costs per year for that client)</p>' +
+      '<p>Once your total contribution margin across all clients exceeds your fixed costs, you\'re profitable.</p>' +
+      '<p style="margin-top:8px;color:var(--muted);font-size:13px;">Tip: a negative contribution margin means you\'re losing money on each client — no amount of volume will fix that. Fix pricing or variable costs first.</p>'
+  },
+  'break-even': {
+    title: 'Break-even Clients',
+    content: '<p>Break-even clients is the minimum number of clients you need to cover <em>all</em> your costs — payroll, fixed overhead, and variable delivery costs.</p>' +
+      '<p><strong>Formula:</strong> Total fixed costs ÷ Contribution margin per client</p>' +
+      '<p>Below break-even = operating at a loss. Above it = every additional client is pure profit (until you hit capacity).</p>' +
+      '<p style="margin-top:8px;color:var(--muted);font-size:13px;">Tip: the progress bar below the number shows how close your current client count is to break-even. Green = you\'ve crossed it.</p>'
+  }
+};
+
+// Delegated handler: KPI help "?" buttons
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.kpi-help-btn');
+  if (!btn) return;
+  e.stopPropagation();
+  const topic = btn.dataset.topic;
+  const help = KPI_HELP[topic];
+  if (!help) return;
+  createModal({ title: help.title, content: `<div style="line-height:1.7;color:var(--text)">${help.content}</div>`, size: 'sm' });
+});
+
 // Delegated handler: any .copy-on-click input or textarea selects-all and copies on click
 document.addEventListener('click', (e) => {
   const el = e.target.closest('.copy-on-click');
@@ -2644,7 +2684,7 @@ function addOnboardingHelpButton() {
 function showWelcomeDialog() {
   const dialog = createOnboardingDialog({
     title: 'Welcome to ProfitPath! 🎉',
-    content: '<div class="welcome-content"><p>Get started with your profitability analysis in just a few minutes.</p><p>Would you like a quick guided tour of the key features?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="welcome-btn" data-action="tour" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Take Tour</button><button class="welcome-btn" data-action="industry" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:6px;cursor:pointer;">Choose Industry</button><button class="welcome-btn" data-action="skip" style="background:transparent;color:var(--muted);border:none;padding:10px 20px;cursor:pointer;">Skip for Now</button></div>',
+    content: '<div class="welcome-content"><p>Get started with your profitability analysis in just a few minutes.</p><p>Would you like a quick guided tour of the key features?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="welcome-btn" data-action="tour" style="background:var(--accent);color:#06231a;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Take Tour</button><button class="welcome-btn" data-action="industry" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:6px;cursor:pointer;">Choose Industry</button><button class="welcome-btn" data-action="skip" style="background:transparent;color:var(--muted);border:none;padding:10px 20px;cursor:pointer;">Skip for Now</button></div>',
     buttons: [] // We'll handle buttons manually
   });
 
@@ -2719,7 +2759,7 @@ function selectIndustry(industryId, dialog) {
 
   const successDialog = createOnboardingDialog({
     title: 'Great choice! 🎯',
-    content: '<div class="success-content"><p>We\'ve loaded a template configuration for your industry.</p><p>Would you like to take a quick tour to learn how to customize it?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="success-btn" data-action="tour" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Show Me How</button><button class="success-btn" data-action="explore" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:6px;cursor:pointer;">Explore on My Own</button></div>',
+    content: '<div class="success-content"><p>We\'ve loaded a template configuration for your industry.</p><p>Would you like to take a quick tour to learn how to customize it?</p></div><div style="display:flex;gap:10px;justify-content:center;"><button class="success-btn" data-action="tour" style="background:var(--accent);color:#06231a;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;">Show Me How</button><button class="success-btn" data-action="explore" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:10px 20px;border-radius:6px;cursor:pointer;">Explore on My Own</button></div>',
     buttons: [] // We'll handle buttons manually
   });
 
@@ -2787,60 +2827,59 @@ let tourSteps = [];
 let tourActive = false;
 
 function createGuidedTour() {
-  const isMobile = window.innerWidth < 768;
   tourSteps = [
     {
-      target: '.logo',
+      target: '.ab-logo',
       title: 'Welcome to ProfitPath',
       content: 'This is your profitability dashboard. Let\'s take a quick tour of the key areas.',
       position: 'bottom'
     },
     {
-      target: '.inputs-fields .field:first-child',
+      target: '.inputs-fields .field',
       title: 'Choose Your Mode',
-      content: 'Select \'Forecast\' mode to plan capacity for a target client count. Use \'Current\' mode to analyze your active existing client base.',
+      content: 'Select <strong>Forecast</strong> mode to plan capacity for a target client count. Use <strong>Current</strong> mode to analyze your existing active client base.',
       position: 'right'
     },
     {
       target: '.team-config-group',
       title: 'Team Configuration',
-      content: 'Enter your team size and compensation details. The calculator assumes 2080 paid hours per year per employee.',
+      content: 'Enter your team size and compensation. ProfitPath assumes 2,080 paid hours per year per full-time employee.',
       position: 'right'
     },
     {
       target: '.offerings-section .section-h',
       title: 'Define Your Services',
-      content: 'Add your service offerings with pricing, frequency, and costs. Each offering can have different terms.',
+      content: 'Add service offerings with pricing, session frequency, and per-session costs. Each offering can have different terms.',
       position: 'right'
     },
     {
-      target: 'aside.card .card-h',
-      title: 'Key Profitability Metric',
-      content: 'This shows your net income after all expenses. Green indicates profitability, red indicates losses.',
+      target: '.card-h:last-of-type',
+      title: 'Net Income at a Glance',
+      content: 'Your net income summary lives here. The pill turns green when profitable and red when you\'re running at a loss.',
       position: 'left'
     },
     {
-      target: 'aside.card .capacity',
+      target: '.capacity',
       title: 'Capacity Utilization',
-      content: 'Monitor how busy your team is. Aim for 80-90% utilization to balance profitability and client service.',
+      content: 'Monitor how much of your team\'s billable time is in use. Aim for 80–90% — above that risks burnout; below means idle capacity.',
       position: 'left'
     },
     {
       target: '.break-even-section-wrapper',
       title: 'Break-even Analysis',
-      content: 'See how many clients you need to break even with a detailed break-even analysis.',
+      content: 'See exactly how many clients and how much revenue you need to cover all costs. The progress bar shows how close you are.',
       position: 'left'
     },
     {
       target: '.charts-visualizations-container',
       title: 'Charts & Visualizations',
-      content: 'Explore interactive charts and graphs that help visualize your business metrics and financial analysis.',
+      content: 'Interactive charts help you visualize revenue mix, cost breakdown, and profitability trends.',
       position: 'left'
     },
     {
-      target: isMobile ? '#hamburgerBtn' : '.header-actions',
+      target: '#appMenuBtn',
       title: 'Save, Export & Share',
-      content: isMobile ? 'Access all saving, exporting, and sharing tools from the menu.' : 'Save scenarios for comparison, generate professional reports, or share your analysis with stakeholders.',
+      content: 'Open the menu to save scenarios, export reports (CSV, PDF, Excel), compare scenarios side-by-side, and share your analysis.',
       position: 'bottom'
     }
   ];
@@ -3299,7 +3338,12 @@ function showHelpMenu() {
 
   const helpDialog = createOnboardingDialog({
     title: 'Help & Learning Center',
-    content: '<div style="display:grid;gap:12px;"><button class="help-menu-btn" data-action="tour" style="' + btnStyle + '">🎯 <strong>Take Guided Tour</strong><br><small>Step-by-step walkthrough of key features</small></button><button class="help-menu-btn" data-action="industry" style="' + btnStyle + '">🏢 <strong>Change Industry</strong><br><small>Switch to a different business template</small></button>' + tooltipsBtn + '</div>',
+    content: '<div style="display:grid;gap:12px;">' +
+      '<button class="help-menu-btn" data-action="tour" style="' + btnStyle + '">🎯 <strong>Take Guided Tour</strong><br><small>Step-by-step walkthrough of key features</small></button>' +
+      '<button class="help-menu-btn" data-action="faq" style="' + btnStyle + '">📖 <strong>Quick Reference</strong><br><small>Common questions and calculation formulas</small></button>' +
+      '<button class="help-menu-btn" data-action="industry" style="' + btnStyle + '">🏢 <strong>Change Industry</strong><br><small>Switch to a different business template</small></button>' +
+      tooltipsBtn +
+      '</div>',
     buttons: [
       { text: 'Close', action: () => { } }
     ]
@@ -3310,15 +3354,16 @@ function showHelpMenu() {
     document.querySelectorAll('.help-menu-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const action = e.currentTarget.dataset.action;
-        helpDialog.remove(); // Close the dialog
+        helpDialog.remove();
 
         setTimeout(() => {
           if (action === 'tour') {
             startGuidedTour();
+          } else if (action === 'faq') {
+            showQuickReference();
           } else if (action === 'industry') {
             showIndustrySelector();
           } else if (action === 'tooltips') {
-            // Toggle based on the state captured when the menu opened.
             if (tipsOn) hideContextualHelp(); else showContextualHelp();
           }
         }, 100);
@@ -3327,6 +3372,31 @@ function showHelpMenu() {
   }, 100);
 
   document.body.appendChild(helpDialog);
+}
+
+function showQuickReference() {
+  const faqHtml = `
+<div style="line-height:1.7;color:var(--text)">
+  <h4 style="margin:0 0 6px;color:var(--text)">Forecast vs Current mode</h4>
+  <p style="margin:0 0 14px;color:var(--muted);font-size:13px"><strong style="color:var(--text)">Forecast</strong> — set a target client count; ProfitPath calculates the capacity and revenue you'd need. <strong style="color:var(--text)">Current</strong> — enter your actual active client counts per offering; ProfitPath shows your live utilization and profitability.</p>
+
+  <h4 style="margin:0 0 6px;color:var(--text)">How utilization is calculated</h4>
+  <p style="margin:0 0 14px;color:var(--muted);font-size:13px">Service hours required ÷ (Employees × 2,080 hrs/yr × Productive utilization %). Target 80–90% for a healthy, sustainable pace.</p>
+
+  <h4 style="margin:0 0 6px;color:var(--text)">What contribution margin means</h4>
+  <p style="margin:0 0 14px;color:var(--muted);font-size:13px">Revenue per client per year minus the variable costs to serve them. Each client's contribution margin goes toward covering your fixed costs (rent, payroll, insurance). When the total exceeds fixed costs, you're profitable.</p>
+
+  <h4 style="margin:0 0 6px;color:var(--text)">Break-even clients</h4>
+  <p style="margin:0 0 14px;color:var(--muted);font-size:13px">Fixed costs ÷ Contribution margin per client. Below this number = operating at a loss. Above it = profitable. The progress bar shows how close you are.</p>
+
+  <h4 style="margin:0 0 6px;color:var(--text)">Saving and comparing scenarios</h4>
+  <p style="margin:0 0 14px;color:var(--muted);font-size:13px">Use <strong style="color:var(--text)">Scenarios</strong> (app menu or bottom bar) to save your current setup with a name. Load it later, or select two saved scenarios and hit <strong style="color:var(--text)">Compare</strong> to see a side-by-side diff of every metric.</p>
+
+  <h4 style="margin:0 0 6px;color:var(--text)">Exporting and sharing</h4>
+  <p style="margin:0 0 0;color:var(--muted);font-size:13px">Open the app menu → <strong style="color:var(--text)">Export</strong> for CSV, Excel, PDF, HTML, email, and embed options. Use <strong style="color:var(--text)">Share</strong> to generate a URL that encodes your current scenario so others can view it without any account.</p>
+</div>`;
+
+  createModal({ title: 'Quick Reference', content: faqHtml, size: 'md' });
 }
 
 function initializeContextualTooltips() {
