@@ -1645,7 +1645,7 @@ window.shareComparison = function (id1, id2) {
   const showFallbackModal = () => {
     createModal({
       title: '🔗 Share Comparison',
-      content: `<p style="color:var(--text);margin-bottom:8px;">Copy this link to share your comparison:</p><textarea readonly style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;min-height:80px;word-break:break-all;">${shareUrl}</textarea>`,
+      content: `<p style="color:var(--text);margin-bottom:8px;">Copy this link to share your comparison:</p><textarea readonly class="copy-on-click" title="Click to copy" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;min-height:80px;word-break:break-all;">${shareUrl}</textarea>`,
       size: 'medium'
     });
   };
@@ -1748,7 +1748,7 @@ window.getComparisonEmbedCode = function (id1, id2) {
     title: '📋 Embed Comparison',
     content: `
       <p style="color:var(--text);margin-bottom:8px;">Copy this embed code to add the comparison to your website:</p>
-      <textarea readonly style="width:100%;height:100px;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;">${embedCode}</textarea>
+      <textarea readonly class="copy-on-click" title="Click to copy" style="width:100%;height:100px;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;">${embedCode}</textarea>
       <p style="margin-top:10px;font-size:12px;color:var(--muted);">Preview: <a href="${embedUrl}" target="_blank" style="color:var(--accent);">Open in new tab</a></p>
     `,
     size: 'medium'
@@ -1820,6 +1820,21 @@ const compareBtn = $('#compareBtn');
 if (compareBtn) {
   compareBtn.addEventListener('click', handleComparison);
 }
+
+// Delegated handler: any .copy-on-click input or textarea selects-all and copies on click
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('.copy-on-click');
+  if (!el) return;
+  el.select();
+  // Visual feedback fires immediately regardless of clipboard permission
+  el.classList.add('copy-on-click--copied');
+  setTimeout(() => el.classList.remove('copy-on-click--copied'), 1500);
+  navigator.clipboard?.writeText(el.value).then(() => {
+    showToast('Copied to clipboard!');
+  }).catch(() => {
+    showToast('Select all and press Ctrl+C / Cmd+C to copy', 'info');
+  });
+});
 
 // Load scenario from URL first (if present), then localStorage
 const loadedFromURL = typeof loadScenarioFromURL === 'function' ? loadScenarioFromURL() : false;

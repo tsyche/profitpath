@@ -231,7 +231,7 @@ function showShareSuccessModal(shareUrl) {
       <div class="modal-body">
         <p>Direct share link with unique UUID copied to clipboard!</p>
         <p><strong>Shareable URL:</strong></p>
-        <input type="text" id="shareUrlInput" value="${shareUrl}" readonly style="width: 100%; padding: 5px; margin-bottom: 10px;">
+        <input type="text" id="shareUrlInput" value="${shareUrl}" readonly class="copy-on-click" title="Click to copy" style="width: 100%; padding: 5px; margin-bottom: 10px;">
         <button onclick="copyToClipboard(document.getElementById('shareUrlInput').value); showNotification('Link copied!', 'success');">Copy to Clipboard</button>
       </div>
     </div>
@@ -963,7 +963,7 @@ export function showEmbedCode() {
     title: '📋 Embed Widget',
     content: `
       <p>Copy this code to embed ProfitPath on your website:</p>
-      <textarea id="embedCodeText" readonly style="width:100%;height:100px;padding:10px;margin:10px 0;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--text);box-sizing:border-box;">${embedCode}</textarea>
+      <textarea id="embedCodeText" readonly class="copy-on-click" title="Click to copy" style="width:100%;height:100px;padding:10px;margin:10px 0;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--panel);color:var(--text);box-sizing:border-box;">${embedCode}</textarea>
     `,
     size: 'medium',
     buttons: [

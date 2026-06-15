@@ -183,6 +183,36 @@ test.describe('UI fixes', () => {
     await expect(page.locator('.scenario-diff-wrap')).toBeVisible();
   });
 
+  test('Copy-on-click fields select-all on click and show copied state', async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('onboardingCompleted', 'true');
+        const s = [
+          { id: 'coc-1', name: 'CopyA', timestamp: new Date().toISOString(), state: {} },
+          { id: 'coc-2', name: 'CopyB', timestamp: new Date().toISOString(), state: {} }
+        ];
+        localStorage.setItem('profitpath-scenarios', JSON.stringify(s));
+      } catch { /* */ }
+    });
+    await page.goto('/');
+    await page.waitForTimeout(300);
+
+    // Open embed modal for comparison (exercises getComparisonEmbedCode path)
+    await page.evaluate(() => window.getComparisonEmbedCode('coc-1', 'coc-2'));
+    await page.waitForSelector('.copy-on-click', { timeout: 5000 });
+
+    // Click the copy-on-click textarea
+    await page.click('.copy-on-click');
+    await page.waitForTimeout(200);
+
+    // The field should receive the --copied class briefly
+    const hasCopied = await page.evaluate(() => {
+      const el = document.querySelector('.copy-on-click');
+      return el && el.classList.contains('copy-on-click--copied');
+    });
+    expect(hasCopied).toBe(true);
+  });
+
   test('Scenario compare does not remove document.body (white screen bug)', async ({ page }) => {
     await page.addInitScript(() => {
       try {
