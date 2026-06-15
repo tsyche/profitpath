@@ -4573,6 +4573,17 @@ input[type="checkbox"] {
   transition: width 0.4s ease, background 0.3s ease;
 }
 
+/* KPI contextual help button */
+.kpi-help-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--muted); color: var(--surface); border: none;
+  font-size: 9px; font-weight: 700; line-height: 1; cursor: pointer;
+  vertical-align: middle; margin-left: 4px; opacity: 0.7;
+  transition: opacity 0.15s, background 0.15s;
+}
+.kpi-help-btn:hover { opacity: 1; background: var(--accent); }
+
 /* Click-to-copy fields */
 .copy-on-click { cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; }
 .copy-on-click:hover { border-color: var(--accent) !important; }
