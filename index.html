@@ -815,9 +815,14 @@
       window.acquireScrollLock();
     }
     function closeDrawer() {
-      document.getElementById('appDrawer').classList.remove('open');
+      var drawer = document.getElementById('appDrawer');
+      // Guard: if already closed, don't double-release the scroll lock.
+      // ppOpenModal also calls closeDrawer(), so ppDelegate + ppOpenModal would
+      // release twice without this check.
+      if (!drawer.classList.contains('open')) return;
+      drawer.classList.remove('open');
       document.getElementById('drawerScrim').classList.remove('show');
-      document.getElementById('appDrawer').setAttribute('aria-hidden', 'true');
+      drawer.setAttribute('aria-hidden', 'true');
       window.releaseScrollLock();
     }
     // Tapping the hamburger again should close an open drawer.

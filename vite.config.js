@@ -8,13 +8,6 @@ export default defineConfig({
     jsxFactory: 'h',
     jsxFragment: 'Fragment'
   },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: { '.jsx': 'jsx' },
-      jsxFactory: 'h',
-      jsxFragment: 'Fragment'
-    }
-  },
   build: {
     outDir: 'dist',
     rollupOptions: {

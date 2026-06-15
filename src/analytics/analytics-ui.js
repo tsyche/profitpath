@@ -158,19 +158,23 @@ class AnalyticsUI {
     console.log('[DEBUG analytics-ui] modal created:', modalOverlay);
     document.body.appendChild(modalOverlay);
     console.log('[DEBUG analytics-ui] modal appended to body');
+    window.acquireScrollLock?.();
 
     // Show the modal
     modalOverlay.classList.remove('hidden');
 
+    const closeOverlay = () => {
+      modalOverlay.classList.add('hidden');
+      window.releaseScrollLock?.();
+      setTimeout(() => {
+        if (document.body.contains(modalOverlay)) document.body.removeChild(modalOverlay);
+      }, 300);
+    };
+
     // Close handlers
     const closeBtn = modal.querySelector('.modal-close');
     if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        modalOverlay.classList.add('hidden');
-        setTimeout(() => {
-          document.body.removeChild(modalOverlay);
-        }, 300);
-      });
+      closeBtn.addEventListener('click', closeOverlay);
     }
 
     // Analytics button handlers
@@ -178,7 +182,8 @@ class AnalyticsUI {
     if (enableBtn) {
       enableBtn.addEventListener('click', () => {
         this.analytics.saveSettings({ enabled: true, trackUsage: true, trackFeatures: true, trackExports: true, trackTemplates: true });
-        // Refresh the modal to show enabled state
+        // Refresh the modal to show enabled state (scroll lock reacquired by re-open)
+        window.releaseScrollLock?.();
         modalOverlay.remove();
         this.showAnalyticsDashboard();
       });
@@ -186,30 +191,17 @@ class AnalyticsUI {
 
     const closeAnalyticsBtn = modal.querySelector('#closeAnalyticsBtn');
     if (closeAnalyticsBtn) {
-      closeAnalyticsBtn.addEventListener('click', () => {
-        modalOverlay.classList.add('hidden');
-        setTimeout(() => {
-          document.body.removeChild(modalOverlay);
-        }, 300);
-      });
+      closeAnalyticsBtn.addEventListener('click', closeOverlay);
     }
 
     modalOverlay.addEventListener('click', (e) => {
-      if (e.target === modalOverlay) {
-        modalOverlay.classList.add('hidden');
-        setTimeout(() => {
-          document.body.removeChild(modalOverlay);
-        }, 300);
-      }
+      if (e.target === modalOverlay) closeOverlay();
     });
 
     // ESC key handler
     const escHandler = (e) => {
       if (e.key === 'Escape' && !modalOverlay.classList.contains('hidden')) {
-        modalOverlay.classList.add('hidden');
-        setTimeout(() => {
-          document.body.removeChild(modalOverlay);
-        }, 300);
+        closeOverlay();
         document.removeEventListener('keydown', escHandler);
       }
     };

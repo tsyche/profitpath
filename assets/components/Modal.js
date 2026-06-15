@@ -138,7 +138,14 @@ export function openScenarioModal() {
 
 export function closeScenarioModal() {
   const modal = document.getElementById('scenariosModal');
-  if (modal) {
+  if (!modal) return;
+  // If the modal is inside a createModal overlay, remove the whole overlay and
+  // release the scroll lock so it isn't stranded.
+  const overlay = modal.closest('.modal-overlay');
+  if (overlay) {
+    overlay.remove();
+    window.releaseScrollLock?.();
+  } else {
     modal.classList.add('hidden');
   }
 }
@@ -146,8 +153,10 @@ export function closeScenarioModal() {
 // Global helper to close any overlay modal
 export function closeCurrentModal() {
   const overlays = document.querySelectorAll('.modal-overlay');
-  overlays.forEach(o => o.remove());
-  
-  // Also handle scenarios modal specifically
+  overlays.forEach(o => {
+    o.remove();
+    window.releaseScrollLock?.();
+  });
+  // Handle any modal not already caught by the overlay sweep
   closeScenarioModal();
 }
