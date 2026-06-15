@@ -1,5 +1,11 @@
 # ProfitPath
 
+[![Tests](https://github.com/tsyche/profitpath/actions/workflows/test.yml/badge.svg)](https://github.com/tsyche/profitpath/actions/workflows/test.yml)
+[![Build APK](https://github.com/tsyche/profitpath/actions/workflows/build-apk.yml/badge.svg)](https://github.com/tsyche/profitpath/actions/workflows/build-apk.yml)
+[![Deploy](https://github.com/tsyche/profitpath/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/tsyche/profitpath/actions/workflows/deploy-pages.yml)
+[![Version](https://img.shields.io/github/v/release/tsyche/profitpath?include_prereleases&label=version)](https://github.com/tsyche/profitpath/releases)
+[![License](https://img.shields.io/github/license/tsyche/profitpath)](LICENSE)
+
 Client-side profitability and capacity simulator for recurring service businesses. Provides real-time calculations, scenario management, and advanced export capabilities with progressive disclosure UI.
 
 ## What's included
