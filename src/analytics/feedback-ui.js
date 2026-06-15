@@ -63,6 +63,7 @@ class FeedbackUI {
 
     const modal = this.createFeedbackModal();
     document.body.appendChild(modal);
+    window.acquireScrollLock?.();
 
     // Focus on first input
     setTimeout(() => {
@@ -78,6 +79,7 @@ class FeedbackUI {
     const modal = document.getElementById('feedbackModal');
     if (modal) {
       modal.remove();
+      window.releaseScrollLock?.();
     }
     this.isModalOpen = false;
     this.currentContext = null;
