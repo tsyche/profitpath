@@ -1,0 +1,20 @@
+name: Mark old releases as pre-release (one-time)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mark-prerelease:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Mark v3–v8 as pre-release
+        run: |
+          for tag in v3 v4 v5 v6 v7 v8; do
+            echo "Marking $tag as pre-release..."
+            gh release edit "$tag" --prerelease --repo ${{ github.repository }} || echo "Skipping $tag (release not found)"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
