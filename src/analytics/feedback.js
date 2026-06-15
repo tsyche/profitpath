@@ -40,6 +40,10 @@ class FeedbackCollector {
       throw new Error('Rating and category are required');
     }
 
+    // Pull email out before sanitizing — we send it to the remote but never
+    // store it locally to avoid keeping PII in localStorage.
+    const contactEmail = feedbackData.contactEmail || null;
+
     const feedback = {
       id: this.generateId(),
       timestamp: new Date().toISOString(),
@@ -67,8 +71,8 @@ class FeedbackCollector {
     // Deliver it. Prefer the remote endpoint when configured; otherwise fall
     // back to the opt-in mailto so behavior is unchanged until a key is added.
     if (this.remoteEnabled()) {
-      this.sendToRemote(feedback);
-    } else if (feedback.allowContact && feedback.comment) {
+      this.sendToRemote(feedback, contactEmail);
+    } else if (contactEmail && feedback.comment) {
       this.sendEmailNotification(feedback);
     }
 
@@ -125,7 +129,7 @@ This feedback was submitted via the ProfitPath feedback form.
    * Deliver one feedback item to the remote endpoint (Web3Forms). On success the
    * stored copy is marked synced; on failure it stays queued for a later retry.
    */
-  async sendToRemote(feedback) {
+  async sendToRemote(feedback, contactEmail = null) {
     if (!this.remoteEnabled()) return false;
     try {
       const payload = {
@@ -135,7 +139,7 @@ This feedback was submitted via the ProfitPath feedback form.
         rating: feedback.rating,
         category: feedback.category,
         comment: feedback.comment || '(none)',
-        allow_contact: feedback.allowContact ? 'yes' : 'no',
+        contact_email: contactEmail || '(not provided)',
         page: feedback.url || '',
         user_agent: feedback.userAgent || '',
         context: feedback.context ? JSON.stringify(feedback.context) : '',
@@ -292,8 +296,8 @@ This feedback was submitted via the ProfitPath feedback form.
   sanitizeFeedback(feedback) {
     const sanitized = { ...feedback };
 
-    // Remove sensitive fields
-    const sensitiveFields = ['email', 'name', 'phone', 'address', 'creditCard'];
+    // Remove PII — email is handled separately and never stored locally
+    const sensitiveFields = ['email', 'contactEmail', 'name', 'phone', 'address', 'creditCard'];
     sensitiveFields.forEach(field => delete sanitized[field]);
 
     // Sanitize comment

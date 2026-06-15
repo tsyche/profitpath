@@ -100,7 +100,8 @@
 }
 
 .feedback-section select,
-.feedback-section textarea {
+.feedback-section textarea,
+.feedback-section input[type="email"] {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -112,10 +113,18 @@
 }
 
 .feedback-section select:focus,
-.feedback-section textarea:focus {
+.feedback-section textarea:focus,
+.feedback-section input[type="email"]:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.feedback-optional {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: 4px;
 }
 
 .rating-container {

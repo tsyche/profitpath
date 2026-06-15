@@ -128,7 +128,12 @@ class FeedbackUI {
               <span id="commentCharCount">0</span> / 500
             </div>
           </div>
-          
+
+          <div class="feedback-section">
+            <label for="feedbackEmail">Email <span class="feedback-optional">(optional — only if you'd like a reply)</span></label>
+            <input type="email" id="feedbackEmail" name="contactEmail" placeholder="your@email.com" autocomplete="email" maxlength="254">
+          </div>
+
           <div class="feedback-actions">
             <button type="button" class="btn secondary cancel-feedback">Cancel</button>
             <button type="submit" class="btn primary">
@@ -324,7 +329,7 @@ class FeedbackUI {
       rating,
       category,
       comment: formData.get('comment') || null,
-      allowContact: formData.has('allowContact'),
+      contactEmail: (formData.get('contactEmail') || '').trim() || null,
       context: formData.get('context') ? JSON.parse(formData.get('context')) : null,
       userAgent: navigator.userAgent,
       url: window.location.href
