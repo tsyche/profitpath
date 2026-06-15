@@ -19,8 +19,6 @@ class FeedbackCollector {
     this.remoteEndpoint = WEB3FORMS_ENDPOINT;
     this.remoteAccessKey = WEB3FORMS_ACCESS_KEY;
     this.initializeStorage();
-    // Retry anything that was saved while offline / before a key was configured.
-    this.flushUnsyncedFeedback();
   }
 
   remoteEnabled() {
