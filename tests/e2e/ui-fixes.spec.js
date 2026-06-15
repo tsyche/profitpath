@@ -183,7 +183,7 @@ test.describe('UI fixes', () => {
     await expect(page.locator('.scenario-diff-wrap')).toBeVisible();
   });
 
-  test('Copy-on-click fields select-all on click and show copied state', async ({ page }) => {
+  test('Copy-on-click fields select-all on click, show --copied class, and show a toast', async ({ page }) => {
     await page.addInitScript(() => {
       try {
         localStorage.setItem('onboardingCompleted', 'true');
@@ -211,6 +211,12 @@ test.describe('UI fixes', () => {
       return el && el.classList.contains('copy-on-click--copied');
     });
     expect(hasCopied).toBe(true);
+
+    // A toast must appear — this was the regression: TypeError from optional-chaining
+    // silently killed the handler before showToast() was ever reached
+    await page.waitForSelector('.toast', { timeout: 3000 });
+    const toastText = await page.locator('.toast').first().innerText();
+    expect(toastText.toLowerCase()).toContain('cop');
   });
 
   test('Scenario compare does not remove document.body (white screen bug)', async ({ page }) => {
