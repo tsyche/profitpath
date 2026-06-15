@@ -2657,8 +2657,6 @@ if (document.readyState === 'loading') {
 
 // Scroll lock helpers for guided tour
 let _tourScrollLocked = false;
-let _tourPrevHtmlOverflow = '';
-let _tourPrevBodyOverflow = '';
 function _preventTourScroll(e) {
   // allow certain inputs inside the tour dialog (handled by pointer events), but
   // generally prevent default touch/wheel scrolling while tour is active
@@ -2677,10 +2675,7 @@ function lockScrollForTour() {
   if (_tourScrollLocked) return;
   _tourScrollLocked = true;
   try {
-    _tourPrevHtmlOverflow = document.documentElement.style.overflow || '';
-    _tourPrevBodyOverflow = document.body.style.overflow || '';
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
+    window.acquireScrollLock?.();
   } catch {
     // ignore
   }
@@ -2693,8 +2688,7 @@ function unlockScrollForTour() {
   if (!_tourScrollLocked) return;
   _tourScrollLocked = false;
   try {
-    document.documentElement.style.overflow = _tourPrevHtmlOverflow || '';
-    document.body.style.overflow = _tourPrevBodyOverflow || '';
+    window.releaseScrollLock?.();
   } catch {
     // ignore
   }

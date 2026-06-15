@@ -757,6 +757,19 @@
       }
     }
 
+    // Reference-counted scroll lock — prevents background scrolling while any
+    // modal/drawer is open. Multiple callers are safe: scroll only returns when
+    // the last lock is released.
+    window._ppScrollLocks = 0;
+    window.acquireScrollLock = function() {
+      window._ppScrollLocks++;
+      document.body.classList.add('scroll-locked');
+    };
+    window.releaseScrollLock = function() {
+      if (window._ppScrollLocks > 0) window._ppScrollLocks--;
+      if (window._ppScrollLocks === 0) document.body.classList.remove('scroll-locked');
+    };
+
     // Flip light/dark, persist the choice, and keep the toggle icon + browser
     // theme-color in sync. Kept as a plain global so it needs no app.jsx wiring.
     function applyThemeIcon(theme) {
@@ -795,13 +808,13 @@
       document.getElementById('appDrawer').classList.add('open');
       document.getElementById('drawerScrim').classList.add('show');
       document.getElementById('appDrawer').setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
+      window.acquireScrollLock();
     }
     function closeDrawer() {
       document.getElementById('appDrawer').classList.remove('open');
       document.getElementById('drawerScrim').classList.remove('show');
       document.getElementById('appDrawer').setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
+      window.releaseScrollLock();
     }
     // Tapping the hamburger again should close an open drawer.
     function toggleDrawer() {
@@ -834,13 +847,13 @@
       m.hidden = false;
       // next frame so the transition runs
       requestAnimationFrame(function () { m.classList.add('open'); });
-      document.body.style.overflow = 'hidden';
+      window.acquireScrollLock();
     }
     function ppCloseModal(id) {
       var m = document.getElementById(id);
       if (!m) return;
       m.classList.remove('open');
-      document.body.style.overflow = '';
+      window.releaseScrollLock();
       var done = function () { m.hidden = true; m.removeEventListener('transitionend', done); };
       // fall back in case transitionend doesn't fire
       m.addEventListener('transitionend', done);

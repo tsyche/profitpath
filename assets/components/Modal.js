@@ -79,13 +79,12 @@ export function createModal({ title, content, buttons = [], size = 'medium', id 
   document.body.appendChild(overlay);
 
   // Lock background scroll while modal is open
-  const prevOverflow = document.body.style.overflow;
-  document.body.style.overflow = 'hidden';
+  window.acquireScrollLock?.();
 
   // Event listeners
   const closeModal = () => {
     overlay.remove();
-    document.body.style.overflow = document.querySelectorAll('.modal-overlay').length > 1 ? 'hidden' : prevOverflow;
+    window.releaseScrollLock?.();
     document.removeEventListener('keydown', handleEsc);
     if (typeof onClose === 'function') onClose();
   };
