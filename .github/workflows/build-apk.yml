@@ -14,6 +14,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -25,6 +27,31 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      - name: Bump patch version (on main branch only)
+        id: version
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          NEW_VERSION=$(node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json'));
+            const [base, pre] = pkg.version.split('-');
+            const parts = base.split('.');
+            parts[2] = parseInt(parts[2]) + 1;
+            pkg.version = parts.join('.') + (pre ? '-' + pre : '');
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log(pkg.version);
+          ")
+          echo "value=$NEW_VERSION" >> $GITHUB_OUTPUT
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "v$NEW_VERSION [skip ci]"
+          git push
+
+      - name: Get version (on PRs)
+        id: version_pr
+        if: github.event_name == 'pull_request'
+        run: echo "value=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: npm ci
@@ -38,24 +65,26 @@ jobs:
       - name: Build APK
         run: cd android && ./gradlew assembleDebug
 
-      - name: Get version from package.json
-        id: version
-        run: echo "value=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+      - name: Resolve version
+        id: resolved
+        run: |
+          V="${{ steps.version.outputs.value || steps.version_pr.outputs.value }}"
+          echo "value=$V" >> $GITHUB_OUTPUT
 
       - name: Rename APK
         run: |
           mv android/app/build/outputs/apk/debug/app-debug.apk \
-             android/app/build/outputs/apk/debug/profitpath-v${{ steps.version.outputs.value }}.apk
+             android/app/build/outputs/apk/debug/profitpath-v${{ steps.resolved.outputs.value }}.apk
 
       - name: Upload APK to artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: profitpath-v${{ steps.version.outputs.value }}
+          name: profitpath-v${{ steps.resolved.outputs.value }}
           path: android/app/build/outputs/apk/debug/*.apk
 
       - name: Delete existing release if present (on main branch only)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: gh release delete v${{ steps.version.outputs.value }} --yes --cleanup-tag || true
+        run: gh release delete v${{ steps.resolved.outputs.value }} --yes --cleanup-tag || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -64,9 +93,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: android/app/build/outputs/apk/debug/*.apk
-          tag_name: v${{ steps.version.outputs.value }}
-          name: v${{ steps.version.outputs.value }}
-          body: "Beta release — v${{ steps.version.outputs.value }}"
+          tag_name: v${{ steps.resolved.outputs.value }}
+          name: v${{ steps.resolved.outputs.value }}
+          body: "Beta release — v${{ steps.resolved.outputs.value }}"
           prerelease: true
           make_latest: true
         env:
