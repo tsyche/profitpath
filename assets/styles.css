@@ -228,6 +228,113 @@ body {
 }
 body.scroll-locked { overflow: hidden; }
 
+/* ── Read-only / View-Only mode ────────────────────────────────────────────── */
+.pp-readonly-banner {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: var(--accent);
+  color: #06231a;
+  font-size: 14px;
+  font-weight: 600;
+}
+.pp-readonly-banner-sub { font-weight: 400; opacity: 0.8; }
+.pp-readonly-start-link { color: #06231a; font-weight: 700; text-decoration: underline; }
+
+/* Lock all form inputs in read-only mode */
+body.pp-readonly .grid input,
+body.pp-readonly .grid select,
+body.pp-readonly #addOfferingBtn,
+body.pp-readonly #resetBtn,
+body.pp-readonly .del-btn,
+body.pp-readonly #undoBtn,
+body.pp-readonly #redoBtn,
+body.pp-readonly #modeSelect,
+body.pp-readonly #lockMixBtn,
+body.pp-readonly .slider-label + input[type="range"],
+body.pp-readonly #employeesSlider {
+  pointer-events: none;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+body.pp-readonly #addOfferingBtn,
+body.pp-readonly #resetBtn,
+body.pp-readonly .del-btn { display: none; }
+
+/* ── Presentation Notes ─────────────────────────────────────────────────────── */
+.scenario-notes-wrap { padding: 14px 0 4px; }
+.scenario-notes-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.scenario-notes-hint {
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 6px;
+  font-size: 12px;
+}
+.scenario-notes-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 64px;
+  transition: border-color var(--dur-1) var(--ease);
+}
+.scenario-notes-input:focus { outline: none; border-color: var(--accent); }
+.scenario-notes-display {
+  margin: 0;
+  padding: 12px 14px;
+  background: rgba(94, 234, 212, 0.08);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* ── Share modal two-option layout ─────────────────────────────────────────── */
+.share-option-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.share-option-row:last-child { border-bottom: none; }
+.share-option-info { display: flex; flex-direction: column; gap: 2px; }
+.share-option-info strong { font-size: 14px; color: var(--text); }
+.share-option-desc { font-size: 12px; color: var(--muted); }
+.share-option-url { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+.share-url-input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 11px;
+  min-width: 0;
+  cursor: pointer;
+}
+.share-url-input:focus { outline: none; border-color: var(--accent); }
+
 body {
   margin: 0;
   font-family: var(--sans);

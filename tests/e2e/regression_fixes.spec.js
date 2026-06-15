@@ -18,15 +18,19 @@ test.describe('Regression Fixes - UI & Logic', () => {
     await expect(payrollKpi).toContainText('$60,000');
   });
 
-  test('Share Scenario should copy link and show success toast', async ({ page }) => {
+  test('Share Scenario opens a two-option share modal', async ({ page }) => {
     // Share now lives in the menu drawer
     await page.locator('#appMenuBtn').click();
     await page.locator('.app-drawer .drawer-item', { hasText: 'Share' }).click();
 
-    // Check for success toast
-    const toast = page.locator('.toast.toast-success');
-    await expect(toast).toBeVisible();
-    await expect(toast).toContainText('Share link copied to clipboard!');
+    // Modal should appear with both share options
+    const modal = page.locator('.modal-overlay');
+    await expect(modal).toBeVisible();
+    await expect(modal.locator('#shareViewOnlyBtn')).toBeVisible();
+    await expect(modal.locator('#shareEditableBtn')).toBeVisible();
+    // View-only URL should contain &readonly=1
+    const viewInput = modal.locator('.share-url-input').first();
+    await expect(viewInput).toHaveValue(/readonly=1/);
   });
 
   test('Undo/Redo buttons should be in the badge area', async ({ page }) => {

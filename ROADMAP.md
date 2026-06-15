@@ -30,11 +30,11 @@ See README.md for setup and development instructions.
 
 ## Recommended Next 3
 
-1. **Read-only Scenario Sharing & Collaborative Comments** (~2-3 hrs)
-   - Shareable read-only links (builds on existing URL-encode path in `miscService.js`)
-   - Annotation/comment system on calculations and offerings; client presentation mode
-   - Enables team workflows and client collaboration without backend
-   - Matches the #1 user feedback request (Collaboration section below)
+1. ✅ **Read-only Scenario Sharing & Collaborative Comments**
+   - View-only share links (`?readonly=1`) — inputs locked, banner shown, "Start your own" CTA
+   - Presentation Notes field embedded in shared URL for context
+   - Two-option share modal: View Only vs Editable links
+   - `overscroll-behavior: contain` + idempotent `closeDrawer` as part of this release
 
 2. **Tax & Financial Report Generator** (~2-3 hrs)
    - Quarterly income projection summaries

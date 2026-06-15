@@ -7,7 +7,7 @@ import * as misc from './services/miscService';
 import * as businessLogic from './services/businessLogic';
 import { saveScenario, loadScenario, deleteScenario } from './services/scenarioService';
 import { closeScenarioModal, createModal } from './components/Modal.js';
-import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL } from './services/miscService';
+import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL, isReadOnlyURL } from './services/miscService';
 import { uuid, clamp } from './utils/helpers';
 import { showToast } from './services/modalService.js';
 import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui.js';
@@ -247,6 +247,7 @@ const state = {
   targetUtilizationPct: 75, // forecasting target
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings
   loadedTemplate: null, // Track which template was loaded (null if custom scenario)
+  notes: '', // Presentation notes — embedded in shared URLs for context
 };
 
 // Undo/Redo history stacks
@@ -1236,6 +1237,19 @@ document.querySelectorAll('.export-option').forEach(option => {
   if (btn) btn.addEventListener('click', shareScenario);
 }
 
+// Wire presentation notes textarea
+{
+  const notesEl = $('#scenarioNotes');
+  if (notesEl) {
+    // Populate from current state (loaded from URL or localStorage)
+    notesEl.value = state.notes || '';
+    notesEl.addEventListener('input', () => {
+      state.notes = notesEl.value.slice(0, 2000);
+      persistState();
+    });
+  }
+}
+
 // Update key metrics for both full screen and mobile
 function updateKeyMetrics() {
   try {
@@ -1982,6 +1996,9 @@ if (compareStatesParam) {
 
 wire(loadedFromURL);
 
+// Read-only mode: lock all inputs when ?readonly=1 is present in the URL
+if (loadedFromURL && isReadOnlyURL()) enterReadOnlyMode();
+
 // Restore any scheduled report generation
 restoreScheduling();
 
@@ -2703,6 +2720,33 @@ function addOnboardingHelpButton() {
   if (!helpButton) return;
 
   helpButton.addEventListener('click', showHelpMenu);
+}
+
+function enterReadOnlyMode() {
+  document.body.classList.add('pp-readonly');
+
+  // Populate and show the banner
+  const banner = document.getElementById('ppReadOnlyBanner');
+  if (banner) banner.hidden = false;
+
+  // Show notes in the read-only display block and hide the edit textarea
+  const notesEdit = document.getElementById('scenarioNotes');
+  const notesDisplay = document.getElementById('scenarioNotesDisplay');
+  if (notesEdit) notesEdit.style.display = 'none';
+  if (notesDisplay) {
+    const text = (state.notes || '').trim();
+    if (text) {
+      notesDisplay.textContent = text;
+      notesDisplay.hidden = false;
+      notesDisplay.closest('.scenario-notes-wrap')?.classList.add('has-notes');
+    }
+  }
+
+  // Disable undo/redo (state mutation no longer makes sense)
+  const undoBtn = document.getElementById('undoBtn');
+  const redoBtn = document.getElementById('redoBtn');
+  if (undoBtn) undoBtn.disabled = true;
+  if (redoBtn) redoBtn.disabled = true;
 }
 
 function showWelcomeDialog() {
