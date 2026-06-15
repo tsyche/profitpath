@@ -109,11 +109,14 @@ export function createModal({ title, content, buttons = [], size = 'medium', id 
     });
   });
 
-  // ESC key to close
+  // ESC key to close — only respond when this is the topmost overlay
   const handleEsc = (e) => {
     if (e.key === 'Escape') {
-      closeModal();
-      document.removeEventListener('keydown', handleEsc);
+      const overlays = document.querySelectorAll('.modal-overlay');
+      if (overlays[overlays.length - 1] === overlay) {
+        closeModal();
+        document.removeEventListener('keydown', handleEsc);
+      }
     }
   };
   document.addEventListener('keydown', handleEsc);

@@ -3704,39 +3704,35 @@ input[type="checkbox"] {
   margin-top: 2px;
 }
 
-/* Override colors for comparison modal (white background) */
 .modal-content .scenario-diff-wrap,
-.modal-content .scenario-diff-header,
 .modal-content .scenario-diff-row,
 .modal-content .diff-col-label,
 .modal-content .diff-col-s1,
 .modal-content .diff-col-s2,
 .modal-content .diff-col-delta,
-.modal-content .scenario-diff-section-title,
-.modal-content .scenario-diff-offering-name,
-.modal-content .diff-date {
-  color: #1a1a1a !important;
+.modal-content .scenario-diff-offering-name {
+  color: var(--text);
 }
 
 .modal-content .diff-date {
-  color: #666 !important;
+  color: var(--muted);
 }
 
 .modal-content .scenario-diff-section-title {
-  color: #555 !important;
+  color: var(--muted);
 }
 
 .modal-content .scenario-diff-header {
-  background: #f5f5f5 !important;
-  border-bottom-color: #ddd !important;
+  background: var(--surface-2);
+  border-bottom-color: var(--border);
 }
 
 .modal-content .scenario-diff-row:nth-child(even) {
-  background: var(--surface-2) !important;
+  background: var(--surface-2);
 }
 
 .modal-content .scenario-diff-row:nth-child(odd) {
-  background: var(--surface) !important;
+  background: var(--surface);
 }
 
 @media (max-width: 600px) {
