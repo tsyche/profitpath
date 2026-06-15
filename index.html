@@ -333,24 +333,6 @@
   </div>
   </div>
 
-  <!-- Feedback Modal -->
-  <div class="modal" id="feedbackModal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Send Feedback</h3>
-        <button class="modal-close" id="feedbackModalClose">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>We value your feedback! Please share your thoughts, suggestions, or report issues.</p>
-        <textarea id="feedbackText" placeholder="Enter your feedback here..." rows="6"
-          style="width: 100%; margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;"></textarea>
-      </div>
-      <div class="modal-footer">
-        <button class="btn primary" id="submitFeedback">Submit Feedback</button>
-        <button class="btn secondary" id="cancelFeedback">Cancel</button>
-      </div>
-    </div>
-  </div>
 
 
   <div class="grid">
@@ -760,14 +742,36 @@
     // Reference-counted scroll lock — prevents background scrolling while any
     // modal/drawer is open. Multiple callers are safe: scroll only returns when
     // the last lock is released.
+    // On mobile WebViews (Android/iOS), overflow:hidden on body doesn't block
+    // touchmove, so we also intercept and cancel those events on the document
+    // while locked — but allow them to pass through inside scrollable modal content.
     window._ppScrollLocks = 0;
+    window._ppTouchLockHandler = function(e) {
+      // Walk up from the touch target; if we hit a scrollable modal element, allow it.
+      var el = e.target;
+      while (el && el !== document.body) {
+        var style = window.getComputedStyle(el);
+        var overflow = style.overflowY;
+        if ((overflow === 'auto' || overflow === 'scroll') && el.scrollHeight > el.clientHeight) {
+          return; // inside a scrollable modal region — let it scroll
+        }
+        el = el.parentElement;
+      }
+      e.preventDefault();
+    };
     window.acquireScrollLock = function() {
       window._ppScrollLocks++;
       document.body.classList.add('scroll-locked');
+      if (window._ppScrollLocks === 1) {
+        document.addEventListener('touchmove', window._ppTouchLockHandler, { passive: false });
+      }
     };
     window.releaseScrollLock = function() {
       if (window._ppScrollLocks > 0) window._ppScrollLocks--;
-      if (window._ppScrollLocks === 0) document.body.classList.remove('scroll-locked');
+      if (window._ppScrollLocks === 0) {
+        document.body.classList.remove('scroll-locked');
+        document.removeEventListener('touchmove', window._ppTouchLockHandler, { passive: false });
+      }
     };
 
     // Flip light/dark, persist the choice, and keep the toggle icon + browser
