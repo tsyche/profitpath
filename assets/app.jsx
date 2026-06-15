@@ -1915,14 +1915,24 @@ document.addEventListener('click', (e) => {
   const el = e.target.closest('.copy-on-click');
   if (!el) return;
   el.select();
-  // Visual feedback fires immediately regardless of clipboard permission
   el.classList.add('copy-on-click--copied');
   setTimeout(() => el.classList.remove('copy-on-click--copied'), 1500);
-  navigator.clipboard?.writeText(el.value).then(() => {
+
+  const val = el.value;
+  // Guard: optional-chaining alone is not safe to chain .then() on — check explicitly
+  if (typeof navigator.clipboard?.writeText === 'function') {
+    navigator.clipboard.writeText(val).then(() => {
+      showToast('Copied to clipboard!');
+    }).catch(() => {
+      // Permission denied or API unavailable — fall back to selection + execCommand
+      try { document.execCommand('copy'); } catch { /* */ }
+      showToast('Copied to clipboard!');
+    });
+  } else {
+    // No async Clipboard API — execCommand works because text is already selected
+    try { document.execCommand('copy'); } catch { /* */ }
     showToast('Copied to clipboard!');
-  }).catch(() => {
-    showToast('Select all and press Ctrl+C / Cmd+C to copy', 'info');
-  });
+  }
 });
 
 // Load scenario from URL first (if present), then localStorage
@@ -3349,27 +3359,17 @@ function showHelpMenu() {
     ]
   });
 
-  // Add event listeners after dialog is created
-  setTimeout(() => {
-    document.querySelectorAll('.help-menu-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const action = e.currentTarget.dataset.action;
-        helpDialog.remove();
-
-        setTimeout(() => {
-          if (action === 'tour') {
-            startGuidedTour();
-          } else if (action === 'faq') {
-            showQuickReference();
-          } else if (action === 'industry') {
-            showIndustrySelector();
-          } else if (action === 'tooltips') {
-            if (tipsOn) hideContextualHelp(); else showContextualHelp();
-          }
-        }, 100);
-      });
-    });
-  }, 100);
+  // Delegated listener on the dialog element — no setTimeout needed
+  helpDialog.addEventListener('click', (e) => {
+    const btn = e.target.closest('.help-menu-btn');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    helpDialog.remove();
+    if (action === 'tour') startGuidedTour();
+    else if (action === 'faq') showQuickReference();
+    else if (action === 'industry') showIndustrySelector();
+    else if (action === 'tooltips') { if (tipsOn) hideContextualHelp(); else showContextualHelp(); }
+  });
 
   document.body.appendChild(helpDialog);
 }
