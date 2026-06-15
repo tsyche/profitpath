@@ -335,6 +335,12 @@
 
 
 
+  <!-- Read-only mode banner — shown when ?readonly=1 is present in the URL -->
+  <div id="ppReadOnlyBanner" class="pp-readonly-banner" hidden>
+    <span>👁 View Only</span>
+    <span class="pp-readonly-banner-sub">Inputs are locked. <a href="/" class="pp-readonly-start-link">Start your own →</a></span>
+  </div>
+
   <div class="grid">
     <!-- Validation Messages -->
     <div class="validation-container" id="validationContainer" style="display: none; grid-column: 1 / -1;"></div>
@@ -427,6 +433,17 @@
               <div class="hint">Used only in Forecasting mode.</div>
             </div>
           </div>
+        </div>
+
+        <!-- Presentation notes: editable in normal mode, displayed prominently in read-only mode -->
+        <div class="scenario-notes-wrap section-box">
+          <label class="scenario-notes-label" for="scenarioNotes">Presentation Notes
+            <span class="scenario-notes-hint">Optional context for anyone you share this with</span>
+          </label>
+          <textarea id="scenarioNotes" class="scenario-notes-input" rows="3"
+            placeholder="Add notes, context, or assumptions to include when sharing this scenario…"
+            maxlength="2000"></textarea>
+          <p id="scenarioNotesDisplay" class="scenario-notes-display" hidden></p>
         </div>
 
         <div class="section-box offerings-section">

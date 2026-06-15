@@ -161,7 +161,8 @@ describe('Fuzz: sanitizeScenarioState', () => {
       const allowed = new Set([
         'mode', 'offerings', 'fullTimeEmployees', 'partTimeEmployees',
         'fullTimeEmployeePay', 'partTimeEmployeePay', 'monthlyCosts',
-        'productiveUtilizationPct', 'targetUtilizationPct', 'lockMix', 'loadedTemplate'
+        'productiveUtilizationPct', 'targetUtilizationPct', 'lockMix', 'loadedTemplate',
+        'notes'
       ]);
       for (const key of Object.keys(result)) {
         expect(allowed.has(key), `unexpected key ${key} at iteration=${i}`).toBe(true);

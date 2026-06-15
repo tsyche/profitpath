@@ -68,7 +68,8 @@ export function sanitizeScenarioState(data) {
     productiveUtilizationPct: toFiniteNumber(data.productiveUtilizationPct, 80, 1, 100),
     targetUtilizationPct: toFiniteNumber(data.targetUtilizationPct, 75, 1, 150),
     lockMix: data.lockMix === true,
-    loadedTemplate: typeof data.loadedTemplate === 'string' ? data.loadedTemplate.slice(0, 100) : null
+    loadedTemplate: typeof data.loadedTemplate === 'string' ? data.loadedTemplate.slice(0, 100) : null,
+    notes: typeof data.notes === 'string' ? data.notes.slice(0, 2000) : ''
   };
 }
 
@@ -105,22 +106,57 @@ function copyToClipboardFallback(text) {
 }
 
 export function shareScenario() {
-  const shareUrl = encodeScenarioToURL(window.state);
-  if (!shareUrl) {
+  const editUrl = encodeScenarioToURL(window.state);
+  const viewUrl = encodeScenarioToURL(window.state, { readonly: true });
+  if (!editUrl || !viewUrl) {
     showToast('Failed to generate share link', 'error');
     return;
   }
   updateSocialMetaTags(window.state);
-  const handleCopySuccess = () => showToast('Share link copied to clipboard!', 'success');
-  const handleCopyError = () => showToast('Share link: ' + shareUrl, 'info');
 
-  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-    navigator.clipboard.writeText(shareUrl)
-      .then(handleCopySuccess)
-      .catch(() => copyToClipboardFallback(shareUrl).then(handleCopySuccess).catch(handleCopyError));
-  } else {
-    copyToClipboardFallback(shareUrl).then(handleCopySuccess).catch(handleCopyError);
-  }
+  const copyLink = (url, label) => {
+    const success = () => showToast(label + ' link copied!', 'success');
+    const fallback = () => showToast('Link: ' + url, 'info');
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(url).then(success).catch(() => copyToClipboardFallback(url).then(success).catch(fallback));
+    } else {
+      copyToClipboardFallback(url).then(success).catch(fallback);
+    }
+  };
+
+  const esc = escapeHtml;
+  const linkRow = (label, desc, url, btnId) => `
+    <div class="share-option-row">
+      <div class="share-option-info">
+        <strong>${esc(label)}</strong>
+        <span class="share-option-desc">${esc(desc)}</span>
+      </div>
+      <div class="share-option-url">
+        <input type="text" readonly value="${esc(url)}" class="copy-on-click share-url-input" aria-label="${esc(label)} link">
+        <button class="btn small share-copy-btn" id="${btnId}" type="button">Copy</button>
+      </div>
+    </div>`;
+
+  const overlay = createModal({
+    title: '🔗 Share Scenario',
+    content: `
+      <p style="margin-top:0;color:var(--muted);font-size:13px">Choose how to share this scenario:</p>
+      ${linkRow('View Only', 'Inputs locked — ideal for client presentations', viewUrl, 'shareViewOnlyBtn')}
+      ${linkRow('Editable', 'Recipient can adjust all inputs freely', editUrl, 'shareEditableBtn')}
+    `,
+    size: 'medium'
+  });
+
+  overlay.querySelector('#shareViewOnlyBtn').addEventListener('click', () => copyLink(viewUrl, 'View-only'));
+  overlay.querySelector('#shareEditableBtn').addEventListener('click', () => copyLink(editUrl, 'Editable'));
+
+  // Click-to-copy on the URL inputs
+  overlay.querySelectorAll('.share-url-input').forEach(input => {
+    input.addEventListener('click', () => {
+      input.select();
+      copyLink(input.value, 'Link');
+    });
+  });
 }
 
 // Quote a CSV cell: double embedded quotes, and prefix a ' on values starting
@@ -276,17 +312,23 @@ function updateSocialMetaTags(state) {
   document.head.appendChild(metaUrl);
 }
 
-export function encodeScenarioToURL(state) {
+export function encodeScenarioToURL(state, { readonly = false } = {}) {
   try {
     const serialized = JSON.stringify(state);
     // URI-encode before btoa so non-Latin1 characters (e.g. unicode offering
     // names) don't make btoa throw
     const base64 = btoa(encodeURIComponent(serialized));
-    return window.location.origin + window.location.pathname + '?scenario=' + encodeURIComponent(base64);
+    let url = window.location.origin + window.location.pathname + '?scenario=' + encodeURIComponent(base64);
+    if (readonly) url += '&readonly=1';
+    return url;
   } catch (e) {
     console.error('Failed to encode scenario:', e);
     return null;
   }
+}
+
+export function isReadOnlyURL() {
+  return new URLSearchParams(window.location.search).get('readonly') === '1';
 }
 
 export function decodeScenarioFromURL() {
