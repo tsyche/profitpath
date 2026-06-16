@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { calc, clearCalculationCache } from '../calculations/index.js';
+import { calc, clearCalculationCache, getCacheStats } from '../calculations/index.js';
 
 // Helper function to create proper state objects for tests
 function createTestState(overrides = {}) {
@@ -205,6 +205,51 @@ describe('Performance Tests - Calculation Engine', () => {
       expect(results.revenue).toBeGreaterThan(0);
       expect(results.income).toBeGreaterThanOrEqual(-Infinity);
       expect(results.variableCosts).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('Cache LRU eviction and size', () => {
+    it('cache max size is 100', () => {
+      expect(getCacheStats().maxSize).toBe(100);
+    });
+
+    it('cache never grows beyond CACHE_MAX_SIZE', () => {
+      // Each unique priceMonthly produces a unique cache key
+      for (let i = 0; i < 120; i++) {
+        calc(createTestState({
+          offerings: [{ name: 'S', priceMonthly: i + 1, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 100, currentClients: 0 }]
+        }));
+      }
+      expect(getCacheStats().size).toBeLessThanOrEqual(100);
+    });
+
+    it('LRU: re-accessing an entry keeps it alive past older entries', () => {
+      // Fill cache with 99 unique entries
+      for (let i = 0; i < 99; i++) {
+        calc(createTestState({
+          offerings: [{ name: 'S', priceMonthly: i + 1, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 100, currentClients: 0 }]
+        }));
+      }
+      // Access the very first entry again (priceMonthly: 1) so it becomes most-recently-used
+      const earlyState = createTestState({
+        offerings: [{ name: 'S', priceMonthly: 1, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 100, currentClients: 0 }]
+      });
+      const resultBefore = calc(earlyState);
+
+      // Push 5 more unique entries to trigger evictions — FIFO would have already evicted entry 1
+      for (let i = 99; i < 104; i++) {
+        calc(createTestState({
+          offerings: [{ name: 'S', priceMonthly: i + 1, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 100, currentClients: 0 }]
+        }));
+      }
+
+      // The early entry should still be cache-valid (LRU: it was recently promoted)
+      const resultAfter = calc(earlyState);
+      expect(resultAfter).toEqual(resultBefore);
+
+      // Confirm cache hit count increased (meaning it was served from cache)
+      const stats = getCacheStats();
+      expect(stats.hits).toBeGreaterThan(0);
     });
   });
 

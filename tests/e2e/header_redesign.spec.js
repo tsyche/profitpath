@@ -171,13 +171,13 @@ test.describe('Header redesign — modals are theme-matched (light)', () => {
 });
 
 test.describe('Header redesign — export options & mobile drawer', () => {
-  test('all seven export formats are present and visible (no gating in the menu)', async ({ page }) => {
+  test('all eight export formats are present and visible (no gating in the menu)', async ({ page }) => {
     await setup(page);
     await page.locator('#appMenuBtn').click();
     await page.locator('.app-drawer .drawer-item', { hasText: 'Export' }).click();
     const items = page.locator('#dwExport .drawer-subitem');
-    await expect(items).toHaveCount(7);
-    for (const fmt of ['csv', 'excel', 'pdf', 'html', 'email', 'embed', 'schedule']) {
+    await expect(items).toHaveCount(8);
+    for (const fmt of ['csv', 'excel', 'pdf', 'html', 'email', 'embed', 'schedule', 'financial-report']) {
       await expect(
         page.locator(`#dwExport .drawer-subitem[onclick*="${fmt}"]`)
       ).toBeVisible();
