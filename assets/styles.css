@@ -4573,7 +4573,8 @@ input[type="checkbox"] {
      under the header (that was the big gap). Put the bottom-bar scroll clearance
      on .grid, which is the element that actually scrolls behind the bottom bar. */
   #main-content.page { padding-bottom: 0 !important; }
-  .grid { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  /* !important needed to beat the unconditional .grid padding-bottom rule above (line ~864) */
+  .grid { padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important; }
 }
 @media (max-width: 430px) {
   .ab-badge .ab-badge-text { display: none; }   /* very narrow: mode toggle becomes a dot */
