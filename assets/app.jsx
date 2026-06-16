@@ -182,6 +182,7 @@ const exportAsHTML = (...args) => (misc && typeof misc.exportAsHTML === 'functio
 const shareViaEmail = (...args) => (misc && typeof misc.shareViaEmail === 'function') ? misc.shareViaEmail(...args) : undefined;
 const showEmbedCode = (...args) => (misc && typeof misc.showEmbedCode === 'function') ? misc.showEmbedCode(...args) : undefined;
 const showScheduleDialog = (...args) => (misc && typeof misc.showScheduleDialog === 'function') ? misc.showScheduleDialog(...args) : undefined;
+const exportAsFinancialReport = (...args) => (misc && typeof misc.exportAsFinancialReport === 'function') ? misc.exportAsFinancialReport(...args) : undefined;
 const shareScenario = (...args) => (misc && typeof misc.shareScenario === 'function') ? misc.shareScenario(...args) : undefined;
 const loadTestScenarios = (...args) => (misc && typeof misc.loadTestScenarios === 'function') ? misc.loadTestScenarios(...args) : undefined;
 const loadSpecificTestScenario = (...args) => (misc && typeof misc.loadSpecificTestScenario === 'function') ? misc.loadSpecificTestScenario(...args) : undefined;
@@ -424,6 +425,7 @@ function onTableInput(e) {
   }
   try {
     const metrics = calc(state);
+    window.lastMetrics = metrics;
     updateOutputs(metrics);
     updateValidationDisplay(); // Update validation messages after calculations
   } catch (e) {
@@ -506,6 +508,7 @@ function render() {
   let metrics;
   try {
     metrics = calc(state);
+    window.lastMetrics = metrics;
   } catch (e) {
     console.error('calc() failed:', e.message);
     // Fallback: use hardcoded results if calc fails
@@ -1228,6 +1231,9 @@ document.querySelectorAll('.export-option').forEach(option => {
         break;
       case 'schedule':
         showScheduleDialog();
+        break;
+      case 'financial-report':
+        exportAsFinancialReport();
         break;
     }
   });

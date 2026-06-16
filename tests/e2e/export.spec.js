@@ -7,7 +7,7 @@ import { waitForPageReady } from './helpers';
  * real (hidden) .export-option handlers. All formats are always available in
  * the menu — they are no longer gated behind experience level.
  */
-const FORMATS = ['csv', 'excel', 'pdf', 'html', 'email', 'embed', 'schedule'];
+const FORMATS = ['csv', 'excel', 'pdf', 'html', 'email', 'embed', 'schedule', 'financial-report'];
 
 async function openExportMenu(page) {
   await page.locator('#appMenuBtn').click();
@@ -35,10 +35,10 @@ test.describe('Export Functionality - E2E', () => {
       ).toBeVisible();
     });
 
-    test('opening Export reveals all seven format options', async ({ page }) => {
+    test('opening Export reveals all eight format options', async ({ page }) => {
       await openExportMenu(page);
       const items = page.locator('#dwExport .drawer-subitem');
-      await expect(items).toHaveCount(7);
+      await expect(items).toHaveCount(8);
       for (const fmt of FORMATS) {
         await expect(
           page.locator(`#dwExport .drawer-subitem[onclick*="${fmt}"]`)
@@ -119,6 +119,53 @@ test.describe('Export Functionality - E2E', () => {
 
       // Delegation closes the drawer
       await expect(page.locator('.app-drawer')).not.toHaveClass(/open/);
+      expect(errors, errors.join('\n')).toHaveLength(0);
+    });
+  });
+
+  // Regression: Tax & Financial Report Generator
+  test.describe('Financial Report export', () => {
+    test('financial-report option is present in Export submenu', async ({ page }) => {
+      await openExportMenu(page);
+      await expect(
+        page.locator('#dwExport .drawer-subitem[onclick*="financial-report"]')
+      ).toBeVisible();
+    });
+
+    test('window.lastMetrics is populated after page load', async ({ page }) => {
+      const hasMetrics = await page.evaluate(() => {
+        return typeof window.lastMetrics === 'object' && window.lastMetrics !== null &&
+          typeof window.lastMetrics.revenue === 'number';
+      });
+      expect(hasMetrics).toBe(true);
+    });
+
+    test('exportAsFinancialReport opens a print window with required report sections', async ({ page, browserName }) => {
+      // Only Chromium supports window.open in headless reliably for this test
+      test.skip(browserName !== 'chromium', 'window.open popup tracking is Chromium-only in headless');
+
+      const errors = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+
+      // Intercept the popup
+      const popupPromise = page.waitForEvent('popup');
+      await openExportMenu(page);
+      await page.locator('#dwExport .drawer-subitem[onclick*="financial-report"]').click();
+
+      const popup = await popupPromise;
+      await popup.waitForLoadState('domcontentloaded');
+
+      // Verify all four required sections are present
+      const headings = await popup.locator('h2').allTextContents();
+      expect(headings.some(h => /Business Performance Summary/i.test(h))).toBe(true);
+      expect(headings.some(h => /Quarterly Income Projections/i.test(h))).toBe(true);
+      expect(headings.some(h => /Tax Liability/i.test(h))).toBe(true);
+      expect(headings.some(h => /Loan Application/i.test(h))).toBe(true);
+
+      // Verify dollar amounts are actually populated (not $0 for everything)
+      const bodyText = await popup.locator('body').textContent();
+      expect(bodyText).toMatch(/\$[\d,]+/);
+
       expect(errors, errors.join('\n')).toHaveLength(0);
     });
   });

@@ -22,7 +22,7 @@ const MAX_COUNT = 1e6;
 
 // Calculation cache to avoid redundant computations
 const calculationCache = new Map();
-const CACHE_MAX_SIZE = 50;
+const CACHE_MAX_SIZE = 100;
 
 // Performance metrics
 let cacheHits = 0;
@@ -35,6 +35,14 @@ let totalCalcs = 0;
  */
 export function clearCalculationCache() {
   calculationCache.clear();
+}
+
+function cacheSet(key, value) {
+  calculationCache.set(key, value);
+  if (calculationCache.size > CACHE_MAX_SIZE) {
+    // Evict least recently used (Map insertion order = oldest first after LRU promotion)
+    calculationCache.delete(calculationCache.keys().next().value);
+  }
 }
 
 /**
@@ -395,9 +403,11 @@ export function calc(stateInput, options = {}) {
   // Generate cache key for this calculation
   const cacheKey = generateCacheKey(s);
 
-  // Check cache first
+  // Check cache first (LRU: delete + re-insert moves the entry to Map tail)
   if (enableCache && calculationCache.has(cacheKey)) {
     const cached = calculationCache.get(cacheKey);
+    calculationCache.delete(cacheKey);
+    calculationCache.set(cacheKey, cached);
     cacheHits++;
     if (debug) console.log('Using cached calculation result');
     lastCalcMs = performance.now() - startTime;
@@ -500,14 +510,7 @@ export function calc(stateInput, options = {}) {
       ...(debug ? { _intermediate: intermediate } : {})
     };
 
-    if (enableCache) {
-      calculationCache.set(cacheKey, result);
-      if (calculationCache.size > CACHE_MAX_SIZE) {
-        // Remove oldest entry (simple FIFO)
-        const firstKey = calculationCache.keys().next().value;
-        calculationCache.delete(firstKey);
-      }
-    }
+    if (enableCache) cacheSet(cacheKey, result);
 
     return result;
   }
@@ -546,14 +549,7 @@ export function calc(stateInput, options = {}) {
     ...(debug ? { _intermediate: intermediate } : {})
   };
 
-  // Cache the result
-  if (enableCache) {
-    calculationCache.set(cacheKey, result);
-    if (calculationCache.size > CACHE_MAX_SIZE) {
-      const firstKey = calculationCache.keys().next().value;
-      calculationCache.delete(firstKey);
-    }
-  }
+  if (enableCache) cacheSet(cacheKey, result);
 
   lastCalcMs = performance.now() - startTime;
 

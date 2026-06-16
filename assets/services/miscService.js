@@ -971,6 +971,179 @@ export function exportAsHTML() {
   trackEvent('export', { format: 'html' });
 }
 
+export function exportAsFinancialReport() {
+  const state = window.state;
+  const metrics = window.lastMetrics || (window.calc ? window.calc(state) : null);
+
+  const isCapacitor = window.location.origin === 'http://localhost' || window.location.origin === 'capacitor://localhost';
+  if (isCapacitor) {
+    showNotification('Financial report printing unavailable in the app — use HTML export instead', 'info');
+    return;
+  }
+
+  if (!metrics) {
+    showNotification('Run a calculation first before exporting the financial report', 'error');
+    return;
+  }
+
+  const fmt = (n) => '$' + Math.round(n).toLocaleString();
+  const fmtPct = (n) => (typeof n === 'number' ? n.toFixed(1) : '0.0') + '%';
+  const today = new Date();
+  const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  const year = today.getFullYear();
+
+  const grossProfit = metrics.revenue - metrics.variableCosts;
+  const grossMarginPct = metrics.revenue > 0 ? (grossProfit / metrics.revenue * 100) : 0;
+  const netMarginPct = metrics.revenue > 0 ? (metrics.income / metrics.revenue * 100) : 0;
+  const totalTax = (metrics.seTax || 0) + (metrics.federalTax || 0);
+  const qRev = Math.round(metrics.revenue / 4);
+  const qIncome = Math.round(metrics.income / 4);
+  const qVariableCosts = Math.round((metrics.variableCosts || 0) / 4);
+  const qFixedCosts = Math.round((metrics.totalFixedCosts || 0) / 4);
+
+  const quarterRows = [1, 2, 3, 4].map(q => `
+    <tr>
+      <td>Q${q} ${year}</td>
+      <td>${fmt(qRev)}</td>
+      <td>${fmt(qVariableCosts)}</td>
+      <td>${fmt(qFixedCosts)}</td>
+      <td>${fmt(qIncome)}</td>
+      <td>${fmt(metrics.quarterlyEst || 0)}</td>
+    </tr>`).join('');
+
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    showNotification('Please allow popups to print the financial report', 'error');
+    return;
+  }
+
+  printWindow.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ProfitPath Financial Report</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 13px; color: #222; padding: 32px; max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 22px; color: #1a1a2e; border-bottom: 3px solid #6366f1; padding-bottom: 8px; margin-bottom: 4px; }
+    .meta { color: #666; font-size: 12px; margin-bottom: 28px; }
+    h2 { font-size: 15px; color: #1a1a2e; background: #f0f0ff; padding: 6px 10px; border-left: 4px solid #6366f1; margin: 24px 0 12px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    th { background: #6366f1; color: #fff; padding: 8px 10px; text-align: left; font-size: 12px; }
+    td { padding: 7px 10px; border-bottom: 1px solid #e5e7eb; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #fafafa; }
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+    .kpi { background: #f8f9ff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 14px; }
+    .kpi-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: .05em; }
+    .kpi-value { font-size: 20px; font-weight: bold; color: #1a1a2e; margin-top: 4px; }
+    .kpi-sub { font-size: 11px; color: #888; margin-top: 2px; }
+    .positive { color: #16a34a; }
+    .negative { color: #dc2626; }
+    .tax-note { font-size: 11px; color: #888; margin-top: 10px; font-style: italic; }
+    .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #aaa; }
+    @media print { body { padding: 16px; } }
+  </style>
+</head>
+<body>
+  <h1>ProfitPath Financial Report</h1>
+  <p class="meta">Generated ${dateStr} &nbsp;|&nbsp; Mode: ${metrics.mode === 'forecast' ? 'Forecast' : 'Current'} &nbsp;|&nbsp; ${Math.round(metrics.clients || 0)} clients</p>
+
+  <h2>Business Performance Summary</h2>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Annual Revenue</div>
+      <div class="kpi-value">${fmt(metrics.revenue)}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Net Profit (Pre-Tax)</div>
+      <div class="kpi-value ${metrics.income >= 0 ? 'positive' : 'negative'}">${fmt(metrics.income)}</div>
+      <div class="kpi-sub">${fmtPct(netMarginPct)} net margin</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Take-Home (After Tax)</div>
+      <div class="kpi-value">${fmt(metrics.takeHome || 0)}</div>
+      <div class="kpi-sub">${metrics.effectiveRate || 0}% effective tax rate</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Gross Profit</div>
+      <div class="kpi-value">${fmt(grossProfit)}</div>
+      <div class="kpi-sub">${fmtPct(grossMarginPct)} gross margin</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Total Fixed Costs</div>
+      <div class="kpi-value">${fmt(metrics.totalFixedCosts)}</div>
+      <div class="kpi-sub">Payroll + overhead</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Break-Even Clients</div>
+      <div class="kpi-value">${metrics.breakEvenClients === Infinity ? 'N/A' : Math.ceil(metrics.breakEvenClients || 0)}</div>
+      <div class="kpi-sub">at ${fmtPct(metrics.capacityPct || 0)} utilization</div>
+    </div>
+  </div>
+  <table>
+    <tr><th>Metric</th><th>Annual</th><th>Monthly Avg</th></tr>
+    <tr><td>Revenue</td><td>${fmt(metrics.revenue)}</td><td>${fmt(metrics.revenue / 12)}</td></tr>
+    <tr><td>Variable Costs</td><td>${fmt(metrics.variableCosts)}</td><td>${fmt(metrics.variableCosts / 12)}</td></tr>
+    <tr><td>Gross Profit</td><td>${fmt(grossProfit)}</td><td>${fmt(grossProfit / 12)}</td></tr>
+    <tr><td>Fixed Costs (Overhead)</td><td>${fmt(metrics.annualFixedCosts || 0)}</td><td>${fmt((metrics.annualFixedCosts || 0) / 12)}</td></tr>
+    <tr><td>Payroll</td><td>${fmt(metrics.annualPayroll || 0)}</td><td>${fmt((metrics.annualPayroll || 0) / 12)}</td></tr>
+    <tr><td>Net Profit (Pre-Tax)</td><td>${fmt(metrics.income)}</td><td>${fmt(metrics.income / 12)}</td></tr>
+  </table>
+
+  <h2>Quarterly Income Projections — ${year}</h2>
+  <table>
+    <tr><th>Quarter</th><th>Revenue</th><th>Variable Costs</th><th>Fixed Costs</th><th>Net Income</th><th>Est. Tax Payment</th></tr>
+    ${quarterRows}
+    <tr style="font-weight:bold;background:#f0f0ff">
+      <td>Full Year</td>
+      <td>${fmt(metrics.revenue)}</td>
+      <td>${fmt(metrics.variableCosts)}</td>
+      <td>${fmt(metrics.totalFixedCosts)}</td>
+      <td>${fmt(metrics.income)}</td>
+      <td>${fmt(totalTax)}</td>
+    </tr>
+  </table>
+  <p class="tax-note">Note: Quarterly figures assume uniform distribution. Actual results may vary with seasonality.</p>
+
+  <h2>Tax Liability Estimate — ${year}</h2>
+  <table>
+    <tr><th>Tax Component</th><th>Amount</th><th>Notes</th></tr>
+    <tr><td>Self-Employment Tax (SE)</td><td>${fmt(metrics.seTax || 0)}</td><td>15.3% on first $168,600; 2.9% above (on 92.35% of income)</td></tr>
+    <tr><td>Federal Income Tax</td><td>${fmt(metrics.federalTax || 0)}</td><td>2024 brackets, single filer; deducts ½ SE tax + $14,600 standard deduction</td></tr>
+    <tr style="font-weight:bold"><td>Total Estimated Tax</td><td>${fmt(totalTax)}</td><td>${metrics.effectiveRate || 0}% effective rate on gross income</td></tr>
+    <tr><td>Quarterly Payment (Due)</td><td>${fmt(metrics.quarterlyEst || 0)}</td><td>Apr 15 · Jun 15 · Sep 15 · Jan 15</td></tr>
+    <tr><td>Estimated Take-Home</td><td>${fmt(metrics.takeHome || 0)}</td><td>Annual net after all taxes</td></tr>
+  </table>
+  <p class="tax-note">Disclaimer: These are simplified estimates for planning purposes only. Consult a tax professional for filing.</p>
+
+  <h2>Business Performance Summary — Loan Application</h2>
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Annual Gross Revenue</td><td>${fmt(metrics.revenue)}</td></tr>
+    <tr><td>Gross Profit Margin</td><td>${fmtPct(grossMarginPct)}</td></tr>
+    <tr><td>Net Profit Margin</td><td>${fmtPct(netMarginPct)}</td></tr>
+    <tr><td>Break-Even Revenue</td><td>${metrics.breakEvenRevenue === Infinity ? 'N/A' : fmt(metrics.breakEvenRevenue)}</td></tr>
+    <tr><td>Number of Service Clients</td><td>${Math.round(metrics.clients || 0)}</td></tr>
+    <tr><td>Capacity Utilization</td><td>${fmtPct(metrics.capacityPct || 0)}</td></tr>
+    <tr><td>Annual Payroll</td><td>${fmt(metrics.annualPayroll || 0)}</td></tr>
+    <tr><td>Annual Overhead</td><td>${fmt(metrics.annualFixedCosts || 0)}</td></tr>
+    <tr><td>Owner Pre-Tax Income</td><td>${fmt(metrics.income)}</td></tr>
+  </table>
+
+  <div class="footer">Generated by ProfitPath &nbsp;|&nbsp; All figures are projections based on inputs provided. Not financial advice.</div>
+</body>
+</html>`);
+
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+    trackEvent('export', { format: 'financial-report' });
+  }, 500);
+  showNotification('Financial report print dialog opened!', 'success');
+}
+
 export function shareViaEmail() {
   const state = window.state;
   const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
