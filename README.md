@@ -26,7 +26,7 @@ Client-side profitability and capacity simulator for recurring service businesse
 - **Collaboration**: Shareable URLs for sharing scenarios with stakeholders, automatic URL loading on page load
 - **Templates**: Industry-specific templates for consulting, cleaning, landscaping, handyman, fitness, and photography services
 - **UI/UX**: Responsive design, mobile-optimized layout, collapsible debug panel, utilization gauge, profit waterfall charts, polished visual design
-- **Test Coverage**: 315 unit tests (including fuzz tests) and 170 e2e runs across chromium and firefox
+- **Test Coverage**: 315 unit tests (including fuzz tests) and 170 Playwright e2e runs across chromium and firefox — both run in CI on every push
 
 ## Quick Start
 
