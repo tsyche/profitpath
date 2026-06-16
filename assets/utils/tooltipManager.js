@@ -26,7 +26,7 @@ function setupTooltips() {
   try {
     const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
     tooltipsEnabled = settings.showTooltips !== false;
-  } catch (e) {
+  } catch {
     // Default to enabled if settings can't be read
     tooltipsEnabled = true;
   }
@@ -68,7 +68,7 @@ function listenForSettingChanges() {
         if (!tooltipsEnabled) {
           hideTooltip();
         }
-      } catch (err) {
+      } catch {
         // Ignore parse errors
       }
     }

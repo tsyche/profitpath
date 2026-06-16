@@ -22,14 +22,6 @@ export function createModal({ title, content, buttons = [], size = 'medium', id 
   modal.className = 'modal-content modal';
   if (id) modal.id = id;
 
-  // Size variations
-  const sizeStyles = {
-    small: 'max-width: 400px;',
-    medium: 'max-width: 500px;',
-    large: 'max-width: 700px;',
-    full: 'max-width: 90%;'
-  };
-
   modal.style.cssText = `
     background: var(--surface);
     border: 1px solid var(--border-strong);

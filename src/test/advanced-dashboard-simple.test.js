@@ -397,20 +397,12 @@ describe('AdvancedAnalyticsDashboard', () => {
   });
 
   describe('Placeholder Methods', () => {
-    it('should have placeholder refresh methods', () => {
-      const consoleSpy = vi.spyOn(console, 'log');
-
-      dashboard.refreshUsage();
-      dashboard.refreshFeedback();
-      dashboard.refreshPerformance();
-      dashboard.refreshInsights();
-
-      expect(consoleSpy).toHaveBeenCalledWith('Refreshing usage view...');
-      expect(consoleSpy).toHaveBeenCalledWith('Refreshing feedback view...');
-      expect(consoleSpy).toHaveBeenCalledWith('Refreshing performance view...');
-      expect(consoleSpy).toHaveBeenCalledWith('Refreshing insights view...');
-
-      consoleSpy.mockRestore();
+    it('should have no-op placeholder refresh methods', () => {
+      // These are stub methods — verify they exist and don't throw
+      expect(() => dashboard.refreshUsage()).not.toThrow();
+      expect(() => dashboard.refreshFeedback()).not.toThrow();
+      expect(() => dashboard.refreshPerformance()).not.toThrow();
+      expect(() => dashboard.refreshInsights()).not.toThrow();
     });
   });
 

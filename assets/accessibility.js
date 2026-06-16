@@ -118,7 +118,7 @@ function setupModalFocusTrap(modal) {
 /**
  * Announce messages to screen readers
  */
-function announceToScreenReader(message, priority = 'polite') {
+function _announceToScreenReader(message, priority = 'polite') {
   const announcement = document.createElement('div');
   announcement.setAttribute('role', 'status');
   announcement.setAttribute('aria-live', priority);

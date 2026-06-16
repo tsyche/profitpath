@@ -147,8 +147,7 @@ export function formatWithSettings(value, settings = {}) {
   const {
     currency = 'USD',
     locale = 'en-US',
-    decimalPrecision = 2,
-    thousandsSeparator = true
+    decimalPrecision = 2
   } = settings;
 
   return formatCurrency(value, currency, locale, decimalPrecision);

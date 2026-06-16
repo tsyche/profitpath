@@ -1,5 +1,5 @@
 // Chart utilities
-export function lazyLoadChart(chartId, data, options = {}) {
+export function lazyLoadChart(chartId, data, _options = {}) {
   const canvas = document.getElementById(chartId);
   if (!canvas) return null;
 

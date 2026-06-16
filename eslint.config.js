@@ -105,6 +105,14 @@ export default [
     }
   },
   {
+    // Test files: console.log is fine for debugging, unused vars are common in mocks/fixtures
+    files: ['src/test/**/*.js', 'src/**/*.test.js', 'tests/**/*.js', 'tests/**/*.spec.js'],
+    rules: {
+      'no-console': 'off',
+      'no-unused-vars': 'off'
+    }
+  },
+  {
     ignores: [
       'dist/',
       'node_modules/',

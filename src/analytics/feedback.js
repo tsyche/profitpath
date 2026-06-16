@@ -118,8 +118,6 @@ This feedback was submitted via the ProfitPath feedback form.
       // Open email client
       window.open(mailtoLink, '_blank');
 
-      console.log('Email client opened for feedback submission');
-
     } catch (error) {
       console.error('Failed to send email notification:', error);
     }

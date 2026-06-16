@@ -1,5 +1,5 @@
 // Miscellaneous Helpers and UI Logic
-/* global render calc updateOutputs updateValidationDisplay Chart */
+/* global render calc Chart */
 
 // Capacitor WebView serves assets from http://localhost — use the real URL instead
 const PRODUCTION_URL = 'https://tsyche.github.io/profitpath';
@@ -8,9 +8,9 @@ export function getShareBase() {
   if (o === 'http://localhost' || o === 'capacitor://localhost') return PRODUCTION_URL + '/';
   return o + window.location.pathname;
 }
-import { safeParseNumber, clamp } from '../utils/helpers';
+import { clamp } from '../utils/helpers';
 import { showToast } from './modalService.js';
-import { createModal, closeCurrentModal } from '../components/Modal.js';
+import { createModal } from '../components/Modal.js';
 import { persistState } from './stateManager.js';
 import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizations, updateBreakEvenAnalysis } from './visualizationService.js';
 
@@ -50,7 +50,6 @@ function loadScript(src) {
 
 const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
 const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
-const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 
 // Utility function to clamp values between min and max
 // Coerce a value to a finite number within [min, max], or return fallback
@@ -247,50 +246,6 @@ export function exportAsCSV() {
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   downloadOrShare(blob, 'profitpath-' + new Date().toISOString().split('T')[0] + '.csv');
   trackEvent('export', { format: 'csv' });
-}
-
-function showShareErrorModal() {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Share Failed</h3>
-        <button class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>Could not generate a shareable link for this scenario.</p>
-        <p>Please check your inputs and try again.</p>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  setTimeout(() => {
-    document.body.removeChild(modal);
-  }, 3000);
-}
-
-function showShareSuccessModal(shareUrl) {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.innerHTML = `
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Share Link</h3>
-        <button class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p>Shareable link for this scenario:</p>
-        <input type="text" id="shareUrlInput" value="${shareUrl}" readonly class="copy-on-click" style="width:100%;padding:5px;margin-bottom:6px;box-sizing:border-box;">
-        <p class="copy-field-hint">Click the field to copy</p>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  modal.querySelector('.modal-close').addEventListener('click', () => {
-    document.body.removeChild(modal);
-  });
 }
 
 function copyToClipboard(text) {
@@ -512,17 +467,14 @@ export function listScenarios() {
 
 // Additional functions needed by scenarioService.js
 export function getAllScenarios() {
-  const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
-  console.log('getAllScenarios returning:', scenarios);
-  return scenarios;
+  return JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
 }
 
 export function clearTestScenarios() {
   localStorage.removeItem('profitpath-scenarios');
-  console.log('Test scenarios cleared');
 }
 
-export function showNotification(message, type = 'info') {
+export function showNotification(message, _type = 'info') {
   // Create a simple notification element
   const notification = document.createElement('div');
   notification.className = 'notification';
@@ -539,7 +491,6 @@ export function showNotification(message, type = 'info') {
 export function populateComparisonDropdowns(modalContext = null) {
   // Sort scenarios with natural sort (so "2" comes before "10")
   const scenarios = getAllScenarios().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
-  console.log('Found scenarios:', scenarios.length);
 
   // Find dropdowns - if modalContext provided, search within it first
   let dropdown1 = null;
@@ -548,7 +499,6 @@ export function populateComparisonDropdowns(modalContext = null) {
   if (modalContext) {
     dropdown1 = modalContext.querySelector('#compareScenario1');
     dropdown2 = modalContext.querySelector('#compareScenario2');
-    console.log('Searching within modal context:', { dropdown1: !!dropdown1, dropdown2: !!dropdown2 });
   }
 
   // Fall back to document search if not found in modal
@@ -583,10 +533,7 @@ export function populateComparisonDropdowns(modalContext = null) {
     });
   }
 
-  console.log('Dropdown elements found:', { dropdown1: !!dropdown1, dropdown2: !!dropdown2 });
-
   if (!dropdown1 || !dropdown2) {
-    console.error('Comparison dropdowns not found in DOM');
     return;
   }
 
@@ -606,8 +553,6 @@ export function populateComparisonDropdowns(modalContext = null) {
     option2.textContent = scenario.name;
     dropdown2.appendChild(option2);
   });
-
-  console.log('Dropdowns populated. Options:', dropdown1?.options?.length || 0);
 
   // Restore previously selected values from localStorage
   const savedCompare = JSON.parse(localStorage.getItem('profitpath-compare-selection') || 'null');
@@ -647,7 +592,6 @@ export function closeMobileMenu() {
 
 export function restoreScheduling() {
   // Restore any scheduled report generation
-  console.log('restoreScheduling called');
 }
 
 export function loadScenarioFromURL() {
@@ -764,9 +708,7 @@ export function loadIndustryTemplate(templateId) {
 export function exportAsExcel() {
   const state = window.state;
   const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
-  const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString();
   const fmtPct = (n) => n.toFixed(1) + '%';
-  const fmtNum = (n) => (Math.round(n * 100) / 100).toLocaleString();
 
   const lines = [
     'ProfitPath Analysis Report',
@@ -803,7 +745,6 @@ export function exportAsPDF() {
   // Create a printable HTML version and open print dialog
   const state = window.state;
   const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
-  const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString();
   const fmtPct = (n) => n.toFixed(1) + '%';
 
   // Capacitor WebView blocks window.open — fall through to HTML export instead
@@ -895,7 +836,6 @@ export function exportAsPDF() {
 export function exportAsHTML() {
   const state = window.state;
   const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
-  const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString();
   const fmtPct = (n) => n.toFixed(1) + '%';
 
   const offeringsHtml = state.offerings.map(o => `
@@ -1199,18 +1139,12 @@ export function showScheduleDialog() {
 }
 
 export function loadTestScenarios() {
-  // Placeholder for loading test scenarios
-  console.log('loadTestScenarios called');
 }
 
-export function loadSpecificTestScenario(scenarioKey) {
-  // Placeholder for loading specific test scenario
-  console.log('loadSpecificTestScenario called:', scenarioKey);
+export function loadSpecificTestScenario(_scenarioKey) {
 }
 
 export function updateValidationDisplay() {
-  // Placeholder for updating validation display
-  console.log('updateValidationDisplay called');
 }
 
 export function lazyLoadChart(metrics) {
@@ -1255,32 +1189,10 @@ export function resetSettings() {
 }
 
 // Export functions for analytics and feedback
-export function trackEvent(eventName, properties = {}) {
-  if (!getSetting('analyticsEnabled', true)) return;
-
-  const data = {
-    event: eventName,
-    timestamp: new Date().toISOString(),
-    properties: properties,
-    userAgent: navigator.userAgent,
-    url: window.location.href,
-  };
-
-  // Send to analytics endpoint (placeholder)
-  console.log('Analytics event:', data);
+export function trackEvent(_eventName, _properties = {}) {
 }
 
-export function sendFeedback(rating, comment = '') {
-  const feedback = {
-    rating: rating,
-    comment: comment,
-    timestamp: new Date().toISOString(),
-    userAgent: navigator.userAgent,
-    url: window.location.href,
-  };
-
-  // Send feedback to server (placeholder)
-  console.log('Feedback:', feedback);
+export function sendFeedback(_rating, _comment = '') {
   return true;
 }
 
@@ -1291,7 +1203,7 @@ export function measurePerformance(fn, label) {
   const end = performance.now();
   const duration = end - start;
 
-  console.log(`${label} took ${duration.toFixed(2)}ms`);
+  console.warn(`${label} took ${duration.toFixed(2)}ms`);
 
   // Track performance metrics
   trackEvent('performance', {
@@ -1375,22 +1287,20 @@ export function translate(key, language = null) {
 
 // Export functions for debugging
 export function debugState() {
-  console.group('ProfitPath Debug State');
-  console.log('Current State:', JSON.parse(JSON.stringify(state)));
-  console.log('Settings:', JSON.parse(localStorage.getItem('profitpath-settings') || '{}'));
-  console.log('Scenarios:', JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]'));
-  console.log('Performance Metrics:', getPerformanceMetrics());
-  console.groupEnd();
+  console.warn('ProfitPath Debug State — Current State:', JSON.parse(JSON.stringify(state)));
+  console.warn('ProfitPath Debug State — Settings:', JSON.parse(localStorage.getItem('profitpath-settings') || '{}'));
+  console.warn('ProfitPath Debug State — Scenarios:', JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]'));
+  console.warn('ProfitPath Debug State — Performance Metrics:', getPerformanceMetrics());
 }
 
 export function enableDebugMode() {
   updateSetting('debugMode', true);
-  console.log('Debug mode enabled');
+  console.warn('Debug mode enabled');
 }
 
 export function disableDebugMode() {
   updateSetting('debugMode', false);
-  console.log('Debug mode disabled');
+  console.warn('Debug mode disabled');
 }
 
 export function isDebugMode() {

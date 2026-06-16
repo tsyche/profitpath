@@ -1,4 +1,3 @@
-import { lazyLoadChart } from "../utils/chartUtils";
 import { escapeHtml } from "./miscService";
 
 // Import formatting utilities
@@ -160,7 +159,6 @@ export function createProfitWaterfall(metrics) {
     let barHTML = '';
 
     items.forEach((item, index) => {
-      const startTotal = runningTotal;
       const endTotal = runningTotal + item.value;
       runningTotal = endTotal;
 
@@ -229,7 +227,7 @@ function isTooltipsEnabled() {
   try {
     const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
     return settings.showTooltips !== false;
-  } catch (e) {
+  } catch {
     return true;
   }
 }

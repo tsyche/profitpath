@@ -156,7 +156,7 @@ class AnalyticsCollector {
   getAllEvents() {
     try {
       return JSON.parse(localStorage.getItem('profitpath_analytics_events') || '[]');
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -237,7 +237,7 @@ class AnalyticsCollector {
     try {
       const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
       return scenarios.length;
-    } catch (e) {
+    } catch {
       return 0;
     }
   }
@@ -291,14 +291,12 @@ class AnalyticsCollector {
 
 // Initialize global analytics instance (skip in test mode)
 if (typeof window !== 'undefined' && !window.__TEST_MODE__) {
-  console.log('[DEBUG analytics] Initializing AnalyticsCollector');
   if (!window.profitPathAnalytics) {
     Object.defineProperty(window, 'profitPathAnalytics', {
       value: new AnalyticsCollector(),
       writable: true,
       configurable: true
     });
-    console.log('[DEBUG analytics] window.profitPathAnalytics set:', window.profitPathAnalytics);
   }
 
   // Auto-end session on page unload
