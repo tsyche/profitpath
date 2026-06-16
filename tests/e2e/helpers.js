@@ -52,6 +52,7 @@ export async function closeOnboardingIfPresent(page) {
       const overlay = document.querySelector('.onboarding-dialog-overlay');
       if (overlay) {
         overlay.remove();
+        window.releaseScrollLock?.();
       }
 
       // Also try to remove any other modal overlays that might exist
@@ -59,6 +60,7 @@ export async function closeOnboardingIfPresent(page) {
       modals.forEach(modal => {
         if (modal !== overlay && modal.style.zIndex > 1000) {
           modal.remove();
+          window.releaseScrollLock?.();
         }
       });
     });
