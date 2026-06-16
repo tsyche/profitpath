@@ -170,7 +170,7 @@ ProfitPath is 100% free with all calculator features available. No monetization 
 - Experience levels 1-2 (Beginner/Intermediate)
 - localStorage persistence
 
-**Tier 2: Premium ($4.99/month or $39/year)**
+**Tier 2: Premium ($3.99/month or $32/year)**
 - Full Advanced experience level (all features unlocked)
 - Multi-format exports (PDF with charts, Excel with formulas, HTML)
 - Scenario comparison (side-by-side diff)
@@ -179,7 +179,7 @@ ProfitPath is 100% free with all calculator features available. No monetization 
 - Performance dashboard
 - Estimated 5-15% conversion rate
 
-**Tier 3: Pro ($9.99/month or $79/year) — Optional, if demand exists**
+**Tier 3: Pro ($7.99/month or $64/year) — Optional, if demand exists**
 - Team sharing (read-only scenario links with comments)
 - Automated email reporting
 - White-label PDF export
@@ -187,30 +187,96 @@ ProfitPath is 100% free with all calculator features available. No monetization 
 - Estimated 1-5% conversion rate
 
 ### Why Not Ads?
-Ads destroy trust in financial planning tools. Business owners need to feel confident, not distracted. Freemium subscription is the proven model for business SaaS (Notion, Monday.com, Stripe, etc.).
+Ads destroy trust in financial planning tools. Business owners need to feel confident, not distracted. "Opt-in ads to unlock premium" was considered and rejected: the app's target users are small business owners who skew privacy-conscious, the ad SDK would add tracking we explicitly don't want, and the UX complexity of a three-path paywall (pay / watch ads / do neither) is a support nightmare for a solo developer. Freemium subscription is the proven model for business SaaS.
 
 ### Why Not One-Time Purchase?
-- Doesn't scale with growing feature set
-- Users expect ongoing feature improvements in SaaS era
+- Doesn't scale with a growing feature set
+- Users expect ongoing improvements in a SaaS world
 - Subscription enables sustainable development (especially hobby-scale)
-- Easier to test pricing (can adjust tier costs)
+- Easier to experiment with pricing
+- *Exception*: a lifetime license option at a premium price point is worth exploring (see Alternative Access section below) — but as a separate SKU, not a replacement for subscriptions
+
+### Alternative Access & Anti-SaaS Strategies
+
+The SaaS model is under real pressure as AI commoditizes software. These options serve users who will never click "subscribe" and hedge against that trend:
+
+**Referral Program**
+- Existing users get X free months of Premium for each successful referral (e.g. 1 month per referral, capped at 12)
+- Referral tracked by a short URL or promo code; no account required on either end (Play Billing handles identity)
+- Doubles as a word-of-mouth growth channel with zero ad spend
+
+**Card-on-File Trial**
+- 7–14 day full Premium trial gated by a payment method on file (not a free trial that converts nobody)
+- Converts to paid automatically; cancellation is one tap
+- Optional: trial unlocked by completing a short in-app feedback survey instead of card, to maximize top-of-funnel reach
+
+**Lifetime License (One-Time Purchase)**
+- Single SKU at ~5–6× the annual price (e.g. $149–$179) sold directly or via Gumroad/Lemon Squeezy
+- Targets the "I'm never paying another SaaS bill" buyer segment — a real and growing demographic
+- Revenue is lumpy (one-time) but requires no ongoing relationship
+- No-backend verification: Play Store APK uses Play Billing's one-time product; web app uses a signed license key (see Technical Notes)
+- Offer it as a "Founding Member" tier at launch to reward early adopters; can close it later
+
+**Supporter / Voluntary Tier**
+- "Buy me a coffee" style voluntary payment for users who find the app valuable but don't need Premium features
+- Implemented as a Gumroad tip link or a dedicated in-app button; no feature unlock tied to it
+- Surprisingly effective for solo-dev tools with loyal users; low overhead
+- Signals genuine appreciation and provides early social proof for the product
+
+**Consumable AI Credits (Future)**
+- If AI-powered features land (smart price optimization suggestions, anomaly detection on inputs, auto-generated financial narrative in exports), bill them as consumable credit packs rather than gating them behind a subscription tier
+- Users buy a pack of credits (e.g. 50 analyses for $2.99), recharge as needed — no subscription required
+- Aligns cost with value: heavy users pay more, casual users aren't punished
+- Avoids the "I'm paying monthly for a feature I use twice a year" resentment
+
+**Curated Affiliate Partnerships (Not Ads)**
+- Surface contextual recommendations for genuinely useful adjacent tools: payroll software, scheduling apps, accounting integrations (QuickBooks, Wave), business insurance
+- Implemented as a tasteful "Tools We Use" section or in-context suggestion (e.g. after a tax calc, link to Wave)
+- Affiliate commission only; no display ad networks, no tracking pixels, no SDK installs
+- Revenue is passive and scales with traffic; aligns with the "no ads" principle because we control the relationship
+- Example: Housecall Pro, Jobber, or Gusto partnerships would be directly relevant to the user base
+
+**Industry Template Pack DLC**
+- Core industry templates stay free; specialized or niche packs sold as one-time in-app purchases ($0.99–$2.99 per pack)
+- Examples: Medical/dental practices, food trucks, short-term rentals, auto detailing, music lessons
+- Each pack is a curated set of pre-configured offerings, cost structures, and reasonable defaults
+- Low development cost; customers self-select by vertical; builds a long tail of revenue
+
+**B2B / Consultant License**
+- White-label rights or a multi-client license for business coaches, consultants, and accountants who would use ProfitPath as a client-facing tool
+- Priced as an annual seat license rather than individual subscriptions (e.g. $99–$299/yr for up to 10 client scenarios)
+- Distribution vector: one consultant selling to their book of clients = organic growth with zero marketing spend
+- Future option; only worth pursuing once the core product has proven traction
+
+**"Privacy-First, No Cloud" as a Paid Differentiator**
+- The entire category of SaaS financial tools sends data to a server. ProfitPath doesn't — everything stays on device
+- This is currently an implicit feature; make it explicit and use it as a premium marketing claim
+- Could support a premium "verified offline" tier or simply use it as conversion copy to justify paying vs. using a free tool that mines data
+- Dovetails naturally with the "no account required" architecture
+
+### No-Backend Licensing Architecture
+If any paid tier is offered on the web (GitHub Pages build), a backend-free verification model is required:
+- **Android APK**: Play Billing handles licensing natively via local IPC to the Play Store app — no server call needed post-purchase; works fully offline
+- **Web app**: On purchase (Lemon Squeezy / Gumroad), a serverless function (Cloudflare Worker / Vercel Edge) issues a signed JWT license key; the public key is embedded in the web bundle at build time; the app verifies the signature locally — zero phone-home after purchase
+- If an account system becomes necessary (e.g. cross-device sync for paid features), defer until there's real demand; adding auth is a multi-week project with ongoing maintenance
 
 ### Implementation Timeline
 1. **Phase 1** (Now → App Store Launch): Free tier only. Focus on quality and user acquisition.
-2. **Phase 2** (3-6 months post-launch): Add Premium tier via RevenueCat (2-3 hour integration). Monitor conversion rates, gather user feedback.
-3. **Phase 3** (6-12 months): Evaluate Pro tier based on demand. Consider team collaboration features if requested frequently.
+2. **Phase 2** (3-6 months post-launch): Add Premium subscription via RevenueCat (2-3 hour integration). Add referral program and optional supporter tip link. Monitor conversion rates.
+3. **Phase 3** (6-12 months): Evaluate Pro tier based on demand. Launch lifetime license as a limited Founding Member offer. Consider industry template packs if user base has clear vertical clusters.
+4. **Phase 4** (12+ months): Affiliate partnerships, B2B/consultant licensing, AI credit packs if AI features ship.
 
 ### Revenue Projections (Conservative Estimate)
-- **Year 1**: Free tier only (~1,000-5,000 downloads, $0 revenue)
-- **Year 2**: Premium tier + 5% conversion @ $39/yr = ~$1,950-9,750 annual recurring
-- **Year 3**: Improve conversion to 8% + Pro tier at 1% = ~$7,500-35,000 annual recurring
+- **Year 1**: Free tier only (~1,000-5,000 downloads, $0 recurring + occasional tips)
+- **Year 2**: Premium tier + 5% conversion @ $32/yr = ~$1,600-8,000 ARR; lifetime licenses add lump-sum one-time revenue
+- **Year 3**: Improve conversion to 8% + Pro tier at 1% + affiliates = ~$6,000-30,000 ARR
 
-*Note: These are rough estimates. Actual revenue depends entirely on marketing effort (organic growth from App Store visibility). As a hobby project, expect conservative adoption unless you actively market.*
+*Note: These are rough estimates. Actual revenue depends entirely on marketing effort. As a hobby project, expect conservative adoption unless you actively market.*
 
 ### Technical Notes
 - **RevenueCat** (recommended): Unified dashboard for iOS/Android in-app purchases + subscriptions. ~20% fee after platform cuts. 2-3 hour integration.
 - **Stripe**: More complex, requires backend or serverless functions. Better long-term control, higher overhead.
-- **Apple/Google In-App Billing**: Native but requires separate implementation per platform; not recommended for single developer.
+- **Lemon Squeezy / Gumroad**: Best choice for lifetime license and direct web sales; handles VAT, chargebacks, and license key issuance out of the box.
 
 ### Build-Time Monetization Toggle
 Monetization must be exclusive to the officially signed Play Store build — never present in the GitHub Pages web build, sideloaded/debug APKs, or any other distribution channel.
