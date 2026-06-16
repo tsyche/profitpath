@@ -212,6 +212,14 @@ Ads destroy trust in financial planning tools. Business owners need to feel conf
 - **Stripe**: More complex, requires backend or serverless functions. Better long-term control, higher overhead.
 - **Apple/Google In-App Billing**: Native but requires separate implementation per platform; not recommended for single developer.
 
+### Build-Time Monetization Toggle
+Monetization must be exclusive to the officially signed Play Store build — never present in the GitHub Pages web build, sideloaded/debug APKs, or any other distribution channel.
+
+- Gate paywalled features behind a single build-time flag (e.g. `VITE_MONETIZATION_ENABLED`, read via `import.meta.env` and baked in at build time, not runtime-toggleable in the shipped bundle).
+- The flag is set to `true` only in the release workflow that produces the signed Play Store bundle/APK; every other build target (web deploy, debug/dev APK, CI test builds) defaults to `false`.
+- Tree-shake/dead-code-eliminate the RevenueCat (or chosen billing SDK) integration entirely when the flag is off, so it's not just hidden but absent from the bundle — reduces APK size for free builds and removes any temptation/ability to reverse-engineer paywall bypass from a build that was never meant to have it.
+- Add a CI check or test asserting the flag is `false` in `build-apk.yml`'s default job and only flipped in the dedicated signed-release job, so a future workflow edit can't accidentally ship monetization in an unsigned/test build.
+
 ---
 
 ## Status & Notes

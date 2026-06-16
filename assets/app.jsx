@@ -2762,6 +2762,7 @@ function showWelcomeDialog() {
       btn.addEventListener('click', (e) => {
         const action = e.currentTarget.dataset.action;
         dialog.remove(); // Close the dialog
+        window.releaseScrollLock?.();
 
         if (action === 'tour') {
           startGuidedTour();
@@ -2824,6 +2825,7 @@ function selectIndustry(industryId, dialog) {
 
   // Close dialog and show success message
   dialog.remove();
+  window.releaseScrollLock?.();
 
   const successDialog = createOnboardingDialog({
     title: 'Great choice! 🎯',
@@ -2837,6 +2839,7 @@ function selectIndustry(industryId, dialog) {
       btn.addEventListener('click', (e) => {
         const action = e.currentTarget.dataset.action;
         successDialog.remove(); // Close the dialog
+        window.releaseScrollLock?.();
 
         if (action === 'tour') {
           startGuidedTour();

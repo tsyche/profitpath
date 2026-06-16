@@ -291,3 +291,59 @@ test.describe('Background scroll lock', () => {
     expect(await isScrollLocked(page)).toBe(false);
   });
 });
+
+// ── fresh-user welcome dialog (regression: leaked lock left scrolling
+// permanently broken in real browsers for anyone who hadn't already
+// completed onboarding) ───────────────────────────────────────────────────
+test.describe('Background scroll lock — fresh user (welcome dialog)', () => {
+  test.beforeEach(async ({ page }) => {
+    // Deliberately do NOT mark onboarding as completed — this is what a
+    // brand-new visitor sees, and is the path that leaked the lock.
+    await page.goto('/');
+    await page.waitForTimeout(1200); // showWelcomeDialog fires after a 1s setTimeout
+  });
+
+  test('skipping the welcome dialog releases the scroll lock', async ({ page }) => {
+    await expect(page.locator('.onboarding-dialog-overlay')).toBeVisible();
+    expect(await isScrollLocked(page)).toBe(true);
+
+    await page.locator('.welcome-btn[data-action="skip"]').click();
+    await page.waitForTimeout(200);
+    expect(await isScrollLocked(page)).toBe(false);
+    expect(await lockCount(page)).toBe(0);
+  });
+
+  test('choosing an industry then exploring on your own releases the scroll lock', async ({ page }) => {
+    await expect(page.locator('.onboarding-dialog-overlay')).toBeVisible();
+    await page.locator('.welcome-btn[data-action="industry"]').click();
+    await page.waitForTimeout(200);
+
+    await page.locator('.industry-option').first().click();
+    await page.waitForTimeout(200);
+    expect(await isScrollLocked(page)).toBe(true);
+
+    await page.locator('.success-btn[data-action="explore"]').click();
+    await page.waitForTimeout(200);
+    expect(await isScrollLocked(page)).toBe(false);
+    expect(await lockCount(page)).toBe(0);
+  });
+
+  test('taking the tour from the welcome dialog and exiting releases the scroll lock', async ({ page }) => {
+    await expect(page.locator('.onboarding-dialog-overlay')).toBeVisible();
+    await page.locator('.welcome-btn[data-action="tour"]').click();
+    await page.waitForTimeout(500);
+
+    // Exit the tour via Escape rather than completing all steps
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+    // Dismiss the "Tour Exited" confirmation dialog, if it's still up
+    const exitDialogBtn = page.locator('.onboarding-dialog-overlay .dialog-btn').last();
+    if (await exitDialogBtn.isVisible().catch(() => false)) {
+      await exitDialogBtn.click();
+      await page.waitForTimeout(200);
+    }
+
+    expect(await isScrollLocked(page)).toBe(false);
+    expect(await lockCount(page)).toBe(0);
+  });
+});
