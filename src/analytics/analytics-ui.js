@@ -123,19 +123,14 @@ class AnalyticsUI {
   }
 
   showAnalyticsDashboard() {
-    console.log('[DEBUG analytics-ui] showAnalyticsDashboard called');
-
     // Remove any existing analytics modal first
     const existingModal = document.getElementById('analyticsModal');
     if (existingModal) {
-      console.log('[DEBUG analytics-ui] removing existing modal');
       existingModal.remove();
     }
 
     const summary = this.analytics.getAnalyticsSummary();
     const events = this.analytics.getAllEvents();
-    console.log('[DEBUG analytics-ui] summary:', summary);
-    console.log('[DEBUG analytics-ui] events length:', events.length);
 
     // Create modal with proper structure
     const modalOverlay = document.createElement('div');
@@ -155,9 +150,7 @@ class AnalyticsUI {
     `;
 
     modalOverlay.appendChild(modal);
-    console.log('[DEBUG analytics-ui] modal created:', modalOverlay);
     document.body.appendChild(modalOverlay);
-    console.log('[DEBUG analytics-ui] modal appended to body');
     window.acquireScrollLock?.();
 
     // Show the modal
@@ -233,8 +226,7 @@ class AnalyticsUI {
     }
   }
 
-  renderDashboard(summary, events) {
-    const hasData = events.length > 0;
+  renderDashboard(summary, _events) {
     const isEnabled = this.analytics.settings.enabled;
 
     if (!isEnabled) {
@@ -791,16 +783,12 @@ class AnalyticsUI {
 
 // Initialize analytics UI when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[DEBUG analytics-ui] DOMContentLoaded, checking window.profitPathAnalytics:', window.profitPathAnalytics);
-
   // Wait a bit for analytics to initialize
   setTimeout(() => {
     if (window.profitPathAnalytics) {
-      console.log('[DEBUG analytics-ui] Initializing AnalyticsUI');
       window.profitPathAnalyticsUI = new AnalyticsUI();
-      console.log('[DEBUG analytics-ui] window.profitPathAnalyticsUI set:', window.profitPathAnalyticsUI);
     } else {
-      console.error('[DEBUG analytics-ui] window.profitPathAnalytics not found, cannot initialize UI');
+      console.error('profitPathAnalytics not found, cannot initialize analytics UI');
     }
   }, 100);
 });

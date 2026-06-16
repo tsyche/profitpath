@@ -48,7 +48,7 @@ export function renderCustomerAnalyticsDashboard(metrics, settings = {}) {
 /**
  * Generate HTML for customer analytics dashboard
  */
-function generateDashboardHTML(summary, cac, ltv, churn, growth) {
+function generateDashboardHTML(summary, cac, ltv, churn, _growth) {
   const healthColor = getHealthColor(summary.healthScore);
   const cacHealthColor = summary.ltvToCAC.health === 'healthy' ? '#34d399' : summary.ltvToCAC.health === 'fair' ? '#fbbf24' : '#fb7185';
 

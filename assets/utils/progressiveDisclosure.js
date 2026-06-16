@@ -7,7 +7,7 @@ export function initializeProgressiveDisclosure() {
   try {
     const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
     userLevel = settings.experienceLevel || 'beginner';
-  } catch (e) {
+  } catch {
     // Default to beginner if settings can't be read
   }
 
@@ -40,7 +40,7 @@ export function initializeProgressiveDisclosure() {
   try {
     const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
     showDebugPanel = settings.showDebugPanel === true;
-  } catch (e) {
+  } catch {
     // Default to hidden if settings can't be read
   }
   if (showDebugPanel) {

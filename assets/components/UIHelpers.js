@@ -1,6 +1,5 @@
-import { loadScenario, deleteScenario } from "../services/scenarioService";
-import { getAllScenarios, escapeHtml, populateComparisonDropdowns } from "../services/miscService";
-import { showConfirmationModal, showToast } from "../services/modalService";
+import { deleteScenario } from "../services/scenarioService";
+import { getAllScenarios, escapeHtml } from "../services/miscService";
 import { createModal } from "../components/Modal";
 
 // UI Components and Helpers
@@ -18,18 +17,6 @@ export function showDeleteConfirmation(scenarioId, onConfirm) {
 }
 
 export function openScenarioModal() {
-  console.log('=== openScenarioModal called ===');
-
-  // Add cleanup function to properly remove overlay
-  const cleanupModal = () => {
-    const modalOverlay = document.querySelector('.modal-overlay');
-    if (modalOverlay) {
-      modalOverlay.remove();
-    }
-    // Also remove any lingering blur effects
-    document.body.style.backdropFilter = '';
-  };
-
   const scenarios = getAllScenarios();
   const scenariosList = scenarios.map(s => {
     const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
@@ -93,18 +80,12 @@ export function openScenarioModal() {
   });
 
   // Populate comparison dropdowns after modal is added to DOM
-  console.log('Modal added to DOM, populating dropdowns immediately...');
-
-  // Try multiple approaches to populate dropdowns
   const populateDropdowns = () => {
     const scenarios = getAllScenarios();
-    console.log('Populating with scenarios:', scenarios.length);
 
     // Find dropdowns in the modal
     const dropdown1 = modal.querySelector('#compareScenario1');
     const dropdown2 = modal.querySelector('#compareScenario2');
-
-    console.log('Found dropdowns in modal:', { dropdown1: !!dropdown1, dropdown2: !!dropdown2 });
 
     if (dropdown1 && dropdown2) {
       // Clear and populate
@@ -122,10 +103,7 @@ export function openScenarioModal() {
         option2.textContent = scenario.name;
         dropdown2.appendChild(option2);
       });
-
-      console.log('Dropdowns populated successfully!');
     } else {
-      console.log('Dropdowns not found in modal, trying global search...');
       import('../services/miscService.js').then((miscService) => {
         miscService.populateComparisonDropdowns();
       });
@@ -230,7 +208,6 @@ export function openScenarioModal() {
   }
 
   // Populate comparison dropdowns
-  console.log('Opening scenarios modal, populating dropdowns...');
   import('../services/miscService.js').then((miscService) => {
     miscService.populateComparisonDropdowns();
   });
@@ -248,8 +225,6 @@ export function performComparisonInModal(scenarioId1, scenarioId2, modal) {
 }
 
 export function performComparison(scenarioId1, scenarioId2, modal = null) {
-  console.log('performComparison called with:', scenarioId1, scenarioId2);
-
   const scenarios = getAllScenarios();
 
   // Find scenarios by ID
@@ -282,8 +257,6 @@ export function performComparison(scenarioId1, scenarioId2, modal = null) {
     console.error('Comparison table tbody not found');
     return;
   }
-
-  console.log('Performing comparison between scenarios:', scenario1.name, scenario2.name);
 
   // Total headcount and FT pay, with fallback for legacy employees/employeePay scenarios
   const totalEmployees = (s) => 'fullTimeEmployees' in s ? (s.fullTimeEmployees || 0) + (s.partTimeEmployees || 0) : (s.employees || 0);

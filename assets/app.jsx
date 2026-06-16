@@ -188,8 +188,6 @@ const loadTestScenarios = (...args) => (misc && typeof misc.loadTestScenarios ==
 const loadSpecificTestScenario = (...args) => (misc && typeof misc.loadSpecificTestScenario === 'function') ? misc.loadSpecificTestScenario(...args) : undefined;
 // Use a function to avoid initialization issues
 const getTestScenarios = () => (typeof TEST_SCENARIOS !== 'undefined' ? TEST_SCENARIOS : {});
-const showNotification = (...args) => (misc && typeof misc.showNotification === 'function') ? misc.showNotification(...args) : undefined;
-
 // Make utility functions globally available after they're defined
 // Use a function to ensure assignment happens after module is loaded
 const assignGlobalFunctions = () => {
@@ -987,8 +985,6 @@ function updateLevelDescription(level) {
 let settingsInitialized = false;
 
 function initializeSettings() {
-  const settings = typeof loadSettings === 'function' ? loadSettings() : {};
-
   // Only attach event listeners once to prevent duplicates
   if (!settingsInitialized) {
     settingsInitialized = true;
@@ -1713,7 +1709,7 @@ window.shareComparison = function (id1, id2) {
     });
     const statePayload = btoa(encodeURIComponent(json).replace(/%([0-9A-F]{2})/gi, (_, p) => String.fromCharCode(parseInt(p, 16))));
     shareUrl = getShareBase() + '?compareStates=' + encodeURIComponent(statePayload);
-  } catch (e) {
+  } catch {
     showToast('Unable to generate share link', 'error');
     return;
   }
@@ -1820,7 +1816,7 @@ window.getComparisonEmbedCode = function (id1, id2) {
   const embedCode = `<iframe src="${embedUrl}" width="800" height="600" frameborder="0"></iframe>`;
 
   // createModal already appends to body and wires close-on-scrim + ESC
-  const overlay = createModal({
+  createModal({
     title: '📋 Embed Comparison',
     content: `
       <p style="color:var(--text);margin-bottom:8px;">Embed code for this comparison:</p>
@@ -2662,7 +2658,7 @@ const _initializeOnboarding = () => {
     const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
     const tooltipsEnabled = settings.showTooltips !== false;
     updateTooltipsUIOnly(tooltipsEnabled);
-  } catch (e) {
+  } catch {
     // Default to enabled if settings can't be read
     updateTooltipsUIOnly(true);
   }
@@ -3561,7 +3557,7 @@ function showEnhancedTooltip(e) {
       hideEnhancedTooltip(e);
       return;
     }
-  } catch (err) {
+  } catch {
     // Continue with default behavior if settings can't be read
   }
 

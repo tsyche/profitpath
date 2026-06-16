@@ -624,21 +624,10 @@ class AdvancedAnalyticsDashboard {
   }
 
   // Placeholder methods for other views
-  refreshUsage() {
-    console.log('Refreshing usage view...');
-  }
-
-  refreshFeedback() {
-    console.log('Refreshing feedback view...');
-  }
-
-  refreshPerformance() {
-    console.log('Refreshing performance view...');
-  }
-
-  refreshInsights() {
-    console.log('Refreshing insights view...');
-  }
+  refreshUsage() {}
+  refreshFeedback() {}
+  refreshPerformance() {}
+  refreshInsights() {}
 }
 
 // Export for use in other modules

@@ -171,7 +171,7 @@ function calculateCosts(params) {
  * @param {Object} costs - Cost metrics
  * @returns {Object} Forecast mode results
  */
-function calculateForecastMode(offerings, capacity, costs) {
+function calculateForecastMode(offerings, capacity, _costs) {
   const { sum: mixSum, needsNormalization: mixNormalized, shares } = normalizeMix(offerings);
 
   // Per-customer expectations (weighted by mix shares)
@@ -240,7 +240,7 @@ function calculateForecastMode(offerings, capacity, costs) {
  * @param {Object} costs - Cost metrics
  * @returns {Object} Current mode results
  */
-function calculateCurrentMode(offerings, capacity, costs) {
+function calculateCurrentMode(offerings, capacity, _costs) {
   let clients = 0;
   let totalSessions = 0;
   let serviceHours = 0;
@@ -409,7 +409,7 @@ export function calc(stateInput, options = {}) {
     calculationCache.delete(cacheKey);
     calculationCache.set(cacheKey, cached);
     cacheHits++;
-    if (debug) console.log('Using cached calculation result');
+    if (debug) console.warn('Using cached calculation result');
     lastCalcMs = performance.now() - startTime;
     return cached;
   }
@@ -554,7 +554,7 @@ export function calc(stateInput, options = {}) {
   lastCalcMs = performance.now() - startTime;
 
   if (debug) {
-    console.log('Calculation completed:', {
+    console.warn('Calculation completed:', {
       mode,
       clients: result.clients,
       revenue: result.revenue,

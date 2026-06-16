@@ -1,7 +1,7 @@
 import { getAllScenarios, sanitizeScenarioState } from "./miscService";
 import { uuid } from "../utils/helpers";
 import { renderScenariosList } from "../components/UIHelpers";
-import { showConfirmationModal, showToast } from "./modalService";
+import { showToast } from "./modalService";
 
 // Scenario Management
 
@@ -243,12 +243,6 @@ export function initializeScenarios() {
   // Delegate events for load buttons (delete handled by UIHelpers)
   const scenariosList = document.getElementById('scenariosList');
   if (scenariosList) {
-    scenariosList.addEventListener('click', (e) => {
-      const target = e.target;
-      const scenarioId = target.dataset.scenarioId;
-
-      // Load button handling removed - now handled by UIHelpers.js
-      // Delete button handling removed - now handled by UIHelpers.js
-    });
+    // Click handling delegated to UIHelpers.js
   }
 }
