@@ -230,10 +230,10 @@ body.scroll-locked { overflow: hidden; }
 
 /* ── Read-only / View-Only mode ────────────────────────────────────────────── */
 .pp-readonly-banner {
+  display: none;
   position: sticky;
   top: 0;
   z-index: 500;
-  display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
@@ -243,6 +243,7 @@ body.scroll-locked { overflow: hidden; }
   font-size: 14px;
   font-weight: 600;
 }
+body.pp-readonly .pp-readonly-banner { display: flex; }
 .pp-readonly-banner-sub { font-weight: 400; opacity: 0.8; }
 .pp-readonly-start-link { color: #06231a; font-weight: 700; text-decoration: underline; }
 
