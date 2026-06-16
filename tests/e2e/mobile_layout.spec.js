@@ -186,4 +186,39 @@ test.describe('Mobile layout & modal consistency', () => {
     expect(info.bgLum).toBeLessThan(0.4);      // dark surface, not white
     expect(info.textLum).toBeGreaterThan(0.6); // legible light text
   });
+
+  // Regression: an earlier `.grid { padding-bottom: 12px !important; }` rule
+  // silently beat the mobile bottom-bar clearance rule (also on `.grid`),
+  // so content at the very end of the page (debug panel, expanded twisties)
+  // rendered behind the fixed bottom nav bar with no way to scroll past it.
+  test('expanded debug/performance panels clear the fixed bottom nav bar', async ({ page }) => {
+    await page.evaluate(() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
+        s.experienceLevel = 'advanced';
+        localStorage.setItem('profitpath-settings', JSON.stringify(s));
+      } catch { /* ignore */ }
+    });
+    await page.reload();
+    await waitForPageReady(page);
+
+    for (const id of ['customerAnalyticsToggle', 'perfToggle', 'debugToggle']) {
+      const btn = page.locator('#' + id);
+      await btn.scrollIntoViewIfNeeded();
+      await btn.click();
+      await page.waitForTimeout(200);
+    }
+
+    // body is its own scroll container here (html,body both get height:100%),
+    // so window.scrollTo doesn't move it — scroll body.scrollTop directly.
+    await page.evaluate(() => { document.body.scrollTop = document.body.scrollHeight; });
+    await page.waitForTimeout(200);
+
+    const clearance = await page.evaluate(() => {
+      const bottombar = document.querySelector('.bottombar');
+      const lastPanel = document.querySelector('.debug-wrapper');
+      return bottombar.getBoundingClientRect().top - lastPanel.getBoundingClientRect().bottom;
+    });
+    expect(clearance).toBeGreaterThan(0);
+  });
 });
