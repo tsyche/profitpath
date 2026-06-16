@@ -1,5 +1,13 @@
 // Miscellaneous Helpers and UI Logic
 /* global render calc updateOutputs updateValidationDisplay Chart */
+
+// Capacitor WebView serves assets from http://localhost — use the real URL instead
+const PRODUCTION_URL = 'https://tsyche.github.io/profitpath';
+export function getShareBase() {
+  const o = window.location.origin;
+  if (o === 'http://localhost' || o === 'capacitor://localhost') return PRODUCTION_URL + '/';
+  return o + window.location.pathname;
+}
 import { safeParseNumber, clamp } from '../utils/helpers';
 import { showToast } from './modalService.js';
 import { createModal, closeCurrentModal } from '../components/Modal.js';
@@ -8,6 +16,27 @@ import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizati
 
 // Utility functions for export functionality
 const DEFAULT_CURRENCY = 'USD';
+
+// Capacitor WebView blocks <a download> — use Web Share API for files when available
+async function downloadOrShare(blob, filename) {
+  if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: blob.type })] })) {
+    try {
+      await navigator.share({ files: [new File([blob], filename, { type: blob.type })], title: filename });
+      return;
+    } catch (e) {
+      if (e.name === 'AbortError') return; // user cancelled share sheet
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -216,14 +245,7 @@ export function exportAsCSV() {
 
   const csv = lines.join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', 'profitpath-' + (new Date().toISOString().split('T')[0]) + '.csv');
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  setTimeout(() => URL.revokeObjectURL(url), 60000); // Revoke after a minute
+  downloadOrShare(blob, 'profitpath-' + new Date().toISOString().split('T')[0] + '.csv');
   trackEvent('export', { format: 'csv' });
 }
 
@@ -304,7 +326,7 @@ function updateSocialMetaTags(state) {
 
   const metaUrl = document.querySelector('meta[property="og:url"]') || document.createElement('meta');
   metaUrl.setAttribute('property', 'og:url');
-  metaUrl.setAttribute('content', window.location.href);
+  metaUrl.setAttribute('content', encodeScenarioToURL(state) || getShareBase());
 
   document.head.appendChild(metaTitle);
   document.head.appendChild(metaDescription);
@@ -318,7 +340,7 @@ export function encodeScenarioToURL(state, { readonly = false } = {}) {
     // URI-encode before btoa so non-Latin1 characters (e.g. unicode offering
     // names) don't make btoa throw
     const base64 = btoa(encodeURIComponent(serialized));
-    let url = window.location.origin + window.location.pathname + '?scenario=' + encodeURIComponent(base64);
+    let url = getShareBase() + '?scenario=' + encodeURIComponent(base64);
     if (readonly) url += '&readonly=1';
     return url;
   } catch (e) {
@@ -770,16 +792,7 @@ export function exportAsExcel() {
 
   const csv = lines.join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-
-  link.setAttribute('href', url);
-  link.setAttribute('download', 'profitpath-export-' + new Date().toISOString().split('T')[0] + '.csv');
-  link.style.visibility = 'hidden';
-
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  downloadOrShare(blob, 'profitpath-export-' + new Date().toISOString().split('T')[0] + '.csv');
   showNotification('Excel export downloaded!', 'success');
 
   // Track Excel export
@@ -792,6 +805,13 @@ export function exportAsPDF() {
   const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
   const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toLocaleString();
   const fmtPct = (n) => n.toFixed(1) + '%';
+
+  // Capacitor WebView blocks window.open — fall through to HTML export instead
+  const isCapacitor = window.location.origin === 'http://localhost' || window.location.origin === 'capacitor://localhost';
+  if (isCapacitor) {
+    showNotification('PDF printing unavailable in the app — use HTML export instead', 'info');
+    return;
+  }
 
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
@@ -944,16 +964,7 @@ export function exportAsHTML() {
 </html>`;
 
   const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-
-  link.setAttribute('href', url);
-  link.setAttribute('download', 'profitpath-report-' + new Date().toISOString().split('T')[0] + '.html');
-  link.style.visibility = 'hidden';
-
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  downloadOrShare(blob, 'profitpath-report-' + new Date().toISOString().split('T')[0] + '.html');
   showNotification('HTML report downloaded!', 'success');
 
   // Track HTML export
@@ -979,7 +990,7 @@ export function shareViaEmail() {
     `- Productive Utilization: ${fmtPct(state.productiveUtilizationPct)}\n` +
     `- Target Utilization: ${fmtPct(state.targetUtilizationPct)}\n\n` +
     `Service Offerings:\n${offeringsText}\n\n` +
-    `View full analysis at: ${window.location.href}`
+    `View full analysis at: ${encodeScenarioToURL(state) || getShareBase()}`
   );
 
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
@@ -990,7 +1001,7 @@ export function shareViaEmail() {
 }
 
 export function showEmbedCode() {
-  const embedCode = `<iframe src="${window.location.href}" width="100%" height="600" frameborder="0"></iframe>`;
+  const embedCode = `<iframe src="${encodeScenarioToURL(window.state) || getShareBase()}" width="100%" height="600" frameborder="0"></iframe>`;
 
   createModal({
     title: '📋 Embed Widget',
@@ -1263,13 +1274,8 @@ Name,Monthly Price ($),Sessions/Year,Hours/Session,Variable Cost/Session ($),Mix
 Consulting,1000,12,2,100,60,0
 Support,500,24,1,50,40,0`;
 
-  const element = document.createElement('a');
-  element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(template));
-  element.setAttribute('download', 'profitpath-template.csv');
-  element.style.display = 'none';
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
+  const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+  downloadOrShare(blob, 'profitpath-template.csv');
 }
 
 export function importFromCSV(csvText) {

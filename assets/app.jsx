@@ -7,7 +7,7 @@ import * as misc from './services/miscService';
 import * as businessLogic from './services/businessLogic';
 import { saveScenario, loadScenario, deleteScenario } from './services/scenarioService';
 import { closeScenarioModal, createModal } from './components/Modal.js';
-import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL, isReadOnlyURL } from './services/miscService';
+import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL, isReadOnlyURL, getShareBase } from './services/miscService';
 import { uuid, clamp } from './utils/helpers';
 import { showToast } from './services/modalService.js';
 import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui.js';
@@ -1706,7 +1706,7 @@ window.shareComparison = function (id1, id2) {
       s2: { name: scenario2.name, state: scenario2.state }
     });
     const statePayload = btoa(encodeURIComponent(json).replace(/%([0-9A-F]{2})/gi, (_, p) => String.fromCharCode(parseInt(p, 16))));
-    shareUrl = window.location.origin + window.location.pathname + '?compareStates=' + encodeURIComponent(statePayload);
+    shareUrl = getShareBase() + '?compareStates=' + encodeURIComponent(statePayload);
   } catch (e) {
     showToast('Unable to generate share link', 'error');
     return;
@@ -1810,7 +1810,7 @@ window.getComparisonEmbedCode = function (id1, id2) {
     return;
   }
 
-  const embedUrl = window.location.origin + window.location.pathname + '?compare=' + id1 + ',' + id2 + '&embed=true';
+  const embedUrl = getShareBase() + '?compare=' + id1 + ',' + id2 + '&embed=true';
   const embedCode = `<iframe src="${embedUrl}" width="800" height="600" frameborder="0"></iframe>`;
 
   // createModal already appends to body and wires close-on-scrim + ESC
