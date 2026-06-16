@@ -159,7 +159,7 @@ See README.md for setup and development instructions.
 
 ## Monetization Strategy
 
-Privacy-first freemium model planned post-launch. The app will remain fully free until market demand is validated; no ads, no tracking. Full strategy details (pricing tiers, access paths, revenue projections, licensing architecture) are kept in a local-only doc (`docs/MONETIZATION.md`, gitignored).
+Privacy-first freemium model planned post-launch. The app will remain fully free until market demand is validated; no ads, no tracking.
 
 ---
 
