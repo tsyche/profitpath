@@ -2726,8 +2726,8 @@ function enterReadOnlyMode() {
   document.body.classList.add('pp-readonly');
 
   // Populate and show the banner
-  const banner = document.getElementById('ppReadOnlyBanner');
-  if (banner) banner.hidden = false;
+  const startLink = document.querySelector('.pp-readonly-start-link');
+  if (startLink) startLink.href = window.location.origin + window.location.pathname;
 
   // Show notes in the read-only display block and hide the edit textarea
   const notesEdit = document.getElementById('scenarioNotes');
