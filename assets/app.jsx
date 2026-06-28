@@ -664,6 +664,9 @@ function render() {
   }
 
   // KPIs
+  // Respect prefers-reduced-motion for animations
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   // populate KPI elements directly in case core.js isn't loaded (tests use
   // app.jsx standalone)
   function setKpi(id, value) {
@@ -672,9 +675,12 @@ function render() {
     const str = String(value);
     if (el.textContent !== str) {
       el.textContent = str;
-      el.classList.remove('kpi-flash');
+      el.classList.remove('kpi-flash', 'kpi-count-up');
       void el.offsetWidth; // force reflow to restart animation
       el.classList.add('kpi-flash');
+      if (!prefersReducedMotion) {
+        el.classList.add('kpi-count-up');
+      }
     }
   }
   setKpi('kpiClients', fmtInt(metrics.clients));

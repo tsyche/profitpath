@@ -1452,11 +1452,44 @@ button:focus {
   background: var(--accent);
   color: var(--on-accent);
   font-weight: 600;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn.primary:hover {
   background: #7af0dd;
   box-shadow: var(--elev-2);
+}
+
+.btn.primary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.btn.primary:active::before {
+  animation: ripple 0.6s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+
+  100% {
+    width: 300px;
+    height: 300px;
+    opacity: 0;
+  }
 }
 
 .btn.danger {
@@ -1601,6 +1634,10 @@ button:focus {
 
 .kpi-flash {
   animation: kpiFlash 0.35s ease-out;
+}
+
+.kpi-count-up {
+  animation: kpiCountUp 0.3s var(--ease-emphasized);
 }
 
 .pill {
@@ -2614,7 +2651,7 @@ input[type="checkbox"] {
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  animation: modalFadeIn 0.18s ease-out;
+  animation: modalFadeIn var(--dur-2) var(--ease-standard);
 }
 
 .modal-content {
@@ -2629,7 +2666,7 @@ input[type="checkbox"] {
   overflow-y: auto;
   overscroll-behavior: contain;
   position: relative;
-  animation: modalSlideIn 0.2s ease-out;
+  animation: modalSlideIn var(--dur-3) var(--ease-spring);
 }
 
 /* Modal sizes */
@@ -4135,6 +4172,18 @@ input[type="checkbox"] {
   }
 }
 
+@keyframes kpiCountUp {
+  from {
+    opacity: 0.8;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes modalFadeIn {
   from {
     opacity: 0;
@@ -4154,6 +4203,18 @@ input[type="checkbox"] {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -4264,6 +4325,7 @@ input[type="checkbox"] {
 .toast.show {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
+  animation: toastSlideIn var(--dur-3) var(--ease-emphasized);
 }
 
 .toast .toast-close {
@@ -4735,3 +4797,12 @@ input[type="checkbox"] {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent) !important;
 }
 .copy-field-hint { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
