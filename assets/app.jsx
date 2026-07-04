@@ -114,9 +114,10 @@ const INDUSTRY_TEMPLATES = {
     description: 'Lawn care and landscaping business',
     config: {
       offerings: [
-        { name: 'Weekly Lawn Maintenance', priceMonthly: 280, sessionsPerYear: 52, hoursPerSession: 1.5, variableCostPerSession: 20, mixPct: 50, currentClients: 15 },
-        { name: 'Biweekly Lawn Care', priceMonthly: 200, sessionsPerYear: 26, hoursPerSession: 1, variableCostPerSession: 15, mixPct: 30, currentClients: 10 },
-        { name: 'Seasonal Services', priceMonthly: 350, sessionsPerYear: 4, hoursPerSession: 4, variableCostPerSession: 40, mixPct: 20, currentClients: 8 }
+        { name: 'Weekly Lawn Maintenance', priceMonthly: 200, sessionsPerYear: 52, hoursPerSession: 1.5, variableCostPerSession: 20, mixPct: 40, currentClients: 15 },
+        { name: 'Biweekly Lawn Care', priceMonthly: 130, sessionsPerYear: 26, hoursPerSession: 1, variableCostPerSession: 15, mixPct: 30, currentClients: 10 },
+        { name: 'Monthly Lawn Care', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 15, mixPct: 20, currentClients: 8 },
+        { name: 'Seasonal Services', priceMonthly: 250, sessionsPerYear: 4, hoursPerSession: 4, variableCostPerSession: 40, mixPct: 10, currentClients: 5 }
       ],
       fullTimeEmployees: 2,
       partTimeEmployees: 0,
