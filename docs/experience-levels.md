@@ -11,6 +11,8 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Detailed breakdowns: OFF
   - Scenario comparison tools: OFF
   - Sensitivity analysis: OFF
+  - Client mix optimizer: OFF
+  - Advanced charts (heat map, radar, funnel): OFF
   - Debug panel: OFF
   - Performance metrics: OFF
   - Tooltips: ON
@@ -20,6 +22,8 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Detailed breakdowns: ON
   - Scenario comparison tools: ON
   - Sensitivity analysis: ON
+  - Client mix optimizer: ON
+  - Advanced charts (heat map, radar, funnel): OFF
   - Debug panel: OFF
   - Performance metrics: OFF
   - Tooltips: ON
@@ -29,6 +33,8 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Detailed breakdowns: ON
   - Scenario comparison tools: ON
   - Sensitivity analysis: ON
+  - Client mix optimizer: ON
+  - Advanced charts (heat map, radar, funnel): ON
   - Debug panel: ON
   - Performance metrics: ON
   - Tooltips: OFF (disabled by default for power users)
@@ -47,8 +53,11 @@ The app hides/shows elements by toggling display on selectors tied to feature ke
 - `.advanced-calculations` — advanced calculation controls and inputs
 - `.detailed-breakdown` — extra table rows, intermediate values, and chart breakdowns
 - `.comparison-tools` — UI to compare scenarios side-by-side
-- `.advanced-feature` / `.expert-feature` — advanced/expert-only panels (e.g. sensitivity analysis, performance, debug). Note: `.export-option` elements carrying these classes are exempt — they are always shown (see note above).
-- `.debug-panel` — collapsible debug panel under Outputs
+- `.advanced-feature` / `.expert-feature` — advanced/expert-only panels (e.g. sensitivity analysis, mix optimizer, advanced charts, performance, debug). Note: `.export-option` elements carrying these classes are exempt — they are always shown (see note above).
+- `.debug-wrapper` — collapsible debug panel under Outputs
+- `.sensitivity-wrapper` — collapsible sensitivity analysis panel
+- `.mix-optimizer-wrapper` — collapsible client mix optimizer panel
+- `.advanced-charts-wrapper` — collapsible advanced charts panel (heat map, radar, funnel)
 
 When adding a new feature flag, update `FEATURE_GATES` in `src/settings/index.js` and ensure the corresponding DOM elements are toggled in `assets/app.jsx`'s `updateUIForSettings`.
 

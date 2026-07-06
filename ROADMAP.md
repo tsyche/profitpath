@@ -8,15 +8,17 @@ See README.md for setup and development instructions.
 
 ## Recently Completed ✅
 
-**Five Most Recent Completions (June 2026)**
+**Five Most Recent Completions (July 2026)**
 
-1. **Lint Warning Cleanup** — Eliminated all lint warnings (0 errors, 0 warnings): added ESLint override for test files; removed/renamed unused imports, dead-code vars, bare catch params across 17 source files; replaced debug `console.log` with `console.warn` or removed in production code. Updated test to match no-op placeholder methods.
-2. **Tax & Financial Report Generator** — Print-ready HTML financial report accessible from Export drawer: business performance summary (KPI grid + annual/monthly table), quarterly income projections (Q1–Q4), tax liability breakdown (SE tax, federal, quarterly payment due dates), and loan-application business summary. `window.lastMetrics` now populated on every render for zero-cost report generation.
-3. **Performance Optimization & Caching** — Calc cache upgraded from FIFO to LRU (delete+re-insert on hit); max size bumped 50→100 to prevent thrashing during sensitivity analysis. Duplicate eviction logic consolidated into `cacheSet()`. New unit tests lock in LRU behavior and cap enforcement.
-4. **Scroll Lock Bug Fix + Mobile Bottom-Nav Clearance** — Fixed scroll-lock leak in onboarding dialogs (welcome dialog raw `.remove()` bypassed `releaseScrollLock()`); fixed CSS `!important` specificity war hiding debug/perf panels behind fixed nav bar on mobile. Regression tests added for both.
-5. **Read-only Scenario Sharing** — View-only share links (`?readonly=1`): inputs locked, banner shown, "Start your own" CTA; Presentation Notes embedded in URL; two-option share modal (View Only vs Editable).
+1. **Client Mix Optimizer, Advanced Chart Types & KPI Visual Polish** — Grid-search + hill-climbing optimizer suggests the offering mix that maximizes profit or utilization, fully wired into a collapsible panel; new Advanced Charts panel (price × utilization sensitivity heat map, 5-axis balanced scorecard radar, client capacity funnel); subtle accent-gradient wash on KPI boxes/section headers with tightened line-height. 26 new tests (unit + e2e), all manually verified rendering in a headless browser.
+2. **Animated KPI Counters, AI Insights Engine & Reverse Calculator (calc logic)** — KPI counter roll-up animation shipped and visible in the UI. **Caveat**: the Insights Engine (`src/insights/insightsEngine.js`) and Reverse Calculator (`src/insights/reverseCalculator.js`) modules are fully built and unit-tested but have **zero UI wiring** — no panel, no import in `assets/app.jsx` or `index.html`. Users cannot access either feature today; see "Recommended Next 3" below.
+3. **Lint Warning Cleanup** — Eliminated all lint warnings (0 errors, 0 warnings): added ESLint override for test files; removed/renamed unused imports, dead-code vars, bare catch params across 17 source files; replaced debug `console.log` with `console.warn` or removed in production code.
+4. **Tax & Financial Report Generator** — Print-ready HTML financial report accessible from Export drawer: business performance summary (KPI grid + annual/monthly table), quarterly income projections (Q1–Q4), tax liability breakdown (SE tax, federal, quarterly payment due dates), and loan-application business summary.
+5. **Scroll Lock Bug Fix + Mobile Bottom-Nav Clearance** — Fixed scroll-lock leak in onboarding dialogs (welcome dialog raw `.remove()` bypassed `releaseScrollLock()`); fixed CSS `!important` specificity war hiding debug/perf panels behind fixed nav bar on mobile. Regression tests added for both.
 
-**Earlier (April–May 2026)**
+**Earlier (April–June 2026)**
+- Performance Optimization & Caching — FIFO → LRU calc cache, max size 50→100
+- Read-only Scenario Sharing — View-only share links, Presentation Notes embedded in URL
 - UI Modernization — full Material dark/light theming, slim app-bar, hamburger drawer, all-modals theming
 - Share/Copy UX Polish — click-to-copy on all shareable fields, compare/share/embed bug fixes
 - Help & Onboarding Enhancements — contextual '?' KPI help, Quick Reference modal, guided tour fixes
@@ -28,16 +30,19 @@ See README.md for setup and development instructions.
 
 ## Recommended Next 3
 
-1. **Animated KPI Counters & Remaining Micro-interactions** (~2 hrs)
-   - Numbers roll up on recalculation (CSS counter animation or JS tween)
-   - CSS ripple on primary buttons, smoother modal/toast entrance timing
-   - Polishes the premium feel ahead of Play Store launch; low risk
+1. **Wire Up AI Insights Engine & Reverse Calculator UI** (~2-3 hrs)
+   - The calculation logic for both already exists and is unit-tested (`src/insights/`) — this is purely UI wiring, following the exact pattern just established for the Mix Optimizer panel (collapsible section, feature-gate entry, init function)
+   - Highest impact-to-effort ratio on the board right now: two "done" features are currently invisible to every user
+   - Acceptance criteria: collapsible panel(s) in `index.html`, `showInsightsEngine`/`showReverseCalculator` (or similar) feature gates in `src/settings/index.js`, init/render functions in `assets/app.jsx`, at least one e2e smoke test per panel
 
-2. **AI / Rules-Based Insights Engine** (~3-4 hrs)
-   - Rules-based optimization suggestions ("your utilization is 62% — hiring would require X more clients to break even")
-   - Automated alerts for declining margins or under-utilization
-   - Auto-generated what-if scenarios from current inputs
-   - Transforms the calculator into a strategic advisor; natural premium-tier differentiator
+2. **Guided "What If?" Wizard** (~2-3 hrs)
+   - Step-by-step flow walking users through common scenarios ("what if I hired one more person?", "what if I raised prices 15%?") without requiring them to know which inputs to change
+   - Natural delivery mechanism for the Reverse Calculator once wired up (item 1) — pairs well if done back-to-back
+   - Lower friction than manual sensitivity analysis; strong onboarding hook
+
+3. **Industry Benchmarks & Competitive Pricing** (~4-6 hrs)
+   - Templates are done (consulting, cleaning, landscaping, fitness, photography, handyman) — remaining work is benchmark comparisons, regional pricing data, success metric standards
+   - Natural differentiator once the templates already carry realistic default pricing
 
 ---
 
@@ -52,46 +57,24 @@ See README.md for setup and development instructions.
 1. ✅ **Read-only Scenario Sharing & Collaborative Comments**
 2. ✅ **Tax & Financial Report Generator**
 3. ✅ **Performance Optimization & Caching**
+4. ✅ **AI-Powered Profitability Insights Engine** — calc logic done (`src/insights/insightsEngine.js`); **UI wiring still pending**, see item 4b below
+5. ✅ **"What Would It Take?" Reverse Calculator** — calc logic done (`src/insights/reverseCalculator.js`); **UI wiring still pending**, see item 4b below
+6. ✅ **Client Mix Optimizer** — fully wired, panel live in the UI
 
-4. **AI-Powered Profitability Insights Engine** ← *Recommended next*
-   - Rules-based optimization suggestions ("increase price X by 10%")
-   - Automated alerts for declining utilization
-   - Competitive pricing recommendations
-   - Auto-generated what-if scenarios
-   - Impact: Transforms calculator into strategic advisor
-   - Effort: ~3-4 hours
-
-5. **"What Would It Take?" Reverse Calculator** *(new)*
-   - User enters desired annual take-home; app back-calculates required pricing, client count, or utilization
-   - Inverse of the current forward-calculation model — highly intuitive for goal-setting
-   - Effort: ~2-3 hours
-
-6. **Client Mix Optimizer** *(new)*
-   - Given current capacity, suggest the optimal offering mix (service type ratio) to maximize profit or utilization
-   - Builds on existing sensitivity analysis infrastructure
+4b. **Wire Up Insights Engine & Reverse Calculator UI** ← *Recommended next*
+   - Both modules are unit-tested and calc-complete; this is purely UI wiring following the Mix Optimizer panel pattern
    - Effort: ~2-3 hours
 
 **Visual Design & Polish**
 
-7. **Animated KPI Counters & Remaining Micro-interactions** ← *Recommended next*
-   - Animated number roll-up on recalculation, CSS ripple on buttons, smoother entrance animations
-   - `prefers-reduced-motion` guard already in place
-   - Effort: ~2 hours
-
-8. **Modern Visual Effects & Color Enhancement**
-   - ✅ Done: light/dark mode, runtime accent palettes, self-hosted Inter, elevation scale
-   - Remaining: subtle gradient layers on KPI boxes/section headers, typography rhythm pass
-   - Effort: ~1-2 hours
+7. ✅ **Animated KPI Counters & Remaining Micro-interactions**
+8. ✅ **Modern Visual Effects & Color Enhancement** — gradient layers on KPI boxes/section headers, typography rhythm pass, all shipped
 
 **Advanced Analytics (4-6 Hour Tasks)**
 
-9. **Advanced Chart Types**
-   - Heat maps for multi-variable sensitivity analysis
-   - Radar charts for balanced scorecard views
-   - Funnel charts for customer journey
-   - Effort: ~4-6 hours
+9. ✅ **Advanced Chart Types** — price × utilization heat map, balanced scorecard radar, client capacity funnel, fully wired
 
-10. **Industry Benchmarks & Competitive Pricing**
+10. **Industry Benchmarks & Competitive Pricing** ← *Recommended next*
     - ✅ Templates complete (consulting, cleaning, landscaping, fitness, photography, handyman)
     - Remaining: industry benchmark comparisons, regional pricing data, success metric standards
     - Effort: ~4-6 hours (templates done; focus on benchmarking data)
@@ -101,10 +84,26 @@ See README.md for setup and development instructions.
     - Geographic pricing variations by region
     - Effort: ~4-5 hours
 
-12. **Guided "What If?" Wizard** *(new)*
+12. **Guided "What If?" Wizard** ← *Recommended next*
     - Step-by-step flow walking users through 3-5 common scenarios ("what if I hired one more person?", "what if I raised prices 15%?") without requiring them to know which inputs to change
-    - Lower friction than manual sensitivity analysis; great onboarding hook
+    - Natural delivery mechanism for the Reverse Calculator once item 4b ships
     - Effort: ~2-3 hours
+
+**Cleanup / Small Wins**
+
+12b. **Fix or remove the dead `?loadTestScenarios` / `?testScenario=name` feature** *(new — found during doc audit)*
+   - `loadTestScenarios()` and `loadSpecificTestScenario()` in `assets/services/miscService.js` are empty no-op stubs; `TEST_SCENARIOS` in `assets/app.jsx` only has 2 entries (`basic`, `freelancer`), not the 9 previously documented
+   - Either implement real named scenarios or delete the dead code path (it's called unconditionally on load per `assets/app.jsx`)
+   - Effort: ~1-2 hours
+
+12c. **E2E coverage for Mix Optimizer & Advanced Charts panels** *(new)*
+   - Current coverage for both is unit-tests-only (compute logic) plus a handful of visual-polish assertions; no e2e test drives the actual panel toggle → run → results flow the way `mobile_layout.spec.js`/`ui-fixes.spec.js` do for other panels
+   - Effort: ~1-2 hours
+
+12d. **"Advisor" unified panel for scattered analytics features** *(new)*
+   - Insights Engine (once wired), Reverse Calculator (once wired), Mix Optimizer, and Advanced Charts are four separate collapsed panels a user has to know to expand individually — low discoverability
+   - Consider a single "Advisor" tab/section that surfaces the top insight/suggestion from each, with links to expand the full panel
+   - Effort: ~3-4 hours
 
 **Mobile & Platform Support (Deferred — blocked by macOS version)**
 
@@ -150,16 +149,15 @@ Privacy-first freemium model planned post-launch. The app will remain fully free
 
 ## Status & Notes
 
-- **Current status**: Application is fully functional with comprehensive test coverage (340 unit tests across 35 files, 1 skipped, plus 123 Playwright e2e on Chromium), dev server stable. June 2026: financial report export, LRU cache upgrade, scroll lock and mobile nav fixes, monetization strategy documented privately.
-- **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard, ✅ data visualization KPI indicators, ✅ help & onboarding enhancements, ✅ UI modernization (dark/light, Material, app-bar, all-modals theming), ✅ financial report export, ✅ LRU calc cache.
-- **Latest milestones** (June 2026):
-  - Lint cleanup: 0 errors, 0 warnings across all 17 affected source files; dead imports/vars/debug logs removed
-  - Financial Report Export: Print-ready HTML report (performance summary, quarterly projections, tax breakdown, loan summary)
-  - Cache LRU + size bump: FIFO → LRU, 50→100 entries; `cacheSet()` consolidation
-  - Mobile fix: scroll-lock leak on fresh-user welcome dialog; CSS `!important` nav-bar clearance
-  - Monetization strategy: documented in gitignored local doc; public stub only
-- **Next priorities**: Animated KPI counters → AI Insights Engine (see Recommended Next 3 above)
-- **Strategic positioning**: Core financial-modeling + export + performance foundation is complete. Focus now shifts to polish (animations), intelligence (rules-based insights), and mobile app launch (blocked on macOS). Enterprise features deferred until market demand validates investment.
+- **Current status**: Application is fully functional with comprehensive test coverage (427 unit tests across 40 files, 1 skipped, plus 256 Playwright e2e tests across 14 files on chromium + firefox), dev server stable. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, AI insights engine + reverse calculator (calc logic only — UI wiring pending).
+- **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ advanced visualizations (heat map, radar, funnel), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard, ✅ data visualization KPI indicators, ✅ help & onboarding enhancements, ✅ UI modernization (dark/light, Material, app-bar, all-modals theming), ✅ financial report export, ✅ LRU calc cache, ✅ client mix optimizer.
+- **Latest milestones** (July 2026):
+  - Client Mix Optimizer: grid-search + hill-climbing mix suggestions, fully wired panel
+  - Advanced Charts: price × utilization sensitivity heat map, balanced scorecard radar, client capacity funnel
+  - KPI Visual Polish: accent-gradient wash on KPI boxes/section headers, tightened line-height rhythm
+  - Animated KPI Counters shipped; AI Insights Engine & Reverse Calculator calc logic shipped but **not yet wired to any UI** — see item 4b in the backlog
+- **Next priorities**: Wire up Insights Engine & Reverse Calculator UI → Guided "What If?" Wizard → Industry Benchmarks (see Recommended Next 3 above)
+- **Strategic positioning**: Core financial-modeling + export + performance + advanced-analytics foundation is complete. Focus now shifts to closing the gap between built-but-unwired features and actual UI access, then onboarding polish (wizard) and differentiation (benchmarks). Mobile app launch remains blocked on macOS. Enterprise features deferred until market demand validates investment.
 - **Known debt**: Capacitor stuck at v5.7.8 due to Xcode 14.2 / macOS Monterey — 5 high-severity tar vulnerabilities in @capacitor/cli will resolve when Capacitor v8 upgrade is unblocked by macOS upgrade.
 
 ### User Feedback & Research Loop
@@ -169,15 +167,15 @@ This section tracks common feature requests, friction points, and competitive ga
 - **Collaboration**: Teams requesting read-only sharing and comment features for client presentations (✅ shipped)
 - **Financial Reporting**: Users wanting tax liability estimates and quarterly summaries (✅ shipped)
 - **Performance**: Large scenario reports occasionally show slowdowns with multi-service businesses (✅ shipped)
-- **Reverse calculation**: "Tell me what I need to hit X take-home" — no input yet, inferred from usage patterns
-- **Goal-setting wizard**: Users unsure which inputs to adjust for desired outcomes
+- **Reverse calculation**: "Tell me what I need to hit X take-home" — calc logic shipped (`src/insights/reverseCalculator.js`), UI wiring pending (see backlog item 4b)
+- **Goal-setting wizard**: Users unsure which inputs to adjust for desired outcomes — tracked as Guided "What If?" Wizard
 - **Accessibility**: Keyboard navigation and screen reader support (shipped)
 - **Localization**: Multi-currency support and localized formatting (shipped)
 
 **How to use**: Update this list after customer conversations, support tickets, or user interviews. Use to validate roadmap priorities and surface unexpected user needs.
 
-### Test Coverage Status (June 2026)
-- **340 unit tests** across 35 files (1 skipped), plus **123 Playwright e2e** on Chromium
+### Test Coverage Status (July 2026)
+- **427 unit tests** across 40 files (426 passing, 1 skipped), plus **256 Playwright e2e tests** across 14 files on chromium + firefox
 - **Pass rate**: 100% unit tests passing (1 intentional skip); 100% e2e passing; 0 lint errors, 0 lint warnings
 - **Health score**: 9/10 — production-ready with excellent feature gating, UI regression, security, and financial report coverage
 - **Key test areas**:
@@ -190,3 +188,6 @@ This section tracks common feature requests, friction points, and competitive ga
   - ✅ **Tooltips** (50+ tests): All three tooltip systems, XSS prevention, state tracking
   - ✅ **Security** (E2E): XSS and CSV injection regression suite
   - ✅ **Performance** (cache stats, LRU behavior, timing thresholds, max-size cap)
+  - ✅ **Client Mix Optimizer** (9 tests): Profit/utilization objectives, edge cases, public API
+  - ✅ **Advanced Charts** (12 tests): Heat map grid, scorecard normalization, funnel stages
+  - ⚠️ **Gap**: Mix Optimizer & Advanced Charts have no e2e panel-interaction coverage yet (see backlog item 12c)

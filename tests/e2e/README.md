@@ -42,6 +42,9 @@ npx playwright test --project=firefox
 - `help_onboarding.spec.js` - Help center, contextual KPI help, guided tour
 - `ui-fixes.spec.js` - UI fix regressions (compare/share, dark mode legibility, copy-on-click)
 - `security.spec.js` - Security regression tests (XSS, CSV injection)
+- `palette.spec.js` - Color palette switcher (drawer swatches, light/dark toggle, persistence)
+- `scroll-lock.spec.js` - Background scroll lock across modals/dialogs
+- `visual-polish.spec.js` - KPI/section-header gradient polish and legibility
 - `helpers.js` - Shared helpers (page-ready waits, onboarding dismissal)
 
 ## Adding New Tests

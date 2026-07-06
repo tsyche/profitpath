@@ -26,7 +26,8 @@ Client-side profitability and capacity simulator for recurring service businesse
 - **Collaboration**: Shareable URLs for sharing scenarios with stakeholders, automatic URL loading on page load
 - **Templates**: Industry-specific templates for consulting, cleaning, landscaping, handyman, fitness, and photography services
 - **UI/UX**: Responsive design, mobile-optimized layout, collapsible debug panel, utilization gauge, profit waterfall charts, polished visual design
-- **Test Coverage**: 315 unit tests (including fuzz tests) and 170 Playwright e2e runs across chromium and firefox — both run in CI on every push
+- **Advanced Analytics**: Client mix optimizer (suggests optimal offering mix for profit/utilization), advanced charts (sensitivity heat map, balanced scorecard radar, client capacity funnel)
+- **Test Coverage**: 427 unit tests (including fuzz tests, 40 files) and 256 Playwright e2e tests across chromium and firefox (14 files) — both run in CI on every push
 
 ## Quick Start
 
@@ -57,9 +58,12 @@ For full list of available commands, run `just --list`.
 
 ### Testing scenarios
 
-Load test data via URL parameters:
-- `?loadTestScenarios` — add 9 pre-built test scenarios to localStorage
-- `?testScenario=default` — load a specific scenario (also: high-profit, loss-making, multi-service, etc.)
+Use the Templates menu to load real, working `INDUSTRY_TEMPLATES` configs
+(consulting, cleaning, landscaping, fitness, photography, handyman). A
+`TEST_SCENARIOS` object with 2 entries (`basic`, `freelancer`) also exists in
+`assets/app.jsx` for URL-based loading, but the `?loadTestScenarios` /
+`?testScenario=name` loader functions are currently unimplemented stubs — see
+`CLAUDE.md`'s Testing Scenarios section for details.
 
 ## Documentation
 
@@ -67,6 +71,10 @@ Load test data via URL parameters:
 - **[ROADMAP.md](ROADMAP.md)** — Completed features and prioritized roadmap for future improvements
 - **[FEATURES.md](FEATURES.md)** — Detailed feature descriptions and capabilities
 - **[docs/experience-levels.md](docs/experience-levels.md)** — Feature gates by user experience level
+- **[docs/privacy-policy.md](docs/privacy-policy.md)** — Data handling and privacy commitments
+- **[tests/e2e/README.md](tests/e2e/README.md)** — Playwright E2E test suite structure and commands
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — How to contribute: setup, testing, branch/PR conventions
+- **[CHANGELOG.md](CHANGELOG.md)** — Notable changes by version
 
 ## Guided Tour
 
@@ -84,9 +92,7 @@ ProfitPath includes a 9-step interactive tour helping new users explore all feat
 
 ## Contributing
 
-- Create a feature branch: `git checkout -b feature/my-feature`
-- Make focused commits with clear messages
-- Open a pull request when ready
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, testing, and branch/PR conventions.
 
 ## License
 
