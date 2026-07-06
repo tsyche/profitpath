@@ -16,6 +16,8 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Break-even Analysis**: Visual indicators showing contribution margins and break-even points
 - **Utilization Tracking**: Monitor capacity usage with gauge and percentage indicators
 - **Profit/Loss Waterfall**: Interactive chart showing revenue flow and cost breakdown
+- **Client Mix Optimizer**: Suggests the offering mix that maximizes projected profit or utilization within current capacity (Intermediate+ experience levels)
+- **Advanced Charts**: Price × utilization sensitivity heat map, balanced scorecard radar (profitability, utilization, growth headroom, cost efficiency, diversification), and client capacity funnel (Advanced experience level)
 
 ### Data Management
 - **Scenario Saving**: Save unlimited scenarios with descriptive names
@@ -36,9 +38,8 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Automated Scheduling**: Set up recurring report generation
 
 ### Testing Infrastructure
-- **Test Scenarios**: 9 pre-built scenarios covering various business situations
-- **URL Parameters**: Load test scenarios via `?loadTestScenarios` or `?testScenario=name`
-- **Edge Case Coverage**: Scenarios for profit/loss, capacity limits, multi-service businesses
+- **Industry Templates**: 6 working templates (consulting, cleaning, landscaping, fitness, photography, handyman) loadable from the Templates menu
+- **Test Scenarios**: 2 scenarios (`basic`, `freelancer`) defined in `assets/app.jsx`; URL-based loading (`?loadTestScenarios`, `?testScenario=name`) is currently an unimplemented stub — see `CLAUDE.md`
 
 ### Performance & Reliability
 - **Lazy Loading**: Export libraries and charts load on-demand

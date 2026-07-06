@@ -15,7 +15,7 @@ This document provides comprehensive information for AI agents and developers wo
 ## Technical Architecture
 
 ### Frontend Architecture
-- **Build System**: Vite v7.3.1 with JSX support
+- **Build System**: Vite v8.0.16 with JSX support
 - **Testing**: Vitest v4.0.18 with jsdom environment
 - **Code Quality**: ESLint with comprehensive rules
 - **Language**: Modern JavaScript (ES6+) with optional TypeScript support
@@ -36,7 +36,8 @@ assets/
 │   ├── modalService.js     # Modal and toast handling
 │   ├── scenarioService.js  # Scenario management
 │   ├── stateManager.js     # State persistence helpers
-│   └── visualizationService.js # Chart and visualization logic
+│   ├── visualizationService.js # Chart and visualization logic (gauge, waterfall)
+│   └── advancedChartsService.js # Heat map, radar scorecard, client funnel
 └── utils/              # Helper utilities
     ├── chartUtils.js       # Chart configuration and rendering
     ├── helpers.js          # General utility functions
@@ -47,6 +48,10 @@ src/
 ├── analytics/          # Analytics, feedback, and dashboard modules
 ├── calculations/       # Modular calculation engine
 │   └── index.js          # Core calculation engine with caching
+├── insights/           # AI/rules-based insights, reverse calculator, mix optimizer
+│   ├── insightsEngine.js   # Rules-based profitability insights
+│   ├── reverseCalculator.js # "What would it take?" reverse calculations
+│   └── mixOptimizer.js     # Suggests optimal offering mix for profit/utilization
 ├── localization/       # Localization & formatting infrastructure
 ├── settings/          # Experience levels and feature gating
 │   └── index.js          # Settings management and feature gates
@@ -62,12 +67,12 @@ manifest.json        # PWA configuration
 #### 1. Calculation Engine (`src/calculations/index.js`)
 - **Purpose**: Handles all business logic calculations with caching and debugging support
 - **Key Features**:
-  - Caching system with configurable cache size (default: 50 entries)
+  - Caching system with configurable cache size (default: 100 entries)
   - Debug mode with intermediate calculation results
   - Input sanitization and validation
   - Two calculation modes: Forecast and Current operations
 - **Constants**: `HOURS_PER_YEAR = 2080` (standard paid hours per employee per year)
-- **Cache Management**: Automatic cache eviction using FIFO when max size exceeded
+- **Cache Management**: LRU eviction (delete + re-insert on hit) when max size exceeded
 
 #### 2. Business Logic (`assets/services/businessLogic.js`)
 - **Purpose**: Core business rules, validation, and offering management
@@ -81,8 +86,8 @@ manifest.json        # PWA configuration
 - **Purpose**: Manages user preferences and progressive disclosure
 - **Experience Levels**:
   - **Beginner**: Basic features only (core calculations, scenario management)
-  - **Intermediate**: Advanced calculations, detailed breakdowns, scenario comparison, sensitivity analysis
-  - **Advanced**: All features including debug panel, performance metrics, sensitivity analysis
+  - **Intermediate**: Advanced calculations, detailed breakdowns, scenario comparison, sensitivity analysis, client mix optimizer
+  - **Advanced**: All features including debug panel, performance metrics, sensitivity analysis, client mix optimizer, advanced charts (heat map, radar scorecard, client funnel)
 - **Feature Gates**: Automatic feature enablement based on experience level. Note: export formats are always available regardless of level (see `docs/experience-levels.md`).
 
 #### 4. State Management
@@ -183,32 +188,24 @@ npm run lint         # Check code quality
 
 ### Testing Scenarios
 
-The application includes built-in test scenarios accessible via URL parameters:
+`assets/app.jsx` defines a `TEST_SCENARIOS` object with 2 entries (`basic`, `freelancer`) intended to be loadable via URL parameters (`?loadTestScenarios`, `?testScenario=name`).
 
-**Load all test scenarios:**
-```
-http://localhost:3000/?loadTestScenarios
-```
+> **Known gap**: `loadTestScenarios()` and `loadSpecificTestScenario()` in
+> `assets/services/miscService.js` are currently empty no-op stubs, so this
+> URL-loading path does not actually populate the app yet. The scenario data
+> exists but nothing wires it up. Prior versions of this doc described 9 named
+> scenarios (`default`, `high-profit`, `loss-making`, etc.) — those never
+> existed in code and have been removed here; implement the loader or update
+> `TEST_SCENARIOS` before re-documenting this feature.
 
-**Load a specific test scenario:**
-```
-http://localhost:3000/?testScenario=default
-```
-
-**Available Test Scenarios:**
-- `default` - Basic consulting setup
-- `high-profit` - High-margin scenario
-- `loss-making` - Operating at a loss
-- `multi-service` - Multiple service offerings
-- `over-capacity` - Above target utilization
-- `under-capacity` - Below target utilization
-- `current-mode` - Existing clients scenario
-- `zero-values` - Edge case testing
-- `break-even-test` - Break-even analysis
+To manually exercise different business situations for testing, edit the
+`TEST_SCENARIOS` object in `assets/app.jsx` or use the Templates menu, which
+loads real (working) `INDUSTRY_TEMPLATES` configs for consulting, cleaning,
+landscaping, fitness, photography, and handyman.
 
 ### Testing Strategy
 
-#### Test Coverage (315 unit tests, 170 e2e runs passing)
+#### Test Coverage (427 unit tests across 40 files — 426 passing, 1 skipped — plus 256 Playwright e2e tests across 14 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.js`)
@@ -264,6 +261,7 @@ The application supports multiple export formats:
 - **HTML**: Standalone web pages
 - **Email**: Direct sharing via email client
 - **Embed**: iframe codes for website integration
+- **Schedule**: Set up recurring report generation
 
 ### Analytics System
 - **Admin-only tracking** with user opt-out capability
@@ -292,7 +290,7 @@ The application supports multiple export formats:
 - **Service worker** for offline functionality and caching
 
 ### Memory Management
-- **Cache size limits** (default: 50 calculation results)
+- **Cache size limits** (default: 100 calculation results, LRU eviction)
 - **Automatic cleanup** of unused resources
 - **Efficient state updates** to prevent memory leaks
 
@@ -392,6 +390,8 @@ updateSetting('key', 'value');
 
 ## Contributing Guidelines
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, branch/PR conventions, and testing requirements.
+
 ### Code Review Checklist
 - [ ] Functions are well-documented
 - [ ] No console.log statements in production
@@ -400,32 +400,16 @@ updateSetting('key', 'value');
 - [ ] Mobile responsiveness tested
 - [ ] Accessibility considerations included
 
-### Development Process
-1. **Fork the repository**
-2. **Create feature branch**: `git checkout -b feature/my-feature`
-3. **Make changes** with proper testing
-4. **Update documentation** as needed
-5. **Submit pull request** with clear description
-
-### Testing Requirements
-- **Unit tests** for all new functionality
-- **Integration tests** for user workflows
-- **Visual tests** for UI changes
-- **Performance tests** for calculation engine changes
-
 ## Contact and Support
 
 ### Development Team
-- **Primary maintainer**: [Project maintainer information]
 - **Issue tracking**: GitHub Issues
 - **Documentation**: README.md and CLAUDE.md
-- **Community**: [Link to community resources]
 
 ### Getting Help
 - **Documentation**: Start with README.md and CLAUDE.md
 - **Issues**: Search existing issues before creating new ones
-- **Discussions**: Use GitHub Discussions for questions
-- **Contributing**: Create a feature branch, make focused commits, open a pull request
+- **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
