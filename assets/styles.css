@@ -1269,6 +1269,7 @@ body {
 .card .card-h {
   padding: var(--gap);
   border-bottom: 1px solid var(--border);
+  background-image: linear-gradient(180deg, rgba(var(--accent-rgb), .06), transparent);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1278,6 +1279,7 @@ body {
 .card .card-h h2 {
   margin: 0;
   font-size: 13px;
+  line-height: 1.2;
   letter-spacing: .3px;
   text-transform: uppercase;
   font-weight: 600;
@@ -1600,6 +1602,7 @@ button:focus {
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--surface-2);
+  background-image: radial-gradient(160px 90px at 100% 0%, rgba(var(--accent-rgb), .10), transparent 70%);
   box-shadow: var(--elev-1);
   transition: transform var(--dur-2) var(--ease-spring),
     box-shadow var(--dur-2) var(--ease-standard),
@@ -1623,6 +1626,7 @@ button:focus {
   margin-top: 6px;
   font-size: 18px;
   font-weight: 700;
+  line-height: 1.2;
   transition: color 0.3s ease;
 }
 
@@ -1855,6 +1859,127 @@ button:focus {
 .sensitivity-wrapper {
   margin-top: 12px;
   margin-bottom: 8px;
+}
+
+/* Client Mix Optimizer panel */
+.mix-optimizer-wrapper {
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+/* Advanced Charts panel: heat map, radar scorecard, client funnel.
+   Three stacked charts run taller than the other debug panels, so this
+   needs a higher cap than the shared .debug-body max-height: 500px. */
+.advanced-charts-wrapper {
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.advanced-charts-wrapper .debug-body {
+  max-height: 1200px;
+}
+
+.heatmap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: var(--mono);
+}
+
+.heatmap-table th,
+.heatmap-table td {
+  padding: 6px 8px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.heatmap-table th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.heatmap-table td {
+  color: var(--text);
+}
+
+.scorecard-radar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.radar-svg {
+  width: 200px;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+.radar-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.radar-legend-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 160px;
+}
+
+.radar-legend-label {
+  color: var(--muted);
+}
+
+.radar-legend-value {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.client-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.funnel-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.funnel-label {
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 130px;
+  font-family: var(--mono);
+}
+
+.funnel-bar-track {
+  flex: 1;
+  height: 16px;
+  border-radius: 8px;
+  background: var(--overlay-2);
+  overflow: hidden;
+}
+
+.funnel-bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width var(--dur-2) var(--ease-standard);
+}
+
+.funnel-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 40px;
+  text-align: right;
 }
 
 .sensitivity-sliders {
@@ -2354,6 +2479,7 @@ input[type="checkbox"] {
 .section-h h3 {
   margin: 0;
   font-size: 12px;
+  line-height: 1.2;
   letter-spacing: .3px;
   text-transform: uppercase;
   color: var(--muted);

@@ -11,6 +11,8 @@ import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL, isReadOnly
 import { uuid, clamp } from './utils/helpers';
 import { showToast } from './services/modalService.js';
 import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui.js';
+import { optimizeMix } from '../src/insights/mixOptimizer.js';
+import { renderSensitivityHeatmap, renderScorecardRadar, renderClientFunnel } from './services/advancedChartsService.js';
 
 // Test scenarios for development
 const TEST_SCENARIOS = {
@@ -114,10 +116,10 @@ const INDUSTRY_TEMPLATES = {
     description: 'Lawn care and landscaping business',
     config: {
       offerings: [
-        { name: 'Weekly Lawn Maintenance', priceMonthly: 200, sessionsPerYear: 52, hoursPerSession: 1.5, variableCostPerSession: 20, mixPct: 40, currentClients: 15 },
+        { name: 'Weekly Lawn Care', priceMonthly: 200, sessionsPerYear: 52, hoursPerSession: 1.5, variableCostPerSession: 20, mixPct: 40, currentClients: 15 },
         { name: 'Biweekly Lawn Care', priceMonthly: 130, sessionsPerYear: 26, hoursPerSession: 1, variableCostPerSession: 15, mixPct: 30, currentClients: 10 },
         { name: 'Monthly Lawn Care', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 15, mixPct: 20, currentClients: 8 },
-        { name: 'Seasonal Services', priceMonthly: 250, sessionsPerYear: 4, hoursPerSession: 4, variableCostPerSession: 40, mixPct: 10, currentClients: 5 }
+        { name: 'Seasonal Lawn Care', priceMonthly: 250, sessionsPerYear: 4, hoursPerSession: 4, variableCostPerSession: 40, mixPct: 10, currentClients: 5 }
       ],
       fullTimeEmployees: 2,
       partTimeEmployees: 0,
@@ -1112,7 +1114,9 @@ function updateUIForSettings() {
     { selector: '.export-options', setting: 'showExportOptions' },
     { selector: '.debug-wrapper', setting: 'showDebugPanel' },
     { selector: '.perf-wrapper', setting: 'showPerformanceMetrics' },
-    { selector: '.sensitivity-wrapper', setting: 'showSensitivityAnalysis' }
+    { selector: '.sensitivity-wrapper', setting: 'showSensitivityAnalysis' },
+    { selector: '.mix-optimizer-wrapper', setting: 'showMixOptimizer' },
+    { selector: '.advanced-charts-wrapper', setting: 'showAdvancedCharts' }
   ];
 
   elementsToToggle.forEach(({ selector, setting }) => {
@@ -2207,6 +2211,89 @@ function initCustomerAnalyticsPanel() {
   });
 }
 
+// Client Mix Optimizer Panel
+function initMixOptimizerPanel() {
+  const toggle = $('#mixOptimizerToggle');
+  const body = $('#mixOptimizerBody');
+  if (!toggle || !body) return;
+
+  toggle.addEventListener('click', () => {
+    const isCollapsed = body.classList.toggle('collapsed');
+    const expandedNow = !isCollapsed;
+    body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+    toggle.setAttribute('aria-expanded', expandedNow ? 'true' : 'false');
+    toggle.textContent = (expandedNow ? '▼' : '▶') + toggle.textContent.slice(1);
+  });
+
+  $('#mixOptimizerRun')?.addEventListener('click', () => {
+    updateMixOptimizer();
+  });
+}
+
+function updateMixOptimizer() {
+  const resultsEl = $('#mixOptimizerResults');
+  if (!resultsEl) return;
+
+  const objective = $('#mixOptimizerObjective')?.value || 'profit';
+
+  let result;
+  try {
+    const metrics = calc(state);
+    result = optimizeMix(state, metrics, objective);
+  } catch (e) {
+    console.warn('Mix optimization failed:', e);
+    result = null;
+  }
+
+  if (!result) {
+    resultsEl.innerHTML = '<p style="color: var(--muted);">Add at least two offerings to find an optimal mix.</p>';
+    return;
+  }
+
+  let tableHtml = '<table class="sensitivity-comparison"><thead><tr><th title="Service offering">Offering</th><th title="Current mix percentage">Current Mix</th><th title="Suggested mix percentage">Suggested Mix</th></tr></thead><tbody>';
+  result.suggestedMix.forEach((o, idx) => {
+    const current = result.currentMix[idx]?.mixPct ?? 0;
+    tableHtml += `<tr><td>${o.name}</td><td>${Math.round(current)}%</td><td>${Math.round(o.mixPct)}%</td></tr>`;
+  });
+  tableHtml += '</tbody></table>';
+
+  const summary = result.improved
+    ? `<p style="margin-top: 8px;">${result.message}</p>`
+    : '<p style="margin-top: 8px; color: var(--muted);">Your current mix is already close to optimal for this objective.</p>';
+
+  resultsEl.innerHTML = tableHtml + summary;
+}
+
+// Advanced Charts Panel: heat map, radar scorecard, client funnel
+function initAdvancedChartsPanel() {
+  const toggle = $('#advancedChartsToggle');
+  const body = $('#advancedChartsBody');
+  if (!toggle || !body) return;
+
+  const renderCharts = () => {
+    try {
+      const metrics = calc(state);
+      const heatmapEl = $('#heatmapContainer');
+      const radarEl = $('#radarContainer');
+      const funnelEl = $('#funnelContainer');
+      if (heatmapEl) heatmapEl.innerHTML = renderSensitivityHeatmap(state);
+      if (radarEl) radarEl.innerHTML = renderScorecardRadar(metrics);
+      if (funnelEl) funnelEl.innerHTML = renderClientFunnel(metrics);
+    } catch (e) {
+      console.warn('Advanced charts render failed:', e);
+    }
+  };
+
+  toggle.addEventListener('click', () => {
+    const isCollapsed = body.classList.toggle('collapsed');
+    const expandedNow = !isCollapsed;
+    body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+    toggle.setAttribute('aria-expanded', expandedNow ? 'true' : 'false');
+    toggle.textContent = (expandedNow ? '▼' : '▶') + toggle.textContent.slice(1);
+    if (expandedNow) renderCharts();
+  });
+}
+
 function initSliders() {
   const sliders = {
     price: $('#priceSlider'),
@@ -2579,6 +2666,8 @@ try {
   initPerfPanel();
   initSensitivityPanel();
   initCustomerAnalyticsPanel();
+  initMixOptimizerPanel();
+  initAdvancedChartsPanel();
 } catch {
   try {
     persistState();

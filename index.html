@@ -662,6 +662,44 @@
           </div>
         </div>
 
+        <!-- Client Mix Optimizer panel (collapsible) -->
+        <div class="mix-optimizer-wrapper advanced-feature">
+          <button id="mixOptimizerToggle" class="debug-toggle" aria-expanded="false" aria-controls="mixOptimizerBody"
+            title="Find the offering mix that maximizes profit or utilization within your current capacity">▶
+            Client Mix Optimizer</button>
+          <div id="mixOptimizerBody" class="debug-body collapsed" aria-hidden="true">
+            <div id="mixOptimizerPanel">
+              <div class="slider-row">
+                <label class="slider-label">Optimize for</label>
+                <select id="mixOptimizerObjective" title="Choose whether to maximize projected profit or capacity utilization">
+                  <option value="profit">Profit</option>
+                  <option value="utilization">Utilization</option>
+                </select>
+              </div>
+              <button id="mixOptimizerRun" class="btn secondary small" style="margin-top: 8px;"
+                title="Search for the offering mix that best meets the chosen objective">Find optimal mix</button>
+              <div id="mixOptimizerResults" style="margin-top: 12px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Charts panel (collapsible) -->
+        <div class="advanced-charts-wrapper advanced-feature">
+          <button id="advancedChartsToggle" class="debug-toggle" aria-expanded="false" aria-controls="advancedChartsBody"
+            title="Multi-variable sensitivity heat map, balanced scorecard radar, and client capacity funnel">▶
+            Advanced Charts</button>
+          <div id="advancedChartsBody" class="debug-body collapsed" aria-hidden="true">
+            <div id="advancedChartsPanel">
+              <div class="section-h"><h3>Price × Utilization Heat Map</h3></div>
+              <div id="heatmapContainer"></div>
+              <div class="section-h" style="margin-top: 16px;"><h3>Balanced Scorecard</h3></div>
+              <div id="radarContainer"></div>
+              <div class="section-h" style="margin-top: 16px;"><h3>Client Capacity Funnel</h3></div>
+              <div id="funnelContainer"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Customer Analytics Panel (Advanced feature) -->
         <div class="customer-analytics-wrapper advanced-feature">
           <button id="customerAnalyticsToggle" class="debug-toggle" aria-expanded="false" aria-controls="customerAnalyticsBody"
