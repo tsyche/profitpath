@@ -766,6 +766,22 @@
       }
     }
   </script>
+  <!-- GoatCounter: aggregate visit counting only (no cookies, no PII, honors
+       Do Not Track automatically). Never sees business data — it only ever
+       receives a path, referrer, and browser/OS/screen info per page load.
+       See docs/privacy-policy.md for the full breakdown. -->
+  <script>
+    window.goatcounter = {
+      allow_local: true,
+      path: function () {
+        var isApk = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+        var isLocalDev = !isApk && ['localhost', '127.0.0.1', '[::1]'].indexOf(location.hostname) !== -1;
+        if (isLocalDev) return false; // don't count dev-server traffic
+        return (isApk ? '/apk' : '/web') + location.pathname;
+      }
+    };
+  </script>
+  <script data-goatcounter="https://tsyche.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   <script type="module" src="/src/calculations/index.js"></script>
   <script type="module">
     import { initializeAccessibility } from '/assets/accessibility.js';
