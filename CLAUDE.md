@@ -264,10 +264,9 @@ The application supports multiple export formats:
 - **Schedule**: Set up recurring report generation
 
 ### Analytics System
-- **Admin-only tracking** with user opt-out capability
-- Background usage tracking for development insights
-- Toggle available in settings panel
-- Respects user privacy preferences
+Two separate, unrelated systems — don't conflate them:
+- **In-app feature analytics** (`src/analytics/`): admin-only, opt-in via the settings panel toggle, stored in `localStorage` only. Never transmitted anywhere — see `sanitizeData()` in `src/analytics/analytics.js`, which also strips any accidental PII-shaped fields before storing an event.
+- **Site traffic counter** (GoatCounter, `index.html`): a third-party script that logs anonymous page-load counts (path, referrer, browser/OS, screen size) to `tsyche.goatcounter.com`. No cookies, no fingerprinting, honors the browser's Do Not Track header automatically, and never sees anything entered into the app — scenarios, prices, and calculations still never leave the device. Fires from both the web deploy and the Capacitor-wrapped APK, tagged `/web` vs `/apk` respectively so usage can be told apart; skipped automatically on `localhost`/`127.0.0.1` dev servers. See `docs/privacy-policy.md`.
 
 ### Scenario Management
 - **LocalStorage persistence** for unlimited scenarios
@@ -329,8 +328,8 @@ The application supports multiple export formats:
 - **XSS prevention** - proper HTML escaping
 
 ### Data Privacy
-- **No data transmission** - all processing happens locally
-- **User control** - complete control over data
+- **No business-data transmission** - all calculations, scenarios, and inputs stay on-device; only an anonymous page-load count leaves the app (see Analytics System above)
+- **User control** - complete control over your data
 - **Export security** - secure export methods
 - **Privacy-first design** - minimal data collection
 
