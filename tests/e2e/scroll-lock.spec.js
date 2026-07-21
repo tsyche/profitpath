@@ -179,6 +179,33 @@ test.describe('Background scroll lock', () => {
     expect(await lockCount(page)).toBe(0);
   });
 
+  test('analytics → advanced → close both with X leaves scroll unlocked', async ({ page }) => {
+    // Regression for the reported repro: opening the advanced dashboard over the
+    // basic one removed the basic modal without releasing its lock and opened the
+    // advanced view without acquiring one; closing advanced re-opened basic
+    // (another acquire). Closing both with the X button then left a stranded
+    // lock (+1) — scroll permanently dead, force-close required on Android.
+    await page.evaluate(() => window.profitPathAnalytics?.saveSettings({ enabled: true }));
+    await page.evaluate(() => window.profitPathAnalyticsUI?.showAnalyticsDashboard());
+    await expect(page.locator('#analyticsModal')).toBeVisible();
+    expect(await lockCount(page)).toBe(1);
+
+    await page.evaluate(() => window.profitPathAnalyticsUI?.showAdvancedDashboard());
+    await expect(page.locator('#advancedDashboardModal')).toBeVisible();
+    expect(await lockCount(page)).toBe(1); // exactly one — not stacked
+
+    // X on advanced → drills back to basic analytics
+    await page.locator('#advancedDashboardModal .modal-close').click();
+    await expect(page.locator('#analyticsModal')).toBeVisible();
+    expect(await lockCount(page)).toBe(1);
+
+    // X on basic → everything closed, scroll must return
+    await page.locator('#analyticsModal .modal-close').click();
+    await page.waitForTimeout(400);
+    expect(await isScrollLocked(page)).toBe(false);
+    expect(await lockCount(page)).toBe(0);
+  });
+
   // ── feedback modal ────────────────────────────────────────────────────────────
 
   test('feedback modal locks scroll on open, releases on close', async ({ page }) => {

@@ -160,6 +160,8 @@ class AnalyticsUI {
     modalOverlay.classList.remove('hidden');
 
     const closeOverlay = () => {
+      // Guard against a double-fire (X + ESC/overlay) over-releasing the lock.
+      if (modalOverlay.classList.contains('hidden')) return;
       modalOverlay.classList.add('hidden');
       window.releaseScrollLock?.();
       setTimeout(() => {
@@ -354,80 +356,6 @@ class AnalyticsUI {
       console.error('Failed to export analytics data:', error);
       this.showNotification('Failed to export analytics data', 'error');
     }
-  }
-
-  showAdvancedDashboard() {
-    try {
-      // Import and create advanced dashboard
-      import('./advanced-dashboard.js').then(module => {
-        const AdvancedDashboard = module.AdvancedAnalyticsDashboard;
-        const dashboard = new AdvancedDashboard();
-
-        // Create and show the dashboard modal
-        const dashboardElement = dashboard.createDashboard();
-        const modal = this.createModal('Advanced Analytics Dashboard', dashboardElement.outerHTML);
-
-        // Initialize the dashboard after it's added to DOM
-        document.body.appendChild(modal);
-
-        // Re-attach event listeners to the dashboard content
-        const dashboardContent = modal.querySelector('.advanced-analytics-dashboard');
-        if (dashboardContent) {
-          dashboard.attachDashboardEventListeners(dashboardContent);
-          dashboard.refreshDashboard();
-        }
-
-        this.showNotification('Advanced dashboard loaded');
-        this.analytics.trackFeatureUsage('advanced_dashboard_open');
-      }).catch(error => {
-        this.showNotification('Failed to load advanced dashboard', 'error');
-        console.error('Dashboard load error:', error);
-      });
-    } catch (error) {
-      this.showNotification('Failed to open advanced dashboard', 'error');
-      console.error('Dashboard error:', error);
-    }
-  }
-
-  createModal(title, content) {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>${title}</h3>
-          <button class="modal-close">&times;</button>
-        </div>
-        <div class="modal-body">
-          ${content}
-        </div>
-      </div>
-    `;
-
-    // Close handlers
-    const closeBtn = modal.querySelector('.modal-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        document.body.removeChild(modal);
-      });
-    }
-
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        document.body.removeChild(modal);
-      }
-    });
-
-    // ESC key handler
-    const escHandler = (e) => {
-      if (e.key === 'Escape' && document.body.contains(modal)) {
-        document.body.removeChild(modal);
-        document.removeEventListener('keydown', escHandler);
-      }
-    };
-    document.addEventListener('keydown', escHandler);
-
-    return modal;
   }
 
   showNotification(message, type = 'success') {
@@ -652,10 +580,12 @@ class AnalyticsUI {
   }
 
   showAdvancedDashboard() {
-    // Close current modal
+    // Close current modal — release the scroll lock it held, or opening the
+    // advanced view over it strands that lock (scroll never returns).
     const currentModal = document.getElementById('analyticsModal');
     if (currentModal) {
       currentModal.remove();
+      window.releaseScrollLock?.();
     }
 
     // Create advanced dashboard modal
@@ -717,6 +647,9 @@ class AnalyticsUI {
     `;
 
     document.body.appendChild(modal);
+    // This modal owns its own scroll lock (the analytics modal it replaced
+    // released one above), so scroll returns only once it too is closed.
+    window.acquireScrollLock?.();
 
     // Add event listeners
     const closeBtn = modal.querySelector('.modal-close');
@@ -724,7 +657,10 @@ class AnalyticsUI {
     const emailBtn = modal.querySelector('#emailReportBtn');
 
     const closeAdvanced = () => {
+      // Guard against a double-fire (X + overlay-click) over-releasing the lock.
+      if (!modal.isConnected) return;
       modal.remove();
+      window.releaseScrollLock?.();
       this.showAnalyticsDashboard();
     };
 
