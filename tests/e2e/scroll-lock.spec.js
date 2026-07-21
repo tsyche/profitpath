@@ -60,6 +60,20 @@ test.describe('Background scroll lock', () => {
     expect(await lockCount(page)).toBe(0);
   });
 
+  test('rapid double-open of the same modal does not strand the scroll lock', async ({ page }) => {
+    // Regression: ppOpenModal had no idempotency guard, so a fumbled
+    // double-tap acquired the scroll lock twice for one visible modal —
+    // a single close only released once, leaving scroll permanently locked.
+    await page.evaluate(() => { window.ppOpenModal('templatesModal'); window.ppOpenModal('templatesModal'); });
+    await expect(page.locator('#templatesModal')).toBeVisible();
+    expect(await lockCount(page)).toBe(1);
+
+    await page.locator('#templatesModal .pp-sheet-x').click();
+    await page.waitForTimeout(300);
+    expect(await isScrollLocked(page)).toBe(false);
+    expect(await lockCount(page)).toBe(0);
+  });
+
   test('settings modal locks scroll on open, releases on close', async ({ page }) => {
     // #settingsCogBtn is a hidden delegate target — invoke it directly
     await page.evaluate(() => document.getElementById('settingsCogBtn').click());
@@ -148,6 +162,23 @@ test.describe('Background scroll lock', () => {
     expect(await lockCount(page)).toBe(0);
   });
 
+  test('rapid double-open of the analytics dashboard does not strand the scroll lock', async ({ page }) => {
+    // Regression: showAnalyticsDashboard removed a pre-existing #analyticsModal
+    // without releasing the lock it held, then acquired a new one — a second
+    // trigger before the first closed left the count one too high forever.
+    await page.evaluate(() => {
+      window.profitPathAnalyticsUI?.showAnalyticsDashboard();
+      window.profitPathAnalyticsUI?.showAnalyticsDashboard();
+    });
+    await expect(page.locator('#analyticsModal')).toBeVisible();
+    expect(await lockCount(page)).toBe(1);
+
+    await page.locator('#analyticsModal .modal-close').click();
+    await page.waitForTimeout(400);
+    expect(await isScrollLocked(page)).toBe(false);
+    expect(await lockCount(page)).toBe(0);
+  });
+
   // ── feedback modal ────────────────────────────────────────────────────────────
 
   test('feedback modal locks scroll on open, releases on close', async ({ page }) => {
@@ -155,6 +186,21 @@ test.describe('Background scroll lock', () => {
     await page.locator('#appDrawer button.drawer-item', { hasText: 'Give feedback' }).click();
     await expect(page.locator('#feedbackModal')).toBeVisible();
     expect(await isScrollLocked(page)).toBe(true);
+
+    await page.locator('#feedbackModal .feedback-close').click();
+    await page.waitForTimeout(200);
+    expect(await isScrollLocked(page)).toBe(false);
+    expect(await lockCount(page)).toBe(0);
+  });
+
+  test('rapid double-open of the feedback modal does not strand the scroll lock', async ({ page }) => {
+    // Same class of bug as the analytics dashboard, in openFeedbackModal.
+    await page.evaluate(() => {
+      window.feedbackUI?.openFeedbackModal();
+      window.feedbackUI?.openFeedbackModal();
+    });
+    await expect(page.locator('#feedbackModal')).toBeVisible();
+    expect(await lockCount(page)).toBe(1);
 
     await page.locator('#feedbackModal .feedback-close').click();
     await page.waitForTimeout(200);

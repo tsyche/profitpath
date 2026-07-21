@@ -127,6 +127,9 @@ class AnalyticsUI {
     const existingModal = document.getElementById('analyticsModal');
     if (existingModal) {
       existingModal.remove();
+      // That modal held its own scroll lock; release it before acquiring a
+      // new one below, or a rapid re-trigger leaves the lock stranded.
+      window.releaseScrollLock?.();
     }
 
     const summary = this.analytics.getAnalyticsSummary();
