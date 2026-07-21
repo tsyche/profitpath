@@ -109,7 +109,7 @@ jobs:
           files: android/app/build/outputs/apk/debug/*.apk
           tag_name: v${{ steps.resolved.outputs.value }}
           name: v${{ steps.resolved.outputs.value }}
-          body: "Beta release — v${{ steps.resolved.outputs.value }}"
+          generate_release_notes: true
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
