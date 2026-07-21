@@ -769,7 +769,12 @@
   <!-- GoatCounter: aggregate visit counting only (no cookies, no PII, honors
        Do Not Track automatically). Never sees business data — it only ever
        receives a path, referrer, and browser/OS/screen info per page load.
-       See docs/privacy-policy.md for the full breakdown. -->
+       See docs/privacy-policy.md for the full breakdown.
+       Injected AFTER window 'load' rather than as a static <script> tag —
+       a static (even async) tag still delays the page's 'load' event until
+       it resolves, and some browsers silently stall third-party tracker
+       domains instead of failing fast, which hung every Playwright
+       page.goto() in CI under Firefox. -->
   <script>
     window.goatcounter = {
       allow_local: true,
@@ -780,8 +785,14 @@
         return (isApk ? '/apk' : '/web') + location.pathname;
       }
     };
+    window.addEventListener('load', function () {
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = '//gc.zgo.at/count.js';
+      s.setAttribute('data-goatcounter', 'https://tsyche.goatcounter.com/count');
+      document.body.appendChild(s);
+    });
   </script>
-  <script data-goatcounter="https://tsyche.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
   <script type="module" src="/src/calculations/index.js"></script>
   <script type="module">
     import { initializeAccessibility } from '/assets/accessibility.js';
