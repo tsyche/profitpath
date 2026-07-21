@@ -100,7 +100,7 @@
   <!-- ===== app bar (hamburger-left · logo · inline primary · at-a-glance · mode toggle · fixed undo/redo+theme) ===== -->
   <header class="appbar" id="appbar">
     <button class="ab-icon" id="appMenuBtn" type="button" aria-label="Open menu" onclick="toggleDrawer()"><svg viewBox="0 0 24 24"><use href="#ic-menu"/></svg></button>
-    <a href="/" class="ab-logo" aria-label="ProfitPath home"><img class="ab-sun" src="/assets/pp-logo2-final.svg" alt="" /><span class="ab-word">ProfitPath</span></a>
+    <a href="." class="ab-logo" aria-label="ProfitPath home"><img class="ab-sun" src="/assets/pp-logo2-final.svg" alt="" /><span class="ab-word">ProfitPath</span></a>
 
     <nav class="ab-primary" aria-label="Primary actions">
       <button class="ab-btn" id="desktopScenariosBtn" type="button" title="Manage Scenarios" aria-label="Manage saved scenarios"><svg viewBox="0 0 24 24"><use href="#ic-scenarios"/></svg>Scenarios</button>
@@ -937,6 +937,10 @@
       closeDrawer();
       var m = document.getElementById(id);
       if (!m) return;
+      // Guard: a fumbled double-tap re-triggering this before the first open
+      // finishes must not acquire the scroll lock twice for one visible modal.
+      if (m.dataset.scrollLocked === '1') return;
+      m.dataset.scrollLocked = '1';
       m.hidden = false;
       // next frame so the transition runs
       requestAnimationFrame(function () { m.classList.add('open'); });
@@ -945,6 +949,9 @@
     function ppCloseModal(id) {
       var m = document.getElementById(id);
       if (!m) return;
+      // Guard: mirrors the open-side check — don't double-release if already closed.
+      if (m.dataset.scrollLocked !== '1') return;
+      delete m.dataset.scrollLocked;
       m.classList.remove('open');
       window.releaseScrollLock();
       var done = function () { m.hidden = true; m.removeEventListener('transitionend', done); };

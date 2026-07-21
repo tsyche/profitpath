@@ -56,6 +56,9 @@ class FeedbackUI {
     const existingModal = document.getElementById('feedbackModal');
     if (existingModal) {
       existingModal.remove();
+      // That modal held its own scroll lock; release it before acquiring a
+      // new one below, or a rapid re-trigger leaves the lock stranded.
+      window.releaseScrollLock?.();
     }
 
     this.currentContext = context;
