@@ -53,6 +53,12 @@ jobs:
         if: github.event_name == 'pull_request'
         run: echo "value=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
+      - name: Resolve version
+        id: resolved
+        run: |
+          V="${{ steps.version.outputs.value || steps.version_pr.outputs.value }}"
+          echo "value=$V" >> $GITHUB_OUTPUT
+
       - name: Install dependencies
         run: npm ci
 
@@ -61,6 +67,11 @@ jobs:
 
       - name: Set up Capacitor
         run: npx cap sync android
+
+      - name: Set Android version code/name
+        run: |
+          sed -i "s/versionCode .*/versionCode ${{ github.run_number }}/" android/app/build.gradle
+          sed -i "s/versionName .*/versionName \"${{ steps.resolved.outputs.value }}\"/" android/app/build.gradle
 
       - name: Restore signing keystore
         run: |
@@ -73,12 +84,6 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEYSTORE_PASSWORD: android
           KEY_PASSWORD: android
-
-      - name: Resolve version
-        id: resolved
-        run: |
-          V="${{ steps.version.outputs.value || steps.version_pr.outputs.value }}"
-          echo "value=$V" >> $GITHUB_OUTPUT
 
       - name: Rename APK
         run: |
