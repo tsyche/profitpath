@@ -68,6 +68,13 @@ jobs:
       - name: Set up Capacitor
         run: npx cap sync android
 
+      - name: Stamp APK platform marker
+        run: |
+          INDEX=android/app/src/main/assets/public/index.html
+          # Deterministically tag the packaged app as 'apk' (see index.html).
+          grep -q "window.__PP_PLATFORM__ = 'web'" "$INDEX" || { echo "platform stamp anchor not found in $INDEX"; exit 1; }
+          sed -i "s/window.__PP_PLATFORM__ = 'web'/window.__PP_PLATFORM__ = 'apk'/" "$INDEX"
+
       - name: Set Android version code/name
         run: |
           sed -i "s/versionCode .*/versionCode ${{ github.run_number }}/" android/app/build.gradle
