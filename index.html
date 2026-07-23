@@ -775,11 +775,18 @@
        it resolves, and some browsers silently stall third-party tracker
        domains instead of failing fast, which hung every Playwright
        page.goto() in CI under Firefox. -->
+  <!-- Platform stamp. Defaults to 'web'; the APK build (build-apk.yml) rewrites
+       this single literal to 'apk' after `cap sync`, so the packaged app is
+       tagged deterministically at BUILD time rather than sniffed at runtime.
+       Runtime Capacitor detection is kept only as a fallback (e.g. `cap run`
+       dev builds that never went through the CI stamp). -->
+  <script>window.__PP_PLATFORM__ = 'web';</script>
   <script>
     window.goatcounter = {
       allow_local: true,
       path: function () {
-        var isApk = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+        var isApk = window.__PP_PLATFORM__ === 'apk' ||
+          !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
         var isLocalDev = !isApk && ['localhost', '127.0.0.1', '[::1]'].indexOf(location.hostname) !== -1;
         if (isLocalDev) return false; // don't count dev-server traffic
         return (isApk ? '/apk' : '/web') + location.pathname;
@@ -788,7 +795,7 @@
     window.addEventListener('load', function () {
       var s = document.createElement('script');
       s.async = true;
-      s.src = '//gc.zgo.at/count.js';
+      s.src = 'https://gc.zgo.at/count.js';
       s.setAttribute('data-goatcounter', 'https://tsyche.goatcounter.com/count');
       document.body.appendChild(s);
     });
