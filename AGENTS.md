@@ -205,7 +205,7 @@ landscaping, fitness, photography, and handyman.
 
 ### Testing Strategy
 
-#### Test Coverage (427 unit tests across 40 files — 426 passing, 1 skipped — plus 256 Playwright e2e tests across 14 files, chromium + firefox)
+#### Test Coverage (427 unit tests across 40 files — 426 passing, 1 skipped — plus 264 Playwright e2e tests across 14 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.js`)
@@ -322,7 +322,7 @@ Two separate, unrelated systems — don't conflate them:
 ## Security Considerations
 
 ### Client-Side Security
-- **No server dependencies** - fully client-side application
+- **No app-logic server dependencies** - fully client-side application; see Data Privacy below for the one anonymous network call the app makes
 - **LocalStorage security** - user data stays local
 - **Input validation** - comprehensive sanitization
 - **XSS prevention** - proper HTML escaping

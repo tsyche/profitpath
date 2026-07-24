@@ -16,6 +16,9 @@ backfilling every past tag.
 - Subtle gradient polish on KPI boxes and section headers
 - Privacy-respecting GoatCounter visit counter (web + APK, tagged and split by platform)
 
+### Changed
+- APK pre-release notes now auto-generated from commits since the last tag (was a static "Beta release" body)
+
 ### Fixed
 - `.debug-body` `max-height` clipping taller collapsible panels (Advanced Charts)
 - Scroll lock permanently stranding on rapid double-triggered modal opens (Templates/Settings/analytics/feedback), including the analytics → advanced dashboard transition
