@@ -14,6 +14,11 @@ backfilling every past tag.
 - Client Mix Optimizer — suggests the offering mix that maximizes profit or utilization
 - Advanced Charts panel — price × utilization sensitivity heat map, balanced scorecard radar, client capacity funnel
 - Subtle gradient polish on KPI boxes and section headers
+- Privacy-respecting GoatCounter visit counter (web + APK, tagged and split by platform)
 
 ### Fixed
 - `.debug-body` `max-height` clipping taller collapsible panels (Advanced Charts)
+- Scroll lock permanently stranding on rapid double-triggered modal opens (Templates/Settings/analytics/feedback), including the analytics → advanced dashboard transition
+- Logo link resolving to a dead URL under the GitHub Pages subpath
+- APK never registering a real `versionCode`/`versionName`, silently blocking Android updates
+- APK-vs-web analytics misattribution from runtime-only platform detection; now stamped at build time
