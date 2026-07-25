@@ -10,13 +10,14 @@ See README.md for setup and development instructions.
 
 **Five Most Recent Completions (July 2026)**
 
-1. **Privacy-Respecting Traffic Counter (GoatCounter)** — Added a lightweight, cookie-free GoatCounter visit counter to `index.html`, tagged `/web` vs `/apk` at runtime (via `window.Capacitor.isNativePlatform()`) so web and Android usage can be told apart, with local dev servers auto-skipped. No business data is transmitted — only anonymous page-load metadata. `docs/privacy-policy.md` rewritten to accurately disclose it (previously falsely claimed zero third-party integrations) and to distinguish it from the pre-existing, unrelated, local-only, opt-in feature-usage analytics in `src/analytics/`.
-2. **Client Mix Optimizer, Advanced Chart Types & KPI Visual Polish** — Grid-search + hill-climbing optimizer suggests the offering mix that maximizes profit or utilization, fully wired into a collapsible panel; new Advanced Charts panel (price × utilization sensitivity heat map, 5-axis balanced scorecard radar, client capacity funnel); subtle accent-gradient wash on KPI boxes/section headers with tightened line-height. 26 new tests (unit + e2e), all manually verified rendering in a headless browser.
-3. **Animated KPI Counters, AI Insights Engine & Reverse Calculator (calc logic)** — KPI counter roll-up animation shipped and visible in the UI. **Caveat**: the Insights Engine (`src/insights/insightsEngine.js`) and Reverse Calculator (`src/insights/reverseCalculator.js`) modules are fully built and unit-tested but have **zero UI wiring** — no panel, no import in `assets/app.jsx` or `index.html`. Users cannot access either feature today; see "Recommended Next 3" below.
-4. **Lint Warning Cleanup** — Eliminated all lint warnings (0 errors, 0 warnings): added ESLint override for test files; removed/renamed unused imports, dead-code vars, bare catch params across 17 source files; replaced debug `console.log` with `console.warn` or removed in production code.
-5. **Tax & Financial Report Generator** — Print-ready HTML financial report accessible from Export drawer: business performance summary (KPI grid + annual/monthly table), quarterly income projections (Q1–Q4), tax liability breakdown (SE tax, federal, quarterly payment due dates), and loan-application business summary.
+1. **Analytics & APK Release Pipeline Hardening** — GoatCounter privacy-respecting visit counter shipped for web + APK (no cookies, honors Do Not Track, local dev auto-skipped), but the initial runtime-only detection (`window.Capacitor.isNativePlatform()`) turned out unreliable — the APK reported zero traffic for a full day. Root-caused and fixed with a **build-time platform stamp** (`window.__PP_PLATFORM__`, rewritten `'web'`→`'apk'` by `build-apk.yml` after `cap sync`, with runtime Capacitor detection kept only as a fallback); confirmed working via GoatCounter's own device fingerprinting (System: Android, Sizes: Phones) after the fix. Same investigation surfaced and fixed two more release-pipeline bugs: `android/app/build.gradle`'s `versionCode`/`versionName` were hardcoded at `1`/`"1.0"` forever (silently blocking every Android update, and confusing Obtainium's update detection along with stale pre-beta-scheme release tags), and GitHub release notes were a static "Beta release" string instead of the actual commits shipped — both now automated in CI. `docs/privacy-policy.md` rewritten to disclose GoatCounter accurately (previously falsely claimed zero third-party integrations).
+2. **Scroll Lock Reference-Counting Fix (3 leak sites)** — A reference-counted scroll lock (used by every modal/drawer) could get permanently stranded by rapid double-triggered opens — unrecoverable on Android without a force-close, since the touchmove blocker never released. Found and fixed in three places: `ppOpenModal`/`ppCloseModal` (no idempotency guard), and independently in `showAnalyticsDashboard`/`openFeedbackModal` (both had a "remove existing modal" cleanup path that dropped the lock it held). Also deleted a dead, overridden duplicate `showAdvancedDashboard` method that was making the analytics code hard to reason about. Bundled with a dead logo-link fix (`href="/"` resolved to the wrong GitHub Pages root; now `href="."`). 5 new regression tests; each confirmed to fail without its corresponding fix before being merged.
+3. **Client Mix Optimizer, Advanced Chart Types & KPI Visual Polish** — Grid-search + hill-climbing optimizer suggests the offering mix that maximizes profit or utilization, fully wired into a collapsible panel; new Advanced Charts panel (price × utilization sensitivity heat map, 5-axis balanced scorecard radar, client capacity funnel); subtle accent-gradient wash on KPI boxes/section headers with tightened line-height. 26 new tests (unit + e2e), all manually verified rendering in a headless browser.
+4. **Animated KPI Counters, AI Insights Engine & Reverse Calculator (calc logic)** — KPI counter roll-up animation shipped and visible in the UI. **Caveat**: the Insights Engine (`src/insights/insightsEngine.js`) and Reverse Calculator (`src/insights/reverseCalculator.js`) modules are fully built and unit-tested but have **zero UI wiring** — no panel, no import in `assets/app.jsx` or `index.html`. Users cannot access either feature today; see "Recommended Next 3" below.
+5. **Lint Warning Cleanup** — Eliminated all lint warnings (0 errors, 0 warnings): added ESLint override for test files; removed/renamed unused imports, dead-code vars, bare catch params across 17 source files; replaced debug `console.log` with `console.warn` or removed in production code.
 
 **Earlier (April–June 2026)**
+- Tax & Financial Report Generator — Print-ready HTML financial report accessible from Export drawer: business performance summary (KPI grid + annual/monthly table), quarterly income projections (Q1–Q4), tax liability breakdown (SE tax, federal, quarterly payment due dates), and loan-application business summary
 - Performance Optimization & Caching — FIFO → LRU calc cache, max size 50→100
 - Read-only Scenario Sharing — View-only share links, Presentation Notes embedded in URL
 - UI Modernization — full Material dark/light theming, slim app-bar, hamburger drawer, all-modals theming
@@ -105,6 +106,17 @@ See README.md for setup and development instructions.
    - Consider a single "Advisor" tab/section that surfaces the top insight/suggestion from each, with links to expand the full panel
    - Effort: ~3-4 hours
 
+12e. **Fix: export functions ignore the user's selected currency** *(new — found during roadmap audit, real correctness bug)*
+   - Currency is genuinely user-selectable (USD/EUR/GBP/CAD/AUD via `#currencySelect` in Settings, backed by `formatCurrency()` in `src/localization/index.js`), but `exportAsExcel`, `exportAsPDF`, `exportAsHTML`, and `shareViaEmail` in `assets/services/miscService.js` each declare their own local `fmtMoney0` that hardcodes a `'$'` prefix instead of reusing the locale-aware formatter — a user on EUR/GBP/CAD/AUD sees the correct symbol in the app but a hardcoded `$` in every exported report
+   - Fix: replace the 5 duplicated local `fmtMoney0` definitions with the shared `formatCurrency()` (or the existing `Intl.NumberFormat`-based one at line 51 of the same file)
+   - Small fix, but real user-facing incorrectness for anyone not on USD — worth doing sooner than its size suggests
+   - Effort: ~1 hour
+
+12f. **Surface the app's own version in the UI** *(new — motivated by this session's Obtainium/versionCode debugging)*
+   - Nothing in the UI currently shows what version is running — not in Settings, not in the debug panel, nowhere (`grep` for version display in `assets/app.jsx`/`index.html` returns nothing)
+   - Now that CI reliably stamps a real `versionCode`/`versionName` and generates real release notes from commits (see item 1 in Recently Completed), showing "vX.Y.Z" somewhere small (Settings footer or debug panel) would let users self-report their version when reporting bugs, and is a natural stepping stone toward an in-app "what's new" surface if release notes are ever curated for end users rather than just commit logs
+   - Effort: ~30-60 minutes
+
 **Mobile & Platform Support (Deferred — blocked by macOS version)**
 
 13. **Native Android & iOS App via Capacitor**
@@ -149,15 +161,17 @@ Privacy-first freemium model planned post-launch. The app will remain fully free
 
 ## Status & Notes
 
-- **Current status**: Application is fully functional with comprehensive test coverage (427 unit tests across 40 files, 1 skipped, plus 256 Playwright e2e tests across 14 files on chromium + firefox), dev server stable. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, AI insights engine + reverse calculator (calc logic only — UI wiring pending).
+- **Current status**: Application is fully functional with comprehensive test coverage (427 unit tests across 40 files, 1 skipped, plus 264 Playwright e2e tests across 14 files on chromium + firefox), dev server stable. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, AI insights engine + reverse calculator (calc logic only — UI wiring pending), GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed.
 - **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ advanced visualizations (heat map, radar, funnel), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard, ✅ data visualization KPI indicators, ✅ help & onboarding enhancements, ✅ UI modernization (dark/light, Material, app-bar, all-modals theming), ✅ financial report export, ✅ LRU calc cache, ✅ client mix optimizer.
 - **Latest milestones** (July 2026):
   - Client Mix Optimizer: grid-search + hill-climbing mix suggestions, fully wired panel
   - Advanced Charts: price × utilization sensitivity heat map, balanced scorecard radar, client capacity funnel
   - KPI Visual Polish: accent-gradient wash on KPI boxes/section headers, tightened line-height rhythm
   - Animated KPI Counters shipped; AI Insights Engine & Reverse Calculator calc logic shipped but **not yet wired to any UI** — see item 4b in the backlog
-- **Next priorities**: Wire up Insights Engine & Reverse Calculator UI → Guided "What If?" Wizard → Industry Benchmarks (see Recommended Next 3 above)
-- **Strategic positioning**: Core financial-modeling + export + performance + advanced-analytics foundation is complete. Focus now shifts to closing the gap between built-but-unwired features and actual UI access, then onboarding polish (wizard) and differentiation (benchmarks). Mobile app launch remains blocked on macOS. Enterprise features deferred until market demand validates investment.
+  - GoatCounter analytics + APK release pipeline hardened: build-time platform stamping (web vs APK), real `versionCode`/`versionName` on every build, auto-generated release notes
+  - Scroll lock reference-counting leaks fixed across 3 sites (modal double-open, analytics↔advanced dashboard transition); dead logo link fixed
+- **Next priorities**: Wire up Insights Engine & Reverse Calculator UI → Guided "What If?" Wizard → Industry Benchmarks (see Recommended Next 3 above). Also worth a quick pass soon despite being small: the export-currency bug (item 12e) is a real correctness issue for any non-USD user.
+- **Strategic positioning**: Core financial-modeling + export + performance + advanced-analytics foundation is complete, and the release/distribution pipeline (web + APK) is now solid after this round of hardening. Focus shifts back to closing the gap between built-but-unwired features and actual UI access, then onboarding polish (wizard) and differentiation (benchmarks). Mobile app launch remains blocked on macOS. Enterprise features deferred until market demand validates investment.
 - **Known debt**: Capacitor stuck at v5.7.8 due to Xcode 14.2 / macOS Monterey — 5 high-severity tar vulnerabilities in @capacitor/cli will resolve when Capacitor v8 upgrade is unblocked by macOS upgrade.
 
 ### User Feedback & Research Loop
@@ -175,7 +189,7 @@ This section tracks common feature requests, friction points, and competitive ga
 **How to use**: Update this list after customer conversations, support tickets, or user interviews. Use to validate roadmap priorities and surface unexpected user needs.
 
 ### Test Coverage Status (July 2026)
-- **427 unit tests** across 40 files (426 passing, 1 skipped), plus **256 Playwright e2e tests** across 14 files on chromium + firefox
+- **427 unit tests** across 40 files (426 passing, 1 skipped), plus **264 Playwright e2e tests** across 14 files on chromium + firefox
 - **Pass rate**: 100% unit tests passing (1 intentional skip); 100% e2e passing; 0 lint errors, 0 lint warnings
 - **Health score**: 9/10 — production-ready with excellent feature gating, UI regression, security, and financial report coverage
 - **Key test areas**:
@@ -183,7 +197,7 @@ This section tracks common feature requests, friction points, and competitive ga
   - ✅ **Scenarios** (35+ tests): Creation, loading, comparison, workflow validation
   - ✅ **Feature Gating** (45+ tests): All experience levels, visibility transitions, debug panel behavior
   - ✅ **Export/Import** (25+ E2E tests): CSV, Excel, PDF, HTML, financial report, email, clipboard export
-  - ✅ **Scroll Lock** (15+ tests): Fresh-user welcome dialog, all modals, touch-scroll prevention
+  - ✅ **Scroll Lock** (26 tests): Fresh-user welcome dialog, all modals, touch-scroll prevention, rapid double-open reference-counting regressions
   - ✅ **Mobile Layout** (10+ tests): Bottom-nav clearance, debug panel visibility, dark mode contrast
   - ✅ **Tooltips** (50+ tests): All three tooltip systems, XSS prevention, state tracking
   - ✅ **Security** (E2E): XSS and CSV injection regression suite
