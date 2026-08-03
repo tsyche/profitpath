@@ -21,9 +21,14 @@ details.
 
 ## Git workflow
 
-CI auto-bumps the patch version on every push to `main` (commits back with
-`[skip ci]`), so the remote is often 1 commit ahead. Always rebase before
-pushing:
+`origin` pushes to both GitHub and GitLab — one `git push` updates both.
+
+CI is designed to auto-bump the patch version on every push to `main`
+(commits back with `[skip ci]`), so the remote is normally 1 commit ahead.
+**Note:** GitHub Actions hasn't been triggering on push since 2026-07-23
+(support case open on a flagged GitHub account) — auto-bump commits aren't
+currently landing. Still worth rebasing out of habit for when it resumes.
+Always rebase before pushing:
 
 ```bash
 git pull --rebase && git push

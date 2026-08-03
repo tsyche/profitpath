@@ -144,13 +144,15 @@ Each template includes appropriate pricing, frequency, and cost structures.
 ## Development Workflow
 
 ### Prerequisites
-- Node.js (v24, pinned in `.tool-versions`)
+- Node.js (v24, pinned in `.tool-versions`) — the root `.tool-versions` pins only Node; Java (`android/.tool-versions`) and Ruby (`ios/.tool-versions`) are split into their respective platform directories so Cloudflare's build (which reads the root file) doesn't try to install mobile-only tooling
 - Modern browser with ES6+ support
 - Git for version control
 
 ### Git Workflow
 
-CI auto-bumps the patch version on every push to `main` (commits back with `[skip ci]`). This means the remote is always 1 commit ahead by the time you're ready to push. Always rebase before committing or pushing:
+`origin` pushes to both GitHub and GitLab (`git remote get-url --all --push origin`) — one `git push` updates both.
+
+CI is designed to auto-bump the patch version on every push to `main` (commits back with `[skip ci]`), which normally means the remote is 1 commit ahead by the time you're ready to push. **Note:** GitHub Actions has not been triggering on push since 2026-07-23 (suspected tied to a flagged GitHub account, support case open) — auto-bump commits are not currently landing. The rebase habit below is still worth keeping since it'll matter again once Actions resumes, and costs nothing while it's down. Always rebase before committing or pushing:
 
 ```bash
 git pull --rebase

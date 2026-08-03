@@ -8,7 +8,7 @@
 
 Client-side profitability and capacity simulator for recurring service businesses. Provides real-time calculations, scenario management, and advanced export capabilities with progressive disclosure UI.
 
-**Live**: [tsyche.github.io/profitpath](https://tsyche.github.io/profitpath/) (GitHub Pages) · [profitpath.tsyche.workers.dev](https://profitpath.tsyche.workers.dev) (Cloudflare Workers, deployed from the [GitLab mirror](https://gitlab.com/tsyche/profitpath))
+**Live**: [profitpath.tsyche.workers.dev](https://profitpath.tsyche.workers.dev) (Cloudflare Workers, deployed from the [GitLab mirror](https://gitlab.com/tsyche/profitpath)) · [tsyche.github.io/profitpath](https://tsyche.github.io/profitpath/) (GitHub Pages — currently stale; its deploy workflow hasn't triggered since 2026-07-23, see Git Workflow note in [CLAUDE.md](CLAUDE.md))
 
 ## What's included
 
