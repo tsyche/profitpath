@@ -16,7 +16,7 @@ just lint    # ESLint
 
 Or individually: `just test-unit`, `just test-e2e`, `just lintfix` (auto-fix).
 
-See [CLAUDE.md](CLAUDE.md) for architecture, module layout, and business logic
+See [AGENTS.md](AGENTS.md) for architecture, module layout, and business logic
 details.
 
 ## Git workflow
@@ -40,7 +40,7 @@ git pull --rebase && git push
 2. Make focused commits with clear messages (no `feat:`/`fix:` type prefixes —
    see recent `git log` for the house style)
 3. Ensure `just test` and `just lint` pass
-4. Update relevant docs (`README.md`, `CLAUDE.md`/`AGENTS.md` stay in sync via
+4. Update relevant docs (`README.md`, `AGENTS.md`/`CLAUDE.md` stay in sync via
    `just sync-docs`, `FEATURES.md`, `docs/experience-levels.md` if you touch
    feature gating)
 5. Open a pull request with a clear description

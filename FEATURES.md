@@ -40,7 +40,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 
 ### Testing Infrastructure
 - **Industry Templates**: 6 working templates (consulting, cleaning, landscaping, fitness, photography, handyman) loadable from the Templates menu
-- **Test Scenarios**: 2 scenarios (`basic`, `freelancer`) defined in `assets/app.jsx`; URL-based loading (`?loadTestScenarios`, `?testScenario=name`) is currently an unimplemented stub — see `CLAUDE.md`
+- **Test Scenarios**: 2 scenarios (`basic`, `freelancer`) defined in `assets/app.jsx`; URL-based loading (`?loadTestScenarios`, `?testScenario=name`) is currently an unimplemented stub — see `AGENTS.md`
 
 ### Performance & Reliability
 - **Lazy Loading**: Export libraries and charts load on-demand

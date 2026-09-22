@@ -405,10 +405,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, branch/PR conventions, and tes
 
 ### Development Team
 - **Issue tracking**: GitHub Issues
-- **Documentation**: README.md and CLAUDE.md
+- **Documentation**: README.md and AGENTS.md
 
 ### Getting Help
-- **Documentation**: Start with README.md and CLAUDE.md
+- **Documentation**: Start with README.md and AGENTS.md
 - **Issues**: Search existing issues before creating new ones
 - **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
 

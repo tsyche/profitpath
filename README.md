@@ -8,7 +8,7 @@
 
 Client-side profitability and capacity simulator for recurring service businesses. Provides real-time calculations, scenario management, and advanced export capabilities with progressive disclosure UI.
 
-**Live**: [profitpath.tsyche.workers.dev](https://profitpath.tsyche.workers.dev) (Cloudflare Workers, deployed from the [GitLab mirror](https://gitlab.com/tsyche/profitpath)) · [tsyche.github.io/profitpath](https://tsyche.github.io/profitpath/) (GitHub Pages — currently stale; its deploy workflow hasn't triggered since 2026-07-23, see Git Workflow note in [CLAUDE.md](CLAUDE.md))
+**Live**: [profitpath.tsyche.workers.dev](https://profitpath.tsyche.workers.dev) (Cloudflare Workers, deployed from the [GitLab mirror](https://gitlab.com/tsyche/profitpath)) · [tsyche.github.io/profitpath](https://tsyche.github.io/profitpath/) (GitHub Pages — currently stale; its deploy workflow hasn't triggered since 2026-07-23, see Git Workflow note in [AGENTS.md](AGENTS.md))
 
 ## What's included
 
@@ -66,11 +66,11 @@ Use the Templates menu to load real, working `INDUSTRY_TEMPLATES` configs
 `TEST_SCENARIOS` object with 2 entries (`basic`, `freelancer`) also exists in
 `assets/app.jsx` for URL-based loading, but the `?loadTestScenarios` /
 `?testScenario=name` loader functions are currently unimplemented stubs — see
-`CLAUDE.md`'s Testing Scenarios section for details.
+`AGENTS.md`'s Testing Scenarios section for details.
 
 ## Documentation
 
-- **[CLAUDE.md](CLAUDE.md)** — Comprehensive developer guide with architecture, core modules, and contributing guidelines
+- **[AGENTS.md](AGENTS.md)** — Comprehensive developer guide with architecture, core modules, and contributing guidelines
 - **[ROADMAP.md](ROADMAP.md)** — Completed features and prioritized roadmap for future improvements
 - **[FEATURES.md](FEATURES.md)** — Detailed feature descriptions and capabilities
 - **[docs/experience-levels.md](docs/experience-levels.md)** — Feature gates by user experience level
