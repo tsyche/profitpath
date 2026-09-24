@@ -19,17 +19,17 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -104,7 +104,7 @@ jobs:
              android/app/build/outputs/apk/debug/profitpath-v${{ steps.resolved.outputs.value }}.apk
 
       - name: Upload APK to artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: profitpath-v${{ steps.resolved.outputs.value }}
           path: android/app/build/outputs/apk/debug/*.apk
@@ -117,7 +117,7 @@ jobs:
 
       - name: Create Pre-release (on main branch only)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: android/app/build/outputs/apk/debug/*.apk
           tag_name: v${{ steps.resolved.outputs.value }}
