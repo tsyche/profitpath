@@ -13,6 +13,22 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # Blocked majors (see ROADMAP "Known debt"): Capacitor needs a newer
+    # macOS/Xcode; vitest 5 breaks 11 unit tests; typescript 7, jsdom 30 and
+    # jest-dom 7 are untried.
+    ignore:
+      - dependency-name: "@capacitor/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: vitest
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/ui"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: jsdom
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@testing-library/jest-dom"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
