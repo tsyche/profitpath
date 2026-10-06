@@ -1,6 +1,6 @@
 # ProfitPath — Consolidated Roadmap (single source of truth)
 
-This ROADMAP is the single source of truth for ideas, priorities, and next actions. It includes a prioritized backlog of future improvements.
+**TL;DR:** This roadmap is the single source of truth for ProfitPath's ideas, priorities, and next actions.
 
 See README.md for setup and development instructions.
 
@@ -222,6 +222,11 @@ See README.md for setup and development instructions.
     - Distinct from the existing Sensitivity Analysis (which varies one lever at a time against a single baseline): when most of a scenario's inputs are guesses rather than known values (9 of 12 offerings in this session's trial), a single point-estimate output number (e.g. "$42,798 revenue") implies false precision
     - A simple optimistic/base/conservative 3-scenario toggle — applying a confidence band to guessed inputs (informed by item 22's confidence tags, if built) and showing a resulting range rather than one number — would better communicate uncertainty for exactly this "sketching before real data exists" use case
     - Effort: ~4-5 hours
+
+24a. **Membership and prepaid-credit pricing calculator**
+    - Let a business vary plan fees, included and purchased credits, credit value and expiry, service prices, member discounts, eligibility, and a customer's monthly purchase mix. Show regular spend, member spend including the plan fee, credits used or left over, effective savings percentage, and business revenue or margin side by side.
+    - Make it a general what-if tool rather than a Sound Stage-specific template. The first example should expose when a headline plan saving (value of included benefits versus fee) differs from what a customer actually saves on their chosen services. Avoid counting prepaid credits as both new revenue and a discount at redemption.
+    - Acceptance: a user can change the purchase mix and compare two plans with the same services; unused or expired credits and ineligible services affect the result; every displayed percentage identifies its denominator.
 
 **Cost Modeling Rework** *(new category — Tim's read after this session: "the entire pp could use a rework around costs and money out... seems like it's mostly recurring fees and employee stuff right now")*
 
