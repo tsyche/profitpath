@@ -18,7 +18,7 @@ This document provides comprehensive information for AI agents and developers wo
 - **Build System**: Vite v8.0.16 with JSX support
 - **Testing**: Vitest v4.0.18 with jsdom environment
 - **Code Quality**: ESLint with comprehensive rules
-- **Language**: Modern JavaScript (ES6+) with optional TypeScript support
+- **Language**: JavaScript migrating to TypeScript (`checkJs` on, `strict` off; see `docs/plans/typescript-migration.md`)
 - **State Management**: Single global state object with localStorage persistence
 
 ### Key Files Structure
@@ -250,8 +250,11 @@ npm run test:ui      # Run tests with UI interface
 - Service worker integration for PWA features
 
 #### TypeScript Support
-- Gradual migration path available (tsconfig.json present)
-- Optional static typing for better development experience
+- `tsconfig.json` has `allowJs` + `checkJs` + `noEmit`; Vite builds, `tsc` only checks. Run `just typecheck`.
+- Baseline is about 300 non-strict errors. Do not add new ones.
+- **Touched files become TypeScript.** When a change materially edits a `.js` file, rename it to `.ts` (`git mv`, then fix types) in the same change, with its test (`.test.js` to `.test.ts`). Skip `assets/app.jsx` until it is split.
+- New code is written in `.ts`.
+- Full migration plan: `docs/plans/typescript-migration.md`.
 
 ## Integration Points
 

@@ -4,21 +4,21 @@
     "module": "ESNext",
     "lib": ["ES2017", "DOM"],
     "moduleResolution": "node",
-    "strict": true,
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "outDir": "dist",
-    "rootDir": "assets",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "assets/**/*"
+    "assets/**/*",
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "**/*.test.js"
   ]
 }

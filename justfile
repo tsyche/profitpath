@@ -53,6 +53,10 @@ lint: setup
 lintfix: setup
     npm run lint:fix
 
+# Type check JS/TS (checkJs, non-strict; about 300 known errors, see docs/plans/typescript-migration.md)
+typecheck: setup
+    npm run typecheck
+
 # --- Maintenance ---
 
 # Sync CLAUDE.md ↔ AGENTS.md (copy newer to older)

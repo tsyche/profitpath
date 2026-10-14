@@ -93,6 +93,7 @@ vitest.config.js
 
 # Test artifacts
 test-results/
+e2e-results/
 playwright-report/
 blob-report/
 .playwright/

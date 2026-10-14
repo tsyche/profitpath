@@ -51,6 +51,8 @@ See README.md for setup and development instructions.
 
 **Code Quality**
 
+TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/plans/typescript-migration.md](docs/plans/typescript-migration.md).
+
 0. ✅ ~~Lint Warning Cleanup~~ — Eliminated all 90 source-file warnings (no-unused-vars, no-console) plus 50 test-file warnings via ESLint override. Zero warnings, zero errors.
 
 **Collaboration & Insights (High-Value Additions)**
