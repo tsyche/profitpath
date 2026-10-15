@@ -173,7 +173,7 @@ Use `just` as the primary workflow (run `just --list` to see all recipes):
 ```bash
 just fresh           # Complete reset: clean, install, test, lint, start
 just setup           # Install dependencies (npm ci)
-just dev             # Start dev server (localhost:3000)
+just dev             # Start dev server (localhost:3120)
 just test            # Run all tests (unit + e2e)
 just lint            # Check code quality
 just build           # Production build
@@ -182,7 +182,7 @@ just build           # Production build
 Underlying npm commands (for reference):
 ```bash
 npm ci               # Install dependencies
-npm run dev          # Start development server (http://localhost:3000)
+npm run dev          # Start development server (http://localhost:3120)
 npm run build        # Production build
 npm run test:run     # Run unit tests (headless)
 npm run lint         # Check code quality
@@ -212,7 +212,7 @@ landscaping, fitness, photography, and handyman.
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.js`)
 - **Business Logic Tests**: Comprehensive calculation validation
-- **E2E Tests**: Playwright suites in `tests/e2e/` (chromium + firefox, dedicated port 3173)
+- **E2E Tests**: Playwright suites in `tests/e2e/` (chromium + firefox, dedicated port 3121)
 
 #### Test Files
 - `src/calculations/calculations.test.js` - Core calculation tests

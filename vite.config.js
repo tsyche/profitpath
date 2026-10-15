@@ -39,7 +39,8 @@ export default defineConfig({
     pool: 'threads'
   },
   server: {
-    port: 3000,
+    port: 3120,
+    strictPort: true,
     host: true,
     hmr: {
       overlay: true

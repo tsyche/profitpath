@@ -13,7 +13,7 @@ setup:
 
 # --- Development ---
 
-# Start dev server (Vite on localhost:3000)
+# Start dev server (Vite on localhost:3120)
 dev: setup
     npm run dev
 

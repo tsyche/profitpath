@@ -41,7 +41,7 @@ just setup
 just dev
 ```
 
-2. Open http://localhost:3000 in your browser.
+2. Open http://localhost:3120 in your browser.
 
 ## Development
 
@@ -49,7 +49,7 @@ just dev
 
 ```bash
 just setup           # Install dependencies
-just dev             # Start dev server with hot reload (localhost:3000)
+just dev             # Start dev server with hot reload (localhost:3120)
 just test            # Run all tests (unit + e2e)
 just lint            # Check code quality
 just build           # Production build

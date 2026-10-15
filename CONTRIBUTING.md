@@ -4,7 +4,7 @@
 
 ```bash
 just setup   # npm ci + install Playwright browsers
-just dev     # start dev server at http://localhost:3000
+just dev     # start dev server at http://localhost:3120
 ```
 
 ## Before submitting changes
