@@ -3,8 +3,6 @@
  * User enters desired annual take-home; app calculates required changes
  */
 
-import { calc } from '../calculations/index.js';
-
 export class ReverseCalculator {
   constructor(state, currentMetrics) {
     this.state = state;
@@ -119,7 +117,7 @@ export class ReverseCalculator {
       return null;
     }
 
-    const { income: currentIncome, capacityPct: currentCapacity, revenue: currentRevenue, fullTimeEmployees } = this.currentMetrics;
+    const { income: currentIncome, capacityPct: currentCapacity } = this.currentMetrics;
     const incomeDelta = desiredTakeHome - currentIncome;
 
     if (incomeDelta <= 0) {
@@ -212,7 +210,7 @@ export class ReverseCalculator {
   getFeasibleStrategies(desiredTakeHome) {
     const results = this.getAllResults(desiredTakeHome);
     return Object.entries(results)
-      .filter(([key, result]) => result && result.feasible)
+      .filter(([, result]) => result && result.feasible)
       .map(([key, result]) => ({
         name: key,
         ...result

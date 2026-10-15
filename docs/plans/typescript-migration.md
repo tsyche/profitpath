@@ -1,8 +1,8 @@
 # TypeScript migration
 
-**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phase 0 is done: `checkJs` is on with `strict` off and a baseline of 301 type errors. Next come a no-new-errors ratchet, shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
+**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-1 are done: `checkJs` is on with `strict` off, globals are declared, and a CI ratchet holds the baseline at 164 type errors (was 301). Next come shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
 
-**Status:** Building (Phase 0 done 2026-10-14)
+**Status:** Building (Phases 0-1 done 2026-10-15)
 **Fold into:** [AGENTS.md](../../AGENTS.md) "TypeScript Support" section, then delete this plan.
 
 ## Why
@@ -27,7 +27,7 @@
 
 ```mermaid
 flowchart LR
-  P0[0. checkJs on, done] --> P1[1. Ratchet and globals]
+  P0[0. checkJs on, done] --> P1[1. Ratchet and globals, done]
   P1 --> P2[2. Shared types]
   P2 --> P3[3. Rename leaf-first]
   P3 --> P4[4. Strictness ladder]
@@ -42,7 +42,11 @@ flowchart LR
 - `npm run typecheck` and `just typecheck` added.
 - Interim rule in AGENTS.md: touched files become `.ts`, new code is `.ts`.
 
-### Phase 1: ratchet and globals
+### Phase 1: ratchet and globals (done 2026-10-15)
+
+- Result: 301 to 164 errors. `scripts/typecheck-ratchet.mjs` compares against `.typecheck-baseline`; `typecheck` runs in the unit job of `test.yml`. Globals live in `src/globals.d.ts` as `any`; Phase 2 replaces them with real types. The remaining errors are mostly DOM `Element` narrowing (TS2339).
+
+_Original scope:_
 
 - Add a baseline check (stored error count, CI fails if `typecheck` reports more) so the 301 can only fall.
 - Declare the globals once in `src/globals.d.ts` (`state`, `$`, `$$`, `XLSX`, `html2canvas`, `window.__PP_PLATFORM__`). Expect a large drop in TS2339 and TS2304.

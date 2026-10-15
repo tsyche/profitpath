@@ -251,7 +251,7 @@ npm run test:ui      # Run tests with UI interface
 
 #### TypeScript Support
 - `tsconfig.json` has `allowJs` + `checkJs` + `noEmit`; Vite builds, `tsc` only checks. Run `just typecheck`.
-- Baseline is about 300 non-strict errors. Do not add new ones.
+- `just typecheck` is a ratchet: it fails if `tsc` reports more errors than `.typecheck-baseline` (164, CI runs it). When you fix errors, run `npm run typecheck -- --update` to lock in the lower count. Browser globals are declared in `src/globals.d.ts` (all `any` until Phase 2).
 - **Touched files become TypeScript.** When a change materially edits a `.js` file, rename it to `.ts` (`git mv`, then fix types) in the same change, with its test (`.test.js` to `.test.ts`). Skip `assets/app.jsx` until it is split.
 - New code is written in `.ts`.
 - Full migration plan: `docs/plans/typescript-migration.md`.

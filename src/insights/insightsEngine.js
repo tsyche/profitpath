@@ -28,7 +28,6 @@ export class InsightsEngine {
    */
   detectUnderutilization() {
     const { capacityPct, targetUtilizationPct } = this.metrics;
-    const utilDelta = targetUtilizationPct - capacityPct;
 
     if (capacityPct < targetUtilizationPct * 0.8) {
       // Significantly underutilized
@@ -179,10 +178,9 @@ export class InsightsEngine {
    * Detect break-even risk
    */
   detectBreakEvenRisk() {
-    const { clients, breakEvenClients, capacityPct, targetUtilizationPct } = this.metrics;
+    const { clients, breakEvenClients } = this.metrics;
 
     if (breakEvenClients > 0) {
-      const clientsFromBE = clients - breakEvenClients;
       const percentToBE = (clients / breakEvenClients) * 100;
 
       if (percentToBE < 80 && clients < breakEvenClients) {
@@ -216,7 +214,7 @@ export class InsightsEngine {
    */
   generateWhatIfScenarios() {
     const scenarios = [];
-    const { offerings, fullTimeEmployees, fullTimeEmployeePay, targetUtilizationPct } = this.state;
+    const { offerings, fullTimeEmployees, targetUtilizationPct } = this.state;
     const { capacityPct, income } = this.metrics;
 
     // Scenario 1: Price increase (10%)
@@ -256,7 +254,6 @@ export class InsightsEngine {
     });
 
     // Scenario 4: Improve utilization
-    const targetClients = Math.ceil((targetUtilizationPct / 100) * 2080 / (offerings[0]?.hoursPerSession || 1));
     scenarios.push({
       name: 'Reach target utilization',
       description: `Increase clients to achieve ${targetUtilizationPct}% utilization`,

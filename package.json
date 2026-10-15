@@ -16,7 +16,7 @@
     "test:e2e:headed": "playwright test --headed",
     "lint": "eslint assets src tests public",
     "lint:fix": "eslint assets src tests public --fix",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "node scripts/typecheck-ratchet.mjs",
     "postinstall": "find node_modules/@capacitor -name build.gradle -type f -exec sed -i.bak \"s/proguard-android\\.txt/proguard-android-optimize.txt/g\" {} \\; && find node_modules/@capacitor -name '*.bak' -delete 2>/dev/null || true"
   },
   "devDependencies": {
