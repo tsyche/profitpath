@@ -1,4 +1,4 @@
-import { calc, getCacheStats } from '../src/calculations/index.js';
+import { calc, getCacheStats } from '../src/calculations/index';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';

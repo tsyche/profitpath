@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calc } from '../calculations/index.js';
+import { calc } from '../calculations/index';
 
 describe('Scenario Comparison Feature', () => {
   const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);

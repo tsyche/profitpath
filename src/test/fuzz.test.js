@@ -5,7 +5,7 @@
  * assertion message includes the seed and iteration number.
  */
 import { describe, it, expect } from 'vitest';
-import { calc, clearCalculationCache } from '../calculations/index.js';
+import { calc, clearCalculationCache } from '../calculations/index';
 import { sanitizeScenarioState, escapeHtml } from '../../assets/services/miscService.js';
 
 // Mulberry32 seeded PRNG — deterministic across runs

@@ -1,6 +1,6 @@
 // Shared domain types. Phase 2 of docs/plans/typescript-migration.md.
 // JS files reference these through JSDoc: @param {import('../types').Offering} o
-// (path relative to the importing file). Calculation shapes mirror src/calculations/index.js.
+// (path relative to the importing file). Calculation shapes mirror src/calculations/index.ts
 
 export type Mode = 'forecast' | 'current';
 

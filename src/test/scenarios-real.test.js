@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { saveScenario, loadScenario, deleteScenario } from '../../assets/services/scenarioService.js';
-import { calc } from '../../src/calculations/index.js';
+import { calc } from '../../src/calculations/index';
 import { setTestMode, clearGlobalState, clearVitestState, ensureElementRemove } from './test-utils.js';
 
 // Mock DOM elements

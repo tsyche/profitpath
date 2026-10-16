@@ -4,13 +4,30 @@
  */
 
 import { clamp } from '../../assets/utils/helpers';
+import type {
+  BreakEven,
+  CacheStats,
+  CalcIntermediate,
+  CalcOptions,
+  CalcResult,
+  CalcState,
+  Capacity,
+  CapacityParams,
+  CostParams,
+  Costs,
+  ModeResults,
+  MixResult,
+  Offering,
+  SanitizedOffering,
+  TaxEstimate
+} from '../types';
 
 // Constants
 export const HOURS_PER_YEAR = 2080; // Standard paid hours per employee per year
 
 // Coerce to a finite number; non-finite values (NaN, ±Infinity) become the
 // fallback so hostile inputs can't propagate NaN through the results
-const toFinite = (value, fallback = 0) => {
+const toFinite = (value: unknown, fallback = 0) => {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
 };
@@ -21,7 +38,7 @@ const MAX_MONEY = 1e12;
 const MAX_COUNT = 1e6;
 
 // Calculation cache to avoid redundant computations
-const calculationCache = new Map();
+const calculationCache = new Map<string, CalcResult>();
 const CACHE_MAX_SIZE = 100;
 
 // Performance metrics
@@ -37,7 +54,7 @@ export function clearCalculationCache() {
   calculationCache.clear();
 }
 
-function cacheSet(key, value) {
+function cacheSet(key: string, value: CalcResult) {
   calculationCache.set(key, value);
   if (calculationCache.size > CACHE_MAX_SIZE) {
     // Evict least recently used (Map insertion order = oldest first after LRU promotion)
@@ -48,7 +65,7 @@ function cacheSet(key, value) {
 /**
  * Generates a cache key from calculation inputs
  */
-function generateCacheKey(state) {
+function generateCacheKey(state: CalcState) {
   // Create a deterministic string key from the state
   // Handle both new and old formats
   const employeeKey = 'fullTimeEmployees' in state ? {
@@ -82,10 +99,8 @@ function generateCacheKey(state) {
 
 /**
  * Normalizes offering mix percentages and calculates shares
- * @param {import('../types').Offering[]} offerings - Array of service offerings
- * @returns {import('../types').MixResult} Normalized mix data
  */
-export function normalizeMix(offerings) {
+export function normalizeMix(offerings: Offering[]): MixResult {
   const sum = offerings.reduce((a, o) => a + (Number(o.mixPct) || 0), 0);
 
   // Return per-offering shares (sum to 1) for calculations.
@@ -108,10 +123,8 @@ export function normalizeMix(offerings) {
 
 /**
  * Sanitizes and validates offering data
- * @param {import('../types').Offering[]} offerings - Raw offerings from state
- * @returns {import('../types').SanitizedOffering[]} Sanitized offerings
  */
-function sanitizeOfferings(offerings) {
+function sanitizeOfferings(offerings: Offering[]): SanitizedOffering[] {
   return offerings
     .filter((o) => o && typeof o === 'object')
     .map((o) => ({
@@ -129,10 +142,8 @@ function sanitizeOfferings(offerings) {
 
 /**
  * Calculates capacity and utilization metrics
- * @param {import('../types').CapacityParams} params - Calculation parameters
- * @returns {import('../types').Capacity} Capacity metrics
  */
-function calculateCapacity(params) {
+function calculateCapacity(params: CapacityParams): Capacity {
   const { employees, productiveUtilizationPct, targetUtilizationPct, totalAnnualPaidHours } = params;
 
   // Use provided totalAnnualPaidHours if available, otherwise calculate from employees
@@ -148,10 +159,8 @@ function calculateCapacity(params) {
 
 /**
  * Calculates cost metrics
- * @param {import('../types').CostParams} params - Calculation parameters
- * @returns {import('../types').Costs} Cost metrics
  */
-function calculateCosts(params) {
+function calculateCosts(params: CostParams): Costs {
   const { employees, employeePay, monthlyCosts } = params;
 
   const annualFixedCosts = monthlyCosts * 12;
@@ -166,12 +175,8 @@ function calculateCosts(params) {
 
 /**
  * Calculates metrics for forecast mode
- * @param {import('../types').SanitizedOffering[]} offerings - Sanitized offerings
- * @param {import('../types').Capacity} capacity - Capacity metrics
- * @param {import('../types').Costs} _costs - Cost metrics (unused)
- * @returns {import('../types').ModeResults} Forecast mode results
  */
-function calculateForecastMode(offerings, capacity, _costs) {
+function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacity, _costs: Costs): ModeResults {
   const { sum: mixSum, needsNormalization: mixNormalized, shares } = normalizeMix(offerings);
 
   // Per-customer expectations (weighted by mix shares)
@@ -235,12 +240,8 @@ function calculateForecastMode(offerings, capacity, _costs) {
 
 /**
  * Calculates metrics for current operations mode
- * @param {import('../types').SanitizedOffering[]} offerings - Sanitized offerings
- * @param {import('../types').Capacity} capacity - Capacity metrics
- * @param {import('../types').Costs} _costs - Cost metrics (unused)
- * @returns {import('../types').ModeResults} Current mode results
  */
-function calculateCurrentMode(offerings, capacity, _costs) {
+function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity, _costs: Costs): ModeResults {
   let clients = 0;
   let totalSessions = 0;
   let serviceHours = 0;
@@ -297,11 +298,8 @@ function calculateCurrentMode(offerings, capacity, _costs) {
 
 /**
  * Calculates break-even analysis
- * @param {import('../types').ModeResults} results - Calculation results
- * @param {import('../types').Costs} costs - Cost metrics
- * @returns {import('../types').BreakEven} Break-even metrics
  */
-function calculateBreakEven(results, costs) {
+function calculateBreakEven(results: ModeResults, costs: Costs): BreakEven {
   const { revenue, clients } = results;
 
   // Calculate weighted average contribution margin per client
@@ -327,10 +325,8 @@ function calculateBreakEven(results, costs) {
 
 /**
  * Calculate tax estimates (2024 US rates, single filer, simplified)
- * @param {number} income - Pre-tax owner income (net profit before taxes)
- * @returns {import('../types').TaxEstimate} Tax estimates
  */
-function calculateTax(income) {
+function calculateTax(income: number): TaxEstimate {
   if (income <= 0) {
     return {
       seTax: 0,
@@ -385,11 +381,8 @@ function calculateTax(income) {
 
 /**
  * Main calculation engine with caching and debugging support
- * @param {import('../types').CalcState} [stateInput] - Application state (defaults to global state)
- * @param {import('../types').CalcOptions} [options] - Calculation options
- * @returns {import('../types').CalcResult} Calculation results with intermediate steps
  */
-export function calc(stateInput, options = {}) {
+export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcResult {
   const { enableCache = true, debug = false } = options;
   const startTime = performance.now();
   totalCalcs++;
@@ -417,7 +410,7 @@ export function calc(stateInput, options = {}) {
   cacheMisses++;
 
   // Input validation and sanitization
-  const intermediate = {
+  const intermediate: CalcIntermediate = {
     inputs: { ...s },
     sanitization: {},
     capacity: {},
@@ -425,6 +418,9 @@ export function calc(stateInput, options = {}) {
     modeResults: {},
     breakEven: {}
   };
+
+  // Un-narrowed alias: the format checks below narrow `s` per branch
+  const input: CalcState = s;
 
   // Handle both new (fullTime/partTime) and old (employees/hoursPerWeek) formats
   let fullTimeEmployees, partTimeEmployees, fullTimeEmployeePay, partTimeEmployeePay, totalAnnualPaidHours, totalPayroll;
@@ -459,9 +455,9 @@ export function calc(stateInput, options = {}) {
   const employees = fullTimeEmployees + partTimeEmployees || 1; // At least 1 for calculations
   const employeePay = employees > 0 ? totalPayroll / employees : 0; // Average pay per employee
 
-  const monthlyCosts = clamp(toFinite(s.monthlyCosts), 0, MAX_MONEY);
-  const productiveUtilizationPct = clamp(toFinite(s.productiveUtilizationPct), 0, 100);
-  const targetUtilizationPct = clamp(toFinite(s.targetUtilizationPct), 0, 150);
+  const monthlyCosts = clamp(toFinite(input.monthlyCosts), 0, MAX_MONEY);
+  const productiveUtilizationPct = clamp(toFinite(input.productiveUtilizationPct), 0, 100);
+  const targetUtilizationPct = clamp(toFinite(input.targetUtilizationPct), 0, 150);
 
   intermediate.sanitization = {
     fullTimeEmployees,
@@ -478,10 +474,10 @@ export function calc(stateInput, options = {}) {
   };
 
   // Sanitize offerings
-  const offerings = sanitizeOfferings(Array.isArray(s.offerings) ? s.offerings : []);
+  const offerings = sanitizeOfferings(Array.isArray(input.offerings) ? input.offerings : []);
   intermediate.sanitization.offerings = offerings;
 
-  const mode = s.mode;
+  const mode = input.mode;
 
   // Early return for no offerings
   if (!offerings.length) {
@@ -489,8 +485,7 @@ export function calc(stateInput, options = {}) {
     const costs = calculateCosts({ employees, employeePay, monthlyCosts });
 
     const income = -costs.totalFixedCosts;
-    /** @type {import('../types').CalcResult} */
-    const result = {
+    const result: CalcResult = {
       mode,
       offerings,
       ...capacity,
@@ -540,8 +535,7 @@ export function calc(stateInput, options = {}) {
   const income = modeResults.revenue - costs.totalFixedCosts - modeResults.variableCosts;
   const taxCalcs = calculateTax(income);
 
-  /** @type {import('../types').CalcResult} */
-  const result = {
+  const result: CalcResult = {
     mode,
     offerings,
     ...capacity,
@@ -573,9 +567,8 @@ export function calc(stateInput, options = {}) {
 
 /**
  * Gets cache statistics including hit rate and timing
- * @returns {import('../types').CacheStats}
  */
-export function getCacheStats() {
+export function getCacheStats(): CacheStats {
   const hitRate = totalCalcs > 0 ? Math.round((cacheHits / totalCalcs) * 100) : 0;
   return {
     size: calculationCache.size,

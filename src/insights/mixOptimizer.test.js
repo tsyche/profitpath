@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MixOptimizer, optimizeMix } from './mixOptimizer.js';
-import { calc } from '../calculations/index.js';
+import { calc } from '../calculations/index';
 
 describe('Client Mix Optimizer', () => {
   let mockState;

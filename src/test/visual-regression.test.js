@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { calc, clearCalculationCache } from '../calculations/index.js';
+import { calc, clearCalculationCache } from '../calculations/index';
 
 // Helper function to create proper state objects for tests
 function createTestState(overrides = {}) {

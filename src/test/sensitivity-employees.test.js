@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calc } from '../../src/calculations/index.js';
+import { calc } from '../../src/calculations/index';
 
 describe('Sensitivity Analysis - Employee Count Impact', () => {
   it('should calculate different results when employee count changes', () => {

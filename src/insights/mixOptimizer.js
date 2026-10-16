@@ -4,7 +4,7 @@
  * (mixPct per offering) that maximizes profit or utilization within capacity.
  */
 
-import { calc } from '../calculations/index.js';
+import { calc } from '../calculations/index';
 
 const GRID_STEPS = 11; // 0%, 10%, ..., 100% per offering
 const MAX_GRID_OFFERINGS = 5; // grid search combinations grow combinatorially; beyond this, hill-climb only

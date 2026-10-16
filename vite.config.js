@@ -2,11 +2,9 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   base: process.env.GITHUB_PAGES ? '/profitpath/' : '/',
-  esbuild: {
-    loader: 'jsx',
-    include: /assets\/app\.jsx$/,
-    jsxFactory: 'h',
-    jsxFragment: 'Fragment'
+  // Custom `h` factory for assets/app.jsx; .ts files use the default oxc transform
+  oxc: {
+    jsx: { runtime: 'classic', pragma: 'h', pragmaFrag: 'Fragment' }
   },
   build: {
     outDir: 'dist',
@@ -20,12 +18,6 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.js'],
-    esbuild: {
-      loader: 'jsx',
-      include: /assets\/app\.jsx$/,
-      jsxFactory: 'h',
-      jsxFragment: 'Fragment'
-    },
     reporters: ['verbose'],
     outputColor: false,
     silent: false,

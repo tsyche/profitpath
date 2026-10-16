@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { calc } from '../calculations/index.js'
+import { calc } from '../calculations/index'
 
 // Mock the DOM functions that the app uses
 global.$ = (selector) => {

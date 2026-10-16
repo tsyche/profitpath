@@ -2,7 +2,7 @@
 // radar chart, and client-capacity funnel. Follows the same hand-rolled
 // SVG/HTML-string pattern as visualizationService.js (no chart library dep).
 import { escapeHtml } from './miscService.js';
-import { calc } from '../../src/calculations/index.js';
+import { calc } from '../../src/calculations/index';
 
 const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);

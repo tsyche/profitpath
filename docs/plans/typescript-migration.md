@@ -2,7 +2,7 @@
 
 **TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-1 are done: `checkJs` is on with `strict` off, globals are declared, and a CI ratchet holds the baseline at 162 type errors (was 301). Next come shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
 
-**Status:** Building (Phases 0-1 done 2026-10-15)
+**Status:** Building (Phases 0-2 done, Phase 3 started 2026-10-15)
 **Fold into:** [AGENTS.md](../../AGENTS.md) "TypeScript Support" section, then delete this plan.
 
 ## Why
@@ -64,6 +64,8 @@ _Original scope:_
 
 ### Phase 3: rename, leaf-first
 
+- Done 2026-10-15: `typescript-eslint` + `**/*.ts` ESLint block; Vite `esbuild` override replaced by `oxc.jsx` (the old `include` blocked `.ts` transforms); `src/calculations/index.ts` renamed with JSDoc converted to annotations (error set unchanged at 162). Its tests (`src/test/calculations.test.js` etc.) are still `.js` and move later.
+
 - Order: `src/calculations`, `localization`, `settings`, `insights`, then `assets/utils`, `services`, `hooks`, `components`.
 - Per file: `git mv x.js x.ts` as its own commit (keeps history), then fix types, then move its `.test.js` to `.test.ts`.
 - Each step must leave `just test`, `just lint`, and the typecheck ratchet green.
@@ -81,9 +83,9 @@ Turn flags on one at a time, fixing each before the next, in this order:
 
 ### Phase 5: `assets/app.jsx`
 
-- 3,720 lines, 139 errors, no real JSX (it uses a custom `h` factory through a Vite esbuild loader override).
+- 3,720 lines, 139 errors, no real JSX (it uses a custom `h` factory through a Vite `oxc.jsx` pragma override).
 - **Split first:** pull cohesive blocks into modules (dashboard, scenarios, export, etc.), then convert each as a normal Phase 3 file. Converting the monolith in place would be one unreviewable change.
-- Finish by renaming the entry to `app.ts`, updating `index.html` (`src="assets/app.jsx"`) and `package.json` `main`, and deleting the `esbuild.loader: 'jsx'` overrides in `vite.config.js`.
+- Finish by renaming the entry to `app.ts`, updating `index.html` (`src="assets/app.jsx"`) and `package.json` `main`, and dropping the `oxc.jsx` pragma override in `vite.config.js`.
 
 ### Phase 6: lock in
 

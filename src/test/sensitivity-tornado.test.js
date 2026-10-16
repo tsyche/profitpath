@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calc } from '../../src/calculations/index.js';
+import { calc } from '../../src/calculations/index';
 
 describe('Sensitivity Analysis - Tornado Chart Impact Calculations', () => {
   it('should calculate impact for individual factor changes', () => {
