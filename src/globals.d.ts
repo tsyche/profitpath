@@ -1,6 +1,7 @@
 // Ambient declarations for browser globals the app attaches to `window` (or loads
 // from CDN scripts). Phase 1 of docs/plans/typescript-migration.md: everything is
-// `any` on purpose; Phase 2 replaces these with real types from src/types.ts.
+// `any` until typed; Phase 2 replaces them with real types from src/types.ts as the
+// shapes are verified against the code.
 declare global {
   // Test runner globals (vitest `globals: true`)
   var vi: any;
@@ -15,10 +16,10 @@ declare global {
   var Chart: any;
 
   // App state and cross-module functions exposed on window
-  var state: any;
-  var calc: any;
+  var state: import('./types').CalcState;
+  var calc: (state?: import('./types').CalcState, options?: import('./types').CalcOptions) => import('./types').CalcResult;
   var render: any;
-  var lastMetrics: any;
+  var lastMetrics: import('./types').CalcResult | null | undefined;
   var persistState: any;
   var updateOutputs: any;
   var updateValidationDisplay: any;
@@ -30,20 +31,20 @@ declare global {
   var acquireScrollLock: any;
   var releaseScrollLock: any;
   var hideContextualHelp: any;
-  var defaultOfferings: any;
+  var defaultOfferings: () => import('./types').Offering[];
   var INDUSTRY_TEMPLATES: any;
   var loadIndustryTemplate: any;
 
   // Scenarios and comparison
-  var getAllScenarios: any;
+  var getAllScenarios: () => import('./types').Scenario[];
   var saveScenario: any;
-  var loadScenario: any;
-  var deleteScenario: any;
+  var loadScenario: (scenarioId: string) => void;
+  var deleteScenario: (scenarioId: string) => void;
   var renderScenariosList: any;
   var openScenarioModal: any;
   var closeScenarioModal: any;
-  var encodeScenarioToURL: any;
-  var decodeScenarioFromURL: any;
+  var encodeScenarioToURL: (state: import('./types').CalcState, options?: { readonly?: boolean }) => string | null;
+  var decodeScenarioFromURL: () => unknown;
   var loadScenarioFromURL: any;
   var shareComparison: any;
   var showEmbedCode: any;

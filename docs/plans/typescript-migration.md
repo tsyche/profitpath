@@ -52,10 +52,11 @@ _Original scope:_
 - Declare the globals once in `src/globals.d.ts` (`state`, `$`, `$$`, `XLSX`, `html2canvas`, `window.__PP_PLATFORM__`). Expect a large drop in TS2339 and TS2304.
 - Add `typecheck` to CI beside lint. Confirm CI minutes impact is negligible (about 10 s).
 
-### Phase 2: shared types (in progress)
+### Phase 2: shared types (done)
 
 - Done 2026-10-15: `src/types.ts` has the calculation shapes (`CalcState`, `CalcResult`, `Offering`, ...) and `src/calculations/index.js` uses them via JSDoc; `state` in `assets/app.jsx` is typed `CalcState`. Baseline 164 to 162. Typing it caught a dead `.profit` read (per-offering Annual Profit always showed $0) and an early-return result missing the tax fields.
-- Left: settings, scenario and export-payload types, and replacing the `any` globals in `src/globals.d.ts`.
+- Done 2026-10-15: `Settings`, `Scenario` and `SanitizedScenarioState` types (JSDoc on `src/settings`, the scenario helpers in `miscService`); `state`, `calc`, `lastMetrics`, `defaultOfferings` and the scenario functions in `src/globals.d.ts` are typed. Count unchanged at 162, error set identical. `calc()`'s argument is optional because it falls back to the global state.
+- Left as `any` on purpose: UI/DOM helpers, CDN libraries and analytics globals. Type them as their files convert in Phase 3, not before. Export payloads are built inline as HTML/CSV strings, so there is no payload shape to type.
 
 - Define the core shapes first in `src/types.ts`: scenario, inputs, calculation results, settings, export payloads.
 - Start with `src/calculations/`, since everything else depends on its inputs and outputs. These types are what catch real bugs.

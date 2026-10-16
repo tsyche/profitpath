@@ -169,3 +169,59 @@ export interface CacheStats {
   lastCalcMs: string;
   totalCalcs: number;
 }
+
+export type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced';
+
+/** User settings persisted under `profitpath-settings`; mirrors DEFAULT_SETTINGS in src/settings/index.js. */
+export interface Settings {
+  experienceLevel: ExperienceLevel;
+  showAdvancedCalculations: boolean;
+  showDetailedBreakdown: boolean;
+  showComparisonTools: boolean;
+  showExportOptions: boolean;
+  showDebugPanel: boolean;
+  theme: 'light' | 'dark' | 'auto';
+  compactMode: boolean;
+  showTooltips: boolean;
+  currency: 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
+  locale: 'en-US' | 'de-DE' | 'en-GB' | 'en-CA' | 'en-AU';
+  decimalPrecision: number;
+  thousandsSeparator: boolean;
+  enableCaching: boolean;
+  enableDebugMode: boolean;
+  showPerformanceMetrics: boolean;
+  showSensitivityAnalysis: boolean;
+  showMixOptimizer: boolean;
+  showAdvancedCharts: boolean;
+}
+
+/** A saved scenario in the `profitpath-scenarios` localStorage array. */
+export interface Scenario {
+  id: string;
+  name: string;
+  /** Locale-formatted display string. */
+  timestamp: string;
+  /** ISO 8601. */
+  createdAt: string;
+  state: CalcState;
+  /** Written only by the miscService saveScenario variant. */
+  description?: string;
+  /** Pre-`state` scenarios stored the calc input here; readers fall back to it. */
+  data?: CalcState;
+}
+
+/** Output of sanitizeScenarioState(): the only shape accepted from URLs, storage and imports. */
+export interface SanitizedScenarioState extends CalcState {
+  mode: Mode;
+  offerings: SanitizedOffering[];
+  fullTimeEmployees: number;
+  partTimeEmployees: number;
+  fullTimeEmployeePay: number;
+  partTimeEmployeePay: number;
+  monthlyCosts: number;
+  productiveUtilizationPct: number;
+  targetUtilizationPct: number;
+  lockMix: boolean;
+  loadedTemplate: string | null;
+  notes: string;
+}

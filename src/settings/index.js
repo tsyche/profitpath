@@ -4,6 +4,7 @@
  */
 
 // Default settings - beginner-friendly defaults
+/** @type {import('../types').Settings} */
 export const DEFAULT_SETTINGS = {
   // Experience level
   experienceLevel: 'beginner', // 'beginner' | 'intermediate' | 'advanced'
@@ -85,7 +86,7 @@ export const FEATURE_GATES = {
 
 /**
  * Load user settings from localStorage
- * @returns {Object} User settings merged with defaults
+ * @returns {import('../types').Settings} User settings merged with defaults
  */
 export function loadSettings() {
   try {
@@ -102,7 +103,7 @@ export function loadSettings() {
 
 /**
  * Save user settings to localStorage
- * @param {Object} settings - Settings object to save
+ * @param {import('../types').Settings} settings - Settings object to save
  */
 export function saveSettings(settings) {
   try {

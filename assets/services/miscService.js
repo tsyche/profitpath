@@ -66,6 +66,10 @@ const MAX_NAME_LENGTH = 120;
 // safe state object containing only allowlisted fields with clamped values.
 // Returns null if the data is not a usable scenario. Handles the legacy
 // employees/employeePay format by mapping it onto fullTime fields.
+/**
+ * @param {Record<string, any>} data Untrusted input (URL, storage, import)
+ * @returns {import('../../src/types').SanitizedScenarioState | null}
+ */
 export function sanitizeScenarioState(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
 
@@ -289,6 +293,11 @@ function updateSocialMetaTags(state) {
   document.head.appendChild(metaUrl);
 }
 
+/**
+ * @param {import('../../src/types').CalcState} state
+ * @param {{ readonly?: boolean }} [options]
+ * @returns {string | null}
+ */
 export function encodeScenarioToURL(state, { readonly = false } = {}) {
   try {
     const serialized = JSON.stringify(state);
@@ -308,6 +317,7 @@ export function isReadOnlyURL() {
   return new URLSearchParams(window.location.search).get('readonly') === '1';
 }
 
+/** @returns {unknown} Untrusted payload: run it through sanitizeScenarioState(). */
 export function decodeScenarioFromURL() {
   const params = new URLSearchParams(window.location.search);
   const scenarioParam = params.get('scenario');
@@ -461,11 +471,13 @@ export function deleteScenario(scenarioId) {
   localStorage.setItem('profitpath-scenarios', JSON.stringify(filtered));
 }
 
+/** @returns {import('../../src/types').Scenario[]} */
 export function listScenarios() {
   return JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
 }
 
 // Additional functions needed by scenarioService.js
+/** @returns {import('../../src/types').Scenario[]} */
 export function getAllScenarios() {
   return JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
 }
