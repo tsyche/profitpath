@@ -38,7 +38,7 @@ export function lazyLoadChart(chartId, data, _options = {}) {
   return canvas;
 }
 
-export function setupChartEventListeners(chartId, callbacks = {}) {
+export function setupChartEventListeners(chartId, callbacks: { onClick?: (e: any) => void; onHover?: (e: any) => void } = {}) {
   const canvas = document.getElementById(chartId);
   if (!canvas) return;
 

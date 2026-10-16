@@ -56,7 +56,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
     `;
 
     // Import progressive disclosure module
-    await import('../../assets/utils/progressiveDisclosure.js');
+    await import('../../assets/utils/progressiveDisclosure');
   });
 
   afterEach(() => {
@@ -67,7 +67,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
   describe('Beginner Level (Default)', () => {
     beforeEach(async () => {
       localStorageMock.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'beginner' }));
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
     });
 
@@ -100,7 +100,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
   describe('Intermediate Level', () => {
     beforeEach(async () => {
       localStorageMock.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'intermediate' }));
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
     });
 
@@ -139,7 +139,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
   describe('Advanced Level', () => {
     beforeEach(async () => {
       localStorageMock.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'advanced' }));
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
     });
 
@@ -179,7 +179,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
         showDebugPanel: true
       }));
 
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
 
       const debugWrapper = document.querySelector('.debug-wrapper.expert-feature');
@@ -199,7 +199,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
         showDebugPanel: false
       }));
 
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
 
       // For beginner with showDebugPanel=false, panel should be hidden
@@ -215,7 +215,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
       // In real usage, the DOM would be re-rendered when level changes
       // This test verifies the function works correctly on fresh DOM for each level
 
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
 
       // Test beginner level with fresh DOM
       document.body.innerHTML = `
@@ -262,7 +262,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
   describe('Export Option Persistence', () => {
     it('should show export options at all experience levels', async () => {
       const levels = ['beginner', 'intermediate', 'advanced'];
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
 
       for (const level of levels) {
         localStorageMock.setItem('profitpath-settings', JSON.stringify({ experienceLevel: level }));
@@ -288,7 +288,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
 
     it('should show mobile expert features for advanced users', async () => {
       localStorageMock.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'advanced' }));
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
 
       const mobileBtn = document.querySelector('.mobile-submenu-btn.expert-feature');
@@ -298,7 +298,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
 
     it('should always show mobile menu buttons (they are treated as export options)', async () => {
       localStorageMock.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'beginner' }));
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
 
       const mobileBtn = document.querySelector('.mobile-submenu-btn.expert-feature');
@@ -309,7 +309,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
 
   describe('Feature Visibility Coverage', () => {
     it('should consistently apply feature visibility rules', async () => {
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
 
       // Test each level independently with fresh DOM setup
       const levels = ['beginner', 'intermediate', 'advanced'];
@@ -361,7 +361,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
       // The progressive disclosure code only explicitly hides for 'beginner' and 'intermediate'
       // Unknown levels fall through and keep features visible
       localStorageMock.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'unknown-level' }));
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
 
       // Unknown level will show all features (because it's not 'beginner' or 'intermediate')
@@ -371,7 +371,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
 
     it('should default to beginner when level is not set', async () => {
       localStorageMock.clear();
-      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+      const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
 
       // Missing settings defaults to 'beginner'

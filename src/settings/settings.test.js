@@ -8,7 +8,7 @@ import {
   resetSettings,
   DEFAULT_SETTINGS,
   FEATURE_GATES
-} from './index.js'
+} from './index'
 
 describe('Settings System', () => {
   let mockStore = {};

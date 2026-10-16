@@ -45,7 +45,7 @@ describe('Debug Panel Toggle', () => {
 
   it('should initialize progressive disclosure without errors', async () => {
     // Test that the progressiveDisclosure function can be imported and called
-    const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+    const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
 
     // Should not throw when called
     expect(() => {
@@ -61,7 +61,7 @@ describe('Debug Panel Toggle', () => {
     // Set as beginner
     localStorageMock.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'beginner' }));
 
-    const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+    const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
     initializeProgressiveDisclosure();
 
     // Expert features should be hidden for beginner
@@ -80,7 +80,7 @@ describe('Debug Panel Toggle', () => {
       showDebugPanel: true
     }));
 
-    const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+    const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
     initializeProgressiveDisclosure();
 
     const debugPanel = document.querySelector('.debug-wrapper.expert-feature');
@@ -94,7 +94,7 @@ describe('Debug Panel Toggle', () => {
       showDebugPanel: false
     }));
 
-    const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure.js');
+    const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
     initializeProgressiveDisclosure();
 
     const debugPanel = document.querySelector('.debug-wrapper.expert-feature');

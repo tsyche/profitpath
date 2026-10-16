@@ -2,7 +2,7 @@ import { calc, getCacheStats } from '../src/calculations/index';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
-import { initTooltips, setTooltipsEnabled } from './utils/tooltipManager.js';
+import { initTooltips, setTooltipsEnabled } from './utils/tooltipManager';
 import * as misc from './services/miscService';
 import * as businessLogic from './services/businessLogic';
 import { saveScenario, loadScenario, deleteScenario } from './services/scenarioService';
@@ -11,7 +11,7 @@ import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL, isReadOnly
 import { uuid, clamp } from './utils/helpers';
 import { showToast } from './services/modalService.js';
 import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui.js';
-import { optimizeMix } from '../src/insights/mixOptimizer.js';
+import { optimizeMix } from '../src/insights/mixOptimizer';
 import { renderSensitivityHeatmap, renderScorecardRadar, renderClientFunnel } from './services/advancedChartsService.js';
 
 // Test scenarios for development

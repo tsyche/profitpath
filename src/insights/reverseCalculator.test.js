@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { ReverseCalculator, getReverseCalculation, getRecommendedStrategy } from './reverseCalculator.js';
+import { ReverseCalculator, getReverseCalculation, getRecommendedStrategy } from './reverseCalculator';
 
 describe('Reverse Calculator - "What Would It Take?"', () => {
   let calculator;

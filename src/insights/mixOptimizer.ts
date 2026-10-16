@@ -12,10 +12,10 @@ const MAX_GRID_OFFERINGS = 5; // grid search combinations grow combinatorially; 
 /**
  * Generates candidate mix vectors (percentages summing to 100) for N offerings
  * by walking a coarse grid, then refines the best candidate with a local search.
- * @param {number} count - Number of offerings
- * @returns {Array<number[]>} Candidate mix vectors
+ * @param count - Number of offerings
+ * @returns Candidate mix vectors
  */
-function generateGridCandidates(count) {
+function generateGridCandidates(count: number): Array<number[]> {
   if (count <= 0) return [];
   if (count === 1) return [[100]];
 
@@ -38,11 +38,11 @@ function generateGridCandidates(count) {
 
 /**
  * Nudges each offering's mix by +/- delta and keeps improvements (hill-climbing).
- * @param {number[]} startMix - Starting mix percentages (sum to 100)
- * @param {Function} score - (mix) => number, higher is better
- * @returns {number[]} Refined mix
+ * @param startMix - Starting mix percentages (sum to 100)
+ * @param score - (mix) => number, higher is better
+ * @returns Refined mix
  */
-function refineMix(startMix, score) {
+function refineMix(startMix: number[], score: (...args: any[]) => any): number[] {
   let best = [...startMix];
   let bestScore = score(best);
   const deltas = [5, 1];
@@ -73,6 +73,9 @@ function refineMix(startMix, score) {
 }
 
 export class MixOptimizer {
+  state: any;
+  metrics: any;
+
   constructor(state, metrics) {
     this.state = state;
     this.metrics = metrics;
@@ -148,12 +151,11 @@ export class MixOptimizer {
 
 /**
  * Public API for mix optimization
- * @param {Object} state - Application state
- * @param {Object} metrics - Current calc() result
- * @param {'profit'|'utilization'} objective
- * @returns {Object|null} Optimization result
+ * @param state - Application state
+ * @param metrics - Current calc() result
+ * @returns Optimization result
  */
-export function optimizeMix(state, metrics, objective = 'profit') {
+export function optimizeMix(state: Record<string, any>, metrics: Record<string, any>, objective: 'profit'|'utilization' = 'profit'): Record<string, any>|null {
   const optimizer = new MixOptimizer(state, metrics);
   return optimizer.optimize(objective);
 }

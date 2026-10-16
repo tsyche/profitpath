@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MixOptimizer, optimizeMix } from './mixOptimizer.js';
+import { MixOptimizer, optimizeMix } from './mixOptimizer';
 import { calc } from '../calculations/index';
 
 describe('Client Mix Optimizer', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { InsightsEngine, generateInsights, generateWhatIfScenarios } from './insightsEngine.js';
+import { InsightsEngine, generateInsights, generateWhatIfScenarios } from './insightsEngine';
 
 describe('Insights Engine - Rules-Based Optimization', () => {
   let mockMetrics;

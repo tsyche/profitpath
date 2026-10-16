@@ -23,13 +23,13 @@ const NUMBER_FORMATS = {
 
 /**
  * Format a number with proper locale-specific thousands separator and decimal separator
- * @param {number} value - Number to format
- * @param {string} locale - Locale code (e.g., 'en-US', 'de-DE')
- * @param {number} decimals - Number of decimal places
- * @param {boolean} useThousands - Whether to use thousands separator
- * @returns {string} Formatted number string
+ * @param value - Number to format
+ * @param locale - Locale code (e.g., 'en-US', 'de-DE')
+ * @param decimals - Number of decimal places
+ * @param useThousands - Whether to use thousands separator
+ * @returns Formatted number string
  */
-export function formatNumber(value, locale = 'en-US', decimals = 0, useThousands = true) {
+export function formatNumber(value: number, locale = 'en-US', decimals = 0, useThousands = true): string {
   if (typeof value !== 'number' || isNaN(value)) return '0';
 
   const format = NUMBER_FORMATS[locale] || NUMBER_FORMATS['en-US'];
@@ -53,13 +53,13 @@ export function formatNumber(value, locale = 'en-US', decimals = 0, useThousands
 
 /**
  * Format a currency value with symbol and localization
- * @param {number} value - Amount to format
- * @param {string} currency - Currency code (e.g., 'USD', 'EUR')
- * @param {string} locale - Locale code (e.g., 'en-US')
- * @param {number} decimals - Decimal places
- * @returns {string} Formatted currency string
+ * @param value - Amount to format
+ * @param currency - Currency code (e.g., 'USD', 'EUR')
+ * @param locale - Locale code (e.g., 'en-US')
+ * @param decimals - Decimal places
+ * @returns Formatted currency string
  */
-export function formatCurrency(value, currency = 'USD', locale = 'en-US', decimals = 0) {
+export function formatCurrency(value: number, currency = 'USD', locale = 'en-US', decimals = 0): string {
   const currencyConfig = CURRENCIES[currency];
   if (!currencyConfig) return formatNumber(value, locale, decimals);
 
@@ -90,23 +90,23 @@ export function formatCurrency(value, currency = 'USD', locale = 'en-US', decima
 
 /**
  * Format a percentage with proper localization
- * @param {number} value - Percentage value (0-100)
- * @param {string} locale - Locale code
- * @param {number} decimals - Decimal places
- * @returns {string} Formatted percentage
+ * @param value - Percentage value (0-100)
+ * @param locale - Locale code
+ * @param decimals - Decimal places
+ * @returns Formatted percentage
  */
-export function formatPercentage(value, locale = 'en-US', decimals = 1) {
+export function formatPercentage(value: number, locale = 'en-US', decimals = 1): string {
   if (typeof value !== 'number' || isNaN(value)) return '0%';
   return formatNumber(value, locale, decimals, false) + '%';
 }
 
 /**
  * Parse a localized number string back to a number
- * @param {string} str - Localized number string
- * @param {string} locale - Locale code
- * @returns {number} Parsed number
+ * @param str - Localized number string
+ * @param locale - Locale code
+ * @returns Parsed number
  */
-export function parseLocalizedNumber(str, locale = 'en-US') {
+export function parseLocalizedNumber(str: string, locale = 'en-US'): number {
   const format = NUMBER_FORMATS[locale] || NUMBER_FORMATS['en-US'];
   const normalized = str
     .replace(new RegExp('\\' + format.thousands, 'g'), '')
@@ -116,18 +116,18 @@ export function parseLocalizedNumber(str, locale = 'en-US') {
 
 /**
  * Get currency symbol for a currency code
- * @param {string} currency - Currency code
- * @returns {string} Currency symbol
+ * @param currency - Currency code
+ * @returns Currency symbol
  */
-export function getCurrencySymbol(currency = 'USD') {
+export function getCurrencySymbol(currency = 'USD'): string {
   return CURRENCIES[currency]?.symbol || '$';
 }
 
 /**
  * Get all available currencies
- * @returns {Array} Array of currency objects with code, symbol, name
+ * @returns Array of currency objects with code, symbol, name
  */
-export function getAvailableCurrencies() {
+export function getAvailableCurrencies(): any[] {
   return Object.entries(CURRENCIES).map(([code, config]) => ({
     code,
     symbol: config.symbol,
@@ -139,11 +139,11 @@ export function getAvailableCurrencies() {
 /**
  * Format a number according to user settings
  * Used throughout the app to apply consistent formatting
- * @param {number} value - Value to format
- * @param {Object} settings - User settings object with currency, locale, decimalPrecision
- * @returns {string} Formatted number
+ * @param value - Value to format
+ * @param settings - User settings object with currency, locale, decimalPrecision
+ * @returns Formatted number
  */
-export function formatWithSettings(value, settings = {}) {
+export function formatWithSettings(value: number, settings: Record<string, any> = {}): string {
   const {
     currency = 'USD',
     locale = 'en-US',

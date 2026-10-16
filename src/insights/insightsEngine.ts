@@ -4,6 +4,10 @@
  */
 
 export class InsightsEngine {
+  metrics: any;
+  state: any;
+  insights: any[];
+
   constructor(metrics, state) {
     this.metrics = metrics;
     this.state = state;

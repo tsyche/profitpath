@@ -4,6 +4,9 @@
  */
 
 export class ReverseCalculator {
+  state: any;
+  currentMetrics: any;
+
   constructor(state, currentMetrics) {
     this.state = state;
     this.currentMetrics = currentMetrics;

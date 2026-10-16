@@ -71,6 +71,11 @@ _Original scope:_
 - Each step must leave `just test`, `just lint`, and the typecheck ratchet green.
 - ESLint currently only matches `**/*.js` and `**/*.jsx`. Add `typescript-eslint` and a `**/*.ts` block before the first rename.
 - E2E specs: `tests/e2e/app.spec.ts` is already TS; convert the rest last (Playwright runs `.ts` natively).
+- Done 2026-10-15 (uncommitted): `localization`, `settings`, `insights`, `assets/utils`, `useTableFocus` renamed. Build, ratchet (162) and e2e (133) green.
+
+### Phase 3b: analytics and accessibility
+
+- `src/analytics/*.js` and `assets/accessibility.js` were not in the Phase 3 list. Convert after Phase 3, same recipe. Their globals and DOM helpers stay `any` per the rule above.
 
 ### Phase 4: strictness ladder
 

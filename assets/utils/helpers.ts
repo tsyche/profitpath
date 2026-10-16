@@ -24,7 +24,7 @@ export function cssEscape(str) {
 }
 
 export function loadScript(src) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
     script.src = src;
     script.onload = () => resolve();

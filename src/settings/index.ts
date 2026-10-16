@@ -4,8 +4,7 @@
  */
 
 // Default settings - beginner-friendly defaults
-/** @type {import('../types').Settings} */
-export const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS: import('../types').Settings = {
   // Experience level
   experienceLevel: 'beginner', // 'beginner' | 'intermediate' | 'advanced'
 
@@ -86,9 +85,9 @@ export const FEATURE_GATES = {
 
 /**
  * Load user settings from localStorage
- * @returns {import('../types').Settings} User settings merged with defaults
+ * @returns User settings merged with defaults
  */
-export function loadSettings() {
+export function loadSettings(): import('../types').Settings {
   try {
     const stored = localStorage.getItem(SETTINGS_KEY);
     if (stored) {
@@ -103,9 +102,9 @@ export function loadSettings() {
 
 /**
  * Save user settings to localStorage
- * @param {import('../types').Settings} settings - Settings object to save
+ * @param settings - Settings object to save
  */
-export function saveSettings(settings) {
+export function saveSettings(settings: import('../types').Settings) {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     // Dispatch custom event to notify UI of settings changes
@@ -119,10 +118,10 @@ export function saveSettings(settings) {
 
 /**
  * Update a specific setting
- * @param {string} key - Setting key
- * @param {any} value - Setting value
+ * @param key - Setting key
+ * @param value - Setting value
  */
-export function updateSetting(key, value) {
+export function updateSetting(key: string, value: any) {
   const currentSettings = loadSettings();
   const newSettings = { ...currentSettings, [key]: value };
 
@@ -137,28 +136,28 @@ export function updateSetting(key, value) {
 
 /**
  * Check if a feature is enabled based on current settings
- * @param {string} featureKey - Feature key to check
- * @returns {boolean} Whether the feature is enabled
+ * @param featureKey - Feature key to check
+ * @returns Whether the feature is enabled
  */
-export function isFeatureEnabled(featureKey) {
+export function isFeatureEnabled(featureKey: string): boolean {
   const settings = loadSettings();
   return settings[featureKey] === true;
 }
 
 /**
  * Get current experience level
- * @returns {string} Current experience level
+ * @returns Current experience level
  */
-export function getExperienceLevel() {
+export function getExperienceLevel(): string {
   const settings = loadSettings();
   return settings.experienceLevel;
 }
 
 /**
  * Set experience level and apply appropriate feature gates
- * @param {string} level - Experience level ('beginner' | 'intermediate' | 'advanced')
+ * @param level - Experience level ('beginner' | 'intermediate' | 'advanced')
  */
-export function setExperienceLevel(level) {
+export function setExperienceLevel(level: string) {
   if (!FEATURE_GATES[level]) {
     console.warn('Invalid experience level: ' + level);
     return;
@@ -184,9 +183,9 @@ export function resetSettings() {
 
 /**
  * Get settings summary for debugging
- * @returns {Object} Settings summary
+ * @returns Settings summary
  */
-export function getSettingsSummary() {
+export function getSettingsSummary(): Record<string, any> {
   const settings = loadSettings();
   const enabledFeatures = Object.entries(settings)
     .filter(([key, value]) => value === true && key.startsWith('show'))
