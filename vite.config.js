@@ -16,6 +16,8 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    // Unit tests only; tests/e2e belongs to Playwright
+    include: ['src/**/*.{test,spec}.{js,ts}'],
     globals: true,
     setupFiles: ['./src/test/setup.js'],
     reporters: ['verbose'],

@@ -1,8 +1,8 @@
 # TypeScript migration
 
-**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-3b are done: `checkJs` is on with `strict` off, globals are declared, and a CI ratchet holds the baseline now 142 type errors (was 301). Next come shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
+**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-3b are done: `checkJs` is on with `strict` off, globals are declared, and a CI ratchet holds the baseline now 287 type errors (was 301 before `noImplicitAny` went on at 142). Next come shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
 
-**Status:** Building (Phases 0-3b done 2026-10-15; Phase 4 next)
+**Status:** Building (Phases 0-3b done 2026-10-15; Phase 4 step 1 done, `strictNullChecks` next)
 **Fold into:** [AGENTS.md](../../AGENTS.md) "TypeScript Support" section, then delete this plan.
 
 ## Why
@@ -84,7 +84,7 @@ _Original scope:_
 
 Turn flags on one at a time, fixing each before the next, in this order:
 
-1. `noImplicitAny` (the roughly 450 TS7006 errors)
+1. `noImplicitAny` (the roughly 450 TS7006 errors). Done 2026-10-15: codemods added explicit `any` to about 330 params in `.ts` files (lint warnings 113 to 517) and fixed the TS7034/7019/7018/7053 sites; flag on in `tsconfig.json`. Ratchet reset 142 to 287. The extra 145 are about 208 `assets/app.jsx` errors (a `.jsx` file cannot take `: any`) that burn down in Phase 5; no TS7xxx errors remain in `.ts` files. Lint, 431 unit tests, build and 133 e2e green. Follow-up: tighten the explicit `any`s file by file.
 2. `strictNullChecks` (TS18047 and TS2322 families)
 3. `strictFunctionTypes`, `strictBindCallApply`, the rest
 4. `"strict": true` and delete the individual flags
