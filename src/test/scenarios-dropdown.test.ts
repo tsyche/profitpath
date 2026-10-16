@@ -60,7 +60,7 @@ describe('Scenarios Modal Dropdown Population', () => {
 
   it('should populate comparison dropdowns with scenarios', async () => {
     // Import the function to test
-    const miscService = await import('../../assets/services/miscService.js');
+    const miscService = await import('../../assets/services/miscService');
     populateComparisonDropdowns = miscService.populateComparisonDropdowns;
     
     // Call the function
@@ -92,7 +92,7 @@ describe('Scenarios Modal Dropdown Population', () => {
     localStorage.removeItem('profitpath-scenarios');
     
     // Import the function to test
-    const miscService = await import('../../assets/services/miscService.js');
+    const miscService = await import('../../assets/services/miscService');
     populateComparisonDropdowns = miscService.populateComparisonDropdowns;
     
     // Call the function
@@ -116,7 +116,7 @@ describe('Scenarios Modal Dropdown Population', () => {
     dropdown2.remove();
     
     // Import the function to test
-    const miscService = await import('../../assets/services/miscService.js');
+    const miscService = await import('../../assets/services/miscService');
     populateComparisonDropdowns = miscService.populateComparisonDropdowns;
     
     // Call the function - should not crash

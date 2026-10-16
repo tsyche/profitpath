@@ -3,7 +3,7 @@
  * Provides consistent modal behavior across the application
  */
 
-import { createModal } from '../components/Modal.js';
+import { createModal } from '../components/Modal';
 
 // Modal configuration constants
 const MODAL_SIZES = {
@@ -29,16 +29,10 @@ const modalState = {
 
 /**
  * Create and display a modal with standardized behavior
- * @param {Object} config - Modal configuration
- * @param {string} config.title - Modal title
- * @param {string|HTMLElement} config.content - Modal content
- * @param {Array} config.buttons - Array of button configurations
- * @param {string} config.size - Modal size (small, medium, large, full)
- * @param {string} config.type - Modal type for styling
- * @param {Function} config.onClose - Callback when modal closes
- * @returns {HTMLElement} The created modal element
+ * @param config - Modal configuration
+ * @returns The created modal element
  */
-export function showModal(config) {
+export function showModal(config: Record<string, any>): HTMLElement {
     const {
         title,
         content,
@@ -102,9 +96,9 @@ export function showModal(config) {
 
 /**
  * Close a specific modal
- * @param {HTMLElement} modal - The modal element to close
+ * @param modal - The modal element to close
  */
-export function closeModal(modal) {
+export function closeModal(modal: HTMLElement) {
     if (!modal || !modalState.modalStack.includes(modal)) {
         return;
     }
@@ -145,15 +139,15 @@ export function closeAllModals() {
 
 /**
  * Create a confirmation modal
- * @param {string} title - Modal title
- * @param {string} message - Confirmation message
- * @param {Function} onConfirm - Callback when confirmed
- * @param {Function} onCancel - Callback when cancelled
- * @param {string} confirmText - Text for confirm button
- * @param {string} cancelText - Text for cancel button
- * @returns {HTMLElement} The created modal element
+ * @param title - Modal title
+ * @param message - Confirmation message
+ * @param onConfirm - Callback when confirmed
+ * @param onCancel - Callback when cancelled
+ * @param confirmText - Text for confirm button
+ * @param cancelText - Text for cancel button
+ * @returns The created modal element
  */
-export function showConfirmationModal(title, message, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel') {
+export function showConfirmationModal(title: string, message: string, onConfirm: (...args: any[]) => any, onCancel: (...args: any[]) => any, confirmText: string = 'Confirm', cancelText: string = 'Cancel'): HTMLElement {
     return showModal({
         title,
         content: `<p>${message}</p>`,
@@ -182,13 +176,13 @@ export function showConfirmationModal(title, message, onConfirm, onCancel, confi
 
 /**
  * Create an information modal
- * @param {string} title - Modal title
- * @param {string} content - Information content
- * @param {Function} onClose - Callback when closed
- * @param {string} buttonText - Text for the close button
- * @returns {HTMLElement} The created modal element
+ * @param title - Modal title
+ * @param content - Information content
+ * @param onClose - Callback when closed
+ * @param buttonText - Text for the close button
+ * @returns The created modal element
  */
-export function showInformationModal(title, content, onClose, buttonText = 'OK') {
+export function showInformationModal(title: string, content: string, onClose: (...args: any[]) => any, buttonText: string = 'OK'): HTMLElement {
     return showModal({
         title,
         content,
@@ -209,15 +203,15 @@ export function showInformationModal(title, content, onClose, buttonText = 'OK')
 
 /**
  * Create a form modal
- * @param {string} title - Modal title
- * @param {string} formContent - Form HTML content
- * @param {Function} onSubmit - Callback when form is submitted
- * @param {Function} onCancel - Callback when cancelled
- * @param {string} submitText - Text for submit button
- * @param {string} cancelText - Text for cancel button
- * @returns {HTMLElement} The created modal element
+ * @param title - Modal title
+ * @param formContent - Form HTML content
+ * @param onSubmit - Callback when form is submitted
+ * @param onCancel - Callback when cancelled
+ * @param submitText - Text for submit button
+ * @param cancelText - Text for cancel button
+ * @returns The created modal element
  */
-export function showFormModal(title, formContent, onSubmit, onCancel, submitText = 'Submit', cancelText = 'Cancel') {
+export function showFormModal(title: string, formContent: string, onSubmit: (...args: any[]) => any, onCancel: (...args: any[]) => any, submitText: string = 'Submit', cancelText: string = 'Cancel'): HTMLElement {
     return showModal({
         title,
         content: formContent,
@@ -246,15 +240,15 @@ export function showFormModal(title, formContent, onSubmit, onCancel, submitText
 
 /**
  * Create a list selection modal
- * @param {string} title - Modal title
- * @param {Array} items - Array of items to display
- * @param {Function} onSelect - Callback when item is selected
- * @param {Function} onCancel - Callback when cancelled
- * @param {string} selectText - Text for select button
- * @param {string} cancelText - Text for cancel button
- * @returns {HTMLElement} The created modal element
+ * @param title - Modal title
+ * @param items - Array of items to display
+ * @param onSelect - Callback when item is selected
+ * @param onCancel - Callback when cancelled
+ * @param selectText - Text for select button
+ * @param cancelText - Text for cancel button
+ * @returns The created modal element
  */
-export function showListModal(title, items, onSelect, onCancel, selectText = 'Select', cancelText = 'Cancel') {
+export function showListModal(title: string, items: any[], onSelect: (...args: any[]) => any, onCancel: (...args: any[]) => any, selectText: string = 'Select', cancelText: string = 'Cancel'): HTMLElement {
     const listContent = `
     <div class="modal-list">
       ${items.map(item => `
@@ -298,25 +292,25 @@ export function showListModal(title, items, onSelect, onCancel, selectText = 'Se
 
 /**
  * Check if any modal is currently open
- * @returns {boolean} True if a modal is open
+ * @returns True if a modal is open
  */
-export function isModalOpen() {
+export function isModalOpen(): boolean {
     return modalState.isModalOpen;
 }
 
 /**
  * Get the currently active modal
- * @returns {HTMLElement|null} The current modal element
+ * @returns The current modal element
  */
-export function getCurrentModal() {
+export function getCurrentModal(): HTMLElement|null {
     return modalState.currentModal;
 }
 
 /**
  * Get the number of open modals
- * @returns {number} Number of open modals
+ * @returns Number of open modals
  */
-export function getModalCount() {
+export function getModalCount(): number {
     return modalState.modalStack.length;
 }
 

@@ -93,7 +93,7 @@ describe('Scenarios Comparison Functionality', () => {
 
   it('should perform comparison between two scenarios', async () => {
     // Import the function to test
-    const uiHelpers = await import('../../assets/components/UIHelpers.js');
+    const uiHelpers = await import('../../assets/components/UIHelpers');
     performComparison = uiHelpers.performComparison;
     
     // Call the comparison function
@@ -118,7 +118,7 @@ describe('Scenarios Comparison Functionality', () => {
 
   it('should show correct differences in comparison', async () => {
     // Import the function to test
-    const uiHelpers = await import('../../assets/components/UIHelpers.js');
+    const uiHelpers = await import('../../assets/components/UIHelpers');
     performComparison = uiHelpers.performComparison;
     
     // Call the comparison function
@@ -140,7 +140,7 @@ describe('Scenarios Comparison Functionality', () => {
 
   it('should handle comparison with non-existent scenario', async () => {
     // Import the function to test
-    const uiHelpers = await import('../../assets/components/UIHelpers.js');
+    const uiHelpers = await import('../../assets/components/UIHelpers');
     performComparison = uiHelpers.performComparison;
     
     // Call with non-existent scenario - should not crash
@@ -149,7 +149,7 @@ describe('Scenarios Comparison Functionality', () => {
 
   it('should hide comparison results when no scenarios selected', async () => {
     // Import the function to test
-    const uiHelpers = await import('../../assets/components/UIHelpers.js');
+    const uiHelpers = await import('../../assets/components/UIHelpers');
     performComparison = uiHelpers.performComparison;
     
     // Initially hidden

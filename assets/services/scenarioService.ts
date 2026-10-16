@@ -65,7 +65,7 @@ function performSave(name) {
 
     // Update dropdowns immediately after localStorage is updated
     const modalOverlay = document.querySelector('.modal-overlay');
-    import('./miscService.js').then(miscService => {
+    import('./miscService').then(miscService => {
       miscService.populateComparisonDropdowns(modalOverlay);
     });
 
@@ -99,7 +99,7 @@ export function loadScenario(scenarioId) {
     // Update the scenarios modal UI in real time
     setTimeout(() => {
       renderScenariosList();
-      import('./miscService.js').then(miscService => {
+      import('./miscService').then(miscService => {
         miscService.populateComparisonDropdowns();
       });
     }, 100);
@@ -177,7 +177,7 @@ export function deleteScenario(scenarioId) {
       // Defer rendering to next tick to avoid blocking
       setTimeout(() => {
         renderScenariosList();
-        import('./miscService.js').then(miscService => {
+        import('./miscService').then(miscService => {
           // Find the modal overlay to pass as context
           const modalOverlay = document.querySelector('.modal-overlay');
           miscService.populateComparisonDropdowns(modalOverlay);

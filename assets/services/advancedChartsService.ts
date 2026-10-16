@@ -1,7 +1,7 @@
 // Advanced Chart Types: multi-variable sensitivity heat map, balanced-scorecard
 // radar chart, and client-capacity funnel. Follows the same hand-rolled
 // SVG/HTML-string pattern as visualizationService.js (no chart library dep).
-import { escapeHtml } from './miscService.js';
+import { escapeHtml } from './miscService';
 import { calc } from '../../src/calculations/index';
 
 const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
@@ -16,10 +16,9 @@ const HEATMAP_UTIL_STEPS = [-20, -10, 0, 10, 20];
 
 /**
  * Computes a 2D grid of projected income across price and utilization deltas.
- * @param {Object} state - Application state
- * @returns {{priceSteps: number[], utilSteps: number[], cells: Array<Array<{income: number}>>}}
+ * @param state - Application state
  */
-export function computeHeatmapData(state) {
+export function computeHeatmapData(state: Record<string, any>): {priceSteps: number[], utilSteps: number[], cells: Array<Array<{income: number}>>} {
   const baseUtilization = Number(state.productiveUtilizationPct) || 75;
 
   const cells = HEATMAP_PRICE_STEPS.map((priceAdjust) =>
@@ -42,10 +41,10 @@ export function computeHeatmapData(state) {
 
 /**
  * Renders the heat map as a colored HTML table (diverging red→green by income).
- * @param {Object} state - Application state
- * @returns {string} HTML
+ * @param state - Application state
+ * @returns HTML
  */
-export function renderSensitivityHeatmap(state) {
+export function renderSensitivityHeatmap(state: Record<string, any>): string {
   const { priceSteps, utilSteps, cells } = computeHeatmapData(state);
 
   const allIncomes = cells.flat().map((c) => c.income);
@@ -86,10 +85,10 @@ export function renderSensitivityHeatmap(state) {
 
 /**
  * Computes normalized (0-100) scores for a balanced-scorecard view.
- * @param {Object} metrics - calc() result
- * @returns {Object} Scores keyed by dimension
+ * @param metrics - calc() result
+ * @returns Scores keyed by dimension
  */
-export function computeScorecardData(metrics) {
+export function computeScorecardData(metrics: Record<string, any>): Record<string, any> {
   const revenue = Number(metrics.revenue) || 0;
   const income = Number(metrics.income) || 0;
   const capacityPct = Number(metrics.capacityPct) || 0;
@@ -134,10 +133,10 @@ const RADAR_LABELS = {
 
 /**
  * Renders a 5-axis radar/spider SVG chart from scorecard data.
- * @param {Object} metrics - calc() result
- * @returns {string} HTML
+ * @param metrics - calc() result
+ * @returns HTML
  */
-export function renderScorecardRadar(metrics) {
+export function renderScorecardRadar(metrics: Record<string, any>): string {
   const scores = computeScorecardData(metrics);
   const axes = Object.keys(RADAR_LABELS);
   const n = axes.length;
@@ -202,10 +201,9 @@ export function renderScorecardRadar(metrics) {
 
 /**
  * Computes funnel stage values (all expressed as client counts).
- * @param {Object} metrics - calc() result
- * @returns {Array<{label: string, value: number}>}
+ * @param metrics - calc() result
  */
-export function computeFunnelData(metrics) {
+export function computeFunnelData(metrics: Record<string, any>): Array<{label: string, value: number}> {
   const serviceHoursPerClient = Number(metrics.serviceHoursPerClient) || 0;
   const annualServiceHours = Number(metrics.annualServiceHours) || 0;
   const capacityClients = serviceHoursPerClient > 0 ? Math.floor(annualServiceHours / serviceHoursPerClient) : 0;
@@ -221,10 +219,10 @@ export function computeFunnelData(metrics) {
 
 /**
  * Renders the client-capacity funnel as a series of proportionally-scaled bars.
- * @param {Object} metrics - calc() result
- * @returns {string} HTML
+ * @param metrics - calc() result
+ * @returns HTML
  */
-export function renderClientFunnel(metrics) {
+export function renderClientFunnel(metrics: Record<string, any>): string {
   const stages = computeFunnelData(metrics);
   const maxValue = Math.max(...stages.map((s) => s.value), 1);
 

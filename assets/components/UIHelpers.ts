@@ -4,7 +4,7 @@ import { createModal } from "../components/Modal";
 
 // UI Components and Helpers
 
-export function showDeleteConfirmation(scenarioId, onConfirm) {
+export function showDeleteConfirmation(scenarioId: string, onConfirm: () => void) {
   createModal({
     title: '🗑️ Confirm Delete',
     content: 'Are you sure you want to delete this scenario? This action cannot be undone.',
@@ -104,7 +104,7 @@ export function openScenarioModal() {
         dropdown2.appendChild(option2);
       });
     } else {
-      import('../services/miscService.js').then((miscService) => {
+      import('../services/miscService').then((miscService) => {
         miscService.populateComparisonDropdowns();
       });
     }
@@ -131,7 +131,7 @@ export function openScenarioModal() {
           { text: '❌ Cancel', primary: false },
           {
             text: '📂 Load', primary: true, action: async () => {
-              const scenarioService = await import('../services/scenarioService.js');
+              const scenarioService = await import('../services/scenarioService');
               await scenarioService.loadScenario(scenarioId);
               renderScenariosList();
             }
@@ -161,7 +161,7 @@ export function openScenarioModal() {
             { text: '❌ Cancel', primary: false },
             {
               text: '💾 Save', primary: true, action: async () => {
-                const scenarioService = await import('../services/scenarioService.js');
+                const scenarioService = await import('../services/scenarioService');
                 await scenarioService.saveScenario(scenarioName);
                 input.value = '';
                 renderScenariosList();
@@ -200,7 +200,7 @@ export function openScenarioModal() {
       if (dropdown1?.value && dropdown2?.value) {
         performComparisonInModal(dropdown1.value, dropdown2.value, modal);
       } else {
-        import('../services/modalService.js').then((modalService) => {
+        import('../services/modalService').then((modalService) => {
           modalService.showToast('Please select two scenarios to compare');
         });
       }
@@ -208,13 +208,13 @@ export function openScenarioModal() {
   }
 
   // Populate comparison dropdowns
-  import('../services/miscService.js').then((miscService) => {
+  import('../services/miscService').then((miscService) => {
     miscService.populateComparisonDropdowns();
   });
 }
 
 // Function to perform comparison within modal context
-export function performComparisonInModal(scenarioId1, scenarioId2, modal) {
+export function performComparisonInModal(scenarioId1: string, scenarioId2: string, modal?: HTMLElement | null) {
   // Delegate to the new full-width diff modal
   if (typeof window.showScenarioComparisonDiff === 'function') {
     window.showScenarioComparisonDiff(scenarioId1, scenarioId2);
@@ -224,7 +224,7 @@ export function performComparisonInModal(scenarioId1, scenarioId2, modal) {
   }
 }
 
-export function performComparison(scenarioId1, scenarioId2, modal = null) {
+export function performComparison(scenarioId1: string, scenarioId2: string, modal: HTMLElement | null = null) {
   const scenarios = getAllScenarios();
 
   // Find scenarios by ID
@@ -232,15 +232,15 @@ export function performComparison(scenarioId1, scenarioId2, modal = null) {
   const scenario2 = scenarios.find(s => s.id === scenarioId2);
 
   if (!scenario1 || !scenario2) {
-    import('../services/modalService.js').then((modalService) => {
+    import('../services/modalService').then((modalService) => {
       modalService.showToast('Scenario not found');
     });
     return;
   }
 
   // Find results div within the modal if provided, or globally (for tests)
-  const resultsDiv = modal ? (modal.querySelector('#comparisonResults') || modal.parentElement?.querySelector('#comparisonResults')) : 
-                     document.querySelector('#comparisonResults');
+  const resultsDiv = modal ? (modal.querySelector<HTMLElement>('#comparisonResults') || modal.parentElement?.querySelector<HTMLElement>('#comparisonResults')) : 
+                     document.querySelector<HTMLElement>('#comparisonResults');
   
   if (!resultsDiv) {
     console.error('Comparison results div not found in modal context');

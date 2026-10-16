@@ -6,7 +6,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { calc, clearCalculationCache } from '../calculations/index';
-import { sanitizeScenarioState, escapeHtml } from '../../assets/services/miscService.js';
+import { sanitizeScenarioState, escapeHtml } from '../../assets/services/miscService';
 
 // Mulberry32 seeded PRNG — deterministic across runs
 function mulberry32(seed) {

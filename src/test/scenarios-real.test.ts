@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { saveScenario, loadScenario, deleteScenario } from '../../assets/services/scenarioService.js';
+import { saveScenario, loadScenario, deleteScenario } from '../../assets/services/scenarioService';
 import { calc } from '../../src/calculations/index';
 import { setTestMode, clearGlobalState, clearVitestState, ensureElementRemove } from './test-utils.js';
 
@@ -71,7 +71,7 @@ afterEach(() => {
 });
 
 // Mock modalService to prevent toast DOM manipulation
-vi.mock('../../assets/services/modalService.js', () => ({
+vi.mock('../../assets/services/modalService', () => ({
   showToast: vi.fn(),
   showModal: vi.fn(),
   hideModal: vi.fn(),
@@ -125,7 +125,7 @@ describe('Scenario Save and Load - Real Implementation', () => {
   let saveScenario, loadScenario, deleteScenario;
 
   beforeEach(async () => {
-    const scenarioService = await import('../../assets/services/scenarioService.js');
+    const scenarioService = await import('../../assets/services/scenarioService');
     saveScenario = scenarioService.saveScenario;
     loadScenario = scenarioService.loadScenario;
     deleteScenario = scenarioService.deleteScenario;

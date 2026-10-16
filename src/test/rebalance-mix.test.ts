@@ -4,7 +4,7 @@
 // was never imported), leaving totals like 127%.
 
 import { describe, it, expect } from 'vitest';
-import { rebalanceMix } from '../../assets/services/businessLogic.js';
+import { rebalanceMix } from '../../assets/services/businessLogic';
 
 function setOfferings(...mixPcts) {
   global.state = {

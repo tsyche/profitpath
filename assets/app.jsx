@@ -6,13 +6,17 @@ import { initTooltips, setTooltipsEnabled } from './utils/tooltipManager';
 import * as misc from './services/miscService';
 import * as businessLogic from './services/businessLogic';
 import { saveScenario, loadScenario, deleteScenario } from './services/scenarioService';
-import { closeScenarioModal, createModal } from './components/Modal.js';
+import { closeScenarioModal, createModal } from './components/Modal';
 import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL, isReadOnlyURL, getShareBase } from './services/miscService';
 import { uuid, clamp } from './utils/helpers';
-import { showToast } from './services/modalService.js';
+import { showToast } from './services/modalService';
 import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui.js';
 import { optimizeMix } from '../src/insights/mixOptimizer';
-import { renderSensitivityHeatmap, renderScorecardRadar, renderClientFunnel } from './services/advancedChartsService.js';
+import { renderSensitivityHeatmap, renderScorecardRadar, renderClientFunnel } from './services/advancedChartsService';
+
+// Untyped views for the (...args) forwarding wrappers below; real signatures are checked at direct call sites.
+const miscAny = /** @type {any} */ (misc);
+const businessLogicAny = /** @type {any} */ (businessLogic);
 
 // Test scenarios for development
 const TEST_SCENARIOS = {
@@ -30,13 +34,13 @@ const TEST_SCENARIOS = {
 };
 
 // wrapper around miscService helper to avoid ReferenceErrors in test env
-const restoreScheduling = (...args) => (misc && typeof misc.restoreScheduling === 'function') ? misc.restoreScheduling(...args) : undefined;
+const restoreScheduling = (...args) => (misc && typeof misc.restoreScheduling === 'function') ? miscAny.restoreScheduling(...args) : undefined;
 
 // HTML escape helper
-const escapeHtml = (...args) => (misc && typeof misc.escapeHtml === 'function') ? misc.escapeHtml(...args) : (args[0] == null ? '' : String(args[0]));
+const escapeHtml = (...args) => (misc && typeof misc.escapeHtml === 'function') ? miscAny.escapeHtml(...args) : (args[0] == null ? '' : String(args[0]));
 
 // other utility wrappers - remove functions that don't exist
-const loadScenarioFromURL = (...args) => (misc && typeof misc.loadScenarioFromURL === 'function') ? misc.loadScenarioFromURL(...args) : undefined;
+const loadScenarioFromURL = (...args) => (misc && typeof misc.loadScenarioFromURL === 'function') ? miscAny.loadScenarioFromURL(...args) : undefined;
 
 // DOM utility functions
 const $ = (selector) => {
@@ -174,21 +178,21 @@ if (typeof window !== 'undefined') {
 }
 
 // Additional function wrappers to prevent ReferenceErrors - only include functions that exist
-const loadSettings = (...args) => (misc && typeof misc.loadSettings === 'function') ? misc.loadSettings(...args) : (() => ({}));
-const setExperienceLevel = (...args) => (misc && typeof misc.setExperienceLevel === 'function') ? misc.setExperienceLevel(...args) : undefined;
-const updateSetting = (...args) => (misc && typeof misc.updateSetting === 'function') ? misc.updateSetting(...args) : undefined;
-const loadIndustryTemplate = (...args) => (misc && typeof misc.loadIndustryTemplate === 'function') ? misc.loadIndustryTemplate(...args) : undefined;
-const exportAsCSV = (...args) => (misc && typeof misc.exportAsCSV === 'function') ? misc.exportAsCSV(...args) : undefined;
-const exportAsExcel = (...args) => (misc && typeof misc.exportAsExcel === 'function') ? misc.exportAsExcel(...args) : undefined;
-const exportAsPDF = (...args) => (misc && typeof misc.exportAsPDF === 'function') ? misc.exportAsPDF(...args) : undefined;
-const exportAsHTML = (...args) => (misc && typeof misc.exportAsHTML === 'function') ? misc.exportAsHTML(...args) : undefined;
-const shareViaEmail = (...args) => (misc && typeof misc.shareViaEmail === 'function') ? misc.shareViaEmail(...args) : undefined;
-const showEmbedCode = (...args) => (misc && typeof misc.showEmbedCode === 'function') ? misc.showEmbedCode(...args) : undefined;
-const showScheduleDialog = (...args) => (misc && typeof misc.showScheduleDialog === 'function') ? misc.showScheduleDialog(...args) : undefined;
-const exportAsFinancialReport = (...args) => (misc && typeof misc.exportAsFinancialReport === 'function') ? misc.exportAsFinancialReport(...args) : undefined;
-const shareScenario = (...args) => (misc && typeof misc.shareScenario === 'function') ? misc.shareScenario(...args) : undefined;
-const loadTestScenarios = (...args) => (misc && typeof misc.loadTestScenarios === 'function') ? misc.loadTestScenarios(...args) : undefined;
-const loadSpecificTestScenario = (...args) => (misc && typeof misc.loadSpecificTestScenario === 'function') ? misc.loadSpecificTestScenario(...args) : undefined;
+const loadSettings = (...args) => (misc && typeof misc.loadSettings === 'function') ? miscAny.loadSettings(...args) : (() => ({}));
+const setExperienceLevel = (...args) => (misc && typeof misc.setExperienceLevel === 'function') ? miscAny.setExperienceLevel(...args) : undefined;
+const updateSetting = (...args) => (misc && typeof misc.updateSetting === 'function') ? miscAny.updateSetting(...args) : undefined;
+const loadIndustryTemplate = (...args) => (misc && typeof misc.loadIndustryTemplate === 'function') ? miscAny.loadIndustryTemplate(...args) : undefined;
+const exportAsCSV = (...args) => (misc && typeof misc.exportAsCSV === 'function') ? miscAny.exportAsCSV(...args) : undefined;
+const exportAsExcel = (...args) => (misc && typeof misc.exportAsExcel === 'function') ? miscAny.exportAsExcel(...args) : undefined;
+const exportAsPDF = (...args) => (misc && typeof misc.exportAsPDF === 'function') ? miscAny.exportAsPDF(...args) : undefined;
+const exportAsHTML = (...args) => (misc && typeof misc.exportAsHTML === 'function') ? miscAny.exportAsHTML(...args) : undefined;
+const shareViaEmail = (...args) => (misc && typeof misc.shareViaEmail === 'function') ? miscAny.shareViaEmail(...args) : undefined;
+const showEmbedCode = (...args) => (misc && typeof misc.showEmbedCode === 'function') ? miscAny.showEmbedCode(...args) : undefined;
+const showScheduleDialog = (...args) => (misc && typeof misc.showScheduleDialog === 'function') ? miscAny.showScheduleDialog(...args) : undefined;
+const exportAsFinancialReport = (...args) => (misc && typeof misc.exportAsFinancialReport === 'function') ? miscAny.exportAsFinancialReport(...args) : undefined;
+const shareScenario = (...args) => (misc && typeof misc.shareScenario === 'function') ? miscAny.shareScenario(...args) : undefined;
+const loadTestScenarios = (...args) => (misc && typeof misc.loadTestScenarios === 'function') ? miscAny.loadTestScenarios(...args) : undefined;
+const loadSpecificTestScenario = (...args) => (misc && typeof misc.loadSpecificTestScenario === 'function') ? miscAny.loadSpecificTestScenario(...args) : undefined;
 // Use a function to avoid initialization issues
 const getTestScenarios = () => (typeof TEST_SCENARIOS !== 'undefined' ? TEST_SCENARIOS : {});
 // Make utility functions globally available after they're defined
@@ -225,9 +229,9 @@ const safeParseNumber = (value, defaultValue = 0) => {
 // No local shadowing needed
 
 // Additional missing function wrappers - only include functions that exist
-const updateValidationDisplay = (...args) => (businessLogic && typeof businessLogic.updateValidationDisplay === 'function') ? businessLogic.updateValidationDisplay(...args) : undefined;
-const lazyLoadChart = (...args) => (misc && typeof misc.lazyLoadChart === 'function') ? misc.lazyLoadChart(...args) : undefined;
-const updateRichVisualizations = (...args) => (misc && typeof misc.updateRichVisualizations === 'function') ? misc.updateRichVisualizations(...args) : undefined;
+const updateValidationDisplay = (...args) => (businessLogic && typeof businessLogic.updateValidationDisplay === 'function') ? businessLogicAny.updateValidationDisplay(...args) : undefined;
+const lazyLoadChart = (...args) => (misc && typeof misc.lazyLoadChart === 'function') ? miscAny.lazyLoadChart(...args) : undefined;
+const updateRichVisualizations = (...args) => (misc && typeof misc.updateRichVisualizations === 'function') ? miscAny.updateRichVisualizations(...args) : undefined;
 
 // Utility functions
 

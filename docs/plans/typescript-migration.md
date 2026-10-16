@@ -1,8 +1,8 @@
 # TypeScript migration
 
-**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-1 are done: `checkJs` is on with `strict` off, globals are declared, and a CI ratchet holds the baseline at 162 type errors (was 301). Next come shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
+**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-3 are done: `checkJs` is on with `strict` off, globals are declared, and a CI ratchet holds the baseline now 144 type errors (was 301). Next come shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
 
-**Status:** Building (Phases 0-2 done, Phase 3 started 2026-10-15)
+**Status:** Building (Phases 0-3 done 2026-10-15; 3b next)
 **Fold into:** [AGENTS.md](../../AGENTS.md) "TypeScript Support" section, then delete this plan.
 
 ## Why
@@ -64,14 +64,17 @@ _Original scope:_
 
 ### Phase 3: rename, leaf-first
 
-- Done 2026-10-15: `typescript-eslint` + `**/*.ts` ESLint block; Vite `esbuild` override replaced by `oxc.jsx` (the old `include` blocked `.ts` transforms); `src/calculations/index.ts` renamed with JSDoc converted to annotations (error set unchanged at 162). Its tests (`src/test/calculations.test.js` etc.) are still `.js` and move later.
+- Done 2026-10-15: `typescript-eslint` + `**/*.ts` ESLint block; Vite `esbuild` override replaced by `oxc.jsx` (the old `include` blocked `.ts` transforms); `src/calculations/index.ts` renamed with JSDoc converted to annotations (error set unchanged at 162). Its tests moved to `.test.ts` later in Phase 3.
 
 - Order: `src/calculations`, `localization`, `settings`, `insights`, then `assets/utils`, `services`, `hooks`, `components`.
 - Per file: `git mv x.js x.ts` as its own commit (keeps history), then fix types, then move its `.test.js` to `.test.ts`.
 - Each step must leave `just test`, `just lint`, and the typecheck ratchet green.
 - ESLint currently only matches `**/*.js` and `**/*.jsx`. Add `typescript-eslint` and a `**/*.ts` block before the first rename.
 - E2E specs: `tests/e2e/app.spec.ts` is already TS; convert the rest last (Playwright runs `.ts` natively).
-- Done 2026-10-15 (uncommitted): `localization`, `settings`, `insights`, `assets/utils`, `useTableFocus` renamed. Build, ratchet (162) and e2e (133) green.
+- Done 2026-10-15: `localization`, `settings`, `insights`, `assets/utils`, `useTableFocus` (commit 974389e), then `assets/components/{Modal,UIHelpers}`, all 7 `assets/services/*` and all 42 unit tests (`.test.ts`, excluded from `tsc` via `**/*.test.ts`). Ratchet 162 to 144, build, 431 unit tests and lint green. `app.jsx` got `miscAny`/`businessLogicAny` aliases for its `(...args)` forwarding wrappers (Phase 5 removes them).
+- Real bug found: `miscService.loadIndustryTemplate` called the stateManager `persistState()` with no args, so it wrote a `"undefined"` localStorage key and never saved state. Fixed, covered by `src/test/template-persist.test.ts`.
+- Kept as `.js` on purpose: `src/test/setup.js` and `test-utils.js` (Vitest `setupFiles` points at `setup.js`; converting gains nothing).
+- **Phase 3 complete.** Gotchas for later renames: in `.ts` a `{}` literal is closed and missing call args error (JS treated params as optional), classes need field declarations, and JSDoc types are ignored.
 
 ### Phase 3b: analytics and accessibility
 

@@ -3,7 +3,7 @@
 // spreadsheet formulas when a CSV export is opened in Excel/Sheets.
 
 import { describe, it, expect } from 'vitest';
-import { csvCell } from '../../assets/services/miscService.js';
+import { csvCell } from '../../assets/services/miscService';
 
 describe('csvCell — CSV formula-injection guard', () => {
   it('prefixes a quote on formula-trigger characters', () => {

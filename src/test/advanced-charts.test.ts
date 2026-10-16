@@ -6,7 +6,7 @@ import {
   renderScorecardRadar,
   computeFunnelData,
   renderClientFunnel
-} from '../../assets/services/advancedChartsService.js';
+} from '../../assets/services/advancedChartsService';
 
 const baseState = {
   mode: 'forecast',

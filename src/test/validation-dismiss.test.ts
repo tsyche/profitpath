@@ -40,7 +40,7 @@ describe('Dismissible validation banners', () => {
     // Healthy metrics so the only warning is the mix-percentage one we set up.
     global.calc = () => ({ capacityPct: 80, clients: 10, income: 5000, revenue: 12000, serviceHours: 100 });
     vi.resetModules();
-    ({ updateValidationDisplay } = await import('../../assets/services/businessLogic.js'));
+    ({ updateValidationDisplay } = await import('../../assets/services/businessLogic'));
   });
 
   it('renders a dismiss button on each validation item', () => {

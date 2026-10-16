@@ -9,10 +9,9 @@ export function getShareBase() {
   return o + window.location.pathname;
 }
 import { clamp } from '../utils/helpers';
-import { showToast } from './modalService.js';
-import { createModal } from '../components/Modal.js';
-import { persistState } from './stateManager.js';
-import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizations, updateBreakEvenAnalysis } from './visualizationService.js';
+import { showToast } from './modalService';
+import { createModal } from '../components/Modal';
+import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizations, updateBreakEvenAnalysis } from './visualizationService';
 
 // Utility functions for export functionality
 const DEFAULT_CURRENCY = 'USD';
@@ -39,10 +38,10 @@ async function downloadOrShare(blob, filename) {
 }
 
 function loadScript(src) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
     script.src = src;
-    script.onload = resolve;
+    script.onload = () => resolve();
     script.onerror = reject;
     document.head.appendChild(script);
   });
@@ -67,10 +66,9 @@ const MAX_NAME_LENGTH = 120;
 // Returns null if the data is not a usable scenario. Handles the legacy
 // employees/employeePay format by mapping it onto fullTime fields.
 /**
- * @param {Record<string, any>} data Untrusted input (URL, storage, import)
- * @returns {import('../../src/types').SanitizedScenarioState | null}
+ * @param data - Untrusted input (URL, storage, import)
  */
-export function sanitizeScenarioState(data) {
+export function sanitizeScenarioState(data: Record<string, any>): import('../../src/types').SanitizedScenarioState | null {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
 
   const rawOfferings = Array.isArray(data.offerings) ? data.offerings.slice(0, MAX_OFFERINGS) : [];
@@ -124,7 +122,7 @@ function copyToClipboardFallback(text) {
   document.body.appendChild(textArea);
   textArea.focus();
   textArea.select();
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     try {
       const successful = document.execCommand('copy');
       document.body.removeChild(textArea);
@@ -293,12 +291,7 @@ function updateSocialMetaTags(state) {
   document.head.appendChild(metaUrl);
 }
 
-/**
- * @param {import('../../src/types').CalcState} state
- * @param {{ readonly?: boolean }} [options]
- * @returns {string | null}
- */
-export function encodeScenarioToURL(state, { readonly = false } = {}) {
+export function encodeScenarioToURL(state: import('../../src/types').CalcState, { readonly = false } = {}): string | null {
   try {
     const serialized = JSON.stringify(state);
     // URI-encode before btoa so non-Latin1 characters (e.g. unicode offering
@@ -338,7 +331,7 @@ export function decodeScenarioFromURL() {
 }
 
 // Export functions for modal service
-export function showModal(content, options = {}) {
+export function showModal(content, options: { title?: string; buttons?: string } = {}) {
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.innerHTML = `
@@ -704,7 +697,7 @@ export function loadIndustryTemplate(templateId) {
 
     // Refresh the UI
     if (typeof window.render === 'function') window.render();
-    persistState();
+    if (typeof window.persistState === 'function') window.persistState();
 
     // Show success notification
     showToast(template.name + ' template loaded successfully.', 'success', 3000);
@@ -1375,7 +1368,7 @@ Support,500,24,1,50,40,0`;
 
 export function importFromCSV(csvText) {
   const errors = [];
-  const settings = {};
+  const settings: Record<string, any> = {};
   const offerings = [];
 
   try {

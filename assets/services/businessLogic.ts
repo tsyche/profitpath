@@ -354,7 +354,7 @@ export function defaultOfferings() {
 // so the same message stays hidden across re-renders (validation re-runs on every
 // input change). Keys for messages that no longer apply are pruned, so a condition
 // that clears and later recurs will surface again.
-const dismissedValidationKeys = new Set();
+const dismissedValidationKeys = new Set<string>();
 
 function validationKey(item) {
   return (item.severity || '') + '::' + (item.message || '');

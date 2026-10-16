@@ -2,7 +2,7 @@
 // flood the queue; only the most recent few should survive (oldest dropped).
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { showToast } from '../../assets/services/modalService.js';
+import { showToast } from '../../assets/services/modalService';
 
 describe('Toast queue cap', () => {
   beforeEach(() => {

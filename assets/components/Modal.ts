@@ -1,5 +1,19 @@
 // Consistent Modal Component for ProfitPath
-export function createModal({ title, content, buttons = [], size = 'medium', id = '', onClose = null }) {
+export function createModal({
+  title,
+  content,
+  buttons = [],
+  size = 'medium',
+  id = '',
+  onClose = null,
+}: {
+  title: string;
+  content: string | HTMLElement;
+  buttons?: any[];
+  size?: string;
+  id?: string;
+  onClose?: (() => void) | null;
+}) {
 
   // Create overlay
   const overlay = document.createElement('div');
