@@ -64,7 +64,7 @@ describe('AdvancedAnalyticsDashboard', () => {
     localStorageMock.clear();
 
     // Import the module
-    const module = await import('../../src/analytics/advanced-dashboard.js');
+    const module = await import('../../src/analytics/advanced-dashboard');
     AdvancedAnalyticsDashboard = module.default || module.AdvancedAnalyticsDashboard;
 
     // Create new instance

@@ -4,9 +4,12 @@
  */
 
 // Import FeedbackCollector
-import { FeedbackCollector } from './feedback.js';
+import { FeedbackCollector } from './feedback';
 
 class FeedbackUI {
+  currentContext: any;
+  feedbackCollector: any;
+  isModalOpen: any;
   constructor() {
     this.feedbackCollector = new FeedbackCollector();
     this.isModalOpen = false;

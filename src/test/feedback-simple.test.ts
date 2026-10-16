@@ -34,7 +34,7 @@ describe('FeedbackCollector', () => {
     localStorageMock.clear();
 
     // Import the module fresh
-    const module = await import('../../src/analytics/feedback.js');
+    const module = await import('../../src/analytics/feedback');
     FeedbackCollector = module.FeedbackCollector;
 
     // Create new instance

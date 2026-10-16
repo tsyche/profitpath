@@ -4,6 +4,11 @@
  */
 
 class AdvancedAnalyticsDashboard {
+  analyticsCollector: any;
+  chartInstances: any;
+  currentView: any;
+  dateRange: any;
+  feedbackCollector: any;
   constructor() {
     this.analyticsCollector = null;
     this.feedbackCollector = null;
@@ -415,7 +420,7 @@ class AdvancedAnalyticsDashboard {
     
     // Draw data points and lines
     const values = Object.values(data);
-    const maxValue = Math.max(...values, 1);
+    const maxValue = Math.max(...(values as number[]), 1);
     const xStep = (width - 2 * padding) / Math.max(values.length - 1, 1);
     const yScale = (height - 2 * padding) / maxValue;
     
@@ -425,7 +430,7 @@ class AdvancedAnalyticsDashboard {
     
     values.forEach((value, index) => {
       const x = padding + index * xStep;
-      const y = height - padding - value * yScale;
+      const y = height - padding - (value as number) * yScale;
       
       if (index === 0) {
         ctx.moveTo(x, y);
@@ -449,14 +454,14 @@ class AdvancedAnalyticsDashboard {
     
     ctx.clearRect(0, 0, width, height);
     
-    const total = Object.values(data).reduce((sum, val) => sum + val, 0);
+    const total = (Object.values(data) as number[]).reduce((sum, val) => sum + val, 0);
     if (total === 0) return;
     
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
     let currentAngle = -Math.PI / 2;
     
     Object.entries(data).forEach(([key, value], index) => {
-      const sliceAngle = (value / total) * 2 * Math.PI;
+      const sliceAngle = ((value as number) / total) * 2 * Math.PI;
       
       // Draw slice
       ctx.fillStyle = colors[index % colors.length];
@@ -532,7 +537,7 @@ class AdvancedAnalyticsDashboard {
     // Export insights
     if (summary.exportStats?.total > 0) {
       const mostPopularFormat = Object.entries(summary.exportStats.byFormat || {})
-        .sort(([,a], [,b]) => b - a)[0];
+        .sort(([,a], [,b]) => (b as number) - (a as number))[0];
       
       if (mostPopularFormat) {
         insights.push({
@@ -634,5 +639,5 @@ class AdvancedAnalyticsDashboard {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = AdvancedAnalyticsDashboard;
 } else {
-  window.AdvancedAnalyticsDashboard = AdvancedAnalyticsDashboard;
+  (window as any).AdvancedAnalyticsDashboard = AdvancedAnalyticsDashboard;
 }

@@ -57,7 +57,6 @@ declare global {
   // Analytics and feedback
   var profitPathAnalytics: any;
   var profitPathAnalyticsUI: any;
-  var AdvancedAnalyticsDashboard: any;
   var FeedbackCollector: any;
   var feedbackUI: any;
 

@@ -3,12 +3,12 @@
  * Displays CAC, LTV, churn, and growth metrics in a dashboard
  */
 
-import * as CA from './customer-analytics.js';
+import * as CA from './customer-analytics';
 
 /**
  * Render customer analytics dashboard
  */
-export function renderCustomerAnalyticsDashboard(metrics, settings = {}) {
+export function renderCustomerAnalyticsDashboard(metrics, settings: Record<string, any> = {}) {
   const {
     monthlyNewCustomers = 5,
     monthlyChurnRate = 5,

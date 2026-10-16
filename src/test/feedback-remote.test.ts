@@ -1,7 +1,7 @@
 // Tests for remote feedback delivery (Web3Forms POST) and the offline retry queue.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { FeedbackCollector } from '../../src/analytics/feedback.js';
+import { FeedbackCollector } from '../../src/analytics/feedback';
 
 const validFeedback = { rating: 5, category: 'general', comment: 'Great app', allowContact: false };
 

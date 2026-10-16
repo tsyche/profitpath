@@ -27,9 +27,9 @@ export function resetLocalStorage(mock) {
 // Unmock common analytics modules. vi.unmock is hoisted by Vitest to the top of
 // the module and runs once at load time regardless of where it's written, so it
 // must live at top level (nesting it inside a function is a future Vitest error).
-vi.unmock('../../src/analytics/analytics.js');
-vi.unmock('../../src/analytics/feedback.js');
-vi.unmock('../../src/analytics/feedback-ui.js');
+vi.unmock('../../src/analytics/analytics');
+vi.unmock('../../src/analytics/feedback');
+vi.unmock('../../src/analytics/feedback-ui');
 
 // Clear all Vitest mocks
 export function clearVitestState() {

@@ -7,11 +7,11 @@
  * Calculate Customer Acquisition Cost (CAC)
  * CAC = Total marketing spend / Number of new customers acquired
  *
- * @param {number} marketingSpend - Total marketing/sales spend (monthly or annual)
- * @param {number} newCustomers - Number of new customers acquired in same period
- * @returns {number} CAC in the spend currency
+ * @param marketingSpend - Total marketing/sales spend (monthly or annual)
+ * @param newCustomers - Number of new customers acquired in same period
+ * @returns CAC in the spend currency
  */
-export function calculateCAC(marketingSpend, newCustomers) {
+export function calculateCAC(marketingSpend: number, newCustomers: number): number {
   if (newCustomers <= 0) return 0;
   return marketingSpend / newCustomers;
 }
@@ -20,12 +20,12 @@ export function calculateCAC(marketingSpend, newCustomers) {
  * Calculate Customer Lifetime Value (LTV)
  * LTV = Average customer lifetime contribution
  *
- * @param {object} metrics - Calculation metrics from ProfitPath
- * @param {number} averageCustomerLifespanMonths - Expected customer lifetime
- * @param {number} clientRetentionRate - % of clients retained year-to-year (0-100)
- * @returns {object} LTV metrics
+ * @param metrics - Calculation metrics from ProfitPath
+ * @param averageCustomerLifespanMonths - Expected customer lifetime
+ * @param clientRetentionRate - % of clients retained year-to-year (0-100)
+ * @returns LTV metrics
  */
-export function calculateLTV(metrics, averageCustomerLifespanMonths = 24, clientRetentionRate = 80) {
+export function calculateLTV(metrics: Record<string, any>, averageCustomerLifespanMonths: number = 24, clientRetentionRate: number = 80): Record<string, any> {
   const retentionRate = Math.max(0, Math.min(100, clientRetentionRate)) / 100;
 
   if (!metrics || !metrics.offeringMetrics) {
@@ -90,11 +90,11 @@ export function calculateLTV(metrics, averageCustomerLifespanMonths = 24, client
  * Calculate LTV:CAC Ratio
  * Healthy ratio is 3:1 or higher (for every $1 spent on CAC, get $3+ in lifetime value)
  *
- * @param {number} ltv - Customer lifetime value
- * @param {number} cac - Customer acquisition cost
- * @returns {object} LTV:CAC ratio and health assessment
+ * @param ltv - Customer lifetime value
+ * @param cac - Customer acquisition cost
+ * @returns LTV:CAC ratio and health assessment
  */
-export function calculateLTVtoCACRatio(ltv, cac) {
+export function calculateLTVtoCACRatio(ltv: number, cac: number): Record<string, any> {
   if (cac <= 0) {
     return {
       ratio: 0,
@@ -133,11 +133,11 @@ export function calculateLTVtoCACRatio(ltv, cac) {
  * Calculate payback period (months until CAC is recovered)
  * Payback Period = CAC / Monthly Gross Profit Per Customer
  *
- * @param {number} cac - Customer acquisition cost
- * @param {number} monthlyProfitPerCustomer - Monthly contribution margin per customer
- * @returns {object} Payback period metrics
+ * @param cac - Customer acquisition cost
+ * @param monthlyProfitPerCustomer - Monthly contribution margin per customer
+ * @returns Payback period metrics
  */
-export function calculatePaybackPeriod(cac, monthlyProfitPerCustomer) {
+export function calculatePaybackPeriod(cac: number, monthlyProfitPerCustomer: number): Record<string, any> {
   if (monthlyProfitPerCustomer <= 0) {
     return {
       months: null,
@@ -175,12 +175,12 @@ export function calculatePaybackPeriod(cac, monthlyProfitPerCustomer) {
  * Calculate churn rate and its impact
  * Churn = % of customers lost per period
  *
- * @param {number} startingCustomers - Customers at period start
- * @param {number} endingCustomers - Customers at period end
- * @param {number} newCustomersAdded - New customers added during period
- * @returns {object} Churn metrics
+ * @param startingCustomers - Customers at period start
+ * @param endingCustomers - Customers at period end
+ * @param newCustomersAdded - New customers added during period
+ * @returns Churn metrics
  */
-export function calculateChurnRate(startingCustomers, endingCustomers, newCustomersAdded = 0) {
+export function calculateChurnRate(startingCustomers: number, endingCustomers: number, newCustomersAdded: number = 0): Record<string, any> {
   if (startingCustomers <= 0) {
     return {
       monthlyChurnRate: 0,
@@ -227,10 +227,10 @@ export function calculateChurnRate(startingCustomers, endingCustomers, newCustom
  * Project customer growth over time
  * Models compound growth with acquisition, retention, and churn
  *
- * @param {object} params - Projection parameters
- * @returns {object} Growth projections
+ * @param params - Projection parameters
+ * @returns Growth projections
  */
-export function projectCustomerGrowth(params) {
+export function projectCustomerGrowth(params: Record<string, any>): Record<string, any> {
   const {
     currentCustomers = 0,
     monthlyAcquisition = 0,
@@ -286,13 +286,13 @@ function calculateBreakEvenMonth(projections) {
  * Calculate Revenue Impact metrics
  * Shows how CAC, LTV, and churn impact monthly/annual revenue
  *
- * @param {object} metrics - Full ProfitPath metrics
- * @param {number} monthlyNewCustomers - New customers acquired per month
- * @param {number} monthlyChurnRate - Monthly churn %
- * @param {number} marketingSpendPerMonth - Monthly marketing budget
- * @returns {object} Revenue impact metrics
+ * @param metrics - Full ProfitPath metrics
+ * @param monthlyNewCustomers - New customers acquired per month
+ * @param monthlyChurnRate - Monthly churn %
+ * @param marketingSpendPerMonth - Monthly marketing budget
+ * @returns Revenue impact metrics
  */
-export function calculateRevenueImpact(metrics, monthlyNewCustomers = 0, monthlyChurnRate = 0, marketingSpendPerMonth = 0) {
+export function calculateRevenueImpact(metrics: Record<string, any>, monthlyNewCustomers: number = 0, monthlyChurnRate: number = 0, marketingSpendPerMonth: number = 0): Record<string, any> {
   if (!metrics) return null;
 
   // Calculate average revenue per customer per month
@@ -336,7 +336,7 @@ export function calculateRevenueImpact(metrics, monthlyNewCustomers = 0, monthly
  * Comprehensive customer acquisition summary
  * Combines all metrics into one view
  */
-export function summarizeCustomerAcquisition(metrics, options = {}) {
+export function summarizeCustomerAcquisition(metrics, options: Record<string, any> = {}) {
   const {
     monthlyNewCustomers = 5,
     monthlyChurnRate = 5,

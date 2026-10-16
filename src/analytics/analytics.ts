@@ -4,6 +4,10 @@
  */
 
 class AnalyticsCollector {
+  events: any;
+  sessionId: any;
+  sessionStart: any;
+  settings: any;
   constructor() {
     this.settings = this.loadSettings();
     this.sessionStart = Date.now();
@@ -141,14 +145,6 @@ class AnalyticsCollector {
       setting,
       oldValue,
       newValue
-    });
-  }
-
-  trackFeedback(rating, category, comment = '') {
-    this.trackEvent('feedback', {
-      rating,
-      category, // 'bug', 'feature', 'general', 'ux'
-      comment: comment.substring(0, 500) // Limit comment length
     });
   }
 

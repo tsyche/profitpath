@@ -1,8 +1,8 @@
 # TypeScript migration
 
-**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-3 are done: `checkJs` is on with `strict` off, globals are declared, and a CI ratchet holds the baseline now 144 type errors (was 301). Next come shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
+**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-3b are done: `checkJs` is on with `strict` off, globals are declared, and a CI ratchet holds the baseline now 142 type errors (was 301). Next come shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
 
-**Status:** Building (Phases 0-3 done 2026-10-15; 3b next)
+**Status:** Building (Phases 0-3b done 2026-10-15; Phase 4 next)
 **Fold into:** [AGENTS.md](../../AGENTS.md) "TypeScript Support" section, then delete this plan.
 
 ## Why
@@ -78,7 +78,7 @@ _Original scope:_
 
 ### Phase 3b: analytics and accessibility
 
-- `src/analytics/*.js` and `assets/accessibility.js` were not in the Phase 3 list. Convert after Phase 3, same recipe. Their globals and DOM helpers stay `any` per the rule above.
+- Done 2026-10-15: all 7 `src/analytics/*` files and `assets/accessibility` renamed to `.ts` (importers and `index.html` script paths updated). Ratchet 144 to 142, build, 431 unit tests, lint and 133 e2e green. Removed a dead duplicate `trackFeedback` in `analytics.ts` (the later definition always won). Globals and DOM helpers stay `any` per the rule above.
 
 ### Phase 4: strictness ladder
 

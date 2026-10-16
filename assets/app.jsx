@@ -10,7 +10,7 @@ import { closeScenarioModal, createModal } from './components/Modal';
 import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL, isReadOnlyURL, getShareBase } from './services/miscService';
 import { uuid, clamp } from './utils/helpers';
 import { showToast } from './services/modalService';
-import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui.js';
+import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui';
 import { optimizeMix } from '../src/insights/mixOptimizer';
 import { renderSensitivityHeatmap, renderScorecardRadar, renderClientFunnel } from './services/advancedChartsService';
 

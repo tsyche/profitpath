@@ -13,6 +13,10 @@ const WEB3FORMS_ACCESS_KEY = 'faddffa2-870d-4e8c-84a9-33224347365a';
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
 
 class FeedbackCollector {
+  maxFeedbackItems: any;
+  remoteAccessKey: any;
+  remoteEndpoint: any;
+  storageKey: any;
   constructor() {
     this.storageKey = 'profitpath_feedback';
     this.maxFeedbackItems = 1000;
@@ -180,7 +184,7 @@ This feedback was submitted via the ProfitPath feedback form.
   /**
    * Get all feedback with optional filtering
    */
-  getAllFeedback(filters = {}) {
+  getAllFeedback(filters: Record<string, any> = {}) {
     try {
       const feedback = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
 
@@ -208,7 +212,7 @@ This feedback was submitted via the ProfitPath feedback form.
         total: 0,
         averageRating: 0,
         ratingDistribution: {},
-        categoryBreakdown: {},
+        categoryBreakdown: {} as Record<string, number>,
         recentTrend: [],
         topIssues: []
       };
@@ -340,7 +344,7 @@ This feedback was submitted via the ProfitPath feedback form.
   }
 
   getCategoryBreakdown(feedback) {
-    const breakdown = {};
+    const breakdown: Record<string, number> = {};
     feedback.forEach(item => {
       breakdown[item.category] = (breakdown[item.category] || 0) + 1;
     });

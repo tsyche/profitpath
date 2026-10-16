@@ -4,6 +4,8 @@
  */
 
 class AnalyticsUI {
+  analytics: any;
+  closeModal: any;
   constructor() {
     this.analytics = window.profitPathAnalytics;
     this.initializeSettings();
@@ -288,7 +290,7 @@ class AnalyticsUI {
             <h4>Feature Usage</h4>
             <div class="usage-list">
               ${Object.entries(summary.featureUsage)
-          .sort(([, a], [, b]) => b - a)
+          .sort(([, a], [, b]) => (b as number) - (a as number))
           .map(([feature, count]) => `
                   <div class="usage-item">
                     <span class="feature-name">${this.formatFeatureName(feature)}</span>
@@ -323,7 +325,7 @@ class AnalyticsUI {
             <h4>Template Usage</h4>
             <div class="usage-list">
               ${Object.entries(summary.templateStats)
-          .sort(([, a], [, b]) => b - a)
+          .sort(([, a], [, b]) => (b as number) - (a as number))
           .map(([template, count]) => `
                   <div class="usage-item">
                     <span class="feature-name">${template}</span>
@@ -464,7 +466,7 @@ class AnalyticsUI {
       }
     });
     const topFeatures = Object.entries(featureCounts)
-      .sort((a, b) => b[1] - a[1])
+      .sort((a, b) => (b[1] as number) - (a[1] as number))
       .slice(0, 5)
       .map(([f, n]) => `  - ${this.formatEventName(f)}: ${n}`)
       .join('\n');
@@ -525,7 +527,6 @@ class AnalyticsUI {
 
     document.body.appendChild(modal);
 
-    const self = this;
     const closeBtn = modal.querySelector('.modal-close');
     const cancelBtn = modal.querySelector('#cancelClearBtn');
     const confirmBtn = modal.querySelector('#confirmClearBtn');
@@ -564,7 +565,7 @@ class AnalyticsUI {
 
     if (confirmBtn) {
       confirmBtn.onclick = () => {
-        self.clearAnalyticsData();
+        this.clearAnalyticsData();
         closeModal();
 
         // Refresh the dashboard
@@ -690,7 +691,7 @@ class AnalyticsUI {
       }
     });
 
-    const sorted = Object.entries(featureCounts).sort((a, b) => b[1] - a[1]);
+    const sorted = Object.entries(featureCounts).sort((a, b) => (b[1] as number) - (a[1] as number));
 
     if (sorted.length === 0) {
       return '<p style="color: var(--muted); text-align: center;">No feature usage data yet</p>';
