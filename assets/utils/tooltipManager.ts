@@ -32,9 +32,9 @@ function setupTooltips() {
   }
 
   // Convert title attributes to data-tooltip for consistent handling
-  document.querySelectorAll('[title]').forEach(el => {
+  document.querySelectorAll<HTMLElement>('[title]').forEach(el => {
     if (!el.dataset.tooltip) {
-      el.dataset.tooltip = el.getAttribute('title');
+      el.dataset.tooltip = el.getAttribute('title') || '';
       el.removeAttribute('title'); // Remove native tooltip
     }
   });
@@ -42,14 +42,14 @@ function setupTooltips() {
   // Add hover listeners to all tooltip elements with event delegation
   document.addEventListener('mouseenter', (e) => {
     const target = e.target;
-    if (target && target.dataset && target.dataset.tooltip && tooltipsEnabled) {
+    if (target instanceof HTMLElement && target.dataset.tooltip && tooltipsEnabled) {
       showTooltip(target);
     }
   }, true);
 
   document.addEventListener('mouseleave', (e) => {
     const target = e.target;
-    if (target && target.dataset && target.dataset.tooltip) {
+    if (target instanceof HTMLElement && target.dataset.tooltip) {
       hideTooltip();
     }
   }, true);

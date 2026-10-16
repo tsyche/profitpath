@@ -105,11 +105,11 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
 
 export function escapeHtml(str: any) {
   return String(str == null ? '' : str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // Clipboard fallback for non-secure contexts
@@ -177,12 +177,13 @@ export function shareScenario() {
     size: 'medium'
   });
 
-  overlay.querySelector('#shareViewOnlyBtn').addEventListener('click', () => copyLink(viewUrl, 'View-only'));
-  overlay.querySelector('#shareEditableBtn').addEventListener('click', () => copyLink(editUrl, 'Editable'));
+  overlay.querySelector('#shareViewOnlyBtn')?.addEventListener('click', () => copyLink(viewUrl, 'View-only'));
+  overlay.querySelector('#shareEditableBtn')?.addEventListener('click', () => copyLink(editUrl, 'Editable'));
 
   // Click-to-copy on the URL inputs
   overlay.querySelectorAll('.share-url-input').forEach(input => {
     input.addEventListener('click', () => {
+      if (!(input instanceof HTMLInputElement)) return;
       input.select();
       copyLink(input.value, 'Link');
     });
@@ -194,7 +195,7 @@ export function shareScenario() {
 export function csvCell(value: any) {
   let s = String(value == null ? '' : value);
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
-  return '"' + s.replaceAll('"', '""') + '"';
+  return '"' + s.replace(/"/g, '""') + '"';
 }
 
 export function exportAsCSV() {
@@ -588,7 +589,7 @@ export function closeMobileMenu() {
   // Collapse all expanded menu sections
   const mobileTemplatesOptions = document.getElementById('mobileTemplatesOptions');
   const mobileExportOptions = document.getElementById('mobileExportOptions');
-  const mobileSettingsSection = document.querySelector('.mobile-settings-section');
+  const mobileSettingsSection = document.querySelector<HTMLElement>('.mobile-settings-section');
 
   if (mobileTemplatesOptions) mobileTemplatesOptions.style.display = 'none';
   if (mobileExportOptions) mobileExportOptions.style.display = 'none';
@@ -1221,12 +1222,12 @@ export function measurePerformance(fn: any, label: any) {
 
 export function getPerformanceMetrics() {
   if ('performance' in window && 'getEntriesByType' in performance) {
-    const navigation = performance.getEntriesByType('navigation')[0];
+    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
     const paint = performance.getEntriesByType('paint');
 
     return {
-      loadTime: navigation ? navigation.loadEventEnd - navigation.navigationStart : 0,
-      domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.navigationStart : 0,
+      loadTime: navigation ? navigation.loadEventEnd - navigation.startTime : 0,
+      domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.startTime : 0,
       firstPaint: paint.find(entry => entry.name === 'first-paint')?.startTime || 0,
       firstContentfulPaint: paint.find(entry => entry.name === 'first-contentful-paint')?.startTime || 0,
     };

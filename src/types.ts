@@ -50,6 +50,22 @@ export interface CalcState {
   notes?: string;
 }
 
+/** An offering in app state: the UI always fills every field. */
+export type AppOffering = Required<Offering>;
+
+/**
+ * The live app `state` global. calc() input stays CalcState because it also accepts the
+ * legacy employees/hoursPerWeek/employeePay trio, which the app never sets.
+ */
+export type AppState = Omit<CalcState, 'offerings' | 'employees' | 'hoursPerWeek' | 'employeePay'> &
+  Required<Omit<CalcState, 'offerings' | 'employees' | 'hoursPerWeek' | 'employeePay'>> & {
+    offerings: AppOffering[];
+    /** Legacy aliases read by scenario and sensitivity UI; absent in current app state. */
+    employees?: number;
+    hoursPerWeek?: number;
+    employeePay?: number;
+  };
+
 export interface CalcOptions {
   enableCache?: boolean;
   debug?: boolean;

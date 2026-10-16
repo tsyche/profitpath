@@ -13,10 +13,11 @@ export function captureTableFocus(tableId: any) {
   if (activeElement && typeof table.contains === 'function' && table.contains(activeElement)) {
     const cell = activeElement.closest('td, th');
     if (cell) {
-      const row = cell.parentNode;
+      const row = cell.parentElement;
+      if (!(row instanceof HTMLTableRowElement)) return null;
       focusState = {
         row: Array.from(table.querySelectorAll('tr')).indexOf(row),
-        col: Array.from(row.cells).indexOf(cell),
+        col: Array.from(row.cells).indexOf(cell as HTMLTableCellElement),
         editing: activeElement.tagName === 'INPUT' ? activeElement : null
       };
       return focusState;

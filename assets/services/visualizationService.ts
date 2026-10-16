@@ -332,13 +332,17 @@ export function renderSimpleChart(metrics: any) {
   }
 
   // Clean up any existing document event handlers to prevent stale closures
-  if (document._chartClickHandler) {
-    document.removeEventListener('click', document._chartClickHandler);
-    document._chartClickHandler = null;
+  const chartDocument = document as Document & {
+    _chartClickHandler?: EventListener | null;
+    _chartKeyHandler?: EventListener | null;
+  };
+  if (chartDocument._chartClickHandler) {
+    document.removeEventListener('click', chartDocument._chartClickHandler);
+    chartDocument._chartClickHandler = null;
   }
-  if (document._chartKeyHandler) {
-    document.removeEventListener('keydown', document._chartKeyHandler);
-    document._chartKeyHandler = null;
+  if (chartDocument._chartKeyHandler) {
+    document.removeEventListener('keydown', chartDocument._chartKeyHandler);
+    chartDocument._chartKeyHandler = null;
   }
 
   // Prefer top-level metrics, but fall back to summing per-offering metrics if needed

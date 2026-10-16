@@ -371,7 +371,7 @@ function buildValidationItem(item: any, icon: any) {
     '<button class="validation-dismiss" type="button" aria-label="Dismiss message">&times;</button>' +
     '</div><div class="validation-suggestion">' + (item.suggestion) + '</div>';
 
-  el.querySelector('.validation-dismiss').addEventListener('click', () => {
+  el.querySelector('.validation-dismiss')?.addEventListener('click', () => {
     dismissedValidationKeys.add(key);
     updateValidationDisplay();
   });

@@ -55,7 +55,7 @@ function performSave(name: any) {
     }
 
     // Clear input(s) and re-render list in any open modal
-    document.querySelectorAll('#scenarioNameInput').forEach(i => i.value = '');
+    document.querySelectorAll<HTMLInputElement>('#scenarioNameInput').forEach(i => i.value = '');
     renderScenariosList();
 
     // Clear template badge when saving custom scenario
@@ -223,7 +223,7 @@ export function initializeScenarios() {
   const saveBtn = document.getElementById('saveScenarioBtn');
   if (saveBtn) {
     saveBtn.addEventListener('click', () => {
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.getElementById('scenarioNameInput') as HTMLInputElement | null;
       if (input) {
         saveScenario(input.value);
       }
@@ -231,7 +231,7 @@ export function initializeScenarios() {
   }
 
   // Set up input enter key
-  const input = document.getElementById('scenarioNameInput');
+  const input = document.getElementById('scenarioNameInput') as HTMLInputElement | null;
   if (input) {
     input.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {

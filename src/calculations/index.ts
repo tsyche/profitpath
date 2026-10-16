@@ -399,6 +399,7 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
   // Check cache first (LRU: delete + re-insert moves the entry to Map tail)
   if (enableCache && calculationCache.has(cacheKey)) {
     const cached = calculationCache.get(cacheKey);
+    if (!cached) throw new Error('Calculation cache entry disappeared');
     calculationCache.delete(cacheKey);
     calculationCache.set(cacheKey, cached);
     cacheHits++;

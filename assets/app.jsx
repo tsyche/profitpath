@@ -241,7 +241,7 @@ const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 })
 const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
 const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
-/** @type {import('../src/types').CalcState} */
+/** @type {import('../src/types').AppState} */
 const state = {
   mode: 'forecast', // 'forecast' | 'current'
   offerings: businessLogic.defaultOfferings(),

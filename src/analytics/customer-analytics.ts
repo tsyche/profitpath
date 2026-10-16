@@ -292,7 +292,7 @@ function calculateBreakEvenMonth(projections: any) {
  * @param marketingSpendPerMonth - Monthly marketing budget
  * @returns Revenue impact metrics
  */
-export function calculateRevenueImpact(metrics: Record<string, any>, monthlyNewCustomers: number = 0, monthlyChurnRate: number = 0, marketingSpendPerMonth: number = 0): Record<string, any> {
+export function calculateRevenueImpact(metrics: Record<string, any>, monthlyNewCustomers: number = 0, monthlyChurnRate: number = 0, marketingSpendPerMonth: number = 0): Record<string, any> | null {
   if (!metrics) return null;
 
   // Calculate average revenue per customer per month

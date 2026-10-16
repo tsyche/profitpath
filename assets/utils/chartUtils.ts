@@ -1,10 +1,11 @@
 // Chart utilities
 export function lazyLoadChart(chartId: any, data: any, _options = {}) {
   const canvas = document.getElementById(chartId);
-  if (!canvas) return null;
+  if (!(canvas instanceof HTMLCanvasElement)) return null;
 
   // Simple chart rendering (placeholder for Chart.js or similar)
   const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
   const width = canvas.width = canvas.offsetWidth;
   const height = canvas.height = canvas.offsetHeight;
 

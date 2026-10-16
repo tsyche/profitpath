@@ -114,7 +114,8 @@ export function openScenarioModal() {
 
   // Set up event delegation for scenario buttons
   modal.addEventListener('click', (e) => {
-    const btn = e.target.closest('.load-btn, .delete-btn');
+    if (!(e.target instanceof Element)) return;
+    const btn = e.target.closest<HTMLElement>('.load-btn, .delete-btn');
     if (!btn) return;
 
     const scenarioId = btn.dataset.scenarioId;
@@ -151,7 +152,7 @@ export function openScenarioModal() {
   const saveBtn = modal.querySelector('#saveScenarioBtn');
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
-      const input = modal.querySelector('#scenarioNameInput');
+      const input = modal.querySelector<HTMLInputElement>('#scenarioNameInput');
       if (input && input.value.trim()) {
         const scenarioName = input.value.trim();
         createModal({
@@ -174,18 +175,18 @@ export function openScenarioModal() {
   }
 
   // Set up input enter key
-  const input = modal.querySelector('#scenarioNameInput');
+  const input = modal.querySelector<HTMLInputElement>('#scenarioNameInput');
   if (input) {
-    input.addEventListener('keypress', (e) => {
+    input.addEventListener('keypress', (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
-        const saveBtn = modal.querySelector('#saveScenarioBtn');
+        const saveBtn = modal.querySelector<HTMLButtonElement>('#saveScenarioBtn');
         if (saveBtn) saveBtn.click();
       }
     });
   }
 
   // Focus the input
-  const scenarioInput = modal.querySelector('#scenarioNameInput');
+  const scenarioInput = modal.querySelector<HTMLInputElement>('#scenarioNameInput');
   if (scenarioInput) {
     scenarioInput.focus();
   }
@@ -194,8 +195,8 @@ export function openScenarioModal() {
   const compareBtn = modal.querySelector('#compareBtn');
   if (compareBtn) {
     compareBtn.addEventListener('click', () => {
-      const dropdown1 = modal.querySelector('#compareScenario1');
-      const dropdown2 = modal.querySelector('#compareScenario2');
+      const dropdown1 = modal.querySelector<HTMLSelectElement>('#compareScenario1');
+      const dropdown2 = modal.querySelector<HTMLSelectElement>('#compareScenario2');
 
       if (dropdown1?.value && dropdown2?.value) {
         performComparisonInModal(dropdown1.value, dropdown2.value, modal);

@@ -16,7 +16,7 @@ declare global {
   var Chart: any;
 
   // App state and cross-module functions exposed on window
-  var state: import('./types').CalcState;
+  var state: import('./types').AppState;
   var calc: (state?: import('./types').CalcState, options?: import('./types').CalcOptions) => import('./types').CalcResult;
   var render: any;
   var lastMetrics: import('./types').CalcResult | null | undefined;

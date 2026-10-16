@@ -322,7 +322,7 @@ class AdvancedAnalyticsDashboard {
 
   switchView(viewName: any) {
     // Update navigation
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+    document.querySelectorAll<HTMLElement>('.nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === viewName);
     });
 
@@ -366,10 +366,14 @@ class AdvancedAnalyticsDashboard {
     const feedbackAnalytics = this.feedbackCollector ? this.feedbackCollector.getFeedbackAnalytics() : null;
 
     // Update metric cards
-    document.getElementById('totalSessions').textContent = summary.totalSessions || 0;
-    document.getElementById('totalExports').textContent = summary.exportStats?.total || 0;
-    document.getElementById('totalFeedback').textContent = feedbackAnalytics?.total || 0;
-    document.getElementById('avgRating').textContent = feedbackAnalytics?.averageRating?.toFixed(1) || 'N/A';
+    const setMetric = (id: string, value: string | number) => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = String(value);
+    };
+    setMetric('totalSessions', summary.totalSessions || 0);
+    setMetric('totalExports', summary.exportStats?.total || 0);
+    setMetric('totalFeedback', feedbackAnalytics?.total || 0);
+    setMetric('avgRating', feedbackAnalytics?.averageRating?.toFixed(1) || 'N/A');
 
     // Create charts
     this.createActivityTimelineChart();
@@ -379,9 +383,10 @@ class AdvancedAnalyticsDashboard {
 
   createActivityTimelineChart() {
     const canvas = document.getElementById('activityTimelineChart');
-    if (!canvas) return;
+    if (!(canvas instanceof HTMLCanvasElement)) return;
 
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const events = this.analyticsCollector.getAllEvents();
     
     // Group events by date
@@ -393,9 +398,10 @@ class AdvancedAnalyticsDashboard {
 
   createExportDistributionChart(summary: any) {
     const canvas = document.getElementById('exportDistributionChart');
-    if (!canvas) return;
+    if (!(canvas instanceof HTMLCanvasElement)) return;
 
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const exportData = summary.exportStats?.byFormat || {};
     
     // Simple pie chart implementation
@@ -558,6 +564,7 @@ class AdvancedAnalyticsDashboard {
     }
     
     const insightsContainer = document.getElementById('keyInsights');
+    if (!insightsContainer) return;
     insightsContainer.innerHTML = insights.map(insight => `
       <div class="insight-item ${insight.type}">
         <h4>${insight.title}</h4>

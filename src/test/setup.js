@@ -39,14 +39,14 @@ Object.defineProperty(global, 'localStorage', {
 })
 
 // Mock URL APIs
-global.URL = class URL {
+global.URL = /** @type {any} */ (class URL {
   /** @param {string} url */
   constructor(url) {
     this.href = url
     this.pathname = url.split('?')[0]
     this.search = url.includes('?') ? '?' + url.split('?')[1] : ''
   }
-}
+})
 
 global.URL.createObjectURL = vi.fn(() => 'mock-object-url')
 global.URL.revokeObjectURL = vi.fn()
@@ -54,7 +54,7 @@ global.URL.revokeObjectURL = vi.fn()
 // Mock navigator.clipboard
 Object.defineProperty(navigator, 'clipboard', {
   value: {
-    writeText: vi.fn().mockResolvedValue(),
+    writeText: vi.fn().mockResolvedValue(undefined),
     readText: vi.fn().mockResolvedValue(''),
   },
   writable: true,

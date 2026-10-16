@@ -73,7 +73,7 @@ class FeedbackUI {
 
     // Focus on first input
     setTimeout(() => {
-      const firstInput = modal.querySelector('input, select, textarea');
+      const firstInput = modal.querySelector<HTMLElement>('input, select, textarea');
       if (firstInput) firstInput.focus();
     }, 100);
   }
@@ -254,7 +254,8 @@ class FeedbackUI {
    * Set rating value
    */
   setRating(rating: any) {
-    const ratingInput = document.getElementById('feedbackRating');
+    const ratingInput = document.getElementById('feedbackRating') as HTMLInputElement | null;
+    if (!ratingInput) return;
     const stars = document.querySelectorAll('.rating-star');
 
     ratingInput.value = rating;
@@ -301,7 +302,8 @@ class FeedbackUI {
 
     // Read rating from hidden input; fall back to counting active stars in case
     // the hidden input wasn't updated (e.g. touch events on mobile WebView)
-    let rating = parseInt(formData.get('rating'));
+    const rawRating = formData.get('rating');
+    let rating = typeof rawRating === 'string' ? parseInt(rawRating, 10) : NaN;
     if (isNaN(rating) || rating < 1) {
       const activeStars = form.querySelectorAll('.rating-star.active');
       rating = activeStars.length || 0;
@@ -337,8 +339,10 @@ class FeedbackUI {
       rating,
       category,
       comment: formData.get('comment') || null,
-      contactEmail: (formData.get('contactEmail') || '').trim() || null,
-      context: formData.get('context') ? JSON.parse(formData.get('context')) : null,
+      contactEmail: (formData.get('contactEmail') || '').toString().trim() || null,
+      context: typeof formData.get('context') === 'string' && formData.get('context')
+        ? JSON.parse(formData.get('context') as string)
+        : null,
       userAgent: navigator.userAgent,
       url: window.location.href
     };

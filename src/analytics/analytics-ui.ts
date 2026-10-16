@@ -17,7 +17,7 @@ class AnalyticsUI {
     const settings = this.analytics.settings;
 
     // Main analytics toggle
-    const enabledCheckbox = document.getElementById('analyticsEnabled');
+    const enabledCheckbox = document.getElementById('analyticsEnabled') as HTMLInputElement | null;
     if (enabledCheckbox) {
       enabledCheckbox.checked = settings.enabled;
       this.toggleAnalyticsOptions(settings.enabled);
@@ -32,7 +32,7 @@ class AnalyticsUI {
     };
 
     Object.entries(trackingOptions).forEach(([id, value]) => {
-      const checkbox = document.getElementById(id);
+      const checkbox = document.getElementById(id) as HTMLInputElement | null;
       if (checkbox) {
         checkbox.checked = value;
       }
@@ -41,20 +41,20 @@ class AnalyticsUI {
 
   attachEventListeners() {
     // Main analytics toggle
-    const enabledCheckbox = document.getElementById('analyticsEnabled');
+    const enabledCheckbox = document.getElementById('analyticsEnabled') as HTMLInputElement | null;
     if (enabledCheckbox) {
-      enabledCheckbox.addEventListener('change', (e) => {
-        this.handleAnalyticsToggle(e.target.checked);
+      enabledCheckbox.addEventListener('change', () => {
+        this.handleAnalyticsToggle(enabledCheckbox.checked);
       });
     }
 
     // Individual tracking options
     const trackingOptionIds = ['trackUsage', 'trackFeatures', 'trackExports', 'trackTemplates'];
     trackingOptionIds.forEach(id => {
-      const checkbox = document.getElementById(id);
+      const checkbox = document.getElementById(id) as HTMLInputElement | null;
       if (checkbox) {
-        checkbox.addEventListener('change', (e) => {
-          this.handleTrackingOptionChange(id, e.target.checked);
+        checkbox.addEventListener('change', () => {
+          this.handleTrackingOptionChange(id, checkbox.checked);
         });
       }
     });
@@ -527,9 +527,9 @@ class AnalyticsUI {
 
     document.body.appendChild(modal);
 
-    const closeBtn = modal.querySelector('.modal-close');
-    const cancelBtn = modal.querySelector('#cancelClearBtn');
-    const confirmBtn = modal.querySelector('#confirmClearBtn');
+    const closeBtn = modal.querySelector<HTMLButtonElement>('.modal-close');
+    const cancelBtn = modal.querySelector<HTMLButtonElement>('#cancelClearBtn');
+    const confirmBtn = modal.querySelector<HTMLButtonElement>('#confirmClearBtn');
 
     const closeModal = () => {
       if (modal && modal.parentNode) {
@@ -572,10 +572,10 @@ class AnalyticsUI {
         const analyticsModal = document.getElementById('analyticsModal');
         if (analyticsModal) {
           analyticsModal.remove();
-          self.showAnalyticsDashboard();
+          this.showAnalyticsDashboard();
         }
 
-        self.showNotification('Analytics data cleared successfully', 'success');
+        window.showNotification('Analytics data cleared successfully', 'success');
       };
     }
   }
@@ -653,8 +653,8 @@ class AnalyticsUI {
     window.acquireScrollLock?.();
 
     // Add event listeners
-    const closeBtn = modal.querySelector('.modal-close');
-    const backBtn = modal.querySelector('#backToBasicBtn');
+    const closeBtn = modal.querySelector<HTMLButtonElement>('.modal-close');
+    const backBtn = modal.querySelector<HTMLButtonElement>('#backToBasicBtn');
     const emailBtn = modal.querySelector('#emailReportBtn');
 
     const closeAdvanced = () => {
@@ -665,8 +665,8 @@ class AnalyticsUI {
       this.showAnalyticsDashboard();
     };
 
-    closeBtn.addEventListener('click', closeAdvanced);
-    backBtn.addEventListener('click', closeAdvanced);
+    closeBtn?.addEventListener('click', closeAdvanced);
+    backBtn?.addEventListener('click', closeAdvanced);
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeAdvanced();
     });

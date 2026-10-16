@@ -6,6 +6,7 @@
 function initKeyboardNavigation() {
   // Dropdown menu keyboard navigation
   document.addEventListener('keydown', (e) => {
+    const target = e.target;
     // Close menus on Escape
     if (e.key === 'Escape') {
       closeAllDropdowns();
@@ -23,10 +24,10 @@ function initKeyboardNavigation() {
     }
 
     // Enter/Space to activate buttons
-    if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName !== 'TEXTAREA') {
-      if (e.target.tagName === 'BUTTON' || e.target.classList.contains('btn')) {
+    if (target instanceof HTMLElement && (e.key === 'Enter' || e.key === ' ') && target.tagName !== 'TEXTAREA') {
+      if (target.tagName === 'BUTTON' || target.classList.contains('btn')) {
         e.preventDefault();
-        e.target.click();
+        target.click();
       }
     }
   });
@@ -68,7 +69,7 @@ function navigateDropdown(dropdown: any, direction: any) {
  */
 function closeAllDropdowns() {
   document.querySelectorAll('.templates-menu, .export-menu').forEach((menu) => {
-    menu.style.display = 'none';
+    if (menu instanceof HTMLElement) menu.style.display = 'none';
   });
 
   // Close mobile menus
@@ -173,7 +174,7 @@ export function initializeAccessibility() {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
-        if (node.classList && node.classList.contains('modal')) {
+        if (node instanceof Element && node.classList.contains('modal')) {
           setupModalFocusTrap(node);
         }
       });

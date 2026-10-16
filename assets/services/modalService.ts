@@ -47,8 +47,7 @@ export function showModal(config: Record<string, any>): HTMLElement {
         title,
         content,
         buttons,
-        size,
-        type
+        size
     });
 
     // Add event listeners for modal lifecycle
@@ -79,7 +78,7 @@ export function showModal(config: Record<string, any>): HTMLElement {
     document.addEventListener('keydown', handleEscape);
 
     // Store modal reference and cleanup function
-    modal._cleanup = () => {
+    (modal as HTMLElement & { _cleanup?: () => void })._cleanup = () => {
         document.removeEventListener('keydown', handleEscape);
     };
 
@@ -122,8 +121,9 @@ export function closeModal(modal: HTMLElement) {
     }
 
     // Run cleanup
-    if (modal._cleanup) {
-        modal._cleanup();
+    const cleanup = (modal as HTMLElement & { _cleanup?: () => void })._cleanup;
+    if (cleanup) {
+        cleanup();
     }
 }
 
@@ -276,7 +276,7 @@ export function showListModal(title: string, items: any[], onSelect: (...args: a
                 text: selectText,
                 action: () => {
                     // Get selected item
-                    const selectedItem = document.querySelector('.list-item.selected');
+                    const selectedItem = document.querySelector<HTMLElement>('.list-item.selected');
                     if (selectedItem && onSelect) {
                         onSelect(selectedItem.dataset.value);
                     }
