@@ -8,7 +8,7 @@ export class InsightsEngine {
   state: any;
   insights: any[];
 
-  constructor(metrics, state) {
+  constructor(metrics: any, state: any) {
     this.metrics = metrics;
     this.state = state;
     this.insights = [];
@@ -71,7 +71,7 @@ export class InsightsEngine {
     const { offerings } = this.state;
     const lowMarginThreshold = 20; // 20% margin
 
-    offerings.forEach((offering) => {
+    offerings.forEach((offering: any) => {
       if (!offering) return;
       const marginPct = offering.marginPct || 0;
 
@@ -154,9 +154,9 @@ export class InsightsEngine {
    */
   generatePricingRecommendations() {
     const { offerings } = this.state;
-    const avgMargin = offerings.reduce((sum, o) => sum + (o.marginPct || 0), 0) / offerings.length;
+    const avgMargin = offerings.reduce((sum: any, o: any) => sum + (o.marginPct || 0), 0) / offerings.length;
 
-    offerings.forEach((offering) => {
+    offerings.forEach((offering: any) => {
       if (!offering) return;
       const marginPct = offering.marginPct || 0;
       const marginDiff = marginPct - avgMargin;
@@ -226,7 +226,7 @@ export class InsightsEngine {
       name: 'Price increase 10%',
       description: 'Increase all service prices by 10%',
       changes: {
-        offerings: offerings.map(o => ({
+        offerings: offerings.map((o: any) => ({
           ...o,
           priceMonthly: Math.round(o.priceMonthly * 1.1)
         }))
@@ -249,7 +249,7 @@ export class InsightsEngine {
       name: 'Reduce variable costs 10%',
       description: 'Reduce variable costs through efficiency gains',
       changes: {
-        offerings: offerings.map(o => ({
+        offerings: offerings.map((o: any) => ({
           ...o,
           variableCostPerSession: Math.round(o.variableCostPerSession * 0.9)
         }))
@@ -262,7 +262,7 @@ export class InsightsEngine {
       name: 'Reach target utilization',
       description: `Increase clients to achieve ${targetUtilizationPct}% utilization`,
       changes: {
-        offerings: offerings.map(o => ({
+        offerings: offerings.map((o: any) => ({
           ...o,
           currentClients: Math.ceil(o.currentClients * (targetUtilizationPct / capacityPct))
         }))
@@ -276,7 +276,7 @@ export class InsightsEngine {
   /**
    * Get insights sorted by severity
    */
-  getInsightsBySeverity(severity) {
+  getInsightsBySeverity(severity: any) {
     return this.insights.filter(i => i.severity === severity);
   }
 
@@ -296,7 +296,7 @@ export class InsightsEngine {
       bySeverity,
       insights: this.insights.sort((a, b) => {
         const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-        return severityOrder[a.severity] - severityOrder[b.severity];
+        return (severityOrder as any)[a.severity] - (severityOrder as any)[b.severity];
       })
     };
   }
@@ -305,7 +305,7 @@ export class InsightsEngine {
 /**
  * Generate insights for the current state
  */
-export function generateInsights(metrics, state) {
+export function generateInsights(metrics: any, state: any) {
   const engine = new InsightsEngine(metrics, state);
   return engine.generateInsights();
 }
@@ -313,7 +313,7 @@ export function generateInsights(metrics, state) {
 /**
  * Generate what-if scenarios
  */
-export function generateWhatIfScenarios(metrics, state) {
+export function generateWhatIfScenarios(metrics: any, state: any) {
   const engine = new InsightsEngine(metrics, state);
   return engine.generateWhatIfScenarios();
 }

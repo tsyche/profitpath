@@ -22,8 +22,8 @@ const MODAL_TYPES = {
 
 // Modal state management
 const modalState = {
-    currentModal: null,
-    modalStack: [],
+    currentModal: null as any,
+    modalStack: [] as any[],
     isModalOpen: false
 };
 
@@ -62,7 +62,7 @@ export function showModal(config: Record<string, any>): HTMLElement {
     });
 
     // Handle escape key
-    const handleEscape = (e) => {
+    const handleEscape = (e: any) => {
         if (e.key === 'Escape' && modalState.currentModal === modal) {
             closeModal(modal);
         }
@@ -318,9 +318,9 @@ export function getModalCount(): number {
  * Add toast notification functionality
  */
 // Toast queue system
-const toastQueue = [];
-let currentToast = null;
-let toastTimeout = null;
+const toastQueue: any[] = [];
+let currentToast: any = null;
+let toastTimeout: any = null;
 
 function showNextToast() {
     // If a toast is currently displayed, don't show another
@@ -366,7 +366,7 @@ function showNextToast() {
     }, nextToastData.duration);
 }
 
-function removeToast(toast) {
+function removeToast(toast: any) {
     // Clear any pending timeout
     if (toastTimeout) {
         clearTimeout(toastTimeout);
@@ -388,7 +388,7 @@ function removeToast(toast) {
 // flood the queue; keep only the most recent ones and drop the oldest.
 const MAX_TOAST_QUEUE = 5;
 
-export function showToast(message, type = 'info', duration = 3000) {
+export function showToast(message: any, type = 'info', duration = 3000) {
     // Add toast to queue
     toastQueue.push({ message, type, duration });
 

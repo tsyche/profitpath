@@ -7,7 +7,7 @@ export class ReverseCalculator {
   state: any;
   currentMetrics: any;
 
-  constructor(state, currentMetrics) {
+  constructor(state: any, currentMetrics: any) {
     this.state = state;
     this.currentMetrics = currentMetrics;
   }
@@ -17,7 +17,7 @@ export class ReverseCalculator {
    * @param {number} desiredTakeHome - Target annual take-home
    * @returns {Object} - Suggested price changes per offering
    */
-  calculateRequiredPricing(desiredTakeHome) {
+  calculateRequiredPricing(desiredTakeHome: any) {
     if (!desiredTakeHome || desiredTakeHome <= 0) {
       return null;
     }
@@ -36,7 +36,7 @@ export class ReverseCalculator {
     // Estimate price increase needed
     // Assuming gross margin stays constant and price affects revenue proportionally
     const avgMarginPct = currentOfferings.length > 0
-      ? currentOfferings.reduce((sum, o) => sum + (o.marginPct || 0), 0) / currentOfferings.length
+      ? currentOfferings.reduce((sum: any, o: any) => sum + (o.marginPct || 0), 0) / currentOfferings.length
       : 30;
 
     const marginRatio = avgMarginPct / 100;
@@ -54,7 +54,7 @@ export class ReverseCalculator {
       priceIncreasePct: Math.max(0, priceIncreasePct),
       priceIncreaseAmount: Math.max(0, requiredRevenueIncrease / (this.currentMetrics.totalSessions || 1)),
       message: `Increase all service prices by ~${(priceIncreasePct * 100).toFixed(1)}% to reach $${desiredTakeHome.toLocaleString()} take-home.`,
-      offerings: currentOfferings.map(offering => ({
+      offerings: currentOfferings.map((offering: any) => ({
         name: offering.name,
         currentPrice: offering.priceMonthly,
         suggestedPrice: Math.round(offering.priceMonthly * (1 + priceIncreasePct)),
@@ -68,7 +68,7 @@ export class ReverseCalculator {
    * @param {number} desiredTakeHome - Target annual take-home
    * @returns {Object} - Required client counts
    */
-  calculateRequiredClients(desiredTakeHome) {
+  calculateRequiredClients(desiredTakeHome: any) {
     if (!desiredTakeHome || desiredTakeHome <= 0) {
       return null;
     }
@@ -115,7 +115,7 @@ export class ReverseCalculator {
    * @param {number} desiredTakeHome - Target annual take-home
    * @returns {Object} - Required utilization
    */
-  calculateRequiredUtilization(desiredTakeHome) {
+  calculateRequiredUtilization(desiredTakeHome: any) {
     if (!desiredTakeHome || desiredTakeHome <= 0) {
       return null;
     }
@@ -154,7 +154,7 @@ export class ReverseCalculator {
    * @param {number} desiredTakeHome - Target annual take-home
    * @returns {Object} - Required cost reductions
    */
-  calculateRequiredCostReduction(desiredTakeHome) {
+  calculateRequiredCostReduction(desiredTakeHome: any) {
     if (!desiredTakeHome || desiredTakeHome <= 0) {
       return null;
     }
@@ -198,7 +198,7 @@ export class ReverseCalculator {
   /**
    * Get all reverse calculation results
    */
-  getAllResults(desiredTakeHome) {
+  getAllResults(desiredTakeHome: any) {
     return {
       pricing: this.calculateRequiredPricing(desiredTakeHome),
       clients: this.calculateRequiredClients(desiredTakeHome),
@@ -210,7 +210,7 @@ export class ReverseCalculator {
   /**
    * Get feasible strategies
    */
-  getFeasibleStrategies(desiredTakeHome) {
+  getFeasibleStrategies(desiredTakeHome: any) {
     const results = this.getAllResults(desiredTakeHome);
     return Object.entries(results)
       .filter(([, result]) => result && result.feasible)
@@ -223,7 +223,7 @@ export class ReverseCalculator {
   /**
    * Get the easiest/most practical strategy
    */
-  getRecommendedStrategy(desiredTakeHome) {
+  getRecommendedStrategy(desiredTakeHome: any) {
     const strategies = this.getFeasibleStrategies(desiredTakeHome);
 
     if (strategies.length === 0) {
@@ -243,14 +243,14 @@ export class ReverseCalculator {
       utilization: 4
     };
 
-    return strategies.sort((a, b) => strategyRank[a.name] - strategyRank[b.name])[0];
+    return strategies.sort((a, b) => (strategyRank as any)[a.name] - (strategyRank as any)[b.name])[0];
   }
 }
 
 /**
  * Public API for reverse calculations
  */
-export function getReverseCalculation(state, metrics, desiredTakeHome, strategyType = null) {
+export function getReverseCalculation(state: any, metrics: any, desiredTakeHome: any, strategyType: any = null) {
   const calculator = new ReverseCalculator(state, metrics);
 
   if (strategyType) {
@@ -264,9 +264,9 @@ export function getReverseCalculation(state, metrics, desiredTakeHome, strategyT
       'costreduction': 'calculateRequiredCostReduction'
     };
 
-    const methodName = methodMap[cleanType];
-    if (methodName && typeof calculator[methodName] === 'function') {
-      return calculator[methodName](desiredTakeHome);
+    const methodName = (methodMap as any)[cleanType];
+    if (methodName && typeof (calculator as any)[methodName] === 'function') {
+      return (calculator as any)[methodName](desiredTakeHome);
     }
   }
 
@@ -276,7 +276,7 @@ export function getReverseCalculation(state, metrics, desiredTakeHome, strategyT
 /**
  * Get recommended strategy
  */
-export function getRecommendedStrategy(state, metrics, desiredTakeHome) {
+export function getRecommendedStrategy(state: any, metrics: any, desiredTakeHome: any) {
   const calculator = new ReverseCalculator(state, metrics);
   return calculator.getRecommendedStrategy(desiredTakeHome);
 }

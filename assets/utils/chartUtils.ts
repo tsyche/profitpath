@@ -1,5 +1,5 @@
 // Chart utilities
-export function lazyLoadChart(chartId, data, _options = {}) {
+export function lazyLoadChart(chartId: any, data: any, _options = {}) {
   const canvas = document.getElementById(chartId);
   if (!canvas) return null;
 
@@ -17,9 +17,9 @@ export function lazyLoadChart(chartId, data, _options = {}) {
     const chartWidth = width - margin * 2;
     const chartHeight = height - margin * 2;
     const barWidth = chartWidth / data.length;
-    const maxValue = Math.max(...data.map(d => d.value || 0));
+    const maxValue = Math.max(...data.map((d: any) => d.value || 0));
 
-    data.forEach((item, index) => {
+    data.forEach((item: any, index: any) => {
       const barHeight = (item.value / maxValue) * chartHeight;
       const x = margin + index * barWidth;
       const y = height - margin - barHeight;
@@ -38,7 +38,7 @@ export function lazyLoadChart(chartId, data, _options = {}) {
   return canvas;
 }
 
-export function setupChartEventListeners(chartId, callbacks: { onClick?: (e: any) => void; onHover?: (e: any) => void } = {}) {
+export function setupChartEventListeners(chartId: any, callbacks: { onClick?: (e: any) => void; onHover?: (e: any) => void } = {}) {
   const canvas = document.getElementById(chartId);
   if (!canvas) return;
 

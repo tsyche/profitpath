@@ -32,7 +32,7 @@ const NUMBER_FORMATS = {
 export function formatNumber(value: number, locale = 'en-US', decimals = 0, useThousands = true): string {
   if (typeof value !== 'number' || isNaN(value)) return '0';
 
-  const format = NUMBER_FORMATS[locale] || NUMBER_FORMATS['en-US'];
+  const format = (NUMBER_FORMATS as any)[locale] || NUMBER_FORMATS['en-US'];
   const rounded = parseFloat(value.toFixed(decimals));
   const parts = rounded.toString().split('.');
 
@@ -60,10 +60,10 @@ export function formatNumber(value: number, locale = 'en-US', decimals = 0, useT
  * @returns Formatted currency string
  */
 export function formatCurrency(value: number, currency = 'USD', locale = 'en-US', decimals = 0): string {
-  const currencyConfig = CURRENCIES[currency];
+  const currencyConfig = (CURRENCIES as any)[currency];
   if (!currencyConfig) return formatNumber(value, locale, decimals);
 
-  const format = NUMBER_FORMATS[currencyConfig.locale] || NUMBER_FORMATS['en-US'];
+  const format = (NUMBER_FORMATS as any)[currencyConfig.locale] || NUMBER_FORMATS['en-US'];
   const rounded = parseFloat(value.toFixed(decimals));
   const parts = rounded.toString().split('.');
 
@@ -107,7 +107,7 @@ export function formatPercentage(value: number, locale = 'en-US', decimals = 1):
  * @returns Parsed number
  */
 export function parseLocalizedNumber(str: string, locale = 'en-US'): number {
-  const format = NUMBER_FORMATS[locale] || NUMBER_FORMATS['en-US'];
+  const format = (NUMBER_FORMATS as any)[locale] || NUMBER_FORMATS['en-US'];
   const normalized = str
     .replace(new RegExp('\\' + format.thousands, 'g'), '')
     .replace(format.decimal, '.');
@@ -120,7 +120,7 @@ export function parseLocalizedNumber(str: string, locale = 'en-US'): number {
  * @returns Currency symbol
  */
 export function getCurrencySymbol(currency = 'USD'): string {
-  return CURRENCIES[currency]?.symbol || '$';
+  return (CURRENCIES as any)[currency]?.symbol || '$';
 }
 
 /**

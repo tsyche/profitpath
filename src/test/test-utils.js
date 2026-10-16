@@ -20,6 +20,7 @@ export function clearGlobalState() {
 }
 
 // Reset localStorage mock completely
+/** @param {any} mock */
 export function resetLocalStorage(mock) {
   mock.clear();
 }

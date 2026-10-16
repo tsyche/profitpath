@@ -6,10 +6,13 @@ import * as matchers from '@testing-library/jest-dom/matchers'
 expect.extend(matchers)
 
 // Mock browser APIs that might not be available in test environment
+/** @param {string} selector */
 global.$ = (selector) => document.querySelector(selector)
+/** @param {string} selector */
 global.$$ = (selector) => Array.from(document.querySelectorAll(selector))
 
 // Mock localStorage
+/** @type {any} */
 const localStorageMock = {
   getItem: vi.fn((key) => {
     const store = localStorageMock._store || {};
@@ -37,6 +40,7 @@ Object.defineProperty(global, 'localStorage', {
 
 // Mock URL APIs
 global.URL = class URL {
+  /** @param {string} url */
   constructor(url) {
     this.href = url
     this.pathname = url.split('?')[0]

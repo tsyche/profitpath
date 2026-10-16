@@ -4,8 +4,8 @@
 import { escapeHtml } from './miscService';
 import { calc } from '../../src/calculations/index';
 
-const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
+const fmtMoney0 = (n: any) => Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+const fmtInt = (n: any) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 
 // ============================================================================
 // Heat Map — income across a grid of price % and utilization % adjustments
@@ -26,7 +26,7 @@ export function computeHeatmapData(state: Record<string, any>): {priceSteps: num
       const adjusted = {
         ...state,
         productiveUtilizationPct: Math.min(100, Math.max(0, baseUtilization + utilAdjust)),
-        offerings: (state.offerings || []).map((o) => ({
+        offerings: (state.offerings || []).map((o: any) => ({
           ...o,
           priceMonthly: o.priceMonthly * (1 + priceAdjust / 100)
         }))
@@ -50,7 +50,7 @@ export function renderSensitivityHeatmap(state: Record<string, any>): string {
   const allIncomes = cells.flat().map((c) => c.income);
   const maxAbs = Math.max(...allIncomes.map((v) => Math.abs(v)), 1);
 
-  const colorFor = (income) => {
+  const colorFor = (income: any) => {
     // Diverging scale: red at -maxAbs, amber near 0, green at +maxAbs
     const ratio = Math.max(-1, Math.min(1, income / maxAbs));
     if (ratio >= 0) {
@@ -142,7 +142,7 @@ export function renderScorecardRadar(metrics: Record<string, any>): string {
   const n = axes.length;
   const cx = 60, cy = 55, maxR = 42;
 
-  const pointFor = (idx, value) => {
+  const pointFor = (idx: any, value: any) => {
     const angle = -Math.PI / 2 + (idx / n) * Math.PI * 2;
     const r = (Math.max(0, Math.min(100, value)) / 100) * maxR;
     return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
@@ -170,7 +170,7 @@ export function renderScorecardRadar(metrics: Record<string, any>): string {
 
     const labelX = cx + Math.cos(angle) * (maxR + 10);
     const labelY = cy + Math.sin(angle) * (maxR + 10);
-    svg += `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" dy=".3em" font-size="6" fill="var(--muted)">${escapeHtml(RADAR_LABELS[axis])}</text>`;
+    svg += `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" dy=".3em" font-size="6" fill="var(--muted)">${escapeHtml((RADAR_LABELS as any)[axis])}</text>`;
   });
 
   // Data polygon
@@ -183,13 +183,13 @@ export function renderScorecardRadar(metrics: Record<string, any>): string {
   // Data points
   axes.forEach((axis, idx) => {
     const p = pointFor(idx, scores[axis]);
-    svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2" fill="var(--accent, #5eead4)"><title>${escapeHtml(RADAR_LABELS[axis])}: ${scores[axis]}</title></circle>`;
+    svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2" fill="var(--accent, #5eead4)"><title>${escapeHtml((RADAR_LABELS as any)[axis])}: ${scores[axis]}</title></circle>`;
   });
 
   svg += '</svg>';
 
   const legend = axes.map((axis) =>
-    `<div class="radar-legend-item"><span class="radar-legend-label">${escapeHtml(RADAR_LABELS[axis])}</span><span class="radar-legend-value">${scores[axis]}</span></div>`
+    `<div class="radar-legend-item"><span class="radar-legend-label">${escapeHtml((RADAR_LABELS as any)[axis])}</span><span class="radar-legend-value">${scores[axis]}</span></div>`
   ).join('');
 
   return `<div class="scorecard-radar">${svg}<div class="radar-legend">${legend}</div></div>`;

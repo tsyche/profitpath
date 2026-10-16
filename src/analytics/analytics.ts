@@ -38,7 +38,7 @@ class AnalyticsCollector {
     return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
   }
 
-  saveSettings(settings) {
+  saveSettings(settings: any) {
     this.settings = { ...this.settings, ...settings };
     localStorage.setItem('profitpath_analytics_settings', JSON.stringify(this.settings));
   }
@@ -54,7 +54,7 @@ class AnalyticsCollector {
     });
   }
 
-  trackEvent(eventName, data = {}) {
+  trackEvent(eventName: any, data = {}) {
     if (!this.settings.enabled) return;
 
     const event = {
@@ -73,7 +73,7 @@ class AnalyticsCollector {
     return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
-  sanitizeData(data) {
+  sanitizeData(data: any) {
     // Remove any sensitive information
     const sanitized = { ...data };
 
@@ -86,14 +86,14 @@ class AnalyticsCollector {
     return sanitized;
   }
 
-  saveEvent(event) {
+  saveEvent(event: any) {
     try {
       const existingEvents = JSON.parse(localStorage.getItem('profitpath_analytics_events') || '[]');
       existingEvents.push(event);
 
       // Clean old events based on retention policy
       const cutoffDate = Date.now() - (this.settings.retentionDays * 24 * 60 * 60 * 1000);
-      const filteredEvents = existingEvents.filter(e => e.timestamp > cutoffDate);
+      const filteredEvents = existingEvents.filter((e: any) => e.timestamp > cutoffDate);
 
       localStorage.setItem('profitpath_analytics_events', JSON.stringify(filteredEvents));
     } catch (error) {
@@ -102,7 +102,7 @@ class AnalyticsCollector {
   }
 
   // Specific tracking methods
-  trackFeatureUsage(feature, details = {}) {
+  trackFeatureUsage(feature: any, details = {}) {
     if (!this.settings.trackFeatures) return;
 
     this.trackEvent('feature_usage', {
@@ -111,7 +111,7 @@ class AnalyticsCollector {
     });
   }
 
-  trackScenarioAction(action, scenarioData = {}) {
+  trackScenarioAction(action: any, scenarioData = {}) {
     if (!this.settings.trackUsage) return;
 
     this.trackEvent('scenario_action', {
@@ -121,7 +121,7 @@ class AnalyticsCollector {
     });
   }
 
-  trackExport(format, scenarioCount = 1, additionalData = {}) {
+  trackExport(format: any, scenarioCount = 1, additionalData = {}) {
     if (!this.settings.trackExports) return;
 
     this.trackEvent('export', {
@@ -131,7 +131,7 @@ class AnalyticsCollector {
     });
   }
 
-  trackTemplateUsage(templateId, templateName) {
+  trackTemplateUsage(templateId: any, templateName: any) {
     if (!this.settings.trackTemplates) return;
 
     this.trackEvent('template_usage', {
@@ -140,7 +140,7 @@ class AnalyticsCollector {
     });
   }
 
-  trackSettingsChange(setting, oldValue, newValue) {
+  trackSettingsChange(setting: any, oldValue: any, newValue: any) {
     this.trackEvent('settings_change', {
       setting,
       oldValue,
@@ -157,20 +157,20 @@ class AnalyticsCollector {
     }
   }
 
-  getEventsByType(eventType) {
-    return this.getAllEvents().filter(event => event.event === eventType);
+  getEventsByType(eventType: any) {
+    return this.getAllEvents().filter((event: any) => event.event === eventType);
   }
 
   getAnalyticsSummary() {
     const events = this.getAllEvents();
-    const sessions = new Set(events.map(e => e.sessionId)).size;
+    const sessions = new Set(events.map((e: any) => e.sessionId)).size;
 
     return {
       totalEvents: events.length,
       totalSessions: sessions,
       dateRange: {
-        start: events.length > 0 ? new Date(Math.min(...events.map(e => e.timestamp))) : null,
-        end: events.length > 0 ? new Date(Math.max(...events.map(e => e.timestamp))) : null
+        start: events.length > 0 ? new Date(Math.min(...events.map((e: any) => e.timestamp))) : null,
+        end: events.length > 0 ? new Date(Math.max(...events.map((e: any) => e.timestamp))) : null
       },
       featureUsage: this.getFeatureUsageStats(events),
       exportStats: this.getExportStats(events),
@@ -179,51 +179,51 @@ class AnalyticsCollector {
     };
   }
 
-  getFeatureUsageStats(events) {
-    const featureEvents = events.filter(e => e.event === 'feature_usage');
+  getFeatureUsageStats(events: any) {
+    const featureEvents = events.filter((e: any) => e.event === 'feature_usage');
     const stats = {};
 
-    featureEvents.forEach(event => {
+    featureEvents.forEach((event: any) => {
       const feature = event.data.feature;
-      stats[feature] = (stats[feature] || 0) + 1;
+      (stats as any)[feature] = ((stats as any)[feature] || 0) + 1;
     });
 
     return stats;
   }
 
-  getExportStats(events) {
-    const exportEvents = events.filter(e => e.event === 'export');
+  getExportStats(events: any) {
+    const exportEvents = events.filter((e: any) => e.event === 'export');
     const stats = { total: 0, byFormat: {} };
 
-    exportEvents.forEach(event => {
+    exportEvents.forEach((event: any) => {
       stats.total++;
       const format = event.data.format;
-      stats.byFormat[format] = (stats.byFormat[format] || 0) + 1;
+      (stats.byFormat as any)[format] = ((stats.byFormat as any)[format] || 0) + 1;
     });
 
     return stats;
   }
 
-  getScenarioStats(events) {
-    const scenarioEvents = events.filter(e => e.event === 'scenario_action');
+  getScenarioStats(events: any) {
+    const scenarioEvents = events.filter((e: any) => e.event === 'scenario_action');
     const stats = { total: 0, byAction: {} };
 
-    scenarioEvents.forEach(event => {
+    scenarioEvents.forEach((event: any) => {
       stats.total++;
       const action = event.data.action;
-      stats.byAction[action] = (stats.byAction[action] || 0) + 1;
+      (stats.byAction as any)[action] = ((stats.byAction as any)[action] || 0) + 1;
     });
 
     return stats;
   }
 
-  getTemplateStats(events) {
-    const templateEvents = events.filter(e => e.event === 'template_usage');
+  getTemplateStats(events: any) {
+    const templateEvents = events.filter((e: any) => e.event === 'template_usage');
     const stats = {};
 
-    templateEvents.forEach(event => {
+    templateEvents.forEach((event: any) => {
       const templateName = event.data.templateName || 'Unknown';
-      stats[templateName] = (stats[templateName] || 0) + 1;
+      (stats as any)[templateName] = ((stats as any)[templateName] || 0) + 1;
     });
 
     return stats;
@@ -238,12 +238,12 @@ class AnalyticsCollector {
     }
   }
 
-  sanitizeString(str) {
+  sanitizeString(str: any) {
     if (typeof str !== 'string') return '';
     return str.replace(/[<>]/g, '').trim();
   }
 
-  trackFeedback(rating, category, comment = null) {
+  trackFeedback(rating: any, category: any, comment: any = null) {
     if (!this.settings.enabled || !this.settings.trackFeatures) return;
 
     this.trackEvent('feedback', {

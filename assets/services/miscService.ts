@@ -17,7 +17,7 @@ import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizati
 const DEFAULT_CURRENCY = 'USD';
 
 // Capacitor WebView blocks <a download> — use Web Share API for files when available
-async function downloadOrShare(blob, filename) {
+async function downloadOrShare(blob: any, filename: any) {
   if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: blob.type })] })) {
     try {
       await navigator.share({ files: [new File([blob], filename, { type: blob.type })], title: filename });
@@ -37,7 +37,7 @@ async function downloadOrShare(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
-function loadScript(src) {
+function loadScript(src: any) {
   return new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
     script.src = src;
@@ -47,12 +47,12 @@ function loadScript(src) {
   });
 }
 
-const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
-const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
+const fmtMoney0 = (n: any) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
+const fmtPct1 = (n: any) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
 // Utility function to clamp values between min and max
 // Coerce a value to a finite number within [min, max], or return fallback
-function toFiniteNumber(value, fallback, min, max) {
+function toFiniteNumber(value: any, fallback: any, min: any, max: any) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return clamp(n, min, max);
@@ -103,7 +103,7 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
   };
 }
 
-export function escapeHtml(str) {
+export function escapeHtml(str: any) {
   return String(str == null ? '' : str)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -113,7 +113,7 @@ export function escapeHtml(str) {
 }
 
 // Clipboard fallback for non-secure contexts
-function copyToClipboardFallback(text) {
+function copyToClipboardFallback(text: any) {
   const textArea = document.createElement("textarea");
   textArea.value = text;
   textArea.style.position = "fixed";
@@ -144,7 +144,7 @@ export function shareScenario() {
   }
   updateSocialMetaTags(window.state);
 
-  const copyLink = (url, label) => {
+  const copyLink = (url: any, label: any) => {
     const success = () => showToast(label + ' link copied!', 'success');
     const fallback = () => showToast('Link: ' + url, 'info');
     if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -155,7 +155,7 @@ export function shareScenario() {
   };
 
   const esc = escapeHtml;
-  const linkRow = (label, desc, url, btnId) => `
+  const linkRow = (label: any, desc: any, url: any, btnId: any) => `
     <div class="share-option-row">
       <div class="share-option-info">
         <strong>${esc(label)}</strong>
@@ -191,7 +191,7 @@ export function shareScenario() {
 
 // Quote a CSV cell: double embedded quotes, and prefix a ' on values starting
 // with = + - @ so spreadsheet apps don't execute them as formulas
-export function csvCell(value) {
+export function csvCell(value: any) {
   let s = String(value == null ? '' : value);
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
   return '"' + s.replaceAll('"', '""') + '"';
@@ -250,7 +250,7 @@ export function exportAsCSV() {
   trackEvent('export', { format: 'csv' });
 }
 
-function copyToClipboard(text) {
+function copyToClipboard(text: any) {
   navigator.clipboard.writeText(text).then(() => {
     showNotification('Link copied to clipboard!', 'success');
   }).catch((err) => {
@@ -263,8 +263,8 @@ function copyToClipboard(text) {
 window.copyToClipboard = copyToClipboard;
 window.showNotification = showNotification;
 
-function updateSocialMetaTags(state) {
-  const title = 'ProfitPath Scenario: ' + state.offerings.map(o => o.name).join(', ');
+function updateSocialMetaTags(state: any) {
+  const title = 'ProfitPath Scenario: ' + state.offerings.map((o: any) => o.name).join(', ');
   const description = 'Check out my business profitability analysis with ' + state.offerings.length + ' service offerings';
   const image = 'https://example.com/profitpath-logo.png'; // Placeholder URL
 
@@ -331,7 +331,7 @@ export function decodeScenarioFromURL() {
 }
 
 // Export functions for modal service
-export function showModal(content, options: { title?: string; buttons?: string } = {}) {
+export function showModal(content: any, options: { title?: string; buttons?: string } = {}) {
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.innerHTML = `
@@ -364,11 +364,11 @@ export function showLoadingModal() {
   return showModal('<div class="spinner"></div><p>Loading...</p>', { title: 'Loading' });
 }
 
-export function showSuccessModal(message) {
+export function showSuccessModal(message: any) {
   return showModal('<p>' + message + '</p>', { title: 'Success', buttons: '<button onclick="this.closest(\'.modal\').remove()">OK</button>' });
 }
 
-export function showErrorModal(error) {
+export function showErrorModal(error: any) {
   return showModal('<p>' + (error.message || error) + '</p>', { title: 'Error', buttons: '<button onclick="this.closest(\'.modal\').remove()">OK</button>' });
 }
 
@@ -388,7 +388,7 @@ export function loadState() {
 // Removed redundant functions
 
 // Export functions for chart and visualization
-export function renderChart(containerId, data, options = {}) {
+export function renderChart(containerId: any, data: any, options = {}) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -402,7 +402,7 @@ export function renderChart(containerId, data, options = {}) {
   }
 }
 
-function createChart(container, data, options) {
+function createChart(container: any, data: any, options: any) {
   const ctx = container.getContext('2d');
   const chartOptions = {
     responsive: true,
@@ -432,7 +432,7 @@ function createChart(container, data, options) {
 }
 
 // Export functions for scenario management
-export function saveScenario(name, description = '') {
+export function saveScenario(name: any, description = '') {
   const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
   const scenario = {
     id: uuid(),
@@ -447,9 +447,9 @@ export function saveScenario(name, description = '') {
   return scenario;
 }
 
-export function loadScenario(scenarioId) {
+export function loadScenario(scenarioId: any) {
   const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
-  const scenario = scenarios.find(s => s.id === scenarioId);
+  const scenario = scenarios.find((s: any) => s.id === scenarioId);
   if (scenario) {
     state = scenario.state;
     if (typeof render === 'function') render();
@@ -458,9 +458,9 @@ export function loadScenario(scenarioId) {
   return false;
 }
 
-export function deleteScenario(scenarioId) {
+export function deleteScenario(scenarioId: any) {
   const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
-  const filtered = scenarios.filter(s => s.id !== scenarioId);
+  const filtered = scenarios.filter((s: any) => s.id !== scenarioId);
   localStorage.setItem('profitpath-scenarios', JSON.stringify(filtered));
 }
 
@@ -479,7 +479,7 @@ export function clearTestScenarios() {
   localStorage.removeItem('profitpath-scenarios');
 }
 
-export function showNotification(message, _type = 'info') {
+export function showNotification(message: any, _type = 'info') {
   // Create a simple notification element
   const notification = document.createElement('div');
   notification.className = 'notification';
@@ -493,13 +493,13 @@ export function showNotification(message, _type = 'info') {
   }, 3000);
 }
 
-export function populateComparisonDropdowns(modalContext = null) {
+export function populateComparisonDropdowns(modalContext: any = null) {
   // Sort scenarios with natural sort (so "2" comes before "10")
-  const scenarios = getAllScenarios().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
+  const scenarios = getAllScenarios().sort((a: any, b: any) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
 
   // Find dropdowns - if modalContext provided, search within it first
-  let dropdown1 = null;
-  let dropdown2 = null;
+  let dropdown1: any = null;
+  let dropdown2: any = null;
 
   if (modalContext) {
     dropdown1 = modalContext.querySelector('#compareScenario1');
@@ -547,7 +547,7 @@ export function populateComparisonDropdowns(modalContext = null) {
   dropdown2.innerHTML = '<option value="">Select second scenario...</option>';
 
   // Add scenarios
-  scenarios.forEach(scenario => {
+  scenarios.forEach((scenario: any) => {
     const option1 = document.createElement('option');
     option1.value = scenario.id;
     option1.textContent = scenario.name;
@@ -648,7 +648,7 @@ export function loadSettings() {
   return { ...DEFAULT_SETTINGS };
 }
 
-export function setExperienceLevel(level) {
+export function setExperienceLevel(level: any) {
   const FEATURE_GATES = {
     beginner: { showAdvancedCalculations: false, showDetailedBreakdown: false, showComparisonTools: false, showExportOptions: false, showDebugPanel: false, showPerformanceMetrics: false, showSensitivityAnalysis: false, showTooltips: true },
     intermediate: { showAdvancedCalculations: true, showDetailedBreakdown: true, showComparisonTools: true, showExportOptions: false, showDebugPanel: false, showPerformanceMetrics: false, showSensitivityAnalysis: true, showTooltips: true },
@@ -658,27 +658,27 @@ export function setExperienceLevel(level) {
   const currentSettings = loadSettings();
   const newSettings = { ...currentSettings, experienceLevel: level };
 
-  if (FEATURE_GATES[level]) {
-    Object.assign(newSettings, FEATURE_GATES[level]);
+  if ((FEATURE_GATES as any)[level]) {
+    Object.assign(newSettings, (FEATURE_GATES as any)[level]);
   }
 
   localStorage.setItem('profitpath-settings', JSON.stringify(newSettings));
 }
 
-export function updateSetting(key, value) {
+export function updateSetting(key: any, value: any) {
   const settings = loadSettings();
   settings[key] = value;
   localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 }
 
-export function loadIndustryTemplate(templateId) {
+export function loadIndustryTemplate(templateId: any) {
   // Use global INDUSTRY_TEMPLATES as single source of truth
   const template = window.INDUSTRY_TEMPLATES && window.INDUSTRY_TEMPLATES[templateId];
   if (template) {
     const config = template.config;
 
     // Apply template to current state
-    window.state.offerings = config.offerings.map(o => ({
+    window.state.offerings = config.offerings.map((o: any) => ({
       ...o,
       id: uuid(),
       mixPct: o.mixPct || 0,
@@ -712,8 +712,8 @@ export function loadIndustryTemplate(templateId) {
 
 export function exportAsExcel() {
   const state = window.state;
-  const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
-  const fmtPct = (n) => n.toFixed(1) + '%';
+  const fmtMoney0 = (n: any) => '$' + Math.round(n).toLocaleString();
+  const fmtPct = (n: any) => n.toFixed(1) + '%';
 
   const lines = [
     'ProfitPath Analysis Report',
@@ -749,8 +749,8 @@ export function exportAsExcel() {
 export function exportAsPDF() {
   // Create a printable HTML version and open print dialog
   const state = window.state;
-  const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
-  const fmtPct = (n) => n.toFixed(1) + '%';
+  const fmtMoney0 = (n: any) => '$' + Math.round(n).toLocaleString();
+  const fmtPct = (n: any) => n.toFixed(1) + '%';
 
   // Capacitor WebView blocks window.open — fall through to HTML export instead
   const isCapacitor = window.location.origin === 'http://localhost' || window.location.origin === 'capacitor://localhost';
@@ -840,8 +840,8 @@ export function exportAsPDF() {
 
 export function exportAsHTML() {
   const state = window.state;
-  const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
-  const fmtPct = (n) => n.toFixed(1) + '%';
+  const fmtMoney0 = (n: any) => '$' + Math.round(n).toLocaleString();
+  const fmtPct = (n: any) => n.toFixed(1) + '%';
 
   const offeringsHtml = state.offerings.map(o => `
     <tr>
@@ -931,8 +931,8 @@ export function exportAsFinancialReport() {
     return;
   }
 
-  const fmt = (n) => '$' + Math.round(n).toLocaleString();
-  const fmtPct = (n) => (typeof n === 'number' ? n.toFixed(1) : '0.0') + '%';
+  const fmt = (n: any) => '$' + Math.round(n).toLocaleString();
+  const fmtPct = (n: any) => (typeof n === 'number' ? n.toFixed(1) : '0.0') + '%';
   const today = new Date();
   const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   const year = today.getFullYear();
@@ -1091,8 +1091,8 @@ export function exportAsFinancialReport() {
 
 export function shareViaEmail() {
   const state = window.state;
-  const fmtMoney0 = (n) => '$' + Math.round(n).toLocaleString();
-  const fmtPct = (n) => n.toFixed(1) + '%';
+  const fmtMoney0 = (n: any) => '$' + Math.round(n).toLocaleString();
+  const fmtPct = (n: any) => n.toFixed(1) + '%';
 
   const offeringsText = state.offerings.map(o =>
     `- ${o.name}: ${fmtMoney0(o.priceMonthly)}/month, ${o.sessionsPerYear} sessions/year, ${fmtPct(o.mixPct)} mix`
@@ -1146,13 +1146,13 @@ export function showScheduleDialog() {
 export function loadTestScenarios() {
 }
 
-export function loadSpecificTestScenario(_scenarioKey) {
+export function loadSpecificTestScenario(_scenarioKey: any) {
 }
 
 export function updateValidationDisplay() {
 }
 
-export function lazyLoadChart(metrics) {
+export function lazyLoadChart(metrics: any) {
   try {
     if (renderSimpleChart) {
       renderSimpleChart(metrics);
@@ -1162,7 +1162,7 @@ export function lazyLoadChart(metrics) {
   }
 }
 
-export function updateRichVisualizations(metrics) {
+export function updateRichVisualizations(metrics: any) {
   try {
     if (typeof vizUpdateRichVisualizations === 'function') {
       vizUpdateRichVisualizations(metrics);
@@ -1184,7 +1184,7 @@ export function toggleMobileMenu() {
 
 // Export functions for settings and preferences
 
-export function getSetting(key, defaultValue = null) {
+export function getSetting(key: any, defaultValue: any = null) {
   const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
   return settings[key] !== undefined ? settings[key] : defaultValue;
 }
@@ -1194,15 +1194,15 @@ export function resetSettings() {
 }
 
 // Export functions for analytics and feedback
-export function trackEvent(_eventName, _properties = {}) {
+export function trackEvent(_eventName: any, _properties = {}) {
 }
 
-export function sendFeedback(_rating, _comment = '') {
+export function sendFeedback(_rating: any, _comment = '') {
   return true;
 }
 
 // Export functions for performance monitoring
-export function measurePerformance(fn, label) {
+export function measurePerformance(fn: any, label: any) {
   const start = performance.now();
   const result = fn();
   const end = performance.now();
@@ -1254,7 +1254,7 @@ export function enhanceAccessibility() {
 }
 
 // Export functions for internationalization
-export function setLanguage(language) {
+export function setLanguage(language: any) {
   updateSetting('language', language);
   // Reload page to apply language changes
   window.location.reload();
@@ -1264,7 +1264,7 @@ export function getLanguage() {
   return getSetting('language', 'en');
 }
 
-export function translate(key, language = null) {
+export function translate(key: any, language: any = null) {
   const lang = language || getLanguage();
   const translations = {
     en: {
@@ -1287,7 +1287,7 @@ export function translate(key, language = null) {
     },
   };
 
-  return translations[lang] && translations[lang][key] ? translations[lang][key] : key;
+  return (translations as any)[lang] && ((translations as any)[lang] as any)[key] ? ((translations as any)[lang] as any)[key] : key;
 }
 
 // Export functions for debugging
@@ -1321,9 +1321,9 @@ export function uuid() {
   });
 }
 
-export function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
+export function debounce(func: any, wait: any) {
+  let timeout: any;
+  return function executedFunction(...args: any[]) {
     const later = () => {
       clearTimeout(timeout);
       func(...args);
@@ -1333,9 +1333,9 @@ export function debounce(func, wait) {
   };
 }
 
-export function throttle(func, limit) {
-  let inThrottle;
-  return function (...args) {
+export function throttle(func: any, limit: any) {
+  let inThrottle: any;
+  return function (...args: any[]) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
@@ -1366,13 +1366,13 @@ Support,500,24,1,50,40,0`;
   downloadOrShare(blob, 'profitpath-template.csv');
 }
 
-export function importFromCSV(csvText) {
+export function importFromCSV(csvText: any) {
   const errors = [];
   const settings: Record<string, any> = {};
   const offerings = [];
 
   try {
-    const lines = csvText.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+    const lines = csvText.split('\n').map((line: any) => line.trim()).filter((line: any) => line && !line.startsWith('#'));
 
     let inSettingsSection = false;
     let inOfferingsSection = false;
@@ -1391,7 +1391,7 @@ export function importFromCSV(csvText) {
       }
 
       if (inSettingsSection) {
-        const [key, value] = line.split(',').map(s => s.trim());
+        const [key, value] = line.split(',').map((s: any) => s.trim());
         if (key && value !== undefined) {
           const numValue = parseFloat(value);
           if (!isNaN(numValue)) {
@@ -1410,12 +1410,12 @@ export function importFromCSV(csvText) {
       if (inOfferingsSection) {
         if (!offeringHeaders) {
           // First data row is the header
-          offeringHeaders = line.split(',').map(h => h.trim().toLowerCase());
+          offeringHeaders = line.split(',').map((h: any) => h.trim().toLowerCase());
           continue;
         }
 
         // Parse offering row
-        const values = line.split(',').map(v => v.trim());
+        const values = line.split(',').map((v: any) => v.trim());
         if (values.length < 7) continue;
 
         const offering = {

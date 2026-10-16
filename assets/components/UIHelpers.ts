@@ -18,7 +18,7 @@ export function showDeleteConfirmation(scenarioId: string, onConfirm: () => void
 
 export function openScenarioModal() {
   const scenarios = getAllScenarios();
-  const scenariosList = scenarios.map(s => {
+  const scenariosList = scenarios.map((s: any) => {
     const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
     const ts = escapeHtml(s.timestamp || s.createdAt || '');
     const id = escapeHtml(s.id);
@@ -92,7 +92,7 @@ export function openScenarioModal() {
       dropdown1.innerHTML = '<option value="">Select first scenario...</option>';
       dropdown2.innerHTML = '<option value="">Select second scenario...</option>';
 
-      scenarios.forEach(scenario => {
+      scenarios.forEach((scenario: any) => {
         const option1 = document.createElement('option');
         option1.value = scenario.id;
         option1.textContent = scenario.name;
@@ -121,7 +121,7 @@ export function openScenarioModal() {
     if (!scenarioId) return;
 
     if (btn.classList.contains('load-btn')) {
-      const scenario = scenarios.find(s => s.id === scenarioId);
+      const scenario = scenarios.find((s: any) => s.id === scenarioId);
       const scenarioName = escapeHtml(scenario?.name || scenario?.description || 'Unknown scenario');
 
       createModal({
@@ -228,8 +228,8 @@ export function performComparison(scenarioId1: string, scenarioId2: string, moda
   const scenarios = getAllScenarios();
 
   // Find scenarios by ID
-  const scenario1 = scenarios.find(s => s.id === scenarioId1);
-  const scenario2 = scenarios.find(s => s.id === scenarioId2);
+  const scenario1 = scenarios.find((s: any) => s.id === scenarioId1);
+  const scenario2 = scenarios.find((s: any) => s.id === scenarioId2);
 
   if (!scenario1 || !scenario2) {
     import('../services/modalService').then((modalService) => {
@@ -259,8 +259,8 @@ export function performComparison(scenarioId1: string, scenarioId2: string, moda
   }
 
   // Total headcount and FT pay, with fallback for legacy employees/employeePay scenarios
-  const totalEmployees = (s) => 'fullTimeEmployees' in s ? (s.fullTimeEmployees || 0) + (s.partTimeEmployees || 0) : (s.employees || 0);
-  const ftPay = (s) => s.fullTimeEmployeePay ?? s.employeePay ?? 0;
+  const totalEmployees = (s: any) => 'fullTimeEmployees' in s ? (s.fullTimeEmployees || 0) + (s.partTimeEmployees || 0) : (s.employees || 0);
+  const ftPay = (s: any) => s.fullTimeEmployeePay ?? s.employeePay ?? 0;
 
   // Generate comparison data
   const metrics = [
@@ -309,7 +309,7 @@ export function performComparison(scenarioId1: string, scenarioId2: string, moda
 export function renderScenariosList() {
   // Update all scenario lists on the page or within open modals
   const listElements = Array.from(document.querySelectorAll('.scenarios-list'));
-  const scenarios = getAllScenarios().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
+  const scenarios = getAllScenarios().sort((a: any, b: any) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
 
   if (listElements.length === 0) return;
 
@@ -319,7 +319,7 @@ export function renderScenariosList() {
       return;
     }
 
-    listElement.innerHTML = scenarios.map(s => {
+    listElement.innerHTML = scenarios.map((s: any) => {
       const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
       const ts = escapeHtml(s.timestamp || s.createdAt || '');
       const id = escapeHtml(s.id);

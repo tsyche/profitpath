@@ -58,8 +58,8 @@ export function createModal({
     large: '700px',
     full: '90%'
   };
-  if (sizeWidths[size]) {
-    modal.style.maxWidth = sizeWidths[size];
+  if ((sizeWidths as any)[size]) {
+    modal.style.maxWidth = (sizeWidths as any)[size];
   }
 
   // Modal HTML structure (colors come from theme tokens so it matches dark/light)
@@ -120,7 +120,7 @@ export function createModal({
   });
 
   // ESC key to close — only respond when this is the topmost overlay
-  const handleEsc = (e) => {
+  const handleEsc = (e: any) => {
     if (e.key === 'Escape') {
       const overlays = document.querySelectorAll('.modal-overlay');
       if (overlays[overlays.length - 1] === overlay) {

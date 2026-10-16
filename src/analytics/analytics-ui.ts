@@ -92,7 +92,7 @@ class AnalyticsUI {
     }
   }
 
-  handleAnalyticsToggle(enabled) {
+  handleAnalyticsToggle(enabled: any) {
     this.analytics.saveSettings({ enabled });
 
     // If enabling, start session tracking
@@ -111,12 +111,12 @@ class AnalyticsUI {
     );
   }
 
-  handleTrackingOptionChange(option, enabled) {
+  handleTrackingOptionChange(option: any, enabled: any) {
     this.analytics.saveSettings({ [option]: enabled });
     this.analytics.trackSettingsChange(option, !enabled, enabled);
   }
 
-  toggleAnalyticsOptions(show) {
+  toggleAnalyticsOptions(show: any) {
     const options = document.getElementById('analyticsOptions');
     const actions = document.getElementById('analyticsActions');
 
@@ -199,7 +199,7 @@ class AnalyticsUI {
     });
 
     // ESC key handler
-    const escHandler = (e) => {
+    const escHandler = (e: any) => {
       if (e.key === 'Escape' && !modalOverlay.classList.contains('hidden')) {
         closeOverlay();
         document.removeEventListener('keydown', escHandler);
@@ -233,7 +233,7 @@ class AnalyticsUI {
     }
   }
 
-  renderDashboard(summary, _events) {
+  renderDashboard(summary: any, _events: any) {
     const isEnabled = this.analytics.settings.enabled;
 
     if (!isEnabled) {
@@ -339,9 +339,9 @@ class AnalyticsUI {
     `;
   }
 
-  formatFeatureName(feature) {
+  formatFeatureName(feature: any) {
     // Convert camelCase to readable format
-    return feature.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+    return feature.replace(/([A-Z])/g, ' $1').replace(/^./, (str: any) => str.toUpperCase());
   }
 
   exportAnalyticsData() {
@@ -360,7 +360,7 @@ class AnalyticsUI {
     }
   }
 
-  showNotification(message, type = 'success') {
+  showNotification(message: any, type = 'success') {
     // Simple notification implementation
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -453,16 +453,16 @@ class AnalyticsUI {
     }
   }
 
-  sendReportEmail(summary, events) {
+  sendReportEmail(summary: any, events: any) {
     const dateStr = new Date().toLocaleDateString();
     const rangeStart = summary.dateRange?.start ? new Date(summary.dateRange.start).toLocaleDateString() : 'N/A';
     const rangeEnd = summary.dateRange?.end ? new Date(summary.dateRange.end).toLocaleDateString() : 'N/A';
 
     const featureCounts = {};
-    events.forEach(event => {
+    events.forEach((event: any) => {
       if (event.event === 'feature_usage' && event.data?.feature) {
         const f = event.data.feature;
-        featureCounts[f] = (featureCounts[f] || 0) + 1;
+        (featureCounts as any)[f] = ((featureCounts as any)[f] || 0) + 1;
       }
     });
     const topFeatures = Object.entries(featureCounts)
@@ -472,7 +472,7 @@ class AnalyticsUI {
       .join('\n');
 
     const recentEvents = events.slice(-10).reverse()
-      .map(e => `  - ${this.formatEventName(e.event)} (${new Date(e.timestamp).toLocaleString()})`)
+      .map((e: any) => `  - ${this.formatEventName(e.event)} (${new Date(e.timestamp).toLocaleString()})`)
       .join('\n');
 
     const subject = encodeURIComponent(`ProfitPath Analytics Report — ${dateStr}`);
@@ -539,7 +539,7 @@ class AnalyticsUI {
 
     // Attach event listeners immediately (synchronously)
     if (closeBtn) {
-      closeBtn.onclick = (e) => {
+      closeBtn.onclick = (e: any) => {
         e.preventDefault();
         e.stopImmediatePropagation();
         closeModal();
@@ -548,7 +548,7 @@ class AnalyticsUI {
     }
 
     if (cancelBtn) {
-      cancelBtn.onclick = (e) => {
+      cancelBtn.onclick = (e: any) => {
         e.preventDefault();
         e.stopImmediatePropagation();
         closeModal();
@@ -678,16 +678,16 @@ class AnalyticsUI {
     this.analytics.trackFeatureUsage('advanced_dashboard_opened');
   }
 
-  formatEventName(name) {
-    return (name || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  formatEventName(name: any) {
+    return (name || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, (c: any) => c.toUpperCase());
   }
 
-  renderFeatureUsage(events) {
+  renderFeatureUsage(events: any) {
     const featureCounts = {};
-    events.forEach(event => {
+    events.forEach((event: any) => {
       if (event.event === 'feature_usage' && event.data?.feature) {
         const f = event.data.feature;
-        featureCounts[f] = (featureCounts[f] || 0) + 1;
+        (featureCounts as any)[f] = ((featureCounts as any)[f] || 0) + 1;
       }
     });
 
@@ -705,14 +705,14 @@ class AnalyticsUI {
     `).join('');
   }
 
-  renderRecentActivity(events) {
+  renderRecentActivity(events: any) {
     const recent = events.slice(-20).reverse();
 
     if (recent.length === 0) {
       return '<p style="color: var(--muted); text-align: center;">No recent activity</p>';
     }
 
-    return recent.map(event => `
+    return recent.map((event: any) => `
       <div style="padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;">
         <div style="color: var(--text);">${this.formatEventName(event.event)}</div>
         <div style="color: var(--muted); font-size: 11px;">${new Date(event.timestamp).toLocaleString()}</div>

@@ -1,5 +1,5 @@
 // State management
-export function persistState(key, data) {
+export function persistState(key: any, data: any) {
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (e) {
@@ -7,7 +7,7 @@ export function persistState(key, data) {
   }
 }
 
-export function loadState(key) {
+export function loadState(key: any) {
   try {
     const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : null;
@@ -17,7 +17,7 @@ export function loadState(key) {
   }
 }
 
-export function validateAndSanitizeLoadedState(state, schema) {
+export function validateAndSanitizeLoadedState(state: any, schema: any) {
   if (!state || typeof state !== 'object') return null;
   
   const sanitized = {};
@@ -27,15 +27,15 @@ export function validateAndSanitizeLoadedState(state, schema) {
       const value = state[key];
       
       if (type === 'number') {
-        sanitized[key] = typeof value === 'number' ? value : parseFloat(value) || 0;
+        (sanitized as any)[key] = typeof value === 'number' ? value : parseFloat(value) || 0;
       } else if (type === 'string') {
-        sanitized[key] = typeof value === 'string' ? value : String(value);
+        (sanitized as any)[key] = typeof value === 'string' ? value : String(value);
       } else if (type === 'boolean') {
-        sanitized[key] = Boolean(value);
+        (sanitized as any)[key] = Boolean(value);
       } else if (type === 'array') {
-        sanitized[key] = Array.isArray(value) ? value : [];
+        (sanitized as any)[key] = Array.isArray(value) ? value : [];
       } else {
-        sanitized[key] = value;
+        (sanitized as any)[key] = value;
       }
     }
   }

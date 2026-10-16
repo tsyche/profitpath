@@ -8,22 +8,22 @@ export function uuid() {
   });
 }
 
-export function safeParseNumber(value, defaultValue = 0) {
+export function safeParseNumber(value: any, defaultValue = 0) {
   const parsed = parseFloat(value);
   return isNaN(parsed) ? defaultValue : parsed;
 }
 
 // Clamp a number into [min, max]. Single source of truth — previously copy-pasted
 // into four modules, and one missing copy silently broke the Auto-balance Mix % feature.
-export function clamp(n, min, max) {
+export function clamp(n: any, min: any, max: any) {
   return Math.max(min, Math.min(max, n));
 }
 
-export function cssEscape(str) {
+export function cssEscape(str: any) {
   return str.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, '\\$&');
 }
 
-export function loadScript(src) {
+export function loadScript(src: any) {
   return new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
     script.src = src;

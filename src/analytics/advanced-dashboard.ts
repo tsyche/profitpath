@@ -300,16 +300,16 @@ class AdvancedAnalyticsDashboard {
     `;
   }
 
-  attachDashboardEventListeners(dashboard) {
+  attachDashboardEventListeners(dashboard: any) {
     // Navigation
-    dashboard.querySelectorAll('.nav-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    dashboard.querySelectorAll('.nav-btn').forEach((btn: any) => {
+      btn.addEventListener('click', (e: any) => {
         this.switchView(e.target.dataset.view);
       });
     });
 
     // Date range change
-    dashboard.querySelector('#dateRangeSelect').addEventListener('change', (e) => {
+    dashboard.querySelector('#dateRangeSelect').addEventListener('change', (e: any) => {
       this.dateRange = e.target.value;
       this.refreshDashboard();
     });
@@ -320,7 +320,7 @@ class AdvancedAnalyticsDashboard {
     });
   }
 
-  switchView(viewName) {
+  switchView(viewName: any) {
     // Update navigation
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === viewName);
@@ -391,7 +391,7 @@ class AdvancedAnalyticsDashboard {
     this.drawLineChart(ctx, dailyActivity);
   }
 
-  createExportDistributionChart(summary) {
+  createExportDistributionChart(summary: any) {
     const canvas = document.getElementById('exportDistributionChart');
     if (!canvas) return;
 
@@ -402,7 +402,7 @@ class AdvancedAnalyticsDashboard {
     this.drawPieChart(ctx, exportData);
   }
 
-  drawLineChart(ctx, data) {
+  drawLineChart(ctx: any, data: any) {
     // Simple line chart drawing
     const width = ctx.canvas.width;
     const height = ctx.canvas.height;
@@ -445,7 +445,7 @@ class AdvancedAnalyticsDashboard {
     ctx.stroke();
   }
 
-  drawPieChart(ctx, data) {
+  drawPieChart(ctx: any, data: any) {
     const width = ctx.canvas.width;
     const height = ctx.canvas.height;
     const centerX = width / 2;
@@ -485,21 +485,21 @@ class AdvancedAnalyticsDashboard {
     });
   }
 
-  groupEventsByDate(events) {
+  groupEventsByDate(events: any) {
     const grouped = {};
     const dateRange = this.getDateRange();
     
     // Initialize all dates in range with 0
     for (let d = new Date(dateRange.start); d <= dateRange.end; d.setDate(d.getDate() + 1)) {
       const dateKey = d.toISOString().split('T')[0];
-      grouped[dateKey] = 0;
+      (grouped as any)[dateKey] = 0;
     }
     
     // Count events per date (timestamps are epoch ms numbers)
-    events.forEach(event => {
+    events.forEach((event: any) => {
       const dateKey = new Date(event.timestamp).toISOString().split('T')[0];
       if (grouped.hasOwnProperty(dateKey)) {
-        grouped[dateKey]++;
+        (grouped as any)[dateKey]++;
       }
     });
     
@@ -516,13 +516,13 @@ class AdvancedAnalyticsDashboard {
       'all': 365 * 10 // 10 years as "all time"
     };
     
-    const days = ranges[this.dateRange] || 30;
+    const days = (ranges as any)[this.dateRange] || 30;
     const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
     
     return { start, end: now };
   }
 
-  generateKeyInsights(summary, feedbackAnalytics) {
+  generateKeyInsights(summary: any, feedbackAnalytics: any) {
     const insights = [];
     
     // Usage insights

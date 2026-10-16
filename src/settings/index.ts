@@ -126,8 +126,8 @@ export function updateSetting(key: string, value: any) {
   const newSettings = { ...currentSettings, [key]: value };
 
   // If changing experience level, apply feature gates
-  if (key === 'experienceLevel' && FEATURE_GATES[value]) {
-    Object.assign(newSettings, FEATURE_GATES[value]);
+  if (key === 'experienceLevel' && (FEATURE_GATES as any)[value]) {
+    Object.assign(newSettings, (FEATURE_GATES as any)[value]);
   }
 
   saveSettings(newSettings);
@@ -141,7 +141,7 @@ export function updateSetting(key: string, value: any) {
  */
 export function isFeatureEnabled(featureKey: string): boolean {
   const settings = loadSettings();
-  return settings[featureKey] === true;
+  return (settings as any)[featureKey] === true;
 }
 
 /**
@@ -158,7 +158,7 @@ export function getExperienceLevel(): string {
  * @param level - Experience level ('beginner' | 'intermediate' | 'advanced')
  */
 export function setExperienceLevel(level: string) {
-  if (!FEATURE_GATES[level]) {
+  if (!(FEATURE_GATES as any)[level]) {
     console.warn('Invalid experience level: ' + level);
     return;
   }
@@ -166,7 +166,7 @@ export function setExperienceLevel(level: string) {
   const newSettings = {
     ...DEFAULT_SETTINGS,
     experienceLevel: level,
-    ...FEATURE_GATES[level]
+    ...(FEATURE_GATES as any)[level]
   };
 
   saveSettings(newSettings);

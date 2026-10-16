@@ -3,8 +3,8 @@ import { uuid, clamp } from '../utils/helpers';
 
 // Formatting utilities
 const DEFAULT_CURRENCY = 'USD';
-const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
-const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
+const fmtMoney0 = (n: any) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
+const fmtPct1 = (n: any) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
 export function validateBusinessLogic() {
   const issues = [];
@@ -246,7 +246,7 @@ export function validateBusinessLogic() {
       suggestion = 'Add at least one full-time or part-time employee';
     } else if (state.mode === 'current') {
       // In current mode, check if offerings have required fields
-      const offeringIssues = [];
+      const offeringIssues: any[] = [];
       if (state.offerings) {
         state.offerings.forEach((o, idx) => {
           if (!o.name) offeringIssues.push('Offering ' + (idx + 1) + ' has no name');
@@ -286,7 +286,7 @@ export function validateBusinessLogic() {
   return { issues, warnings };
 }
 
-export function rebalanceMix(changedIdx, nextMixPct) {
+export function rebalanceMix(changedIdx: any, nextMixPct: any) {
   const n = state.offerings.length;
   if (n <= 1) {
     if (state.offerings[0]) state.offerings[0].mixPct = 100;
@@ -356,11 +356,11 @@ export function defaultOfferings() {
 // that clears and later recurs will surface again.
 const dismissedValidationKeys = new Set<string>();
 
-function validationKey(item) {
+function validationKey(item: any) {
   return (item.severity || '') + '::' + (item.message || '');
 }
 
-function buildValidationItem(item, icon) {
+function buildValidationItem(item: any, icon: any) {
   const key = validationKey(item);
   const el = document.createElement('div');
   el.className = 'validation-item validation-' + (item.severity);
@@ -380,13 +380,13 @@ function buildValidationItem(item, icon) {
 }
 
 // Lightweight horizontal swipe-to-dismiss for touch devices.
-function attachSwipeToDismiss(el, key) {
+function attachSwipeToDismiss(el: any, key: any) {
   let startX = 0, dx = 0, dragging = false;
-  el.addEventListener('touchstart', (e) => {
+  el.addEventListener('touchstart', (e: any) => {
     startX = e.touches[0].clientX; dx = 0; dragging = true;
     el.style.transition = 'none';
   }, { passive: true });
-  el.addEventListener('touchmove', (e) => {
+  el.addEventListener('touchmove', (e: any) => {
     if (!dragging) return;
     dx = e.touches[0].clientX - startX;
     el.style.transform = 'translateX(' + dx + 'px)';

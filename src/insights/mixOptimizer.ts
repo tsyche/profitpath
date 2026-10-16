@@ -19,10 +19,10 @@ function generateGridCandidates(count: number): Array<number[]> {
   if (count <= 0) return [];
   if (count === 1) return [[100]];
 
-  const candidates = [];
+  const candidates: any[] = [];
   const step = 100 / (GRID_STEPS - 1);
 
-  const build = (remaining, slotsLeft, current) => {
+  const build = (remaining: any, slotsLeft: any, current: any) => {
     if (slotsLeft === 1) {
       candidates.push([...current, remaining]);
       return;
@@ -76,7 +76,7 @@ export class MixOptimizer {
   state: any;
   metrics: any;
 
-  constructor(state, metrics) {
+  constructor(state: any, metrics: any) {
     this.state = state;
     this.metrics = metrics;
   }
@@ -92,9 +92,9 @@ export class MixOptimizer {
       return null;
     }
 
-    const scoreOf = (result) => objective === 'utilization' ? result.capacityPct : result.income;
+    const scoreOf = (result: any) => objective === 'utilization' ? result.capacityPct : result.income;
 
-    const runMix = (mixVector) => {
+    const runMix = (mixVector: any) => {
       const testState = {
         ...this.state,
         mode: 'forecast',

@@ -8,7 +8,7 @@ import { showToast } from "./modalService";
 // Global flag to prevent re-entrant deletion calls
 let isDeletingScenario = false;
 
-export function saveScenario(name) {
+export function saveScenario(name: any) {
   if (!name || !name.trim()) {
     showToast('Please enter a scenario name', 'error');
     return;
@@ -24,7 +24,7 @@ export function saveScenario(name) {
   performSave(name.trim());
 }
 
-function performSave(name) {
+function performSave(name: any) {
   try {
     const scenarios = getAllScenarios();
     const timestamp = new Date().toLocaleString();
@@ -82,10 +82,10 @@ function performSave(name) {
   }
 }
 
-export function loadScenario(scenarioId) {
+export function loadScenario(scenarioId: any) {
   try {
     const scenarios = getAllScenarios();
-    const scenario = scenarios.find((s) => s.id === scenarioId);
+    const scenario = scenarios.find((s: any) => s.id === scenarioId);
     if (!scenario) return;
 
     // Bypass confirmation in test mode
@@ -109,7 +109,7 @@ export function loadScenario(scenarioId) {
   }
 }
 
-export function performLoad(scenario) {
+export function performLoad(scenario: any) {
   try {
     // Handle both old format (scenario.state) and new format (scenario.data)
     const scenarioData = scenario.state || scenario.data;
@@ -151,7 +151,7 @@ export function performLoad(scenario) {
   }
 }
 
-export function deleteScenario(scenarioId) {
+export function deleteScenario(scenarioId: any) {
   // Prevent re-entrant calls
   if (isDeletingScenario) return;
   isDeletingScenario = true;
@@ -160,7 +160,7 @@ export function deleteScenario(scenarioId) {
     // Get scenarios once and filter
     let scenarios = getAllScenarios();
     const initialLength = scenarios.length;
-    scenarios = scenarios.filter((s) => s.id !== scenarioId);
+    scenarios = scenarios.filter((s: any) => s.id !== scenarioId);
 
     // Only update if we actually removed something
     if (scenarios.length < initialLength) {

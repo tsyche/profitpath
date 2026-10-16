@@ -197,7 +197,7 @@ class FeedbackUI {
   /**
    * Attach event listeners to modal elements
    */
-  attachModalEventListeners(modal) {
+  attachModalEventListeners(modal: any) {
     // Overlay click to close
     const overlay = modal.querySelector('.feedback-overlay');
     if (overlay) {
@@ -218,7 +218,7 @@ class FeedbackUI {
 
     // Rating stars
     const stars = modal.querySelectorAll('.rating-star');
-    stars.forEach(star => {
+    stars.forEach((star: any) => {
       const rating = parseInt(star.dataset.rating);
 
       star.addEventListener('click', () => this.setRating(rating));
@@ -239,11 +239,11 @@ class FeedbackUI {
     // Form submission
     const form = modal.querySelector('#feedbackForm');
     if (form) {
-      form.addEventListener('submit', (e) => this.handleFeedbackSubmit(e));
+      form.addEventListener('submit', (e: any) => this.handleFeedbackSubmit(e));
     }
 
     // Escape key to close
-    modal.addEventListener('keydown', (e) => {
+    modal.addEventListener('keydown', (e: any) => {
       if (e.key === 'Escape') {
         this.closeFeedbackModal();
       }
@@ -253,7 +253,7 @@ class FeedbackUI {
   /**
    * Set rating value
    */
-  setRating(rating) {
+  setRating(rating: any) {
     const ratingInput = document.getElementById('feedbackRating');
     const stars = document.querySelectorAll('.rating-star');
 
@@ -271,7 +271,7 @@ class FeedbackUI {
   /**
    * Preview rating on hover
    */
-  previewRating(rating) {
+  previewRating(rating: any) {
     const stars = document.querySelectorAll('.rating-star');
     stars.forEach((star, index) => {
       if (index < rating) {
@@ -293,7 +293,7 @@ class FeedbackUI {
   /**
    * Handle feedback form submission
    */
-  async handleFeedbackSubmit(event) {
+  async handleFeedbackSubmit(event: any) {
     event.preventDefault();
 
     const form = event.target;
@@ -369,7 +369,7 @@ class FeedbackUI {
   /**
    * Show notification message
    */
-  showNotification(message, type = 'info') {
+  showNotification(message: any, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `feedback-notification ${type}`;
     notification.textContent = message;
@@ -385,7 +385,7 @@ class FeedbackUI {
   /**
    * Show contextual feedback prompt
    */
-  showContextualPrompt(context, delay = 2000) {
+  showContextualPrompt(context: any, delay = 2000) {
     setTimeout(() => {
       if (!this.isModalOpen) {
         const prompt = this.createContextualPrompt(context);
@@ -404,7 +404,7 @@ class FeedbackUI {
   /**
    * Create contextual prompt
    */
-  createContextualPrompt(context) {
+  createContextualPrompt(context: any) {
     const prompt = document.createElement('div');
     prompt.className = 'feedback-prompt';
     prompt.innerHTML = `

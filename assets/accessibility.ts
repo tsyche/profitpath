@@ -35,7 +35,7 @@ function initKeyboardNavigation() {
 /**
  * Find the parent dropdown/menu of an element
  */
-function findParentDropdown(element) {
+function findParentDropdown(element: any) {
   return element.closest(
     '.templates-dropdown, .export-dropdown, .mobile-templates-options, [role="menu"]'
   );
@@ -44,7 +44,7 @@ function findParentDropdown(element) {
 /**
  * Navigate through dropdown items with arrow keys
  */
-function navigateDropdown(dropdown, direction) {
+function navigateDropdown(dropdown: any, direction: any) {
   const buttons = dropdown.querySelectorAll(
     'button:not([disabled]), [role="menuitem"]:not([disabled])'
   );
@@ -85,7 +85,7 @@ function closeAllDropdowns() {
 /**
  * Set up focus trap for modals
  */
-function setupModalFocusTrap(modal) {
+function setupModalFocusTrap(modal: any) {
   const focusableElements = modal.querySelectorAll(
     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   );
@@ -95,7 +95,7 @@ function setupModalFocusTrap(modal) {
   const firstElement = focusableElements[0];
   const lastElement = focusableElements[focusableElements.length - 1];
 
-  modal.addEventListener('keydown', (e) => {
+  modal.addEventListener('keydown', (e: any) => {
     if (e.key !== 'Tab') return;
 
     if (e.shiftKey) {
@@ -118,7 +118,7 @@ function setupModalFocusTrap(modal) {
 /**
  * Announce messages to screen readers
  */
-function _announceToScreenReader(message, priority = 'polite') {
+function _announceToScreenReader(message: any, priority = 'polite') {
   const announcement = document.createElement('div');
   announcement.setAttribute('role', 'status');
   announcement.setAttribute('aria-live', priority);

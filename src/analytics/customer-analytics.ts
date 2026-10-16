@@ -40,7 +40,7 @@ export function calculateLTV(metrics: Record<string, any>, averageCustomerLifesp
   }
 
   // Calculate LTV per offering
-  const byOffering = metrics.offeringMetrics.map((offering, idx) => {
+  const byOffering = metrics.offeringMetrics.map((offering: any, idx: any) => {
     if (!offering || offering.sessionsPerYear === 0) {
       return {
         offeringIndex: idx,
@@ -70,8 +70,8 @@ export function calculateLTV(metrics: Record<string, any>, averageCustomerLifesp
   });
 
   // Average LTV across all offerings
-  const totalLTV = byOffering.reduce((sum, o) => sum + o.estimatedLTV, 0);
-  const validOfferings = byOffering.filter(o => o.estimatedLTV > 0).length;
+  const totalLTV = byOffering.reduce((sum: any, o: any) => sum + o.estimatedLTV, 0);
+  const validOfferings = byOffering.filter((o: any) => o.estimatedLTV > 0).length;
   const averageLTV = validOfferings > 0 ? Math.round(totalLTV / validOfferings) : 0;
 
   return {
@@ -273,7 +273,7 @@ export function projectCustomerGrowth(params: Record<string, any>): Record<strin
 /**
  * Find the month when customer base stops declining (if applicable)
  */
-function calculateBreakEvenMonth(projections) {
+function calculateBreakEvenMonth(projections: any) {
   for (let i = 1; i < projections.length; i++) {
     if (projections[i].customers >= projections[i - 1].customers) {
       return i;
@@ -336,7 +336,7 @@ export function calculateRevenueImpact(metrics: Record<string, any>, monthlyNewC
  * Comprehensive customer acquisition summary
  * Combines all metrics into one view
  */
-export function summarizeCustomerAcquisition(metrics, options: Record<string, any> = {}) {
+export function summarizeCustomerAcquisition(metrics: any, options: Record<string, any> = {}) {
   const {
     monthlyNewCustomers = 5,
     monthlyChurnRate = 5,
@@ -375,7 +375,7 @@ export function summarizeCustomerAcquisition(metrics, options: Record<string, an
 /**
  * Calculate overall business health score (0-100)
  */
-function calculateHealthScore(ltvToCACRatio, churnRate, cac, ltv) {
+function calculateHealthScore(ltvToCACRatio: any, churnRate: any, cac: any, ltv: any) {
   let score = 100;
 
   // LTV:CAC ratio scoring (target 3:1)

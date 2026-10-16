@@ -8,7 +8,7 @@ import * as CA from './customer-analytics';
 /**
  * Render customer analytics dashboard
  */
-export function renderCustomerAnalyticsDashboard(metrics, settings: Record<string, any> = {}) {
+export function renderCustomerAnalyticsDashboard(metrics: any, settings: Record<string, any> = {}) {
   const {
     monthlyNewCustomers = 5,
     monthlyChurnRate = 5,
@@ -48,7 +48,7 @@ export function renderCustomerAnalyticsDashboard(metrics, settings: Record<strin
 /**
  * Generate HTML for customer analytics dashboard
  */
-function generateDashboardHTML(summary, cac, ltv, churn, _growth) {
+function generateDashboardHTML(summary: any, cac: any, ltv: any, churn: any, _growth: any) {
   const healthColor = getHealthColor(summary.healthScore);
   const cacHealthColor = summary.ltvToCAC.health === 'healthy' ? '#34d399' : summary.ltvToCAC.health === 'fair' ? '#fbbf24' : '#fb7185';
 
@@ -137,7 +137,7 @@ function generateDashboardHTML(summary, cac, ltv, churn, _growth) {
 /**
  * Get color based on health score
  */
-function getHealthColor(score) {
+function getHealthColor(score: any) {
   if (score >= 80) return '#34d399'; // good
   if (score >= 60) return '#fbbf24'; // warn
   if (score >= 40) return '#f97316'; // bad
@@ -147,7 +147,7 @@ function getHealthColor(score) {
 /**
  * Format metric for display
  */
-export function formatMetric(value, type = 'number') {
+export function formatMetric(value: any, type = 'number') {
   if (type === 'currency') {
     return '$' + Math.round(value).toLocaleString();
   }
@@ -160,7 +160,7 @@ export function formatMetric(value, type = 'number') {
 /**
  * Create mini cards for embedding in existing UI
  */
-export function createMetricCards(summary) {
+export function createMetricCards(summary: any) {
   return [
     {
       label: 'Customer Acquisition Cost',
