@@ -1,6 +1,6 @@
 # TypeScript migration
 
-**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-1 are done: `checkJs` is on with `strict` off, globals are declared, and a CI ratchet holds the baseline at 164 type errors (was 301). Next come shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
+**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-1 are done: `checkJs` is on with `strict` off, globals are declared, and a CI ratchet holds the baseline at 162 type errors (was 301). Next come shared types, leaf-first file renames, a strictness ladder, and the 3,720-line `assets/app.jsx` last. Vite and Vitest already handle `.ts`, so there is no build change.
 
 **Status:** Building (Phases 0-1 done 2026-10-15)
 **Fold into:** [AGENTS.md](../../AGENTS.md) "TypeScript Support" section, then delete this plan.
@@ -52,7 +52,10 @@ _Original scope:_
 - Declare the globals once in `src/globals.d.ts` (`state`, `$`, `$$`, `XLSX`, `html2canvas`, `window.__PP_PLATFORM__`). Expect a large drop in TS2339 and TS2304.
 - Add `typecheck` to CI beside lint. Confirm CI minutes impact is negligible (about 10 s).
 
-### Phase 2: shared types
+### Phase 2: shared types (in progress)
+
+- Done 2026-10-15: `src/types.ts` has the calculation shapes (`CalcState`, `CalcResult`, `Offering`, ...) and `src/calculations/index.js` uses them via JSDoc; `state` in `assets/app.jsx` is typed `CalcState`. Baseline 164 to 162. Typing it caught a dead `.profit` read (per-offering Annual Profit always showed $0) and an early-return result missing the tax fields.
+- Left: settings, scenario and export-payload types, and replacing the `any` globals in `src/globals.d.ts`.
 
 - Define the core shapes first in `src/types.ts`: scenario, inputs, calculation results, settings, export payloads.
 - Start with `src/calculations/`, since everything else depends on its inputs and outputs. These types are what catch real bugs.

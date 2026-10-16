@@ -82,8 +82,8 @@ function generateCacheKey(state) {
 
 /**
  * Normalizes offering mix percentages and calculates shares
- * @param {Array} offerings - Array of service offerings
- * @returns {Object} Normalized mix data
+ * @param {import('../types').Offering[]} offerings - Array of service offerings
+ * @returns {import('../types').MixResult} Normalized mix data
  */
 export function normalizeMix(offerings) {
   const sum = offerings.reduce((a, o) => a + (Number(o.mixPct) || 0), 0);
@@ -108,8 +108,8 @@ export function normalizeMix(offerings) {
 
 /**
  * Sanitizes and validates offering data
- * @param {Array} offerings - Raw offerings from state
- * @returns {Array} Sanitized offerings
+ * @param {import('../types').Offering[]} offerings - Raw offerings from state
+ * @returns {import('../types').SanitizedOffering[]} Sanitized offerings
  */
 function sanitizeOfferings(offerings) {
   return offerings
@@ -129,8 +129,8 @@ function sanitizeOfferings(offerings) {
 
 /**
  * Calculates capacity and utilization metrics
- * @param {Object} params - Calculation parameters
- * @returns {Object} Capacity metrics
+ * @param {import('../types').CapacityParams} params - Calculation parameters
+ * @returns {import('../types').Capacity} Capacity metrics
  */
 function calculateCapacity(params) {
   const { employees, productiveUtilizationPct, targetUtilizationPct, totalAnnualPaidHours } = params;
@@ -148,8 +148,8 @@ function calculateCapacity(params) {
 
 /**
  * Calculates cost metrics
- * @param {Object} params - Calculation parameters
- * @returns {Object} Cost metrics
+ * @param {import('../types').CostParams} params - Calculation parameters
+ * @returns {import('../types').Costs} Cost metrics
  */
 function calculateCosts(params) {
   const { employees, employeePay, monthlyCosts } = params;
@@ -166,10 +166,10 @@ function calculateCosts(params) {
 
 /**
  * Calculates metrics for forecast mode
- * @param {Array} offerings - Sanitized offerings
- * @param {Object} capacity - Capacity metrics
- * @param {Object} costs - Cost metrics
- * @returns {Object} Forecast mode results
+ * @param {import('../types').SanitizedOffering[]} offerings - Sanitized offerings
+ * @param {import('../types').Capacity} capacity - Capacity metrics
+ * @param {import('../types').Costs} _costs - Cost metrics (unused)
+ * @returns {import('../types').ModeResults} Forecast mode results
  */
 function calculateForecastMode(offerings, capacity, _costs) {
   const { sum: mixSum, needsNormalization: mixNormalized, shares } = normalizeMix(offerings);
@@ -235,10 +235,10 @@ function calculateForecastMode(offerings, capacity, _costs) {
 
 /**
  * Calculates metrics for current operations mode
- * @param {Array} offerings - Sanitized offerings
- * @param {Object} capacity - Capacity metrics
- * @param {Object} costs - Cost metrics
- * @returns {Object} Current mode results
+ * @param {import('../types').SanitizedOffering[]} offerings - Sanitized offerings
+ * @param {import('../types').Capacity} capacity - Capacity metrics
+ * @param {import('../types').Costs} _costs - Cost metrics (unused)
+ * @returns {import('../types').ModeResults} Current mode results
  */
 function calculateCurrentMode(offerings, capacity, _costs) {
   let clients = 0;
@@ -297,9 +297,9 @@ function calculateCurrentMode(offerings, capacity, _costs) {
 
 /**
  * Calculates break-even analysis
- * @param {Object} results - Calculation results
- * @param {Object} costs - Cost metrics
- * @returns {Object} Break-even metrics
+ * @param {import('../types').ModeResults} results - Calculation results
+ * @param {import('../types').Costs} costs - Cost metrics
+ * @returns {import('../types').BreakEven} Break-even metrics
  */
 function calculateBreakEven(results, costs) {
   const { revenue, clients } = results;
@@ -328,7 +328,7 @@ function calculateBreakEven(results, costs) {
 /**
  * Calculate tax estimates (2024 US rates, single filer, simplified)
  * @param {number} income - Pre-tax owner income (net profit before taxes)
- * @returns {Object} Tax estimates: seTax, federalTax, quarterlyEst, takeHome, effectiveRate
+ * @returns {import('../types').TaxEstimate} Tax estimates
  */
 function calculateTax(income) {
   if (income <= 0) {
@@ -385,9 +385,9 @@ function calculateTax(income) {
 
 /**
  * Main calculation engine with caching and debugging support
- * @param {Object} stateInput - Application state (defaults to global state)
- * @param {Object} options - Calculation options
- * @returns {Object} Calculation results with intermediate steps
+ * @param {import('../types').CalcState} [stateInput] - Application state (defaults to global state)
+ * @param {import('../types').CalcOptions} [options] - Calculation options
+ * @returns {import('../types').CalcResult} Calculation results with intermediate steps
  */
 export function calc(stateInput, options = {}) {
   const { enableCache = true, debug = false } = options;
@@ -488,6 +488,8 @@ export function calc(stateInput, options = {}) {
     const capacity = calculateCapacity({ employees, productiveUtilizationPct, targetUtilizationPct, totalAnnualPaidHours });
     const costs = calculateCosts({ employees, employeePay, monthlyCosts });
 
+    const income = -costs.totalFixedCosts;
+    /** @type {import('../types').CalcResult} */
     const result = {
       mode,
       offerings,
@@ -499,7 +501,7 @@ export function calc(stateInput, options = {}) {
       capacityPct: 0,
       revenue: 0,
       variableCosts: 0,
-      income: -costs.totalFixedCosts,
+      income,
       mixSum: 0,
       mixNormalized: false,
       breakEvenClients: Infinity,
@@ -507,6 +509,7 @@ export function calc(stateInput, options = {}) {
       contributionMarginPerClient: 0,
       contributionMarginRatio: 0,
       offeringMetrics: [],
+      ...calculateTax(income),
       ...(debug ? { _intermediate: intermediate } : {})
     };
 
@@ -537,6 +540,7 @@ export function calc(stateInput, options = {}) {
   const income = modeResults.revenue - costs.totalFixedCosts - modeResults.variableCosts;
   const taxCalcs = calculateTax(income);
 
+  /** @type {import('../types').CalcResult} */
   const result = {
     mode,
     offerings,
@@ -568,12 +572,8 @@ export function calc(stateInput, options = {}) {
 }
 
 /**
- * Gets cache statistics
- * @returns {Object} Cache statistics
- */
-/**
- * Gets cache statistics
- * @returns {Object} Cache statistics including hit rate and timing
+ * Gets cache statistics including hit rate and timing
+ * @returns {import('../types').CacheStats}
  */
 export function getCacheStats() {
   const hitRate = totalCalcs > 0 ? Math.round((cacheHits / totalCalcs) * 100) : 0;

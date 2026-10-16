@@ -18,6 +18,16 @@ test.describe('Regression Fixes - UI & Logic', () => {
     await expect(payrollKpi).toContainText('$60,000');
   });
 
+  test('Per-offering Annual Profit matches the calculated margin (not a constant $0)', async ({ page }) => {
+    const expected = await page.evaluate(() => Math.round(window.calc(window.state).offeringMetrics[0].margin));
+    expect(expected).not.toBe(0);
+
+    const cell = page.locator('td[data-label="Annual Profit"]').first();
+    await expect(cell).toBeVisible();
+    const shown = Number((await cell.innerText()).replace(/[^0-9-]/g, ''));
+    expect(shown).toBe(expected);
+  });
+
   test('Share Scenario opens a two-option share modal', async ({ page }) => {
     // Share now lives in the menu drawer
     await page.locator('#appMenuBtn').click();

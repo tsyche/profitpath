@@ -237,6 +237,7 @@ const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 })
 const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
 const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
+/** @type {import('../src/types').CalcState} */
 const state = {
   mode: 'forecast', // 'forecast' | 'current'
   offerings: businessLogic.defaultOfferings(),
@@ -631,7 +632,7 @@ function render() {
       '<td class="cell-readonly group-est" data-label="Est. sessions"><span class="mono">' + (fmtInt(estSessions)) + '</span></td>' +
       '<td class="cell-readonly group-metrics" data-label="Annual Revenue"><span class="mono">' + (fmtMoney0(metrics.offeringMetrics[idx]?.revenue || 0)) + '</span></td>' +
       '<td class="cell-readonly group-metrics" data-label="Margin %"><span class="mono" style="color:' + ((metrics.offeringMetrics[idx]?.marginPct || 0) > 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtPct1(metrics.offeringMetrics[idx]?.marginPct || 0)) + '</span></td>' +
-      '<td class="cell-readonly group-metrics group-end" data-label="Annual Profit"><span class="mono" style="color:' + ((metrics.offeringMetrics[idx]?.profit || 0) > 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtMoney0(metrics.offeringMetrics[idx]?.profit || 0)) + '</span></td>' +
+      '<td class="cell-readonly group-metrics group-end" data-label="Annual Profit"><span class="mono" style="color:' + ((metrics.offeringMetrics[idx]?.margin || 0) > 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtMoney0(metrics.offeringMetrics[idx]?.margin || 0)) + '</span></td>' +
       '<td class="cell-edit group-actions" data-label="Actions"><button class="btn small danger" data-action="removeOffering" data-i="' + (idx) + '" aria-label="Remove ' + (escapeHtml(o.name)) + '">Remove</button></td>';
 
     tbody.appendChild(tr);
@@ -2193,7 +2194,7 @@ function initCustomerAnalyticsPanel() {
   const renderPanel = () => {
     try {
       const m = calc(state);
-      const metrics = { ...m, totalClients: m.totalClients ?? m.clients ?? 0 };
+      const metrics = { ...m, totalClients: m.clients };
       panel.innerHTML = renderCustomerAnalyticsDashboard(metrics, {}).html;
     } catch (e) {
       console.warn('Customer analytics render failed:', e);

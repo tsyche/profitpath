@@ -1,0 +1,171 @@
+// Shared domain types. Phase 2 of docs/plans/typescript-migration.md.
+// JS files reference these through JSDoc: @param {import('../types').Offering} o
+// (path relative to the importing file). Calculation shapes mirror src/calculations/index.js.
+
+export type Mode = 'forecast' | 'current';
+
+/** A service offering as stored in app state (user-editable, may be partially filled). */
+export interface Offering {
+  id?: string;
+  name?: string;
+  priceMonthly?: number;
+  sessionsPerYear?: number;
+  hoursPerSession?: number;
+  variableCostPerSession?: number;
+  mixPct?: number;
+  currentClients?: number;
+}
+
+/** An offering after sanitizeOfferings(): every numeric field is a clamped finite number. */
+export interface SanitizedOffering extends Offering {
+  name: string;
+  priceMonthly: number;
+  sessionsPerYear: number;
+  hoursPerSession: number;
+  variableCostPerSession: number;
+  mixPct: number;
+  currentClients: number;
+}
+
+/**
+ * Input to calc(). Employee fields come in two formats: the current full/part-time
+ * fields, or the legacy employees/hoursPerWeek/employeePay trio.
+ */
+export interface CalcState {
+  mode?: Mode;
+  offerings?: Offering[];
+  fullTimeEmployees?: number;
+  partTimeEmployees?: number;
+  fullTimeEmployeePay?: number;
+  partTimeEmployeePay?: number;
+  employees?: number;
+  hoursPerWeek?: number;
+  employeePay?: number;
+  monthlyCosts?: number;
+  productiveUtilizationPct?: number;
+  targetUtilizationPct?: number;
+  /** App-only fields, ignored by calc(). */
+  lockMix?: boolean;
+  loadedTemplate?: string | null;
+  notes?: string;
+}
+
+export interface CalcOptions {
+  enableCache?: boolean;
+  debug?: boolean;
+}
+
+export interface MixResult {
+  sum: number;
+  needsNormalization: boolean;
+  shares: number[];
+}
+
+export interface CapacityParams {
+  employees: number;
+  productiveUtilizationPct: number;
+  targetUtilizationPct: number;
+  totalAnnualPaidHours?: number;
+}
+
+export interface Capacity {
+  annualPaidHours: number;
+  annualServiceHours: number;
+  targetServiceHours: number;
+}
+
+export interface CostParams {
+  employees: number;
+  employeePay: number;
+  monthlyCosts: number;
+}
+
+export interface Costs {
+  annualFixedCosts: number;
+  annualPayroll: number;
+  totalFixedCosts: number;
+}
+
+export interface OfferingMetric {
+  name: string;
+  clients: number;
+  sessions: number;
+  revenue: number;
+  variableCosts: number;
+  margin: number;
+  marginPct: number;
+}
+
+export interface ModeResults {
+  clients: number;
+  totalSessions: number;
+  serviceHours: number;
+  capacityPct: number;
+  revenue: number;
+  variableCosts: number;
+  offeringMetrics: OfferingMetric[];
+  mixSum: number;
+  mixNormalized: boolean;
+  /** Forecast mode only. */
+  serviceHoursPerClient?: number;
+}
+
+export interface BreakEven {
+  /** Infinity when no positive contribution margin (JSON-serializes to null). */
+  breakEvenClients: number;
+  breakEvenRevenue: number;
+  contributionMarginPerClient: number;
+  contributionMarginRatio: number;
+}
+
+export interface TaxEstimate {
+  seTax: number;
+  federalTax: number;
+  quarterlyEst: number;
+  takeHome: number;
+  effectiveRate: number;
+}
+
+/** The sanitized inputs calc() derives; only present on debug results. */
+export interface Sanitization {
+  fullTimeEmployees: number;
+  partTimeEmployees: number;
+  fullTimeEmployeePay: number;
+  partTimeEmployeePay: number;
+  totalAnnualPaidHours: number;
+  totalPayroll: number;
+  employees: number;
+  employeePay: number;
+  monthlyCosts: number;
+  productiveUtilizationPct: number;
+  targetUtilizationPct: number;
+  offerings?: SanitizedOffering[];
+}
+
+export interface CalcIntermediate {
+  inputs: CalcState;
+  sanitization: Partial<Sanitization>;
+  capacity: Partial<Capacity>;
+  costs: Partial<Costs>;
+  modeResults: Partial<ModeResults>;
+  breakEven: Partial<BreakEven>;
+}
+
+/** Everything calc() returns. */
+export interface CalcResult extends Capacity, Costs, ModeResults, BreakEven, TaxEstimate {
+  mode?: Mode;
+  offerings: SanitizedOffering[];
+  income: number;
+  _intermediate?: CalcIntermediate;
+}
+
+export interface CacheStats {
+  size: number;
+  maxSize: number;
+  hitRate: number;
+  hits: number;
+  misses: number;
+  /** Formatted with toFixed(2). */
+  lastCalcMs: string;
+  totalCalcs: number;
+}

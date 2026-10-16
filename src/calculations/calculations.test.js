@@ -126,6 +126,24 @@ describe('Calculation Engine', () => {
       expect(result.revenue).toBe(0)
       expect(result.breakEvenClients).toBe(Infinity)
     })
+
+    it('should return the same keys with and without offerings (tax fields included)', () => {
+      const base = {
+        mode: 'forecast',
+        employees: 1,
+        employeePay: 0,
+        monthlyCosts: 1000,
+        productiveUtilizationPct: 80,
+        targetUtilizationPct: 100
+      }
+      const empty = calc({ ...base, offerings: [] }, { enableCache: false })
+      const full = calc({ ...base, offerings: [{ name: 'A', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 100, currentClients: 1 }] }, { enableCache: false })
+
+      expect(Object.keys(empty).sort()).toEqual(Object.keys(full).filter(k => k !== 'serviceHoursPerClient').sort())
+      for (const k of ['seTax', 'federalTax', 'quarterlyEst', 'takeHome', 'effectiveRate']) {
+        expect(empty[k]).toBe(0)
+      }
+    })
   })
 
   describe('calc - Caching', () => {
