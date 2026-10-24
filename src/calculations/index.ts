@@ -91,6 +91,7 @@ function generateCacheKey(state: CalcState) {
       sessionsPerYear: o.sessionsPerYear,
       hoursPerSession: o.hoursPerSession,
       variableCostPerSession: o.variableCostPerSession,
+      laborPctOfPrice: o.laborPctOfPrice,
       mixPct: o.mixPct,
       currentClients: o.currentClients
     }))
@@ -122,6 +123,15 @@ export function normalizeMix(offerings: Offering[]): MixResult {
 }
 
 /**
+ * Variable cost per client per year: Var $/session plus contractor pay as a
+ * % of list price. Priced off priceMonthly (list price) so a future discount
+ * model (roadmap 24a) must not change the base; the business absorbs discounts.
+ */
+function annualVariableCostPerClient(o: SanitizedOffering): number {
+  return o.sessionsPerYear * o.variableCostPerSession + (o.laborPctOfPrice / 100) * o.priceMonthly * 12;
+}
+
+/**
  * Sanitizes and validates offering data
  */
 function sanitizeOfferings(offerings: Offering[]): SanitizedOffering[] {
@@ -134,6 +144,7 @@ function sanitizeOfferings(offerings: Offering[]): SanitizedOffering[] {
       sessionsPerYear: clamp(toFinite(o.sessionsPerYear), 0, MAX_COUNT),
       hoursPerSession: clamp(toFinite(o.hoursPerSession), 0, MAX_COUNT),
       variableCostPerSession: clamp(toFinite(o.variableCostPerSession), 0, MAX_MONEY),
+      laborPctOfPrice: clamp(toFinite(o.laborPctOfPrice), 0, 100),
       mixPct: clamp(toFinite(o.mixPct), 0, 100),
       currentClients: clamp(Math.floor(toFinite(o.currentClients)), 0, MAX_COUNT),
     }))
@@ -192,7 +203,7 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
     acc + (shares[idx] || 0) * (o.priceMonthly * 12), 0);
 
   const variableCostPerClient = offerings.reduce((acc, o, idx) =>
-    acc + (shares[idx] || 0) * (o.sessionsPerYear * o.variableCostPerSession), 0);
+    acc + (shares[idx] || 0) * annualVariableCostPerClient(o), 0);
 
   const clients = serviceHoursPerClient > 0 ?
     Math.floor(capacity.targetServiceHours / serviceHoursPerClient) : 0;
@@ -210,7 +221,7 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
     const offeringClients = Math.floor(clients * share);
     const offeringSessions = offeringClients * o.sessionsPerYear;
     const offeringRevenue = offeringClients * (o.priceMonthly * 12);
-    const offeringVariableCosts = offeringSessions * o.variableCostPerSession;
+    const offeringVariableCosts = offeringClients * annualVariableCostPerClient(o);
     const offeringMargin = offeringRevenue - offeringVariableCosts;
 
     return {
@@ -252,7 +263,7 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
   offerings.forEach(o => {
     const offeringSessions = o.currentClients * o.sessionsPerYear;
     const offeringRevenue = o.currentClients * (o.priceMonthly * 12);
-    const offeringVariableCosts = offeringSessions * o.variableCostPerSession;
+    const offeringVariableCosts = o.currentClients * annualVariableCostPerClient(o);
     const offeringServiceHours = offeringSessions * o.hoursPerSession;
 
     clients += o.currentClients;
@@ -269,7 +280,7 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
   const offeringMetrics = offerings.map(o => {
     const offeringSessions = o.currentClients * o.sessionsPerYear;
     const offeringRevenue = o.currentClients * (o.priceMonthly * 12);
-    const offeringVariableCosts = offeringSessions * o.variableCostPerSession;
+    const offeringVariableCosts = o.currentClients * annualVariableCostPerClient(o);
     const offeringMargin = offeringRevenue - offeringVariableCosts;
 
     return {

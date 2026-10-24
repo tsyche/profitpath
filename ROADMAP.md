@@ -167,6 +167,12 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
    - Also has a real staleness trap: a previously-copied share URL is a frozen snapshot — editing and re-saving the scenario does *not* update URLs already shared, so an old link can silently show stale data (including stale Presentation Notes) with no indication it's out of date
    - Fix options, roughly in order of effort: (a) compress the JSON before base64 (e.g. gzip) — quick win, doesn't fix staleness; (b) server-side scenario storage with a short opaque ID in the URL (like a pastebin) — fixes both length and staleness, but needs backend infra this project has avoided so far; (c) at minimum, surface a warning in the UI that share links are point-in-time snapshots, not live views
    - Effort: ~1 hour for (a), ~4-6 hours for (b) if backend storage is acceptable
+   - 2026-10-23 trial: a 14-offering scenario produced a ~5.3 KB URL
+
+12p. ✅ **Fix: shared-link Presentation Notes never reach the notes textarea** *(found and fixed 2026-10-23; regression tests in `tests/e2e/notes.spec.ts`)*
+   - `assets/app.jsx` populated `#scenarioNotes` from `state.notes` at module load, before the URL scenario (`loadScenarioFromURL()`) or the localStorage restore ran. So the textarea rendered empty for share links *and* after any page reload, and the next keystroke saved over the stored notes. Read-only display path verified working.
+   - Fix: populate the textarea after URL/localStorage state is applied (e.g. inside `wire()`); add an e2e test that loads a `?scenario=` link with notes and asserts the textarea value
+   - Effort: ~30 min
 
 **Layout & Information Architecture** *(new category — Tim independently flagged this as "getting very busy on a single scrollable page view," agreed with while building the Sound Stage scenario)*
 
@@ -204,9 +210,10 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - A multi-pool model (or at minimum optional resource tagging per offering, with capacity computed per resource) would meaningfully improve accuracy for any facility/studio/gym-style business, not just this one
     - Effort: ~6-8 hours (meaningful capacity-model rework)
 
-21. **Contractor / per-session labor costs**
+21. ✅ **Contractor / per-session labor costs** *(shipped 2026-10-23: per-offering "Labor % of price" column, added to Var $/session; no global default yet)*
     - Staffing today is Full-time/Part-time salaried only, but studios/gyms/coaching businesses commonly pay some instructors per-session or as contractors rather than salary — the real business used to validate this session doesn't even specify on its own public site which staff are salaried vs. contracted, suggesting this is a genuinely common ambiguity, not an edge case
     - A "cost per session" or "% of session revenue" labor field (global default, optionally overridable per offering) would let the model represent gig/contractor pay, which isn't representable at all today
+    - 2026-10-23 trial confirmed the need: instructors are paid a % of the *advertised* price (business absorbs member discounts), so the % must apply to list price, not realized revenue. Workaround today is `price × %` typed into Var $/Session. Raise priority.
     - Effort: ~3-4 hours
 
 22. **Per-offering confidence tagging (Verified / Estimated / Guess) + per-offering notes**
@@ -229,6 +236,25 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - Let a business vary plan fees, included and purchased credits, credit value and expiry, service prices, member discounts, eligibility, and a customer's monthly purchase mix. Show regular spend, member spend including the plan fee, credits used or left over, effective savings percentage, and business revenue or margin side by side.
     - Make it a general what-if tool rather than a Sound Stage-specific template. The first example should expose when a headline plan saving (value of included benefits versus fee) differs from what a customer actually saves on their chosen services. Avoid counting prepaid credits as both new revenue and a discount at redemption.
     - Acceptance: a user can change the purchase mix and compare two plans with the same services; unused or expired credits and ineligible services affect the result; every displayed percentage identifies its denominator.
+    - 2026-10-23 trial: modeling membership tiers vs a punch card needed exactly this; also model breakage (expired credits = revenue with no delivery cost) and credit redemptions consuming the redeemed service's capacity and labor cost.
+
+24b. **Group / cohort offerings (seats, sessions run, fill rate)**
+    - Today staff hours scale with clients (`hoursPerSession` per client), so a group class must be faked as a fractional hour per student (2 hr ÷ 8 seats = 0.25). An under-filled class then looks cheaper to deliver than it is: the instructor still works the full 2 hours.
+    - Add an offering type with seats per session, sessions run per year, and expected fill % (Forecast) or average enrolled (Current). Staff hours and fixed per-run costs count per run; revenue and per-seat costs count per filled seat. Output break-even fill (seats needed to cover the run's cost).
+    - Motivated by the 2026-10-23 trial: seats are known capacity, fill is only known after booking — it felt like needing Current and Forecast mode at once. This item plus 24c removes that tension without a hybrid mode.
+    - Design: implement as one value of a per-offering **type** field shared with items 18 and 19 (`subscription | per-session | group | one-time`), not as a new app mode or a business-type toggle. Each row picks its shape, so mixed businesses (memberships + hourly + classes) work in one scenario; the table shows only the columns a row's type uses; industry templates just preset default types. Keeps the calc one path per type rather than forked per mode.
+    - Effort: ~4-6 hours
+
+24c. **Ranged inputs for assumptions (low / base / high)**
+    - Let any guessed input (fill %, visit frequency, client count) carry a low/base/high value and show results as a range. Pairs with item 22 (confidence tags) as the input side of item 24's range output.
+    - Covers "known capacity, unknown demand" in Current mode: real counts stay point values, guesses become ranges.
+    - Effort: ~3-4 hours on top of item 24
+
+24d. **Per-offering margin per staff hour + discount floor check**
+    - Rank offerings by contribution per delivered staff hour (price − variable cost, ÷ hours), and flag any offering whose best-case discounted price (member discount, prepaid-credit rate) falls below its per-hour delivery cost.
+    - The 2026-10-23 pricing exercise did this by hand to test whether membership/punch-card discounts still clear coach and reader payouts.
+    - Market position: optional per-offering market low / high / average (plus source and date). Show a green / yellow / red badge: green inside the range and clears the floor, yellow within ~10% of either edge or a thin floor margin, red outside the range or failing the floor. Pair the badge with a direction (▼ below market = underpriced, ▲ above = overcharging) since the fixes differ. The trial kept this table by hand and found services both at the low edge and well below market.
+    - Effort: ~2-3 hours (+~1-2 hours for market position)
 
 **Cost Modeling Rework** *(new category — Tim's read after this session: "the entire pp could use a rework around costs and money out... seems like it's mostly recurring fees and employee stuff right now")*
 
@@ -237,7 +263,8 @@ The revenue side of the app is rich: an unlimited, per-offering table with its o
 27. **Structured Expense Line Items table (the headline idea)**
     - Mirror the Service Offerings pattern on the cost side: instead of one flat "Overhead (monthly)" field, a real table of expense line items — name, category, amount, frequency (monthly/annual/one-time) — the same way offerings already have a name, price, and frequency
     - Category tags (Rent/Lease, Utilities, Insurance, Software/Subscriptions, Marketing, Equipment, Loan Payments, Professional Services, Supplies/COGS, Payment Processing, Contractor/1099, Other) would let the Outputs panel break down costs the way it already breaks down revenue by offering
-    - This single change would naturally subsume several smaller ideas below (28, 29, 30) rather than needing bespoke fields bolted on one at a time — a "Contractor/1099" category line covers item 21's per-session labor cost use case, a "Marketing" category line covers item 28 below, "Payment Processing" covers item 29, and one-time-frequency line items cover item 30 — all as category tags on one unified list rather than several separate features
+    - This single change would naturally subsume several smaller ideas below (28, 29, 30) rather than needing bespoke fields bolted on one at a time — a "Contractor/1099" category line covers fixed contractor pay (item 21's per-session % of list price is a per-offering variable cost and stays its own field), a "Marketing" category line covers item 28 below, "Payment Processing" covers item 29, and one-time-frequency line items cover item 30 — all as category tags on one unified list rather than several separate features
+    - Frequency must include **weekly**: the 2026-10-23 trial business pays some contractors a set weekly amount, which today has to be forced into annual FT/PT pay (which also adds capacity hours) or monthly Overhead
     - Effort: ~6-8 hours (this is the core architectural change the other cost items below build on — worth sequencing first)
 
 28. **Marketing spend as a real P&L cost, not just a Customer Analytics input**

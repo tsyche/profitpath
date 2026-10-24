@@ -356,6 +356,7 @@ function onTableInput(e) {
   if (!o) return;
 
   // Validate and sanitize input based on field type
+  /** @type {string | number} */
   let value = el.value;
   let validationError = null;
 
@@ -375,6 +376,8 @@ function onTableInput(e) {
     } else {
       value = parsed;
     }
+  } else if (k === 'laborPctOfPrice') {
+    value = Math.min(100, Math.max(0, safeParseNumber(value, 0)));
   } else if (k === 'sessionsPerYear') {
     const parsed = Math.floor(safeParseNumber(value, 0));
     if (parsed <= 0) {
@@ -468,6 +471,7 @@ function addOffering() {
     sessionsPerYear: 12,
     hoursPerSession: 1.0,
     variableCostPerSession: 0,
+    laborPctOfPrice: 0,
     mixPct: 0,
     currentClients: 0,
   });
@@ -629,7 +633,8 @@ function render() {
       '<td class="cell-edit group-inputs" data-label="Price / mo"><input aria-label="Price per month for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="10" value="' + (o.priceMonthly) + '" data-k="priceMonthly" data-i="' + (idx) + '" data-tooltip="Monthly billing price per client"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Sessions / yr"><input aria-label="Sessions per year for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.sessionsPerYear) + '" data-k="sessionsPerYear" data-i="' + (idx) + '" data-tooltip="How many times per year this service is delivered to each client"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Hours / session"><input aria-label="Hours per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="0.1" value="' + (o.hoursPerSession) + '" data-k="hoursPerSession" data-i="' + (idx) + '" data-tooltip="Duration of each service session in hours"/></td>' +
-      '<td class="cell-edit group-inputs group-end" data-label="Var $ / session"><input aria-label="Variable cost per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.variableCostPerSession) + '" data-k="variableCostPerSession" data-i="' + (idx) + '" data-tooltip="Cost per session (materials, supplies, delivery, etc.)"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Var $ / session"><input aria-label="Variable cost per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.variableCostPerSession) + '" data-k="variableCostPerSession" data-i="' + (idx) + '" data-tooltip="Cost per session (materials, supplies, delivery, etc.)"/></td>' +
+      '<td class="cell-edit group-inputs group-end" data-label="Labor % of price"><input aria-label="Labor percent of list price for ' + (escapeHtml(o.name)) + '" type="number" min="0" max="100" step="1" value="' + (o.laborPctOfPrice || 0) + '" data-k="laborPctOfPrice" data-i="' + (idx) + '" data-tooltip="Contractor pay as a % of list price (added to Var $ / session)"/></td>' +
       '<td class="cell-edit group-start group-mode" data-label="Mix % (forecast)" data-tooltip="Percentage of total clients using this offering (forecast mode only)">' + (mixCell) + '</td>' +
       '<td class="cell-edit group-mode group-end" data-label="Clients (current)" data-tooltip="Number of active clients for this offering (current mode only)">' + (clientsCell) + '</td>' +
       '<td class="cell-readonly group-start group-est" data-label="Est. clients"><span class="mono">' + (fmtInt(estClients)) + '</span></td>' +

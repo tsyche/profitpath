@@ -78,7 +78,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 ## How to Use
 
 1. **Set Business Parameters**: Configure employees, pay rates, overhead costs, and utilization targets
-2. **Define Services**: Add service offerings with pricing, frequency, and variable costs
+2. **Define Services**: Add service offerings with pricing, frequency, variable costs, and optional contractor pay as a % of list price
 3. **Analyze Results**: Review KPIs, charts, and break-even analysis
 4. **Save Scenarios**: Save different business configurations for comparison
 5. **Export Reports**: Generate professional reports in multiple formats

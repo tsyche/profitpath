@@ -12,6 +12,8 @@ export interface Offering {
   sessionsPerYear?: number;
   hoursPerSession?: number;
   variableCostPerSession?: number;
+  /** Contractor pay as % of list price (0-100), added to variable cost. */
+  laborPctOfPrice?: number;
   mixPct?: number;
   currentClients?: number;
 }
@@ -23,6 +25,7 @@ export interface SanitizedOffering extends Offering {
   sessionsPerYear: number;
   hoursPerSession: number;
   variableCostPerSession: number;
+  laborPctOfPrice: number;
   mixPct: number;
   currentClients: number;
 }
@@ -51,7 +54,8 @@ export interface CalcState {
 }
 
 /** An offering in app state: the UI always fills every field. */
-export type AppOffering = Required<Offering>;
+// laborPctOfPrice stays optional: older saved states and templates omit it (treated as 0)
+export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice'>> & { laborPctOfPrice?: number };
 
 /**
  * The live app `state` global. calc() input stays CalcState because it also accepts the

@@ -139,6 +139,16 @@ export function validateBusinessLogic() {
       });
     }
 
+    const laborPct = offering.laborPctOfPrice ?? 0;
+    if (laborPct < 0 || laborPct > 100) {
+      issues.push({
+        severity: 'error',
+        message: '"' + (offering.name || 'Unnamed offering') + '" labor percentage is invalid',
+        field: 'offering-' + index + '-laborPctOfPrice',
+        suggestion: 'Labor % of price must be between 0% and 100%'
+      });
+    }
+
     if (offering.mixPct < 0 || offering.mixPct > 100) {
       issues.push({
         severity: 'error',

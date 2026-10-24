@@ -81,6 +81,7 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
       sessionsPerYear: Math.floor(toFiniteNumber(o.sessionsPerYear, 12, 1, 100000)),
       hoursPerSession: toFiniteNumber(o.hoursPerSession, 1, 0.1, 10000),
       variableCostPerSession: toFiniteNumber(o.variableCostPerSession, 0, 0, 1e9),
+      laborPctOfPrice: toFiniteNumber(o.laborPctOfPrice, 0, 0, 100),
       mixPct: toFiniteNumber(o.mixPct, 0, 0, 100),
       currentClients: Math.floor(toFiniteNumber(o.currentClients, 0, 0, 1e7))
     }));
@@ -236,12 +237,12 @@ export function exportAsCSV() {
     'Capacity Utilization,' + (fmtPct1(results.capacityPct || 0)) + ',%',
     '',
     'SERVICE OFFERINGS',
-    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients',
+    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price',
   ];
 
   state.offerings.forEach((o) => {
     lines.push(
-      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients)
+      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0)
     );
   });
 
@@ -729,12 +730,12 @@ export function exportAsExcel() {
     'Target Utilization,' + fmtPct(state.targetUtilizationPct),
     '',
     'SERVICE OFFERINGS',
-    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients'
+    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients,Labor % of Price'
   ];
 
   state.offerings.forEach((o) => {
     lines.push(
-      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients}`
+      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${o.laborPctOfPrice || 0}`
     );
   });
 
@@ -775,6 +776,7 @@ export function exportAsPDF() {
       <td>${fmtMoney0(o.variableCostPerSession)}</td>
       <td>${fmtPct(o.mixPct)}</td>
       <td>${o.currentClients}</td>
+      <td>${fmtPct(o.laborPctOfPrice || 0)}</td>
     </tr>
   `).join('');
 
@@ -818,6 +820,7 @@ export function exportAsPDF() {
               <th>Variable Cost</th>
               <th>Mix %</th>
               <th>Current Clients</th>
+              <th>Labor % of Price</th>
             </tr>
           </thead>
           <tbody>
@@ -853,6 +856,7 @@ export function exportAsHTML() {
       <td>${fmtMoney0(o.variableCostPerSession)}</td>
       <td>${fmtPct(o.mixPct)}</td>
       <td>${o.currentClients}</td>
+      <td>${fmtPct(o.laborPctOfPrice || 0)}</td>
     </tr>
   `).join('');
 
@@ -899,6 +903,7 @@ export function exportAsHTML() {
           <th>Variable Cost</th>
           <th>Mix %</th>
           <th>Current Clients</th>
+          <th>Labor % of Price</th>
         </tr>
       </thead>
       <tbody>
@@ -1359,9 +1364,9 @@ targetUtilizationPct,75
 
 # Offerings
 # Add or remove rows. Mix % values should sum to 100.
-Name,Monthly Price ($),Sessions/Year,Hours/Session,Variable Cost/Session ($),Mix %,Current Clients
-Consulting,1000,12,2,100,60,0
-Support,500,24,1,50,40,0`;
+Name,Monthly Price ($),Sessions/Year,Hours/Session,Variable Cost/Session ($),Mix %,Current Clients,Labor % of Price
+Consulting,1000,12,2,100,60,0,0
+Support,500,24,1,50,40,0,0`;
 
   const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
   downloadOrShare(blob, 'profitpath-template.csv');
@@ -1427,7 +1432,9 @@ export function importFromCSV(csvText: any) {
           hoursPerSession: Math.max(0.1, parseFloat(values[3]) || 1),
           variableCostPerSession: Math.max(0, parseFloat(values[4]) || 0),
           mixPct: Math.max(0, Math.min(100, parseFloat(values[5]) || 0)),
-          currentClients: Math.max(0, Math.floor(parseFloat(values[6]) || 0))
+          currentClients: Math.max(0, Math.floor(parseFloat(values[6]) || 0)),
+          // Column 8 is optional so CSVs exported before this field still import
+          laborPctOfPrice: Math.max(0, Math.min(100, parseFloat(values[7]) || 0))
         };
 
         // Validate offering
