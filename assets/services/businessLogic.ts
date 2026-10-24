@@ -1,9 +1,8 @@
 // Business Logic
 import { uuid, clamp } from '../utils/helpers';
+import { fmtMoney0 } from '../../src/calculations/currency';
 
 // Formatting utilities
-const DEFAULT_CURRENCY = 'USD';
-const fmtMoney0 = (n: any) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
 const fmtPct1 = (n: any) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
 export function validateBusinessLogic() {

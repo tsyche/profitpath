@@ -8,18 +8,19 @@ export function getShareBase() {
   if (o === 'http://localhost' || o === 'capacitor://localhost') return PRODUCTION_URL + '/';
   return o + window.location.pathname;
 }
+import { deflateSync, inflateSync, strToU8, strFromU8 } from 'fflate';
 import { clamp } from '../utils/helpers';
 import { normalizeOfferingType } from '../../src/calculations/index';
 import { rangeCsvCells, sanitizeOfferingRange } from '../../src/calculations/ranges';
 import { marketCsvCells, sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
 import { normalizeConfidence, sanitizeNote, sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
 import { sanitizeExpenses, totalMonthlyOverhead } from '../../src/calculations/expenses';
+import { fmtMoney0, normalizeCurrency } from '../../src/calculations/currency';
 import { showToast } from './modalService';
 import { createModal } from '../components/Modal';
 import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizations, updateBreakEvenAnalysis } from './visualizationService';
 
 // Utility functions for export functionality
-const DEFAULT_CURRENCY = 'USD';
 
 // Capacitor WebView blocks <a download> — use Web Share API for files when available
 async function downloadOrShare(blob: any, filename: any) {
@@ -52,7 +53,6 @@ function loadScript(src: any) {
   });
 }
 
-const fmtMoney0 = (n: any) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
 const fmtPct1 = (n: any) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
 // Utility function to clamp values between min and max
@@ -113,6 +113,7 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
     lockMix: data.lockMix === true,
     loadedTemplate: typeof data.loadedTemplate === 'string' ? data.loadedTemplate.slice(0, 100) : null,
     notes: typeof data.notes === 'string' ? data.notes.slice(0, 2000) : '',
+    currency: normalizeCurrency(data.currency),
     expenses: sanitizeExpenses(data.expenses, uuid)
   };
 }
@@ -316,13 +317,27 @@ function updateSocialMetaTags(state: any) {
   document.head.appendChild(metaUrl);
 }
 
+// v2 links: UTF-8 JSON, deflated, as unpadded base64url (roughly 4-5x shorter than
+// the legacy percent-encode + base64 + percent-encode chain). Legacy links still decode.
+const SCENARIO_V2_PREFIX = 'v2.';
+// Untrusted input: refuse payloads no real scenario needs before inflating them
+const MAX_V2_PAYLOAD_CHARS = 20000;
+
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64UrlToBytes(b64: string): Uint8Array {
+  const bin = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+}
+
 export function encodeScenarioToURL(state: import('../../src/types').CalcState, { readonly = false } = {}): string | null {
   try {
     const serialized = JSON.stringify(state);
-    // URI-encode before btoa so non-Latin1 characters (e.g. unicode offering
-    // names) don't make btoa throw
-    const base64 = btoa(encodeURIComponent(serialized));
-    let url = getShareBase() + '?scenario=' + encodeURIComponent(base64);
+    let url = getShareBase() + '?scenario=' + SCENARIO_V2_PREFIX + bytesToBase64Url(deflateSync(strToU8(serialized), { level: 9 }));
     if (readonly) url += '&readonly=1';
     return url;
   } catch (e) {
@@ -342,6 +357,10 @@ export function decodeScenarioFromURL() {
   if (!scenarioParam) return null;
 
   try {
+    if (scenarioParam.startsWith(SCENARIO_V2_PREFIX)) {
+      if (scenarioParam.length > MAX_V2_PAYLOAD_CHARS) return null;
+      return JSON.parse(strFromU8(inflateSync(base64UrlToBytes(scenarioParam.slice(SCENARIO_V2_PREFIX.length)))));
+    }
     const decoded = atob(decodeURIComponent(scenarioParam));
     try {
       return JSON.parse(decodeURIComponent(decoded));
@@ -738,7 +757,6 @@ export function loadIndustryTemplate(templateId: any) {
 
 export function exportAsExcel() {
   const state = window.state;
-  const fmtMoney0 = (n: any) => '$' + Math.round(n).toLocaleString();
   const fmtPct = (n: any) => n.toFixed(1) + '%';
 
   const lines = [
@@ -775,7 +793,6 @@ export function exportAsExcel() {
 export function exportAsPDF() {
   // Create a printable HTML version and open print dialog
   const state = window.state;
-  const fmtMoney0 = (n: any) => '$' + Math.round(n).toLocaleString();
   const fmtPct = (n: any) => n.toFixed(1) + '%';
 
   // Capacitor WebView blocks window.open — fall through to HTML export instead
@@ -868,7 +885,6 @@ export function exportAsPDF() {
 
 export function exportAsHTML() {
   const state = window.state;
-  const fmtMoney0 = (n: any) => '$' + Math.round(n).toLocaleString();
   const fmtPct = (n: any) => n.toFixed(1) + '%';
 
   const offeringsHtml = state.offerings.map(o => `
@@ -961,7 +977,7 @@ export function exportAsFinancialReport() {
     return;
   }
 
-  const fmt = (n: any) => '$' + Math.round(n).toLocaleString();
+  const fmt = fmtMoney0;
   const fmtPct = (n: any) => (typeof n === 'number' ? n.toFixed(1) : '0.0') + '%';
   const today = new Date();
   const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -1121,7 +1137,6 @@ export function exportAsFinancialReport() {
 
 export function shareViaEmail() {
   const state = window.state;
-  const fmtMoney0 = (n: any) => '$' + Math.round(n).toLocaleString();
   const fmtPct = (n: any) => n.toFixed(1) + '%';
 
   const offeringsText = state.offerings.map(o =>
@@ -1171,12 +1186,6 @@ export function showScheduleDialog() {
     `,
     size: 'small'
   });
-}
-
-export function loadTestScenarios() {
-}
-
-export function loadSpecificTestScenario(_scenarioKey: any) {
 }
 
 export function updateValidationDisplay() {

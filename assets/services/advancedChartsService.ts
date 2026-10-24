@@ -3,8 +3,8 @@
 // SVG/HTML-string pattern as visualizationService.js (no chart library dep).
 import { escapeHtml } from './miscService';
 import { calc } from '../../src/calculations/index';
+import { fmtMoney0 } from '../../src/calculations/currency';
 
-const fmtMoney0 = (n: any) => Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 const fmtInt = (n: any) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 
 // ============================================================================

@@ -8,7 +8,7 @@
 
 Client-side profitability and capacity simulator for recurring service businesses. Provides real-time calculations, scenario management, and advanced export capabilities with progressive disclosure UI.
 
-**Live**: [profitpath.tsyche.workers.dev](https://profitpath.tsyche.workers.dev) (Cloudflare Workers, deployed from the [GitLab mirror](https://gitlab.com/tsyche/profitpath)) · [tsyche.github.io/profitpath](https://tsyche.github.io/profitpath/) (GitHub Pages — currently stale; its deploy workflow hasn't triggered since 2026-07-23, see Git Workflow note in [AGENTS.md](AGENTS.md))
+**Live**: [profitpath.tsyche.workers.dev](https://profitpath.tsyche.workers.dev) (Cloudflare Workers, deployed from the [GitLab mirror](https://gitlab.com/tsyche/profitpath)) · [tsyche.github.io/profitpath](https://tsyche.github.io/profitpath/) (GitHub Pages)
 
 ## What's included
 
@@ -62,11 +62,7 @@ For full list of available commands, run `just --list`.
 ### Testing scenarios
 
 Use the Templates menu to load real, working `INDUSTRY_TEMPLATES` configs
-(consulting, cleaning, landscaping, fitness, photography, handyman). A
-`TEST_SCENARIOS` object with 2 entries (`basic`, `freelancer`) also exists in
-`assets/app.jsx` for URL-based loading, but the `?loadTestScenarios` /
-`?testScenario=name` loader functions are currently unimplemented stubs — see
-`AGENTS.md`'s Testing Scenarios section for details.
+(consulting, cleaning, landscaping, fitness, photography, handyman).
 
 ## Documentation
 

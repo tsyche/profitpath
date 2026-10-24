@@ -1,8 +1,7 @@
 import { escapeHtml } from "./miscService";
+import { fmtMoney0, fmtMoneyK } from '../../src/calculations/currency';
 
 // Import formatting utilities
-const DEFAULT_CURRENCY = 'USD';
-const fmtMoney0 = (n: any) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
 const fmtPct1 = (n: any) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 const fmtInt = (n: any) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 
@@ -200,7 +199,7 @@ export function createProfitWaterfall(metrics: any) {
         ? barY + barHeight + 7  // below the negative bar
         : barY - 2;             // above the positive bar
 
-      const shortValue = item.value > 0 ? '$' + Math.round(item.value / 1000) + 'k' : '$' + Math.round(item.value / 1000) + 'k';
+      const shortValue = fmtMoneyK(item.value);
       barHTML += '<text x="' + (x + barWidth / 2) + '" y="' + (valueLabelY) + '" text-anchor="middle" font-size="6" fill="var(--text)" font-weight="600">' + (shortValue) + '</text>';
 
       // Connector line to next bar (except after last bar)

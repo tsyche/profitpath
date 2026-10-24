@@ -2,6 +2,8 @@
 // JS files reference these through JSDoc: @param {import('../types').Offering} o
 // (path relative to the importing file). Calculation shapes mirror src/calculations/index.ts
 
+import type { CurrencyCode } from './calculations/currency';
+
 export type Mode = 'forecast' | 'current';
 
 /** Only types with behavior live here; per-session/one-time arrive with roadmap items 18/19. */
@@ -108,6 +110,7 @@ export interface CalcState {
   lockMix?: boolean;
   loadedTemplate?: string | null;
   notes?: string;
+  currency?: string;
 }
 
 /** An offering in app state: the UI always fills every field. */
@@ -330,5 +333,6 @@ export interface SanitizedScenarioState extends CalcState {
   lockMix: boolean;
   loadedTemplate: string | null;
   notes: string;
+  currency: CurrencyCode;
   expenses: Expense[];
 }

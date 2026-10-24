@@ -25,9 +25,7 @@ details.
 
 CI is designed to auto-bump the patch version on every push to `main`
 (commits back with `[skip ci]`), so the remote is normally 1 commit ahead.
-**Note:** GitHub Actions hasn't been triggering on push since 2026-07-23
-(support case open on a flagged GitHub account) — auto-bump commits aren't
-currently landing. Still worth rebasing out of habit for when it resumes.
+Actions was down 2026-07-23 to early September (flagged account) but works again.
 Always rebase before pushing:
 
 ```bash

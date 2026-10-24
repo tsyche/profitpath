@@ -16,27 +16,13 @@ import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL, isReadOnly
 import { uuid, clamp } from './utils/helpers';
 import { showToast } from './services/modalService';
 import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui';
+import { fmtMoney0, normalizeCurrency } from '../src/calculations/currency';
 import { optimizeMix } from '../src/insights/mixOptimizer';
 import { renderSensitivityHeatmap, renderScorecardRadar, renderClientFunnel } from './services/advancedChartsService';
 
 // Untyped views for the (...args) forwarding wrappers below; real signatures are checked at direct call sites.
 const miscAny = /** @type {any} */ (misc);
 const businessLogicAny = /** @type {any} */ (businessLogic);
-
-// Test scenarios for development
-const TEST_SCENARIOS = {
-  'basic': {
-    name: 'Basic Service',
-    offerings: [{ name: 'Basic Service', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 2, variableCostPerSession: 20, mixPct: 100, currentClients: 5 }]
-  },
-  'freelancer': {
-    name: 'Freelancer',
-    offerings: [
-      { name: 'Consulting', priceMonthly: 200, sessionsPerYear: 24, hoursPerSession: 2, variableCostPerSession: 50, mixPct: 60, currentClients: 3 },
-      { name: 'Support', priceMonthly: 150, sessionsPerYear: 48, hoursPerSession: 1, variableCostPerSession: 25, mixPct: 40, currentClients: 8 }
-    ]
-  }
-};
 
 // wrapper around miscService helper to avoid ReferenceErrors in test env
 const restoreScheduling = (...args) => (misc && typeof misc.restoreScheduling === 'function') ? miscAny.restoreScheduling(...args) : undefined;
@@ -196,10 +182,7 @@ const showEmbedCode = (...args) => (misc && typeof misc.showEmbedCode === 'funct
 const showScheduleDialog = (...args) => (misc && typeof misc.showScheduleDialog === 'function') ? miscAny.showScheduleDialog(...args) : undefined;
 const exportAsFinancialReport = (...args) => (misc && typeof misc.exportAsFinancialReport === 'function') ? miscAny.exportAsFinancialReport(...args) : undefined;
 const shareScenario = (...args) => (misc && typeof misc.shareScenario === 'function') ? miscAny.shareScenario(...args) : undefined;
-const loadTestScenarios = (...args) => (misc && typeof misc.loadTestScenarios === 'function') ? miscAny.loadTestScenarios(...args) : undefined;
-const loadSpecificTestScenario = (...args) => (misc && typeof misc.loadSpecificTestScenario === 'function') ? miscAny.loadSpecificTestScenario(...args) : undefined;
 // Use a function to avoid initialization issues
-const getTestScenarios = () => (typeof TEST_SCENARIOS !== 'undefined' ? TEST_SCENARIOS : {});
 // Make utility functions globally available after they're defined
 // Use a function to ensure assignment happens after module is loaded
 const assignGlobalFunctions = () => {
@@ -241,9 +224,7 @@ const updateRichVisualizations = (...args) => (misc && typeof misc.updateRichVis
 // Utility functions
 
 // Settings and UI function wrappers
-const DEFAULT_CURRENCY = 'USD';
 const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
-const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }).format(n);
 const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
 /** @type {import('../src/types').AppState} */
@@ -261,6 +242,7 @@ const state = {
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings
   loadedTemplate: null, // Track which template was loaded (null if custom scenario)
   notes: '', // Presentation notes — embedded in shared URLs for context
+  currency: 'USD', // display currency for this scenario (never affects calculations)
 };
 
 // Undo/Redo history stacks
@@ -713,6 +695,11 @@ function addOffering() {
   render();
 }
 
+function syncCurrencySelect() {
+  const el = $('#currencySelect');
+  if (el) el.value = normalizeCurrency(state.currency);
+}
+
 function resetDefaults() {
   state.offerings = businessLogic.defaultOfferings();
   state.fullTimeEmployees = 1;
@@ -726,6 +713,7 @@ function resetDefaults() {
   state.mode = 'forecast';
   state.lockMix = false;
   state.loadedTemplate = null;
+  state.currency = 'USD';
   localStorage.removeItem('profitpath-state');
   render();
 }
@@ -749,6 +737,7 @@ function updateTemplateBadge() {
 }
 
 function render() {
+  syncCurrencySelect();
   const focus = captureTableFocus('offeringsTable');
 
   let metrics;
@@ -1011,6 +1000,8 @@ function updateBreakEvenBar(cardEl, clients, beClients) {
 }
 
 function updateOutputs(metrics) {
+  // Header chips and the glance modal share these numbers; in-place edits (typing in the table) skip render()
+  updateKeyMetrics();
   try {
     // Cache DOM elements to avoid repeated queries
     const kpiClients = $('#kpiClients');
@@ -1047,7 +1038,7 @@ function updateOutputs(metrics) {
 
     // Break-even analysis
     const breakEvenClients = Number.isFinite(metrics.breakEvenClients) ? fmtInt(metrics.breakEvenClients) : '∞';
-    const breakEvenRevenue = Number.isFinite(metrics.breakEvenRevenue) ? fmtMoney0(metrics.breakEvenRevenue) : '$∞';
+    const breakEvenRevenue = Number.isFinite(metrics.breakEvenRevenue) ? fmtMoney0(metrics.breakEvenRevenue) : fmtMoney0(0).replace(/[\d\s.,]/g, '') + '∞';
     const contributionMargin = fmtMoney0(metrics.contributionMarginPerClient);
     const income = fmtMoney0(metrics.income);
 
@@ -1543,6 +1534,18 @@ document.querySelectorAll('.export-option').forEach(option => {
 {
   const btn = $('#shareBtn');
   if (btn) btn.addEventListener('click', shareScenario);
+}
+
+// Wire the currency selector (per-scenario display currency)
+{
+  const currencyEl = $('#currencySelect');
+  if (currencyEl) {
+    currencyEl.addEventListener('change', () => {
+      state.currency = normalizeCurrency(currencyEl.value);
+      persistState();
+      render();
+    });
+  }
 }
 
 // Wire presentation notes textarea
@@ -2272,15 +2275,6 @@ if (!loadedFromURL && typeof misc.loadState === 'function' && typeof misc.saniti
   if (sanitizedPersisted) Object.assign(state, sanitizedPersisted);
 }
 
-// Check for test scenario loading
-if (typeof loadTestScenarios === 'function') loadTestScenarios();
-if (typeof loadSpecificTestScenario === 'function') {
-  const testScenarios = getTestScenarios();
-  if (Object.keys(testScenarios).length > 0) {
-    loadSpecificTestScenario(Object.keys(testScenarios).find(key => new URLSearchParams(window.location.search).get('testScenario') === key));
-  }
-}
-
 // Check for shared comparison link
 const compareStatesParam = new URLSearchParams(window.location.search).get('compareStates');
 if (compareStatesParam) {
@@ -2348,6 +2342,7 @@ function wire() {
   // Fill notes now that URL/localStorage state has been applied
   const notesInput = $('#scenarioNotes');
   if (notesInput) notesInput.value = state.notes || '';
+  syncCurrencySelect();
 
   // Call render in test environment to ensure calculations run
   if (typeof render === 'function') {

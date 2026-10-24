@@ -7,7 +7,7 @@ test.describe('KPI & section header visual polish', () => {
     await page.addInitScript(() => {
       try { localStorage.setItem('onboardingCompleted', 'true'); } catch { /* ignore */ }
     });
-    await page.goto('/?testScenario=multi-service');
+    await page.goto('/');
     await page.waitForTimeout(300);
   });
 

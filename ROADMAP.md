@@ -51,6 +51,10 @@ See README.md for setup and development instructions.
 
 **Code Quality**
 
+12q. ✅ **`#decimalPrecisionSelect` in Settings does nothing** *(SHIPPED 2026-10-24: removed the dead control; money is shown in whole units)* *(new — found while fixing 12e; same dead-control pattern)*
+   - No JS reads the select (`index.html` only), and every money value is formatted at 0 decimals regardless of the choice. Either wire it into `formatMoney0` (scenario-level or global setting) or remove the control
+   - Effort: ~1 hour
+
 TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/plans/typescript-migration.md](docs/plans/typescript-migration.md).
 
 0. ✅ ~~Lint Warning Cleanup~~ — Eliminated all 90 source-file warnings (no-unused-vars, no-console) plus 50 test-file warnings via ESLint override. Zero warnings, zero errors.
@@ -94,7 +98,7 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
 
 **Cleanup / Small Wins**
 
-12b. **Fix or remove the dead `?loadTestScenarios` / `?testScenario=name` feature** *(new — found during doc audit)*
+12b. ✅ **Remove the dead `?loadTestScenarios` / `?testScenario=name` feature** *(SHIPPED 2026-10-24: deleted the stubs, `TEST_SCENARIOS` and the call sites; docs updated)* *(new — found during doc audit)*
    - `loadTestScenarios()` and `loadSpecificTestScenario()` in `assets/services/miscService.js` are empty no-op stubs; `TEST_SCENARIOS` in `assets/app.jsx` only has 2 entries (`basic`, `freelancer`), not the 9 previously documented
    - Either implement real named scenarios or delete the dead code path (it's called unconditionally on load per `assets/app.jsx`)
    - Effort: ~1-2 hours
@@ -108,11 +112,10 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
    - Consider a single "Advisor" tab/section that surfaces the top insight/suggestion from each, with links to expand the full panel
    - Effort: ~3-4 hours
 
-12e. **Fix: export functions ignore the user's selected currency** *(new — found during roadmap audit, real correctness bug)*
-   - Currency is genuinely user-selectable (USD/EUR/GBP/CAD/AUD via `#currencySelect` in Settings, backed by `formatCurrency()` in `src/localization/index.js`), but `exportAsExcel`, `exportAsPDF`, `exportAsHTML`, and `shareViaEmail` in `assets/services/miscService.js` each declare their own local `fmtMoney0` that hardcodes a `'$'` prefix instead of reusing the locale-aware formatter — a user on EUR/GBP/CAD/AUD sees the correct symbol in the app but a hardcoded `$` in every exported report
-   - Fix: replace the 5 duplicated local `fmtMoney0` definitions with the shared `formatCurrency()` (or the existing `Intl.NumberFormat`-based one at line 51 of the same file)
-   - Small fix, but real user-facing incorrectness for anyone not on USD — worth doing sooner than its size suggests
-   - Effort: ~1 hour
+12e. ✅ **Fix: export functions ignore the user's selected currency** *(SHIPPED 2026-10-24; tests in `src/calculations/currency.test.ts` and `tests/e2e/currency.spec.ts`)*
+   - The original diagnosis was wrong: `#currencySelect` was a dead control (no JS read it) and the app UI hardcoded USD too, so exports were not the only offender
+   - Now `state.currency` (USD/EUR/GBP/CAD/AUD, per scenario, allowlisted in `sanitizeScenarioState`, persisted via localStorage and share URLs) drives one shared `fmtMoney0` in `src/calculations/currency.ts`; the 9 duplicate formatters (app, services, 4 exports) and the unused `src/localization/` were removed
+   - Left out: tax report amounts are still US-tax figures shown in the scenario currency; `#decimalPrecisionSelect` is also dead (see 12q)
 
 12f. **Surface the app's own version in the UI** *(new — motivated by this session's Obtainium/versionCode debugging)*
    - Nothing in the UI currently shows what version is running — not in Settings, not in the debug panel, nowhere (`grep` for version display in `assets/app.jsx`/`index.html` returns nothing)
@@ -126,13 +129,13 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
    - Fix: either leave a genuine empty state (with an "Add your first offering" prompt) or show a confirmation before the reset-to-demo-data path fires
    - Effort: ~1 hour
 
-12h. **Bug: Customer Analytics LTV shows $0 even with a fully populated revenue model** *(new — found trialing a real business)*
+12h. ✅ **Bug: Customer Analytics LTV shows $0 even with a fully populated revenue model** *(SHIPPED 2026-10-24: `calculateLTV` read `priceMonthly` from per-offering metrics that never carried it; offering metrics now expose `contributionPerClientMonthly` and LTV uses it; tests in `src/analytics/customer-analytics.test.ts`)* *(new — found trialing a real business)*
    - With Avg Customer Lifespan set to 24 months and a 12-offering scenario computing a real $1,026/client contribution margin, the Customer Analytics panel still showed `LTV: $0` (and consequently `LTV:CAC: 0.00:1`, flagged "Critical: business model is unsustainable")
    - CAC computed correctly from Marketing Budget ÷ New Customers ($1000/5 = $200), so the assumption inputs *are* wired up — LTV specifically looks disconnected from the actual per-client revenue/contribution-margin numbers the rest of the app already computes
    - Worth checking whether LTV is reading from real offering revenue at all, or stuck on a stale/zero source value
    - Effort: unknown until root-caused; likely small once found (~1-2 hours)
 
-12i. **Sticky header KPI totals lagged the Outputs panel after a batch of edits** *(new — found trialing a real business; may be automation-specific, flag with lower confidence)*
+12i. ✅ **Sticky header KPI totals lagged the Outputs panel after a batch of edits** *(SHIPPED 2026-10-24: real bug, not automation-only. `onTableInput` refreshed Outputs but not the header chips, so any typed edit left them stale until the next full render; `updateOutputs` now refreshes them; test `tests/e2e/header-sync.spec.ts`)* *(new — found trialing a real business; may be automation-specific, flag with lower confidence)*
    - After programmatically filling ~12 offerings' worth of fields in quick succession, the top sticky bar (Revenue/Net Income/Utilization) kept showing stale pre-edit numbers while the Outputs panel below had already recomputed correctly — required an unrelated UI interaction (closing an unrelated modal) before the header repainted
    - This was hit via browser automation (`form_input`-style programmatic value-setting) rather than a human clicking through the UI one field at a time, so it's possible this doesn't reproduce with normal typing — but worth a quick check on whether the header subscribes to the same state/store as Outputs, since a real desync there would also affect fast manual edits (e.g. CSV import, paste)
    - Effort: ~30-60 minutes to check, more if it's a real state-subscription bug
@@ -156,13 +159,13 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
    - The Scenarios modal has Save/Load/Delete/Compare but no clone — wanted this to keep one scenario as a "fill in as real data arrives" baseline and branch an illustrative/aspirational variant without re-entering all 12 offerings by hand
    - Effort: ~1 hour
 
-12n. **Saving a scenario under an existing name silently creates a duplicate instead of overwriting** *(new — found trialing a real business, hit immediately after 12m)*
+12n. ✅ **Saving a scenario under an existing name silently creates a duplicate instead of overwriting** *(SHIPPED 2026-10-24: same name, ignoring case, now updates in place keeping id and createdAt; test `tests/e2e/scenario-save.spec.ts`)* *(new — found trialing a real business, hit immediately after 12m)*
    - Edited Presentation Notes on an already-saved scenario, then saved again under the exact same name expecting an update-in-place — instead got two entries with identical names in "Load Saved Scenarios" (only distinguishable by timestamp), and had to manually identify and delete the stale one
    - The "Confirm Save" dialog text ("Save current configuration as 'X'? This will save your current calculations and settings.") reads like it's describing an update, not a duplicate-creation — the actual behavior doesn't match that framing
    - Fix: detect an existing scenario with the same name and either overwrite it or explicitly ask "a scenario with this name already exists — overwrite or save as a new copy?"
    - Effort: ~1 hour
 
-12o. **Share URLs are absurdly long** *(new — found trialing a real business; Tim's reaction on seeing one: "lol")*
+12o. ✅ **Share URLs are absurdly long** *(PARTLY SHIPPED 2026-10-24: v2 links are deflated + base64url via `fflate`, about 4-5x shorter, legacy links still decode; staleness of old links and a server-side short ID remain open)* *(new — found trialing a real business; Tim's reaction on seeing one: "lol")*
    - The Share feature encodes the entire scenario JSON (every offering's full field set, plus the full Presentation Notes text) as a base64 blob in a `?scenario=` query param — a 12-offering scenario with a few paragraphs of notes produced a URL several thousand characters long, unusable in most contexts (chat apps, SMS, some URL-length-limited systems) and unpleasant to paste anywhere
    - Also has a real staleness trap: a previously-copied share URL is a frozen snapshot — editing and re-saving the scenario does *not* update URLs already shared, so an old link can silently show stale data (including stale Presentation Notes) with no indication it's out of date
    - Fix options, roughly in order of effort: (a) compress the JSON before base64 (e.g. gzip) — quick win, doesn't fix staleness; (b) server-side scenario storage with a short opaque ID in the URL (like a pastebin) — fixes both length and staleness, but needs backend infra this project has avoided so far; (c) at minimum, surface a warning in the UI that share links are point-in-time snapshots, not live views
@@ -341,7 +344,7 @@ Privacy-first freemium model planned post-launch. The app will remain fully free
   - Animated KPI Counters shipped; AI Insights Engine & Reverse Calculator calc logic shipped but **not yet wired to any UI** — see item 4b in the backlog
   - GoatCounter analytics + APK release pipeline hardened: build-time platform stamping (web vs APK), real `versionCode`/`versionName` on every build, auto-generated release notes
   - Scroll lock reference-counting leaks fixed across 3 sites (modal double-open, analytics↔advanced dashboard transition); dead logo link fixed
-- **Next priorities**: Wire up Insights Engine & Reverse Calculator UI → Guided "What If?" Wizard → Industry Benchmarks (see Recommended Next 3 above). Also worth a quick pass soon despite being small: the export-currency bug (item 12e) is a real correctness issue for any non-USD user.
+- **Next priorities**: Wire up Insights Engine & Reverse Calculator UI → Guided "What If?" Wizard → Industry Benchmarks (see Recommended Next 3 above).
 - **Strategic positioning**: Core financial-modeling + export + performance + advanced-analytics foundation is complete, and the release/distribution pipeline (web + APK) is now solid after this round of hardening. Focus shifts back to closing the gap between built-but-unwired features and actual UI access, then onboarding polish (wizard) and differentiation (benchmarks). Mobile app launch remains blocked on macOS. Enterprise features deferred until market demand validates investment.
 - **Known debt**: Capacitor stuck at v5.7.8 due to Xcode 14.2 / macOS Monterey — 5 high-severity tar vulnerabilities in @capacitor/cli will resolve when Capacitor v8 upgrade is unblocked by macOS upgrade.
 - **Blocked major bumps** (ignored in `.github/dependabot.yml`; 2026-09-25): vitest/@vitest/ui 5 fails 11 unit tests; jsdom 30, jest-dom 7 and typescript 7 untried. Also note `@capacitor/cli` is ^8 while `@capacitor/core` and the platform packages are ^5 — a pre-existing mismatch to resolve with the Capacitor upgrade. Remove each ignore once fixed.
