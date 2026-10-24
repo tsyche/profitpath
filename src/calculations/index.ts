@@ -159,6 +159,18 @@ function annualStaffHoursPerClient(o: SanitizedOffering): number {
   return o.type === 'group' ? perClient / (o.seats * (o.fillPct / 100)) : perClient;
 }
 
+/** Per-client unit economics, independent of how many clients there are. */
+function unitEconomics(o: SanitizedOffering): { marginPerHour: number; maxDiscountPct: number } {
+  const revenue = o.priceMonthly * 12;
+  const contribution = revenue - annualVariableCostPerClient(o);
+  const hours = annualStaffHoursPerClient(o);
+  return {
+    marginPerHour: hours > 0 ? contribution / hours : 0,
+    // Deepest discount before delivery costs eat the whole price
+    maxDiscountPct: revenue > 0 ? Math.max(0, (contribution / revenue) * 100) : 0
+  };
+}
+
 /**
  * Current-mode staff hours: a group needs ceil(enrolled/seats) runs, each costing
  * sessions*hours, so hours step with cohorts instead of scaling with enrollment.
@@ -271,7 +283,8 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
       revenue: offeringRevenue,
       variableCosts: offeringVariableCosts,
       margin: offeringMargin,
-      marginPct: offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0
+      marginPct: offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0,
+      ...unitEconomics(o)
     };
   });
 
@@ -330,7 +343,8 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
       revenue: offeringRevenue,
       variableCosts: offeringVariableCosts,
       margin: offeringMargin,
-      marginPct: offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0
+      marginPct: offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0,
+      ...unitEconomics(o)
     };
   });
 

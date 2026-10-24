@@ -1,0 +1,68 @@
+import { describe, it, expect, beforeEach } from 'vitest'
+import { calc, clearCalculationCache } from './index'
+import { rankOfferings } from './offeringRanking'
+
+// Roadmap 24d: contribution per staff hour and the deepest discount an offering survives.
+const base = {
+  mode: 'current',
+  employees: 2,
+  employeePay: 50000,
+  monthlyCosts: 1000,
+  productiveUtilizationPct: 80,
+  targetUtilizationPct: 100
+}
+const sub = {
+  name: 'Coaching',
+  priceMonthly: 100,
+  sessionsPerYear: 12,
+  hoursPerSession: 1,
+  variableCostPerSession: 10,
+  mixPct: 100,
+  currentClients: 0
+}
+const metric = (o: object) => calc({ ...base, offerings: [{ ...sub, ...o }] } as any).offeringMetrics[0] as any
+
+describe('marginPerHour and maxDiscountPct', () => {
+  beforeEach(() => clearCalculationCache())
+
+  it('subscription: (price*12 - cost) / staff hours per client, even with zero clients', () => {
+    const m = metric({})
+    expect(m.marginPerHour).toBeCloseTo(90) // (1200 - 120) / 12h
+    expect(m.maxDiscountPct).toBeCloseTo(90)
+  })
+
+  it('labor % of price counts as cost', () => {
+    const m = metric({ laborPctOfPrice: 50, variableCostPerSession: 0 })
+    expect(m.maxDiscountPct).toBeCloseTo(50)
+    expect(m.marginPerHour).toBeCloseTo(50) // 600 / 12h
+  })
+
+  it('group: under-filled class spreads the same hours over fewer seats', () => {
+    const full = metric({ type: 'group', seats: 8, fillPct: 100 })
+    const half = metric({ type: 'group', seats: 8, fillPct: 50 })
+    expect(half.marginPerHour).toBeCloseTo(full.marginPerHour / 2)
+  })
+
+  it('cost above price: negative per hour, zero discount headroom', () => {
+    const m = metric({ priceMonthly: 10, variableCostPerSession: 50 })
+    expect(m.marginPerHour).toBeLessThan(0)
+    expect(m.maxDiscountPct).toBe(0)
+  })
+
+  it('zero price gives zero headroom, not NaN', () => {
+    const m = metric({ priceMonthly: 0 })
+    expect(Number.isFinite(m.marginPerHour)).toBe(true)
+    expect(m.maxDiscountPct).toBe(0)
+  })
+})
+
+describe('rankOfferings', () => {
+  const m = (name: string, marginPerHour: number, maxDiscountPct: number) => ({ name, marginPerHour, maxDiscountPct }) as any
+
+  it('sorts by margin per hour and flags headroom', () => {
+    const rows = rankOfferings([m('A', 10, 5), m('B', 90, 90), m('C', -5, 0), m('D', 40, 15)])
+    expect(rows.map((r) => [r.name, r.status])).toEqual([
+      ['B', 'ok'], ['D', 'ok'], ['A', 'thin'], ['C', 'loss'],
+    ])
+  })
+})

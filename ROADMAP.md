@@ -250,7 +250,7 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - Covers "known capacity, unknown demand" in Current mode: real counts stay point values, guesses become ranges.
     - Effort: ~3-4 hours on top of item 24
 
-24d. **Per-offering margin per staff hour + discount floor check**
+24d. **Per-offering margin per staff hour + discount floor check** *(PARTIAL, 2026-10-23: Outputs table ranks offerings by profit per staff hour with max-discount headroom and an OK / Thin (<15%) / Below cost flag; remaining: per-offering named discounts (member, prepaid credit) and market low/high/avg position badges)*
     - Rank offerings by contribution per delivered staff hour (price − variable cost, ÷ hours), and flag any offering whose best-case discounted price (member discount, prepaid-credit rate) falls below its per-hour delivery cost.
     - The 2026-10-23 pricing exercise did this by hand to test whether membership/punch-card discounts still clear coach and reader payouts.
     - Market position: optional per-offering market low / high / average (plus source and date). Show a green / yellow / red badge: green inside the range and clears the floor, yellow within ~10% of either edge or a thin floor margin, red outside the range or failing the floor. Pair the badge with a direction (▼ below market = underpriced, ▲ above = overcharging) since the fixes differ. The trial kept this table by hand and found services both at the low edge and well below market.

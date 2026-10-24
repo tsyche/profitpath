@@ -48,6 +48,7 @@ src/
 ├── analytics/          # Analytics, feedback, and dashboard modules
 ├── calculations/       # Modular calculation engine
 │   ├── index.ts          # Core calculation engine with caching
+│   ├── offeringRanking.ts # Profit-per-staff-hour ranking and discount-floor status
 │   └── expenses.ts       # Expense line items: categories, frequencies, sanitizer, annualization, cost-by-category breakdown
 ├── insights/           # AI/rules-based insights, reverse calculator, mix optimizer
 │   ├── insightsEngine.js   # Rules-based profitability insights
@@ -208,7 +209,7 @@ landscaping, fitness, photography, and handyman.
 
 ### Testing Strategy
 
-#### Test Coverage (505 unit tests across 47 files — 504 passing, 1 skipped — plus 290 Playwright e2e tests across 18 files, chromium + firefox)
+#### Test Coverage (511 unit tests across 48 files — 510 passing, 1 skipped — plus 292 Playwright e2e tests across 19 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

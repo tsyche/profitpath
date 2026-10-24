@@ -159,6 +159,10 @@ export interface OfferingMetric {
   variableCosts: number;
   margin: number;
   marginPct: number;
+  /** Contribution per delivered staff hour, per client basis (independent of client count). */
+  marginPerHour: number;
+  /** Deepest discount (% of price) before delivery costs exceed revenue. */
+  maxDiscountPct: number;
 }
 
 export interface ModeResults {

@@ -1,4 +1,5 @@
 import { calc, getCacheStats, normalizeOfferingType } from '../src/calculations/index';
+import { rankOfferings } from '../src/calculations/offeringRanking';
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
@@ -471,6 +472,20 @@ function renderCostBreakdown() {
   body.innerHTML = rows.map(r => '<tr><td>' + escapeHtml(r.label) + '</td><td class="mono">' + fmtMoney0(r.annual) + '</td><td class="mono">' + fmtPct1(r.pct) + '</td></tr>').join('');
 }
 
+const FLOOR_LABELS = { ok: 'OK', thin: 'Thin', loss: 'Below cost' };
+const FLOOR_COLORS = { ok: 'var(--good)', thin: 'var(--warn)', loss: 'var(--bad)' };
+
+/** @param {any} metrics */
+function renderOfferingRanking(metrics) {
+  const wrap = $('#offeringRanking');
+  const body = $('#offeringRankingBody');
+  if (!wrap || !body) return;
+  const rows = rankOfferings(metrics?.offeringMetrics || []);
+  wrap.hidden = rows.length === 0;
+  body.innerHTML = rows.map(r => '<tr><td>' + escapeHtml(r.name) + '</td><td class="mono">' + fmtMoney0(r.marginPerHour) + '/hr</td><td class="mono">' + fmtPct1(r.maxDiscountPct) +
+    '</td><td data-status="' + r.status + '" style="color:' + FLOOR_COLORS[r.status] + '">' + FLOOR_LABELS[r.status] + '</td></tr>').join('');
+}
+
 function renderExpenses() {
   const tbody = $('#expensesBody');
   if (!tbody) return;
@@ -808,6 +823,7 @@ function render() {
   setKpi('kpiRevenue', fmtMoney0(metrics.revenue));
   setKpi('kpiFixedCosts', fmtMoney0(metrics.annualFixedCosts));
   renderCostBreakdown();
+  renderOfferingRanking(metrics);
   setKpi('kpiPayroll', fmtMoney0(metrics.annualPayroll));
   setKpi('kpiVariableCosts', fmtMoney0(metrics.variableCosts));
   setKpi('kpiBreakEvenClients', fmtInt(metrics.breakEvenClients));
@@ -888,6 +904,7 @@ function updateOutputs(metrics) {
     if (kpiRevenue) kpiRevenue.textContent = fmtMoney0(metrics.revenue);
     if (kpiFixedCosts) kpiFixedCosts.textContent = fmtMoney0(metrics.annualFixedCosts);
     renderCostBreakdown();
+    renderOfferingRanking(metrics);
     if (kpiPayroll) kpiPayroll.textContent = fmtMoney0(metrics.annualPayroll);
     if (kpiVariableCosts) kpiVariableCosts.textContent = fmtMoney0(metrics.variableCosts);
 
