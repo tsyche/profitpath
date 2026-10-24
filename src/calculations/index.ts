@@ -94,6 +94,8 @@ function generateCacheKey(state: CalcState) {
       variableCostPerSession: o.variableCostPerSession,
       laborPctOfPrice: o.laborPctOfPrice,
       type: o.type,
+      seats: o.seats,
+      fillPct: o.fillPct,
       mixPct: o.mixPct,
       currentClients: o.currentClients
     }))
@@ -140,6 +142,30 @@ export function normalizeOfferingType(v: unknown): OfferingType {
   return OFFERING_TYPES.includes(v as OfferingType) ? (v as OfferingType) : 'subscription';
 }
 
+/** Absent or non-numeric input takes the default; numeric input is clamped by the caller. */
+function finiteOr(v: unknown, fallback: number): number {
+  const n = typeof v === 'string' && v.trim() !== '' ? Number(v) : v;
+  return typeof n === 'number' && Number.isFinite(n) ? n : fallback;
+}
+
+/**
+ * Forecast staff hours per client per year. A group run costs the same staff
+ * time however full it is, so each client carries sessions*hours / filled seats.
+ */
+function annualStaffHoursPerClient(o: SanitizedOffering): number {
+  const perClient = o.sessionsPerYear * o.hoursPerSession;
+  return o.type === 'group' ? perClient / (o.seats * (o.fillPct / 100)) : perClient;
+}
+
+/**
+ * Current-mode staff hours: a group needs ceil(enrolled/seats) runs, each costing
+ * sessions*hours, so hours step with cohorts instead of scaling with enrollment.
+ */
+function currentStaffHours(o: SanitizedOffering): number {
+  const perRun = o.sessionsPerYear * o.hoursPerSession;
+  return o.type === 'group' ? Math.ceil(o.currentClients / o.seats) * perRun : o.currentClients * perRun;
+}
+
 /**
  * Sanitizes and validates offering data
  */
@@ -155,6 +181,8 @@ function sanitizeOfferings(offerings: Offering[]): SanitizedOffering[] {
       variableCostPerSession: clamp(toFinite(o.variableCostPerSession), 0, MAX_MONEY),
       laborPctOfPrice: clamp(toFinite(o.laborPctOfPrice), 0, 100),
       type: normalizeOfferingType(o.type),
+      seats: Math.floor(clamp(finiteOr(o.seats, 1), 1, MAX_COUNT)),
+      fillPct: clamp(finiteOr(o.fillPct, 100), 1, 100),
       mixPct: clamp(toFinite(o.mixPct), 0, 100),
       currentClients: clamp(Math.floor(toFinite(o.currentClients)), 0, MAX_COUNT),
     }))
@@ -203,7 +231,7 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
   // Per-customer expectations (weighted by mix shares)
   const serviceHoursPerClient = offerings.reduce((acc, o, idx) => {
     const share = shares[idx] || 0;
-    return acc + share * o.sessionsPerYear * o.hoursPerSession;
+    return acc + share * annualStaffHoursPerClient(o);
   }, 0);
 
   const sessionsPerClient = offerings.reduce((acc, o, idx) =>
@@ -274,7 +302,7 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
     const offeringSessions = o.currentClients * o.sessionsPerYear;
     const offeringRevenue = o.currentClients * (o.priceMonthly * 12);
     const offeringVariableCosts = o.currentClients * annualVariableCostPerClient(o);
-    const offeringServiceHours = offeringSessions * o.hoursPerSession;
+    const offeringServiceHours = currentStaffHours(o);
 
     clients += o.currentClients;
     totalSessions += offeringSessions;

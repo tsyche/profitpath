@@ -207,7 +207,7 @@ landscaping, fitness, photography, and handyman.
 
 ### Testing Strategy
 
-#### Test Coverage (441 unit tests across 43 files — 440 passing, 1 skipped — plus 276 Playwright e2e tests across 16 files, chromium + firefox)
+#### Test Coverage (476 unit tests across 45 files — 475 passing, 1 skipped — plus 282 Playwright e2e tests across 17 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

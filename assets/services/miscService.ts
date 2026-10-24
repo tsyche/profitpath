@@ -84,6 +84,8 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
       variableCostPerSession: toFiniteNumber(o.variableCostPerSession, 0, 0, 1e9),
       laborPctOfPrice: toFiniteNumber(o.laborPctOfPrice, 0, 0, 100),
       type: normalizeOfferingType(o.type),
+      seats: Math.floor(toFiniteNumber(o.seats, 1, 1, 100000)),
+      fillPct: toFiniteNumber(o.fillPct, 100, 1, 100),
       mixPct: toFiniteNumber(o.mixPct, 0, 0, 100),
       currentClients: Math.floor(toFiniteNumber(o.currentClients, 0, 0, 1e7))
     }));
@@ -239,12 +241,12 @@ export function exportAsCSV() {
     'Capacity Utilization,' + (fmtPct1(results.capacityPct || 0)) + ',%',
     '',
     'SERVICE OFFERINGS',
-    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type',
+    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %',
   ];
 
   state.offerings.forEach((o) => {
     lines.push(
-      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type)
+      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100)
     );
   });
 
@@ -732,12 +734,12 @@ export function exportAsExcel() {
     'Target Utilization,' + fmtPct(state.targetUtilizationPct),
     '',
     'SERVICE OFFERINGS',
-    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients,Labor % of Price,Type'
+    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients,Labor % of Price,Type,Seats,Fill %'
   ];
 
   state.offerings.forEach((o) => {
     lines.push(
-      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${o.laborPctOfPrice || 0},${normalizeOfferingType(o.type)}`
+      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${o.laborPctOfPrice || 0},${normalizeOfferingType(o.type)},${o.seats || 1},${o.fillPct || 100}`
     );
   });
 
@@ -1366,9 +1368,9 @@ targetUtilizationPct,75
 
 # Offerings
 # Add or remove rows. Mix % values should sum to 100.
-Name,Monthly Price ($),Sessions/Year,Hours/Session,Variable Cost/Session ($),Mix %,Current Clients,Labor % of Price,Type
-Consulting,1000,12,2,100,60,0,0,subscription
-Support,500,24,1,50,40,0,0,subscription`;
+Name,Monthly Price ($),Sessions/Year,Hours/Session,Variable Cost/Session ($),Mix %,Current Clients,Labor % of Price,Type,Seats,Fill %
+Consulting,1000,12,2,100,60,0,0,subscription,1,100
+Support,500,24,1,50,40,0,0,subscription,1,100`;
 
   const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
   downloadOrShare(blob, 'profitpath-template.csv');
@@ -1438,7 +1440,10 @@ export function importFromCSV(csvText: any) {
           // Column 8 is optional so CSVs exported before this field still import
           laborPctOfPrice: Math.max(0, Math.min(100, parseFloat(values[7]) || 0)),
           // Column 9 is optional too; unknown values fall back to subscription
-          type: normalizeOfferingType(values[8])
+          type: normalizeOfferingType(values[8]),
+          // Columns 10-11 are optional: group seats and forecast fill
+          seats: Math.max(1, Math.floor(parseFloat(values[9]) || 1)),
+          fillPct: Math.max(1, Math.min(100, parseFloat(values[10]) || 100))
         };
 
         // Validate offering

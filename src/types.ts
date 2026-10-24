@@ -19,6 +19,10 @@ export interface Offering {
   laborPctOfPrice?: number;
   /** Missing or unknown values behave as 'subscription'. */
   type?: OfferingType;
+  /** Group only: seats per run (>= 1). */
+  seats?: number;
+  /** Group only: forecast fill, % of seats taken (1-100). */
+  fillPct?: number;
   mixPct?: number;
   currentClients?: number;
 }
@@ -32,6 +36,8 @@ export interface SanitizedOffering extends Offering {
   variableCostPerSession: number;
   laborPctOfPrice: number;
   type: OfferingType;
+  seats: number;
+  fillPct: number;
   mixPct: number;
   currentClients: number;
 }
@@ -60,8 +66,13 @@ export interface CalcState {
 }
 
 /** An offering in app state: the UI always fills every field. */
-// laborPctOfPrice and type stay optional: older saved states and templates omit them (0 / subscription)
-export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'type'>> & { laborPctOfPrice?: number; type?: OfferingType };
+// laborPctOfPrice, type, seats and fillPct stay optional: older saved states and templates omit them (0 / subscription / 1 / 100)
+export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'type' | 'seats' | 'fillPct'>> & {
+  laborPctOfPrice?: number;
+  type?: OfferingType;
+  seats?: number;
+  fillPct?: number;
+};
 
 /**
  * The live app `state` global. calc() input stays CalcState because it also accepts the

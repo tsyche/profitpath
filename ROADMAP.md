@@ -238,7 +238,7 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - Acceptance: a user can change the purchase mix and compare two plans with the same services; unused or expired credits and ineligible services affect the result; every displayed percentage identifies its denominator.
     - 2026-10-23 trial: modeling membership tiers vs a punch card needed exactly this; also model breakage (expired credits = revenue with no delivery cost) and credit redemptions consuming the redeemed service's capacity and labor cost.
 
-24b. **Group / cohort offerings (seats, sessions run, fill rate)**
+24b. **Group / cohort offerings (seats, sessions run, fill rate)** *(PARTIAL, 2026-10-23: `type` field (`subscription | group`) with Seats and Fill % columns shipped; remaining: break-even fill, fixed per-run costs, fitness template's group row, waterfall hours still per-client)*
     - Today staff hours scale with clients (`hoursPerSession` per client), so a group class must be faked as a fractional hour per student (2 hr ÷ 8 seats = 0.25). An under-filled class then looks cheaper to deliver than it is: the instructor still works the full 2 hours.
     - Add an offering type with seats per session, sessions run per year, and expected fill % (Forecast) or average enrolled (Current). Staff hours and fixed per-run costs count per run; revenue and per-seat costs count per filled seat. Output break-even fill (seats needed to cover the run's cost).
     - Motivated by the 2026-10-23 trial: seats are known capacity, fill is only known after booking — it felt like needing Current and Forecast mode at once. This item plus 24c removes that tension without a hybrid mode.

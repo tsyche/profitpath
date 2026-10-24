@@ -1,4 +1,4 @@
-import { calc, getCacheStats } from '../src/calculations/index';
+import { calc, getCacheStats, normalizeOfferingType } from '../src/calculations/index';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
@@ -339,7 +339,7 @@ function setStateFromInputs() {
 
 function onTableInput(e) {
   const el = e.target;
-  if (!(el instanceof HTMLInputElement)) return;
+  if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement)) return;
 
   const k = el.dataset.k;
   const i = Number(el.dataset.i);
@@ -378,6 +378,12 @@ function onTableInput(e) {
     }
   } else if (k === 'laborPctOfPrice') {
     value = Math.min(100, Math.max(0, safeParseNumber(value, 0)));
+  } else if (k === 'type') {
+    value = normalizeOfferingType(value);
+  } else if (k === 'seats') {
+    value = Math.max(1, Math.floor(safeParseNumber(value, 1)));
+  } else if (k === 'fillPct') {
+    value = Math.min(100, Math.max(1, safeParseNumber(value, 100)));
   } else if (k === 'sessionsPerYear') {
     const parsed = Math.floor(safeParseNumber(value, 0));
     if (parsed <= 0) {
@@ -441,7 +447,7 @@ function onTableInput(e) {
     console.warn('Failed to refresh outputs on input:', e);
   }
   // If changing mix in locked forecast mode, re-render to update other mix inputs
-  if (k === 'mixPct' && state.mode === 'forecast' && state.lockMix) {
+  if ((k === 'mixPct' && state.mode === 'forecast' && state.lockMix) || k === 'type') {
     render();
   }
 }
@@ -473,6 +479,8 @@ function addOffering() {
     variableCostPerSession: 0,
     laborPctOfPrice: 0,
     type: 'subscription',
+    seats: 1,
+    fillPct: 100,
     mixPct: 0,
     currentClients: 0,
   });
@@ -622,6 +630,17 @@ function render() {
       ? '<span class="muted">—</span>'
       : '<input aria-label="Clients for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" step="1" value="' + (o.currentClients ?? 0) + '" data-k="currentClients" data-i="' + (idx) + '" data-tooltip="Number of active clients for this offering" />';
 
+    const isGroup = o.type === 'group';
+    const typeCell = '<select aria-label="Type for ' + (escapeHtml(o.name)) + '" data-k="type" data-i="' + (idx) + '" data-tooltip="Subscription: one client at a time. Group: clients share a class with limited seats">' +
+      '<option value="subscription"' + (isGroup ? '' : ' selected') + '>Subscription</option>' +
+      '<option value="group"' + (isGroup ? ' selected' : '') + '>Group</option></select>';
+    const seatsCell = isGroup
+      ? '<input aria-label="Seats per class for ' + (escapeHtml(o.name)) + '" type="number" min="1" step="1" value="' + (o.seats || 1) + '" data-k="seats" data-i="' + (idx) + '" data-tooltip="Seats per class run. Sessions / yr is how many classes each enrolled client attends"/>'
+      : '<span class="muted">—</span>';
+    const fillCell = isGroup && isForecast
+      ? '<input aria-label="Fill percent for ' + (escapeHtml(o.name)) + '" type="number" min="1" max="100" step="1" value="' + (o.fillPct ?? 100) + '" data-k="fillPct" data-i="' + (idx) + '" data-tooltip="Forecast: average % of seats filled. Current mode derives fill from Clients"/>'
+      : '<span class="muted">—</span>';
+
     const estClients = isForecast
       ? Math.floor(metrics.clients * ((o.mixPct || 0) / 100))
       : o.currentClients;
@@ -635,7 +654,10 @@ function render() {
       '<td class="cell-edit group-inputs" data-label="Sessions / yr"><input aria-label="Sessions per year for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.sessionsPerYear) + '" data-k="sessionsPerYear" data-i="' + (idx) + '" data-tooltip="How many times per year this service is delivered to each client"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Hours / session"><input aria-label="Hours per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="0.1" value="' + (o.hoursPerSession) + '" data-k="hoursPerSession" data-i="' + (idx) + '" data-tooltip="Duration of each service session in hours"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Var $ / session"><input aria-label="Variable cost per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.variableCostPerSession) + '" data-k="variableCostPerSession" data-i="' + (idx) + '" data-tooltip="Cost per session (materials, supplies, delivery, etc.)"/></td>' +
-      '<td class="cell-edit group-inputs group-end" data-label="Labor % of price"><input aria-label="Labor percent of list price for ' + (escapeHtml(o.name)) + '" type="number" min="0" max="100" step="1" value="' + (o.laborPctOfPrice || 0) + '" data-k="laborPctOfPrice" data-i="' + (idx) + '" data-tooltip="Contractor pay as a % of list price (added to Var $ / session)"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Labor % of price"><input aria-label="Labor percent of list price for ' + (escapeHtml(o.name)) + '" type="number" min="0" max="100" step="1" value="' + (o.laborPctOfPrice || 0) + '" data-k="laborPctOfPrice" data-i="' + (idx) + '" data-tooltip="Contractor pay as a % of list price (added to Var $ / session)"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Type">' + (typeCell) + '</td>' +
+      '<td class="cell-edit group-inputs" data-label="Seats">' + (seatsCell) + '</td>' +
+      '<td class="cell-edit group-inputs group-end" data-label="Fill % (forecast)">' + (fillCell) + '</td>' +
       '<td class="cell-edit group-start group-mode" data-label="Mix % (forecast)" data-tooltip="Percentage of total clients using this offering (forecast mode only)">' + (mixCell) + '</td>' +
       '<td class="cell-edit group-mode group-end" data-label="Clients (current)" data-tooltip="Number of active clients for this offering (current mode only)">' + (clientsCell) + '</td>' +
       '<td class="cell-readonly group-start group-est" data-label="Est. clients"><span class="mono">' + (fmtInt(estClients)) + '</span></td>' +
