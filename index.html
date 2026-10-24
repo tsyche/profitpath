@@ -415,10 +415,10 @@
             </div>
 
             <div class="field">
-              <label title="Fixed monthly costs like rent, insurance, utilities">Overhead (monthly)</label>
+              <label title="Other fixed monthly costs not listed under Fixed Expenses">Other overhead (monthly)</label>
               <input id="monthlyCosts" type="number" min="0" step="10" value="250"
                 title="Fixed monthly costs like rent, insurance, utilities" />
-              <div class="hint">Converted to annual fixed costs.</div>
+              <div class="hint">Catch-all, on top of the Fixed Expenses table; converted to annual fixed costs.</div>
             </div>
 
             <div class="field">
@@ -486,6 +486,35 @@
           <div class="smallprint">
             Notes: Mix % is interpreted as a % of customers (not revenue). In forecasting mode, totals are
             auto-normalized for the math.
+          </div>
+        </div>
+
+        <div class="section-box expenses-section">
+          <div class="section-h">
+            <h3>Fixed Expenses</h3>
+            <div class="section-actions">
+              <button class="btn primary" id="addExpenseBtn" type="button"
+                title="Add a recurring fixed cost such as rent, insurance, or a weekly contractor">Add expense</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table expenses-table" id="expensesTable" aria-label="Fixed expenses">
+              <thead>
+                <tr>
+                  <th title="What the cost is for">Expense</th>
+                  <th title="Cost category">Category</th>
+                  <th title="Amount charged each period">Amount</th>
+                  <th title="How often the amount is charged">Frequency</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="expensesBody"></tbody>
+            </table>
+          </div>
+
+          <div class="smallprint" id="expensesNote">
+            Added on top of Overhead (monthly) in the inputs. Weekly is x52 per year, monthly x12.
           </div>
         </div>
       </div>

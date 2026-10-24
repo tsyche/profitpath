@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calc, clearCalculationCache } from './index'
-import { annualizeExpense, sanitizeExpenses, EXPENSE_CATEGORIES } from './expenses'
+import { annualizeExpense, sanitizeExpenses, scaleOverhead, totalMonthlyOverhead, EXPENSE_CATEGORIES } from './expenses'
 import { sanitizeScenarioState } from '../../assets/services/miscService'
 
 // Roadmap 27: structured expense line items. monthlyCosts stays as "other overhead".
@@ -100,5 +100,33 @@ describe('sanitizeScenarioState expenses', () => {
   it('absent or garbage becomes []', () => {
     expect(st(undefined).expenses).toEqual([])
     expect(st('nope').expenses).toEqual([])
+  })
+})
+
+describe('overhead helpers', () => {
+  it('totalMonthlyOverhead = monthlyCosts + annualized expenses / 12', () => {
+    expect(totalMonthlyOverhead({ monthlyCosts: 100, expenses: [exp(12, 'weekly'), exp(1200, 'annual')] } as any)).toBeCloseTo(100 + 52 + 100, 9)
+  })
+
+  it('totalMonthlyOverhead tolerates legacy and garbage state', () => {
+    expect(totalMonthlyOverhead({ monthlyCosts: 250 } as any)).toBe(250)
+    expect(totalMonthlyOverhead({ monthlyCosts: 'x', expenses: 'nope' } as any)).toBe(0)
+    expect(totalMonthlyOverhead({} as any)).toBe(0)
+  })
+
+  it('scaleOverhead scales monthlyCosts and every expense, without mutating the input', () => {
+    const state = { monthlyCosts: 100, expenses: [exp(50, 'monthly')] } as any
+    const scaled = scaleOverhead(state, 1.2)
+    expect(scaled.monthlyCosts).toBeCloseTo(120, 9)
+    expect(scaled.expenses[0].amount).toBeCloseTo(60, 9)
+    expect(state.monthlyCosts).toBe(100)
+    expect(state.expenses[0].amount).toBe(50)
+  })
+
+  it('scaled overhead moves calc income by the full overhead delta (what-if must not skip expenses)', () => {
+    const state = { ...base, expenses: [exp(100, 'weekly')] } as any
+    const a = calc(state)
+    const b = calc(scaleOverhead(state, 1.5))
+    expect(a.income - b.income).toBeCloseTo(0.5 * (12000 + 5200), 6)
   })
 })

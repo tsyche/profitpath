@@ -10,7 +10,7 @@ export function getShareBase() {
 }
 import { clamp } from '../utils/helpers';
 import { normalizeOfferingType } from '../../src/calculations/index';
-import { sanitizeExpenses } from '../../src/calculations/expenses';
+import { sanitizeExpenses, totalMonthlyOverhead } from '../../src/calculations/expenses';
 import { showToast } from './modalService';
 import { createModal } from '../components/Modal';
 import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizations, updateBreakEvenAnalysis } from './visualizationService';
@@ -205,6 +205,49 @@ export function csvCell(value: any) {
   return '"' + s.replace(/"/g, '""') + '"';
 }
 
+// Builds the CSV report; importFromCSV reads the parameters, offerings and expenses sections back
+export function buildCSV(st: any, results: any) {
+  const lines = [
+    'ProfitPath Business Analysis Report',
+    'Generated: ' + csvCell(new Date().toLocaleString()),
+    'Mode: ' + (st.mode === 'forecast' ? 'Forecast' : 'Current'),
+    '',
+    'BUSINESS PARAMETERS',
+    'Parameter,Value,Unit',
+    'Full-time Employees,' + st.fullTimeEmployees + ',people',
+    'Part-time Employees,' + st.partTimeEmployees + ',people',
+    'FT Annual Pay,' + st.fullTimeEmployeePay + ',USD/yr',
+    'PT Annual Pay,' + st.partTimeEmployeePay + ',USD/yr',
+    'Other Overhead,' + st.monthlyCosts + ',USD/mo',
+    'Productive Utilization,' + st.productiveUtilizationPct + ',%',
+    'Target Utilization,' + st.targetUtilizationPct + ',%',
+    '',
+    'FINANCIAL RESULTS',
+    'Metric,Value,Unit',
+    'Total Annual Revenue,' + csvCell(fmtMoney0(results.revenue)) + ',USD/yr',
+    'Total Variable Costs,' + csvCell(fmtMoney0(results.variableCosts)) + ',USD/yr',
+    'Net Profit(Loss),' + csvCell(fmtMoney0(results.income)) + ',USD/yr',
+    'Profit Margin,' + (fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)) + ',%',
+    'Capacity Utilization,' + (fmtPct1(results.capacityPct || 0)) + ',%',
+    '',
+    'SERVICE OFFERINGS',
+    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %',
+  ];
+
+  st.offerings.forEach((o: any) => {
+    lines.push(
+      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100)
+    );
+  });
+
+  lines.push('', 'FIXED EXPENSES', 'Name,Category,Amount,Frequency');
+  sanitizeExpenses(st.expenses).forEach((e) => {
+    lines.push(csvCell(e.name) + ',' + csvCell(e.category) + ',' + e.amount + ',' + e.frequency);
+  });
+
+  return lines.join('\n');
+}
+
 export function exportAsCSV() {
   let results;
   try {
@@ -219,40 +262,7 @@ export function exportAsCSV() {
     return;
   }
 
-  const lines = [
-    'ProfitPath Business Analysis Report',
-    'Generated: ' + (new Date().toLocaleString()),
-    'Mode: ' + (state.mode === 'forecast' ? 'Forecast' : 'Current'),
-    '',
-    'BUSINESS PARAMETERS',
-    'Parameter,Value,Unit',
-    'Full-time Employees,' + (state.fullTimeEmployees) + ',people',
-    'Part-time Employees,' + (state.partTimeEmployees) + ',people',
-    'FT Annual Pay,' + (fmtMoney0(state.fullTimeEmployeePay)) + ',USD/yr',
-    'PT Annual Pay,' + (fmtMoney0(state.partTimeEmployeePay)) + ',USD/yr',
-    'Monthly Overhead,' + (fmtMoney0(state.monthlyCosts)) + ',USD/mo',
-    'Productive Utilization,' + (fmtPct1(state.productiveUtilizationPct)) + ',%',
-    'Target Utilization,' + (fmtPct1(state.targetUtilizationPct)) + ',%',
-    '',
-    'FINANCIAL RESULTS',
-    'Metric,Value,Unit',
-    'Total Annual Revenue,' + (fmtMoney0(results.revenue)) + ',USD/yr',
-    'Total Variable Costs,' + (fmtMoney0(results.variableCosts)) + ',USD/yr',
-    'Net Profit(Loss),' + (fmtMoney0(results.income)) + ',USD/yr',
-    'Profit Margin,' + (fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)) + ',%',
-    'Capacity Utilization,' + (fmtPct1(results.capacityPct || 0)) + ',%',
-    '',
-    'SERVICE OFFERINGS',
-    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %',
-  ];
-
-  state.offerings.forEach((o) => {
-    lines.push(
-      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100)
-    );
-  });
-
-  const csv = lines.join('\n');
+  const csv = buildCSV(state, results);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   downloadOrShare(blob, 'profitpath-' + new Date().toISOString().split('T')[0] + '.csv');
   trackEvent('export', { format: 'csv' });
@@ -697,6 +707,7 @@ export function loadIndustryTemplate(templateId: any) {
     window.state.fullTimeEmployeePay = config.fullTimeEmployeePay || 60000;
     window.state.partTimeEmployeePay = config.partTimeEmployeePay || 30000;
     window.state.monthlyCosts = config.monthlyCosts;
+    window.state.expenses = [];
     window.state.productiveUtilizationPct = config.productiveUtilizationPct;
     window.state.targetUtilizationPct = config.targetUtilizationPct;
 
@@ -731,7 +742,7 @@ export function exportAsExcel() {
     'Metric,Value',
     'Employees,' + state.employees,
     'Employee Pay,' + fmtMoney0(state.employeePay),
-    'Monthly Costs,' + fmtMoney0(state.monthlyCosts),
+    'Monthly Costs,' + fmtMoney0(totalMonthlyOverhead(state)),
     'Productive Utilization,' + fmtPct(state.productiveUtilizationPct),
     'Target Utilization,' + fmtPct(state.targetUtilizationPct),
     '',
@@ -809,7 +820,7 @@ export function exportAsPDF() {
         <h2>Business Overview</h2>
         <p><span class="label">Employees:</span> ${state.employees}</p>
         <p><span class="label">Employee Pay:</span> ${fmtMoney0(state.employeePay)}</p>
-        <p><span class="label">Monthly Costs:</span> ${fmtMoney0(state.monthlyCosts)}</p>
+        <p><span class="label">Monthly Costs:</span> ${fmtMoney0(totalMonthlyOverhead(state))}</p>
         <p><span class="label">Productive Utilization:</span> ${fmtPct(state.productiveUtilizationPct)}</p>
         <p><span class="label">Target Utilization:</span> ${fmtPct(state.targetUtilizationPct)}</p>
       </div>
@@ -892,7 +903,7 @@ export function exportAsHTML() {
     <h2>Business Overview</h2>
     <div class="metric"><span class="label">Employees:</span> <span class="value">${state.employees}</span></div>
     <div class="metric"><span class="label">Employee Pay:</span> <span class="value">${fmtMoney0(state.employeePay)}</span></div>
-    <div class="metric"><span class="label">Monthly Costs:</span> <span class="value">${fmtMoney0(state.monthlyCosts)}</span></div>
+    <div class="metric"><span class="label">Monthly Costs:</span> <span class="value">${fmtMoney0(totalMonthlyOverhead(state))}</span></div>
     <div class="metric"><span class="label">Productive Utilization:</span> <span class="value">${fmtPct(state.productiveUtilizationPct)}</span></div>
     <div class="metric"><span class="label">Target Utilization:</span> <span class="value">${fmtPct(state.targetUtilizationPct)}</span></div>
   </div>
@@ -1116,7 +1127,7 @@ export function shareViaEmail() {
     `Business Overview:\n` +
     `- Employees: ${state.employees}\n` +
     `- Employee Pay: ${fmtMoney0(state.employeePay)}\n` +
-    `- Monthly Costs: ${fmtMoney0(state.monthlyCosts)}\n` +
+    `- Monthly Costs: ${fmtMoney0(totalMonthlyOverhead(state))}\n` +
     `- Productive Utilization: ${fmtPct(state.productiveUtilizationPct)}\n` +
     `- Target Utilization: ${fmtPct(state.targetUtilizationPct)}\n\n` +
     `Service Offerings:\n${offeringsText}\n\n` +
@@ -1372,62 +1383,117 @@ targetUtilizationPct,75
 # Add or remove rows. Mix % values should sum to 100.
 Name,Monthly Price ($),Sessions/Year,Hours/Session,Variable Cost/Session ($),Mix %,Current Clients,Labor % of Price,Type,Seats,Fill %
 Consulting,1000,12,2,100,60,0,0,subscription,1,100
-Support,500,24,1,50,40,0,0,subscription,1,100`;
+Support,500,24,1,50,40,0,0,subscription,1,100
+
+# Fixed Expenses
+# Category: one of the app's categories (unknown = Other). Frequency: weekly, monthly or annual.
+Name,Category,Amount,Frequency
+Studio rent,Rent/Lease,1200,monthly
+Liability insurance,Insurance,900,annual`;
 
   const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
   downloadOrShare(blob, 'profitpath-template.csv');
+}
+
+// Quote-aware split of one CSV line; undoes the leading ' that csvCell adds to formula-like values
+export function splitCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let cur = '';
+  let quoted = false;
+  let wasQuoted = false;
+  const push = () => {
+    let v = wasQuoted ? cur : cur.trim();
+    if (wasQuoted && /^'[=+\-@\t\r]/.test(v)) v = v.slice(1);
+    out.push(v);
+    cur = '';
+    wasQuoted = false;
+  };
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (quoted) {
+      if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (c === '"') quoted = false;
+      else cur += c;
+    } else if (c === '"') { quoted = true; wasQuoted = true; }
+    else if (c === ',') push();
+    else cur += c;
+  }
+  push();
+  return out;
+}
+
+// Settings keys: the import template's names plus the labels exportAsCSV writes
+const SETTINGS_KEYS: Record<string, string> = {
+  employees: 'employees', 'full-time employees': 'employees',
+  parttimeemployees: 'partTimeEmployees', 'part-time employees': 'partTimeEmployees',
+  employeepay: 'employeePay', 'ft annual pay': 'employeePay',
+  parttimeemployeepay: 'partTimeEmployeePay', 'pt annual pay': 'partTimeEmployeePay',
+  monthlycosts: 'monthlyCosts', 'other overhead': 'monthlyCosts', 'monthly overhead': 'monthlyCosts',
+  productiveutilizationpct: 'productiveUtilizationPct', 'productive utilization': 'productiveUtilizationPct',
+  targetutilizationpct: 'targetUtilizationPct', 'target utilization': 'targetUtilizationPct'
+};
+
+function csvSectionOf(line: string): 'settings' | 'offerings' | 'expenses' | 'none' | null {
+  const isComment = line.startsWith('#');
+  const text = line.replace(/^#\s*/, '').trim();
+  if (text.includes(',')) return null;
+  if (/^(fixed )?expenses$/i.test(text)) return 'expenses';
+  if (/^(service )?offerings$/i.test(text)) return 'offerings';
+  if (/^(business )?(settings|parameters)$/i.test(text)) return 'settings';
+  return isComment ? null : 'none';
 }
 
 export function importFromCSV(csvText: any) {
   const errors = [];
   const settings: Record<string, any> = {};
   const offerings = [];
+  const rawExpenses: Array<Record<string, unknown>> = [];
 
   try {
-    const lines = csvText.split('\n').map((line: any) => line.trim()).filter((line: any) => line && !line.startsWith('#'));
+    const lines = csvText.split('\n').map((line: any) => line.trim()).filter((line: any) => line);
 
-    let inSettingsSection = false;
-    let inOfferingsSection = false;
-    let offeringHeaders = null;
+    let section: 'settings' | 'offerings' | 'expenses' | 'none' = 'none';
+    let headerSeen = false;
 
     for (const line of lines) {
-      if (line.includes('Settings')) {
-        inSettingsSection = true;
-        inOfferingsSection = false;
+      const next = csvSectionOf(line);
+      if (next) {
+        section = next;
+        headerSeen = false;
         continue;
       }
-      if (line.includes('Offerings')) {
-        inSettingsSection = false;
-        inOfferingsSection = true;
-        continue;
-      }
+      if (line.startsWith('#')) continue;
 
-      if (inSettingsSection) {
-        const [key, value] = line.split(',').map((s: any) => s.trim());
-        if (key && value !== undefined) {
-          const numValue = parseFloat(value);
-          if (!isNaN(numValue)) {
-            // Map CSV keys to state field names
-            if (key === 'employees') settings.employees = Math.max(0, Math.floor(numValue));
-            if (key === 'partTimeEmployees') settings.partTimeEmployees = Math.max(0, Math.floor(numValue));
-            if (key === 'employeePay') settings.employeePay = Math.max(0, numValue);
-            if (key === 'partTimeEmployeePay') settings.partTimeEmployeePay = Math.max(0, numValue);
-            if (key === 'monthlyCosts') settings.monthlyCosts = Math.max(0, numValue);
-            if (key === 'productiveUtilizationPct') settings.productiveUtilizationPct = Math.max(0, Math.min(100, numValue));
-            if (key === 'targetUtilizationPct') settings.targetUtilizationPct = Math.max(0, numValue);
-          }
+      if (section === 'settings') {
+        const [rawKey, value] = splitCsvLine(line);
+        const key = SETTINGS_KEYS[(rawKey || '').toLowerCase()];
+        const numValue = parseFloat(String(value).replace(/[$,%\s]/g, ''));
+        if (key && !isNaN(numValue)) {
+          if (key === 'employees') settings.employees = Math.max(0, Math.floor(numValue));
+          if (key === 'partTimeEmployees') settings.partTimeEmployees = Math.max(0, Math.floor(numValue));
+          if (key === 'employeePay') settings.employeePay = Math.max(0, numValue);
+          if (key === 'partTimeEmployeePay') settings.partTimeEmployeePay = Math.max(0, numValue);
+          if (key === 'monthlyCosts') settings.monthlyCosts = Math.max(0, numValue);
+          if (key === 'productiveUtilizationPct') settings.productiveUtilizationPct = Math.max(0, Math.min(100, numValue));
+          if (key === 'targetUtilizationPct') settings.targetUtilizationPct = Math.max(0, numValue);
         }
       }
 
-      if (inOfferingsSection) {
-        if (!offeringHeaders) {
+      if (section === 'expenses') {
+        if (!headerSeen) { headerSeen = true; continue; }
+        const [name, category, amount, frequency] = splitCsvLine(line);
+        if (name) rawExpenses.push({ name, category, amount: parseFloat(amount), frequency: (frequency || '').toLowerCase() });
+      }
+
+      if (section === 'offerings') {
+        if (!headerSeen) {
           // First data row is the header
-          offeringHeaders = line.split(',').map((h: any) => h.trim().toLowerCase());
+          headerSeen = true;
           continue;
         }
 
         // Parse offering row
-        const values = line.split(',').map((v: any) => v.trim());
+        const values = splitCsvLine(line);
         if (values.length < 7) continue;
 
         const offering = {
@@ -1462,6 +1528,8 @@ export function importFromCSV(csvText: any) {
       }
     }
 
+    const expenses = sanitizeExpenses(rawExpenses, uuid);
+
     // Validate offerings
     if (offerings.length === 0) {
       errors.push('CSV must contain at least 1 offering');
@@ -1469,7 +1537,7 @@ export function importFromCSV(csvText: any) {
     }
 
     // Success
-    return { success: true, data: { settings, offerings }, errors };
+    return { success: true, data: { settings, offerings, expenses }, errors };
   } catch (e) {
     return { success: false, errors: [`Parse error: ${e.message}`] };
   }

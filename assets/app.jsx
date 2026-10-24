@@ -1,4 +1,5 @@
 import { calc, getCacheStats, normalizeOfferingType } from '../src/calculations/index';
+import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, scaleOverhead, sanitizeExpenses } from '../src/calculations/expenses';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
@@ -262,6 +263,7 @@ const state = {
 const undoStack = [];
 const redoStack = [];
 const MAX_HISTORY = 50;
+/** @type {string | null} */
 let _lastHistoryField = null; // Track last field edited for debounce
 
 // Make state accessible to calculations module
@@ -453,6 +455,73 @@ function onTableInput(e) {
   }
 }
 
+function addExpense() {
+  state.expenses.push({ id: uuid(), name: 'Expense ' + (state.expenses.length + 1), category: 'Other', amount: 0, frequency: 'monthly' });
+  persistState();
+  render();
+}
+
+function renderExpenses() {
+  const tbody = $('#expensesBody');
+  if (!tbody) return;
+  /** @param {readonly string[]} list @param {string} current */
+  const opts = (list, current) => list.map(v => '<option value="' + escapeHtml(v) + '"' + (v === current ? ' selected' : '') + '>' + escapeHtml(v) + '</option>').join('');
+  tbody.innerHTML = '';
+  state.expenses.forEach((e, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td class="cell-edit" data-label="Expense"><input aria-label="Expense name" type="text" maxlength="100" value="' + escapeHtml(e.name) + '" data-k="name" data-i="' + idx + '"/></td>' +
+      '<td class="cell-edit" data-label="Category"><select aria-label="Category for ' + escapeHtml(e.name) + '" data-k="category" data-i="' + idx + '">' + opts(EXPENSE_CATEGORIES, e.category) + '</select></td>' +
+      '<td class="cell-edit" data-label="Amount"><input aria-label="Amount for ' + escapeHtml(e.name) + '" type="number" min="0" step="1" value="' + e.amount + '" data-k="amount" data-i="' + idx + '"/></td>' +
+      '<td class="cell-edit" data-label="Frequency"><select aria-label="Frequency for ' + escapeHtml(e.name) + '" data-k="frequency" data-i="' + idx + '">' + opts(EXPENSE_FREQUENCIES, e.frequency) + '</select></td>' +
+      '<td class="cell-edit" data-label="Actions"><button class="btn small danger" data-action="removeExpense" data-i="' + idx + '" aria-label="Remove ' + escapeHtml(e.name) + '">Remove</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+/** @param {any} e */
+function onExpenseInput(e) {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement)) return;
+  const k = el.dataset.k;
+  const i = Number(el.dataset.i);
+  const row = /** @type {Record<string, any>} */ (state.expenses[i]);
+  if (!k || !row) return;
+  // Debounce history like offerings: one undo step per field, not per keystroke
+  const fieldKey = `exp-${i}-${k}`;
+  if (fieldKey !== _lastHistoryField) {
+    pushHistory();
+    _lastHistoryField = fieldKey;
+  }
+  if (k === 'name') {
+    row.name = el.value.slice(0, 100);
+  } else {
+    // Per-row sanitizer is the single source of truth for clamping and fallbacks
+    const [clean] = sanitizeExpenses([{ ...row, [k]: el.value }], () => row.id);
+    row[k] = clean[k];
+  }
+  persistState();
+  try {
+    const metrics = calc(state);
+    window.lastMetrics = metrics;
+    updateOutputs(metrics);
+    updateValidationDisplay();
+  } catch (err) {
+    console.warn('Failed to refresh outputs on expense input:', err);
+  }
+}
+
+/** @param {any} e */
+function onExpenseClick(e) {
+  const btn = e.target.closest('button[data-action="removeExpense"]');
+  if (!btn) return;
+  const i = Number(btn.dataset.i);
+  if (!Number.isFinite(i) || !state.expenses[i]) return;
+  pushHistory();
+  state.expenses.splice(i, 1);
+  persistState();
+  render();
+}
+
 function onTableClick(e) {
   const btn = e.target.closest('button');
   if (!btn) return;
@@ -495,6 +564,7 @@ function resetDefaults() {
   state.fullTimeEmployeePay = 60000;
   state.partTimeEmployeePay = 30000;
   state.monthlyCosts = 250;
+  state.expenses = [];
   state.productiveUtilizationPct = 80;
   state.targetUtilizationPct = 75;
   state.mode = 'forecast';
@@ -672,6 +742,7 @@ function render() {
   });
 
   restoreTableFocus(focus);
+  renderExpenses();
 
   // Mix/mode note (used as the "what am I editing" banner, especially on small screens).
   const mixNote = $('#mixNote');
@@ -911,6 +982,16 @@ $$('#controls select').forEach((el) => {
 {
   const btn = $('#addOfferingBtn');
   if (btn) btn.addEventListener('click', addOffering);
+}
+{
+  const btn = $('#addExpenseBtn');
+  if (btn) btn.addEventListener('click', addExpense);
+  const body = $('#expensesBody');
+  if (body) {
+    body.addEventListener('input', onExpenseInput);
+    body.addEventListener('click', onExpenseClick);
+    body.addEventListener('blur', () => { _lastHistoryField = null; }, true);
+  }
 }
 {
   const btn = $('#resetBtn');
@@ -1490,7 +1571,7 @@ function handleCSVImport(file) {
       return;
     }
 
-    const { settings, offerings } = result.data;
+    const { settings, offerings, expenses } = /** @type {any} */ (result.data);
 
     // Apply imported settings to state
     if (settings.employees !== undefined) state.fullTimeEmployees = settings.employees;
@@ -1501,8 +1582,9 @@ function handleCSVImport(file) {
     if (settings.productiveUtilizationPct !== undefined) state.productiveUtilizationPct = settings.productiveUtilizationPct;
     if (settings.targetUtilizationPct !== undefined) state.targetUtilizationPct = settings.targetUtilizationPct;
 
-    // Apply imported offerings
+    // Apply imported offerings; expenses only when the CSV had that section
     if (offerings.length > 0) state.offerings = offerings;
+    if (expenses.length > 0) state.expenses = expenses;
 
     persistState();
     render();
@@ -2417,7 +2499,7 @@ function updateSensitivity() {
 
   // Apply overhead multiplier
   if (overheadAdjust !== 0) {
-    adjusted.monthlyCosts = adjusted.monthlyCosts * (1 + overheadAdjust);
+    Object.assign(adjusted, scaleOverhead(adjusted, 1 + overheadAdjust));
   }
 
   // Calculate baseline and adjusted
@@ -2466,14 +2548,12 @@ function updateSensitivity() {
   // Overhead impact (current slider adjustment or default ±20%)
   if (overheadAdjust !== 0) {
     const overheadOnly = JSON.parse(JSON.stringify(state));
-    overheadOnly.monthlyCosts = overheadOnly.monthlyCosts * (1 + overheadAdjust);
-    const overheadOnlyMetrics = calc(overheadOnly);
+    const overheadOnlyMetrics = calc(scaleOverhead(overheadOnly, 1 + overheadAdjust));
     impacts.push({ label: 'Overhead', impact: Math.abs(overheadOnlyMetrics.income - baseline.income) });
   } else {
     // Show default +20% impact if not adjusted
     const overheadUp = JSON.parse(JSON.stringify(state));
-    overheadUp.monthlyCosts = overheadUp.monthlyCosts * 1.2;
-    const overheadDownMetrics = calc(overheadUp);
+    const overheadDownMetrics = calc(scaleOverhead(overheadUp, 1.2));
     impacts.push({ label: 'Overhead', impact: Math.abs(baseline.income - overheadDownMetrics.income) });
   }
 
@@ -3007,6 +3087,7 @@ function loadOnboardingIndustryTemplate(industryId) {
     state.fullTimeEmployeePay = config.fullTimeEmployeePay || 60000;
     state.partTimeEmployeePay = config.partTimeEmployeePay || 30000;
     state.monthlyCosts = config.monthlyCosts || 250;
+    state.expenses = [];
     state.productiveUtilizationPct = config.productiveUtilizationPct || 80;
     state.targetUtilizationPct = config.targetUtilizationPct || 85;
 

@@ -47,3 +47,18 @@ export function annualizeExpense(e: Pick<Expense, 'amount' | 'frequency'>): numb
 export function annualExpenseTotal(expenses: Expense[]): number {
   return expenses.reduce((sum, e) => sum + annualizeExpense(e), 0);
 }
+
+/** Monthly overhead as the user thinks of it: the free-form field plus all expense line items. */
+export function totalMonthlyOverhead(state: { monthlyCosts?: unknown; expenses?: unknown }): number {
+  const other = Number(state.monthlyCosts);
+  return (Number.isFinite(other) ? Math.max(0, other) : 0) + annualExpenseTotal(sanitizeExpenses(state.expenses)) / 12;
+}
+
+/** Copy of a state with all overhead (monthlyCosts and expense amounts) scaled; used by what-if sliders. */
+export function scaleOverhead<T extends { monthlyCosts?: number; expenses?: unknown }>(state: T, factor: number): T {
+  return {
+    ...state,
+    monthlyCosts: (Number(state.monthlyCosts) || 0) * factor,
+    expenses: sanitizeExpenses(state.expenses).map((e) => ({ ...e, amount: e.amount * factor })),
+  };
+}

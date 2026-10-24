@@ -1581,6 +1581,14 @@ button:focus {
   min-width: 110px;
 }
 
+.expenses-table {
+  min-width: 520px;
+}
+
+.expenses-table td select {
+  min-width: 140px;
+}
+
 .table tr:last-child td {
   border-bottom: none;
 }
