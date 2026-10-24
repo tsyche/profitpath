@@ -49,6 +49,7 @@ src/
 ├── calculations/       # Modular calculation engine
 │   ├── index.ts          # Core calculation engine with caching
 │   ├── offeringRanking.ts # Profit-per-staff-hour ranking and discount-floor status
+│   ├── marketPosition.ts # Optional market low/avg/high per offering and the green/yellow/red price badge; display only
 │   ├── offeringMeta.ts   # Per-offering confidence tag (verified/estimated/guess) and note sanitizers; display only
 │   ├── ranges.ts         # Optional low/high bounds (fill %, current clients): calcRange min/base/max band, bound sanitizers
 │   └── expenses.ts       # Expense line items: categories, frequencies, sanitizer, annualization, cost-by-category breakdown
@@ -211,7 +212,7 @@ landscaping, fitness, photography, and handyman.
 
 ### Testing Strategy
 
-#### Test Coverage (547 unit tests across 50 files — 546 passing, 1 skipped — plus 304 Playwright e2e tests across 20 files, chromium + firefox)
+#### Test Coverage (560 unit tests across 51 files — 559 passing, 1 skipped — plus 314 Playwright e2e tests across 21 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

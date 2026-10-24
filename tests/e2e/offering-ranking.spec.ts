@@ -68,3 +68,24 @@ test.describe('Best-case discount', () => {
     await expect(page.locator('#offeringsBody tr').first().locator('input[data-k="discountPct"]')).toHaveValue('100');
   });
 });
+
+test.describe('Removing offerings (roadmap 12g)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      try { localStorage.setItem('onboardingCompleted', 'true'); } catch { /* ignore */ }
+    });
+    await page.goto('/');
+    await waitForPageReady(page);
+  });
+
+  test('removing down to one keeps the last offering instead of swapping in demo defaults', async ({ page }) => {
+    const rows = page.locator('#offeringsBody tr');
+    await rows.first().locator('input[data-k="name"]').fill('My Real Offering');
+    while ((await rows.count()) > 1) {
+      await rows.last().locator('button[data-action="removeOffering"]').click();
+    }
+    await rows.first().locator('button[data-action="removeOffering"]').click();
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first().locator('input[data-k="name"]')).toHaveValue('My Real Offering');
+  });
+});

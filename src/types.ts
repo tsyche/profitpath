@@ -58,6 +58,11 @@ export interface Offering {
   /** Optional reliability tag and short note; display only, never used by calc. */
   confidence?: Confidence;
   note?: string;
+  /** Optional market price range and average (same units as priceMonthly) plus a source/date note; display only. */
+  marketLow?: number;
+  marketHigh?: number;
+  marketAvg?: number;
+  marketNote?: string;
   mixPct?: number;
   currentClients?: number;
 }
@@ -107,7 +112,7 @@ export interface CalcState {
 
 /** An offering in app state: the UI always fills every field. */
 // laborPctOfPrice, type, seats and fillPct stay optional: older saved states and templates omit them (0 / subscription / 1 / 100)
-export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'confidence' | 'note'>> & {
+export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'confidence' | 'note' | 'marketLow' | 'marketHigh' | 'marketAvg' | 'marketNote'>> & {
   laborPctOfPrice?: number;
   discountPct?: number;
   type?: OfferingType;
@@ -119,6 +124,10 @@ export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountP
   currentClientsHigh?: number;
   confidence?: Confidence;
   note?: string;
+  marketLow?: number;
+  marketHigh?: number;
+  marketAvg?: number;
+  marketNote?: string;
 };
 
 /**

@@ -1,6 +1,7 @@
 import { calc, getCacheStats, normalizeOfferingType } from '../src/calculations/index';
-import { rankOfferings } from '../src/calculations/offeringRanking';
+import { floorStatus, rankOfferings } from '../src/calculations/offeringRanking';
 import { calcRange, sanitizeOfferingRange } from '../src/calculations/ranges';
+import { marketBadge, sanitizeOfferingMarket } from '../src/calculations/marketPosition';
 import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../src/calculations/offeringMeta';
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
@@ -532,6 +533,58 @@ function renderRangesTable() {
   }).join('');
 }
 
+const BADGE_LABELS = { green: 'In range', yellow: 'Near edge', red: 'Off market' };
+const BADGE_COLORS = { green: 'var(--good)', yellow: 'var(--warn)', red: 'var(--bad)' };
+
+/** @param {any} o @param {any} metric */
+function marketBadgeHtml(o, metric) {
+  const status = metric ? floorStatus(metric.maxDiscountPct, o.discountPct || 0) : 'ok';
+  const b = marketBadge(Number(o.priceMonthly) || 0, o, status);
+  if (!b) return '<span class="muted">—</span>';
+  const arrow = b.direction === 'below' ? ' ▼' : b.direction === 'above' ? ' ▲' : '';
+  return '<span data-level="' + b.level + '" style="color:' + BADGE_COLORS[b.level] + '">' + BADGE_LABELS[b.level] + arrow + '</span>';
+}
+
+/** @param {any} metrics */
+function renderMarketTable(metrics) {
+  const tbody = $('#marketBody');
+  if (!tbody) return;
+  /** @param {any} o @param {number} idx @param {string} k @param {string} label */
+  const num = (o, idx, k, label) => '<td class="cell-edit" data-label="' + label + '"><input aria-label="Market ' + label.toLowerCase() + ' for ' + escapeHtml(o.name) +
+    '" type="number" min="0" step="1" placeholder="none" value="' + (o[k] ?? '') + '" data-k="' + k + '" data-i="' + idx + '"/></td>';
+  tbody.innerHTML = state.offerings.map((o, idx) => '<tr><td data-label="Offering">' + escapeHtml(o.name) + '</td>' +
+    '<td class="mono" data-label="Your price">' + fmtMoney0(o.priceMonthly) + '</td>' +
+    num(o, idx, 'marketLow', 'Low') + num(o, idx, 'marketAvg', 'Avg') + num(o, idx, 'marketHigh', 'High') +
+    '<td class="cell-edit" data-label="Source / date"><input aria-label="Market source for ' + escapeHtml(o.name) + '" type="text" maxlength="' + MAX_NOTE_LENGTH +
+    '" placeholder="Source, date" value="' + escapeHtml(o.marketNote || '') + '" data-k="marketNote" data-i="' + idx + '"/></td>' +
+    '<td data-label="Badge" class="market-badge">' + marketBadgeHtml(o, metrics?.offeringMetrics?.[idx]) + '</td></tr>').join('');
+}
+
+/** @param {any} e */
+function onMarketInput(e) {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement)) return;
+  const k = el.dataset.k;
+  const idx = Number(el.dataset.i);
+  const o = /** @type {Record<string, any>} */ (state.offerings[idx]);
+  if (!k || !o) return;
+  const fieldKey = `mkt-${idx}-${k}`;
+  if (fieldKey !== _lastHistoryField) {
+    pushHistory();
+    _lastHistoryField = fieldKey;
+  }
+  const clean = /** @type {Record<string, any>} */ (sanitizeOfferingMarket({ [k]: el.value }));
+  if (clean[k] === undefined) delete o[k];
+  else o[k] = clean[k];
+  persistState();
+  try {
+    const cell = el.closest('tr')?.querySelector('.market-badge');
+    if (cell) cell.innerHTML = marketBadgeHtml(o, calc(state).offeringMetrics[idx]);
+  } catch (err) {
+    console.warn('Failed to refresh market badge:', err);
+  }
+}
+
 /** @param {any} e */
 function onRangeInput(e) {
   const el = e.target;
@@ -628,9 +681,14 @@ function onTableClick(e) {
 
   if (action === 'removeOffering') {
     const i = Number(btn.dataset.i);
-    if (Number.isFinite(i)) {
+    if (Number.isFinite(i) && state.offerings[i]) {
+      // The calc and every persistence path need at least one offering; refuse rather than swap in demo data
+      if (state.offerings.length === 1) {
+        showToast('Keep at least one offering: edit or rename this one instead', 'info', 3000);
+        return;
+      }
+      pushHistory();
       state.offerings.splice(i, 1);
-      if (state.offerings.length === 0) state.offerings = businessLogic.defaultOfferings();
       render();
     }
   }
@@ -899,6 +957,7 @@ function render() {
   setKpi('kpiFixedCosts', fmtMoney0(metrics.annualFixedCosts));
   renderCostBreakdown();
   renderOfferingRanking(metrics);
+  renderMarketTable(metrics);
   renderRangeBand();
   setKpi('kpiPayroll', fmtMoney0(metrics.annualPayroll));
   setKpi('kpiVariableCosts', fmtMoney0(metrics.variableCosts));
@@ -981,6 +1040,7 @@ function updateOutputs(metrics) {
     if (kpiFixedCosts) kpiFixedCosts.textContent = fmtMoney0(metrics.annualFixedCosts);
     renderCostBreakdown();
     renderOfferingRanking(metrics);
+    renderMarketTable(metrics);
     renderRangeBand();
     if (kpiPayroll) kpiPayroll.textContent = fmtMoney0(metrics.annualPayroll);
     if (kpiVariableCosts) kpiVariableCosts.textContent = fmtMoney0(metrics.variableCosts);
@@ -1088,6 +1148,13 @@ $$('#controls select').forEach((el) => {
 {
   const btn = $('#addOfferingBtn');
   if (btn) btn.addEventListener('click', addOffering);
+}
+{
+  const body = $('#marketBody');
+  if (body) {
+    body.addEventListener('input', onMarketInput);
+    body.addEventListener('blur', () => { _lastHistoryField = null; }, true);
+  }
 }
 {
   const body = $('#rangesBody');
