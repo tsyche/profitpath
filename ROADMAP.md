@@ -13,7 +13,7 @@ See README.md for setup and development instructions.
 1. **Analytics & APK Release Pipeline Hardening** — GoatCounter privacy-respecting visit counter shipped for web + APK (no cookies, honors Do Not Track, local dev auto-skipped), but the initial runtime-only detection (`window.Capacitor.isNativePlatform()`) turned out unreliable — the APK reported zero traffic for a full day. Root-caused and fixed with a **build-time platform stamp** (`window.__PP_PLATFORM__`, rewritten `'web'`→`'apk'` by `build-apk.yml` after `cap sync`, with runtime Capacitor detection kept only as a fallback); confirmed working via GoatCounter's own device fingerprinting (System: Android, Sizes: Phones) after the fix. Same investigation surfaced and fixed two more release-pipeline bugs: `android/app/build.gradle`'s `versionCode`/`versionName` were hardcoded at `1`/`"1.0"` forever (silently blocking every Android update, and confusing Obtainium's update detection along with stale pre-beta-scheme release tags), and GitHub release notes were a static "Beta release" string instead of the actual commits shipped — both now automated in CI. `docs/privacy-policy.md` rewritten to disclose GoatCounter accurately (previously falsely claimed zero third-party integrations).
 2. **Scroll Lock Reference-Counting Fix (3 leak sites)** — A reference-counted scroll lock (used by every modal/drawer) could get permanently stranded by rapid double-triggered opens — unrecoverable on Android without a force-close, since the touchmove blocker never released. Found and fixed in three places: `ppOpenModal`/`ppCloseModal` (no idempotency guard), and independently in `showAnalyticsDashboard`/`openFeedbackModal` (both had a "remove existing modal" cleanup path that dropped the lock it held). Also deleted a dead, overridden duplicate `showAdvancedDashboard` method that was making the analytics code hard to reason about. Bundled with a dead logo-link fix (`href="/"` resolved to the wrong GitHub Pages root; now `href="."`). 5 new regression tests; each confirmed to fail without its corresponding fix before being merged.
 3. **Client Mix Optimizer, Advanced Chart Types & KPI Visual Polish** — Grid-search + hill-climbing optimizer suggests the offering mix that maximizes profit or utilization, fully wired into a collapsible panel; new Advanced Charts panel (price × utilization sensitivity heat map, 5-axis balanced scorecard radar, client capacity funnel); subtle accent-gradient wash on KPI boxes/section headers with tightened line-height. 26 new tests (unit + e2e), all manually verified rendering in a headless browser.
-4. **Animated KPI Counters, AI Insights Engine & Reverse Calculator (calc logic)** — KPI counter roll-up animation shipped and visible in the UI. **Caveat**: the Insights Engine (`src/insights/insightsEngine.js`) and Reverse Calculator (`src/insights/reverseCalculator.js`) modules are fully built and unit-tested but have **zero UI wiring** — no panel, no import in `assets/app.jsx` or `index.html`. Users cannot access either feature today; see "Recommended Next 3" below.
+4. **Animated KPI Counters, AI Insights Engine & Reverse Calculator (calc logic)** — KPI counter roll-up animation shipped and visible in the UI. The Insights Engine and Reverse Calculator are now wired into two Intermediate+ panels (2026-10-24). Both modules were stale against the real model (profitable offerings flagged loss-making, `~Infinity%` price rises, NaN what-ifs), so they were rebuilt on `calc()` first; see item 4b.
 5. **Lint Warning Cleanup** — Eliminated all lint warnings (0 errors, 0 warnings): added ESLint override for test files; removed/renamed unused imports, dead-code vars, bare catch params across 17 source files; replaced debug `console.log` with `console.warn` or removed in production code.
 
 **Earlier (April–June 2026)**
@@ -31,10 +31,7 @@ See README.md for setup and development instructions.
 
 ## Recommended Next 3
 
-1. **Wire Up AI Insights Engine & Reverse Calculator UI** (~2-3 hrs)
-   - The calculation logic for both already exists and is unit-tested (`src/insights/`) — this is purely UI wiring, following the exact pattern just established for the Mix Optimizer panel (collapsible section, feature-gate entry, init function)
-   - Highest impact-to-effort ratio on the board right now: two "done" features are currently invisible to every user
-   - Acceptance criteria: collapsible panel(s) in `index.html`, `showInsightsEngine`/`showReverseCalculator` (or similar) feature gates in `src/settings/index.js`, init/render functions in `assets/app.jsx`, at least one e2e smoke test per panel
+1. ✅ **Wire Up AI Insights Engine & Reverse Calculator UI** *(SHIPPED 2026-10-24, see item 4b)*
 
 2. **Guided "What If?" Wizard** (~2-3 hrs)
    - Step-by-step flow walking users through common scenarios ("what if I hired one more person?", "what if I raised prices 15%?") without requiring them to know which inputs to change
@@ -64,13 +61,13 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
 1. ✅ **Read-only Scenario Sharing & Collaborative Comments**
 2. ✅ **Tax & Financial Report Generator**
 3. ✅ **Performance Optimization & Caching**
-4. ✅ **AI-Powered Profitability Insights Engine** — calc logic done (`src/insights/insightsEngine.js`); **UI wiring still pending**, see item 4b below
-5. ✅ **"What Would It Take?" Reverse Calculator** — calc logic done (`src/insights/reverseCalculator.js`); **UI wiring still pending**, see item 4b below
+4. ✅ **AI-Powered Profitability Insights Engine** — rebuilt on `calc()` and wired into the "Insights & What-Ifs" panel (`src/insights/insightsEngine.ts`), see item 4b
+5. ✅ **"What Would It Take?" Reverse Calculator** — solves each lever by re-running `calc()` and is wired into the "What Would It Take?" panel (`src/insights/reverseCalculator.ts`), see item 4b
 6. ✅ **Client Mix Optimizer** — fully wired, panel live in the UI
 
-4b. **Wire Up Insights Engine & Reverse Calculator UI** ← *Recommended next*
-   - Both modules are unit-tested and calc-complete; this is purely UI wiring following the Mix Optimizer panel pattern
-   - Effort: ~2-3 hours
+4b. ✅ **Wire Up Insights Engine & Reverse Calculator UI** *(SHIPPED 2026-10-24: two collapsible Intermediate+ panels behind `showInsights` / `showReverseCalculator`; tests `src/insights/*.test.ts`, `tests/e2e/insights-reverse.spec.ts`)*
+   - The ROADMAP called this "purely UI wiring"; it was not. Both modules read fields that do not exist on the real state (`marginPct`, `fullTimeEmployees`), so every offering looked loss-making, add-employee showed NaN and the pricing lever returned `~Infinity%`. Rebuilt on the calc engine: insights use per-offering unit margin, what-if impacts re-run `calc()`, and the reverse calculator bisects each lever against `takeHome` (after estimated tax). Money uses the scenario currency
+   - Not done: the reverse calculator does not auto-refresh when inputs change (press Calculate again); no lever combines pricing with volume
 
 **Visual Design & Polish**
 
@@ -341,11 +338,11 @@ Privacy-first freemium model planned post-launch. The app will remain fully free
   - Client Mix Optimizer: grid-search + hill-climbing mix suggestions, fully wired panel
   - Advanced Charts: price × utilization sensitivity heat map, balanced scorecard radar, client capacity funnel
   - KPI Visual Polish: accent-gradient wash on KPI boxes/section headers, tightened line-height rhythm
-  - Animated KPI Counters shipped; AI Insights Engine & Reverse Calculator calc logic shipped but **not yet wired to any UI** — see item 4b in the backlog
+  - Animated KPI Counters shipped; AI Insights Engine & Reverse Calculator rebuilt on `calc()` and wired into two panels (October 2026) — see item 4b
   - GoatCounter analytics + APK release pipeline hardened: build-time platform stamping (web vs APK), real `versionCode`/`versionName` on every build, auto-generated release notes
   - Scroll lock reference-counting leaks fixed across 3 sites (modal double-open, analytics↔advanced dashboard transition); dead logo link fixed
-- **Next priorities**: Wire up Insights Engine & Reverse Calculator UI → Guided "What If?" Wizard → Industry Benchmarks (see Recommended Next 3 above).
-- **Strategic positioning**: Core financial-modeling + export + performance + advanced-analytics foundation is complete, and the release/distribution pipeline (web + APK) is now solid after this round of hardening. Focus shifts back to closing the gap between built-but-unwired features and actual UI access, then onboarding polish (wizard) and differentiation (benchmarks). Mobile app launch remains blocked on macOS. Enterprise features deferred until market demand validates investment.
+- **Next priorities**: Guided "What If?" Wizard → Industry Benchmarks (see Recommended Next 3 above).
+- **Strategic positioning**: Core financial-modeling + export + performance + advanced-analytics foundation is complete, and the release/distribution pipeline (web + APK) is now solid after this round of hardening. Insights and Reverse Calculator are now reachable; focus moves to onboarding polish (wizard) and differentiation (benchmarks). Mobile app launch remains blocked on macOS. Enterprise features deferred until market demand validates investment.
 - **Known debt**: Capacitor stuck at v5.7.8 due to Xcode 14.2 / macOS Monterey — 5 high-severity tar vulnerabilities in @capacitor/cli will resolve when Capacitor v8 upgrade is unblocked by macOS upgrade.
 - **Blocked major bumps** (ignored in `.github/dependabot.yml`; 2026-09-25): vitest/@vitest/ui 5 fails 11 unit tests; jsdom 30, jest-dom 7 and typescript 7 untried. Also note `@capacitor/cli` is ^8 while `@capacitor/core` and the platform packages are ^5 — a pre-existing mismatch to resolve with the Capacitor upgrade. Remove each ignore once fixed.
 

@@ -399,7 +399,7 @@ function calculateBreakEven(results: ModeResults, costs: Costs): BreakEven {
 /**
  * Calculate tax estimates (2024 US rates, single filer, simplified)
  */
-function calculateTax(income: number): TaxEstimate {
+export function calculateTax(income: number): TaxEstimate {
   if (income <= 0) {
     return {
       seTax: 0,

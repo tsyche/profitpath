@@ -12,6 +12,7 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Scenario comparison tools: OFF
   - Sensitivity analysis: OFF
   - Client mix optimizer: OFF
+  - Insights & What-Ifs, What Would It Take?: OFF
   - Advanced charts (heat map, radar, funnel): OFF
   - Debug panel: OFF
   - Performance metrics: OFF
@@ -23,6 +24,7 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Scenario comparison tools: ON
   - Sensitivity analysis: ON
   - Client mix optimizer: ON
+  - Insights & What-Ifs, What Would It Take?: ON
   - Advanced charts (heat map, radar, funnel): OFF
   - Debug panel: OFF
   - Performance metrics: OFF
@@ -34,6 +36,7 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Scenario comparison tools: ON
   - Sensitivity analysis: ON
   - Client mix optimizer: ON
+  - Insights & What-Ifs, What Would It Take?: ON
   - Advanced charts (heat map, radar, funnel): ON
   - Debug panel: ON
   - Performance metrics: ON
@@ -57,6 +60,8 @@ The app hides/shows elements by toggling display on selectors tied to feature ke
 - `.debug-wrapper` — collapsible debug panel under Outputs
 - `.sensitivity-wrapper` — collapsible sensitivity analysis panel
 - `.mix-optimizer-wrapper` — collapsible client mix optimizer panel
+- `.insights-wrapper` — collapsible insights and what-if estimates panel (`showInsights`)
+- `.reverse-calculator-wrapper` — collapsible "What Would It Take?" panel (`showReverseCalculator`)
 - `.advanced-charts-wrapper` — collapsible advanced charts panel (heat map, radar, funnel)
 
 When adding a new feature flag, update `FEATURE_GATES` in `src/settings/index.js` and ensure the corresponding DOM elements are toggled in `assets/app.jsx`'s `updateUIForSettings`.

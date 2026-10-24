@@ -301,6 +301,8 @@ export interface Settings {
   showPerformanceMetrics: boolean;
   showSensitivityAnalysis: boolean;
   showMixOptimizer: boolean;
+  showInsights: boolean;
+  showReverseCalculator: boolean;
   showAdvancedCharts: boolean;
 }
 

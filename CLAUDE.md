@@ -54,10 +54,10 @@ src/
 │   ├── offeringMeta.ts   # Per-offering confidence tag (verified/estimated/guess) and note sanitizers; display only
 │   ├── ranges.ts         # Optional low/high bounds (fill %, current clients): calcRange min/base/max band, bound sanitizers, suggestRanges (confidence-tag presets), calcRangeDrivers (profit swing per offering)
 │   └── expenses.ts       # Expense line items: categories, frequencies, sanitizer, annualization, cost-by-category breakdown
-├── insights/           # AI/rules-based insights, reverse calculator, mix optimizer
-│   ├── insightsEngine.js   # Rules-based profitability insights
-│   ├── reverseCalculator.js # "What would it take?" reverse calculations
-│   └── mixOptimizer.js     # Suggests optimal offering mix for profit/utilization
+├── insights/           # Rules-based insights + what-ifs, reverse calculator (both built on calc()), mix optimizer
+│   ├── insightsEngine.ts   # Rules-based insights; what-if impacts re-run calc()
+│   ├── reverseCalculator.ts # "What would it take?": bisects each lever against takeHome (after est. tax)
+│   └── mixOptimizer.ts     # Suggests optimal offering mix for profit/utilization
 ├── settings/          # Experience levels and feature gating
 │   └── index.js          # Settings management and feature gates
 └── test/             # Vitest unit/integration tests (incl. fuzz tests)
@@ -91,7 +91,7 @@ manifest.json        # PWA configuration
 - **Purpose**: Manages user preferences and progressive disclosure
 - **Experience Levels**:
   - **Beginner**: Basic features only (core calculations, scenario management)
-  - **Intermediate**: Advanced calculations, detailed breakdowns, scenario comparison, sensitivity analysis, client mix optimizer
+  - **Intermediate**: Advanced calculations, detailed breakdowns, scenario comparison, sensitivity analysis, client mix optimizer, insights and reverse calculator panels
   - **Advanced**: All features including debug panel, performance metrics, sensitivity analysis, client mix optimizer, advanced charts (heat map, radar scorecard, client funnel)
 - **Feature Gates**: Automatic feature enablement based on experience level. Note: export formats are always available regardless of level (see `docs/experience-levels.md`).
 
@@ -199,7 +199,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (582 unit tests across 55 files — 581 passing, 1 skipped — plus 330 Playwright e2e tests across 24 files, chromium + firefox)
+#### Test Coverage (558 unit tests across 55 files — 557 passing, 1 skipped — plus 340 Playwright e2e tests across 25 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

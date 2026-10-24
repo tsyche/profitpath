@@ -18,6 +18,8 @@ import { showToast } from './services/modalService';
 import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui';
 import { fmtMoney0, normalizeCurrency } from '../src/calculations/currency';
 import { optimizeMix } from '../src/insights/mixOptimizer';
+import { generateInsights, generateWhatIfScenarios } from '../src/insights/insightsEngine';
+import { getReverseCalculation, getRecommendedStrategy } from '../src/insights/reverseCalculator';
 import { renderSensitivityHeatmap, renderScorecardRadar, renderClientFunnel } from './services/advancedChartsService';
 
 // Untyped views for the (...args) forwarding wrappers below; real signatures are checked at direct call sites.
@@ -1041,6 +1043,7 @@ function updateOutputs(metrics) {
     renderOfferingRanking(metrics);
     renderMarketTable(metrics);
     renderRangeBand();
+    if (!$('#insightsBody')?.classList.contains('collapsed')) renderInsightsPanel();
     if (kpiPayroll) kpiPayroll.textContent = fmtMoney0(metrics.annualPayroll);
     if (kpiVariableCosts) kpiVariableCosts.textContent = fmtMoney0(metrics.variableCosts);
 
@@ -1421,6 +1424,8 @@ function updateUIForSettings() {
     { selector: '.perf-wrapper', setting: 'showPerformanceMetrics' },
     { selector: '.sensitivity-wrapper', setting: 'showSensitivityAnalysis' },
     { selector: '.mix-optimizer-wrapper', setting: 'showMixOptimizer' },
+    { selector: '.insights-wrapper', setting: 'showInsights' },
+    { selector: '.reverse-calculator-wrapper', setting: 'showReverseCalculator' },
     { selector: '.advanced-charts-wrapper', setting: 'showAdvancedCharts' }
   ];
 
@@ -2577,6 +2582,93 @@ function updateMixOptimizer() {
   resultsEl.innerHTML = tableHtml + summary;
 }
 
+// Collapsible-panel toggle shared by the insights and reverse panels
+/** @param {string} toggleSel @param {string} bodySel @param {() => void} [onOpen] */
+function bindPanelToggle(toggleSel, bodySel, onOpen) {
+  const toggle = $(toggleSel);
+  const body = $(bodySel);
+  if (!toggle || !body) return;
+  toggle.addEventListener('click', () => {
+    const isCollapsed = body.classList.toggle('collapsed');
+    body.setAttribute('aria-hidden', isCollapsed ? 'true' : 'false');
+    toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+    toggle.textContent = (isCollapsed ? '▶' : '▼') + toggle.textContent.slice(1);
+    if (!isCollapsed && onOpen) onOpen();
+  });
+}
+
+/** @type {Record<string, number>} */
+const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
+/** @type {Record<string, string>} */
+const SEVERITY_COLORS = { critical: 'var(--bad)', high: 'var(--bad)', medium: 'var(--warn)', low: 'var(--muted)' };
+
+// Insights & What-Ifs: rules-based alerts plus what-if estimates computed by re-running calc
+function renderInsightsPanel() {
+  const el = $('#insightsResults');
+  if (!el) return;
+  /** @type {any[]} */
+  let insights = [];
+  /** @type {any[]} */
+  let whatIfs = [];
+  try {
+    const metrics = calc(state);
+    insights = generateInsights(metrics, state).sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+    whatIfs = generateWhatIfScenarios(metrics, state);
+  } catch (e) {
+    console.warn('Insights failed:', e);
+  }
+  const list = insights.length
+    ? '<ul class="insights-list" style="padding-left: 18px;">' + insights.map(i =>
+      '<li data-severity="' + i.severity + '"><strong style="color:' + SEVERITY_COLORS[i.severity] + '">' + escapeHtml(i.severity.toUpperCase()) + '</strong> ' +
+      escapeHtml(i.title) + ' <span class="muted">' + escapeHtml(i.message) + '</span></li>').join('') + '</ul>'
+    : '<p class="muted">No issues found for the current scenario.</p>';
+  const table = whatIfs.length
+    ? '<table class="sensitivity-comparison" style="margin-top: 8px;"><thead><tr><th>What if</th><th>Estimated impact</th></tr></thead><tbody>' +
+      whatIfs.map(w => '<tr><td title="' + escapeHtml(w.description) + '">' + escapeHtml(w.name) + '</td><td class="mono">' + escapeHtml(w.estimatedImpact) + '</td></tr>').join('') + '</tbody></table>'
+    : '';
+  el.innerHTML = list + table;
+}
+
+function initInsightsPanel() {
+  bindPanelToggle('#insightsToggle', '#insightsBody', renderInsightsPanel);
+}
+
+/** @type {Record<string, string>} */
+const REVERSE_LABELS = { pricing: 'Raise prices', clients: 'Add clients', utilization: 'Raise utilization', costs: 'Cut costs' };
+
+// What Would It Take?: solve each lever for a desired take-home
+function renderReverseResults() {
+  const el = $('#reverseResults');
+  const input = $('#reverseTarget');
+  if (!el || !input) return;
+  const desired = Number(input.value);
+  if (!Number.isFinite(desired) || desired <= 0) {
+    el.innerHTML = '<p class="muted">Enter a take-home amount above zero.</p>';
+    return;
+  }
+  try {
+    const metrics = calc(state);
+    const all = getReverseCalculation(state, metrics, desired);
+    const best = getRecommendedStrategy(state, metrics, desired);
+    el.innerHTML = '<ul class="reverse-list" style="padding-left: 18px;">' + Object.entries(all).map(([key, r]) => {
+      if (!r) return '';
+      const tag = !r.requiresChange ? 'Already there' : r.feasible ? (best && best.name === key ? 'Recommended' : 'Feasible') : 'Not realistic';
+      const color = r.feasible ? 'var(--good)' : 'var(--bad)';
+      return '<li data-strategy="' + key + '" data-feasible="' + !!r.feasible + '"><strong>' + REVERSE_LABELS[key] + '</strong> <span style="color:' + color + '">(' + tag + ')</span> ' +
+        escapeHtml(r.message) + (r.warning ? ' <span class="muted">' + escapeHtml(r.warning) + '</span>' : '') + '</li>';
+    }).join('') + '</ul>';
+  } catch (e) {
+    console.warn('Reverse calculation failed:', e);
+    el.innerHTML = '<p class="muted">Could not work that out for the current scenario.</p>';
+  }
+}
+
+function initReversePanel() {
+  bindPanelToggle('#reverseToggle', '#reverseBody');
+  $('#reverseRun')?.addEventListener('click', renderReverseResults);
+  $('#reverseTarget')?.addEventListener('keydown', (/** @type {KeyboardEvent} */ e) => { if (e.key === 'Enter') renderReverseResults(); });
+}
+
 // Advanced Charts Panel: heat map, radar scorecard, client funnel
 function initAdvancedChartsPanel() {
   const toggle = $('#advancedChartsToggle');
@@ -2978,6 +3070,8 @@ try {
   initSensitivityPanel();
   initCustomerAnalyticsPanel();
   initMixOptimizerPanel();
+  initInsightsPanel();
+  initReversePanel();
   initAdvancedChartsPanel();
 } catch {
   try {

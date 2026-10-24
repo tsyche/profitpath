@@ -32,6 +32,8 @@ export const DEFAULT_SETTINGS: import('../types').Settings = {
   showPerformanceMetrics: false,
   showSensitivityAnalysis: false,
   showMixOptimizer: false,
+  showInsights: false,
+  showReverseCalculator: false,
   showAdvancedCharts: false
 };
 
@@ -50,6 +52,8 @@ export const FEATURE_GATES = {
     showPerformanceMetrics: false,
     showSensitivityAnalysis: false,
     showMixOptimizer: false,
+    showInsights: false,
+    showReverseCalculator: false,
     showAdvancedCharts: false,
     showTooltips: true
   },
@@ -64,6 +68,8 @@ export const FEATURE_GATES = {
     showPerformanceMetrics: false,
     showSensitivityAnalysis: true,
     showMixOptimizer: true,
+    showInsights: true,
+    showReverseCalculator: true,
     showAdvancedCharts: false,
     showTooltips: true
   },
@@ -78,6 +84,8 @@ export const FEATURE_GATES = {
     showPerformanceMetrics: true,
     showSensitivityAnalysis: true,
     showMixOptimizer: true,
+    showInsights: true,
+    showReverseCalculator: true,
     showAdvancedCharts: true,
     showTooltips: false
   }

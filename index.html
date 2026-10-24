@@ -790,6 +790,32 @@
           </div>
         </div>
 
+        <!-- Insights panel (collapsible) -->
+        <div class="insights-wrapper advanced-feature">
+          <button id="insightsToggle" class="debug-toggle" aria-expanded="false" aria-controls="insightsBody"
+            title="Rules-based alerts and suggestions for the current scenario, plus what-if estimates">▶
+            Insights &amp; What-Ifs</button>
+          <div id="insightsBody" class="debug-body collapsed" aria-hidden="true">
+            <div id="insightsResults"></div>
+          </div>
+        </div>
+
+        <!-- Reverse Calculator panel (collapsible) -->
+        <div class="reverse-calculator-wrapper advanced-feature">
+          <button id="reverseToggle" class="debug-toggle" aria-expanded="false" aria-controls="reverseBody"
+            title="Enter the take-home you want and see what pricing, volume or cost change gets there">▶
+            What Would It Take?</button>
+          <div id="reverseBody" class="debug-body collapsed" aria-hidden="true">
+            <div class="slider-row">
+              <label class="slider-label" for="reverseTarget">Desired annual take-home (after est. tax)</label>
+              <input id="reverseTarget" type="number" min="1" step="1000" placeholder="e.g. 100000" />
+            </div>
+            <button id="reverseRun" class="btn secondary small" style="margin-top: 8px;"
+              title="Work out what each lever would need to be">Calculate</button>
+            <div id="reverseResults" style="margin-top: 12px;"></div>
+          </div>
+        </div>
+
         <!-- Advanced Charts panel (collapsible) -->
         <div class="advanced-charts-wrapper advanced-feature">
           <button id="advancedChartsToggle" class="debug-toggle" aria-expanded="false" aria-controls="advancedChartsBody"

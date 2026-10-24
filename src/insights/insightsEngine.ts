@@ -3,6 +3,9 @@
  * Provides optimization suggestions, automated alerts, and what-if scenarios
  */
 
+import { calc, HOURS_PER_YEAR } from '../calculations/index';
+import { formatMoney0 } from '../calculations/currency';
+
 export class InsightsEngine {
   metrics: any;
   state: any;
@@ -12,6 +15,23 @@ export class InsightsEngine {
     this.metrics = metrics;
     this.state = state;
     this.insights = [];
+  }
+
+  money(n: number) {
+    return formatMoney0(n, this.state.currency);
+  }
+
+  /**
+   * Per-offering unit margin (% of price left after variable and labor cost per client).
+   * Taken from the calc engine so it holds in both modes, even when an offering has 0 clients.
+   */
+  offeringMargins(): { name: string; marginPct: number; priceMonthly: number }[] {
+    const offerings = Array.isArray(this.state.offerings) ? this.state.offerings : [];
+    return (this.metrics.offeringMetrics || []).map((m: any, i: number) => ({
+      name: m.name,
+      marginPct: m.maxDiscountPct,
+      priceMonthly: Number(offerings.find((o: any) => o && o.name === m.name)?.priceMonthly ?? offerings[i]?.priceMonthly) || 0
+    }));
   }
 
   /**
@@ -35,9 +55,9 @@ export class InsightsEngine {
 
     if (capacityPct < targetUtilizationPct * 0.8) {
       // Significantly underutilized
-      const clientsNeeded = Math.ceil(
-        (targetUtilizationPct * this.metrics.serviceHours / 2080) - this.metrics.clients
-      );
+      const clientsNeeded = capacityPct > 0
+        ? Math.ceil(this.metrics.clients * (targetUtilizationPct / capacityPct) - this.metrics.clients)
+        : 0;
 
       this.insights.push({
         type: 'alert',
@@ -68,12 +88,10 @@ export class InsightsEngine {
    * Detect declining margins
    */
   detectDecliningMargins() {
-    const { offerings } = this.state;
     const lowMarginThreshold = 20; // 20% margin
 
-    offerings.forEach((offering: any) => {
-      if (!offering) return;
-      const marginPct = offering.marginPct || 0;
+    this.offeringMargins().forEach((offering) => {
+      const marginPct = offering.marginPct;
 
       if (marginPct < lowMarginThreshold && marginPct > 0) {
         this.insights.push({
@@ -106,6 +124,7 @@ export class InsightsEngine {
    */
   generateOptimizationSuggestions() {
     const { income, revenue, annualPayroll, annualFixedCosts } = this.metrics;
+    if (!(revenue > 0)) return;
     const payrollPct = annualPayroll / revenue * 100;
     const fixedCostPct = annualFixedCosts / revenue * 100;
 
@@ -153,12 +172,12 @@ export class InsightsEngine {
    * Generate pricing recommendations
    */
   generatePricingRecommendations() {
-    const { offerings } = this.state;
-    const avgMargin = offerings.reduce((sum: any, o: any) => sum + (o.marginPct || 0), 0) / offerings.length;
+    const offerings = this.offeringMargins();
+    if (offerings.length < 2) return;
+    const avgMargin = offerings.reduce((sum, o) => sum + o.marginPct, 0) / offerings.length;
 
-    offerings.forEach((offering: any) => {
-      if (!offering) return;
-      const marginPct = offering.marginPct || 0;
+    offerings.forEach((offering) => {
+      const marginPct = offering.marginPct;
       const marginDiff = marginPct - avgMargin;
 
       if (marginDiff < -5 && offering.priceMonthly > 0) {
@@ -168,7 +187,7 @@ export class InsightsEngine {
           severity: 'medium',
           category: 'pricing',
           title: `Raise Price for "${offering.name}"`,
-          message: `Margin ${marginDiff.toFixed(1)}% below average. Consider raising price from $${offering.priceMonthly} to $${recommendedPrice}.`,
+          message: `Margin ${marginDiff.toFixed(1)}% below average. Consider raising price from ${this.money(offering.priceMonthly)} to ${this.money(recommendedPrice)}.`,
           metric: marginPct,
           offering: offering.name,
           recommendation: { current: offering.priceMonthly, suggested: recommendedPrice },
@@ -184,7 +203,17 @@ export class InsightsEngine {
   detectBreakEvenRisk() {
     const { clients, breakEvenClients } = this.metrics;
 
-    if (breakEvenClients > 0) {
+    if (breakEvenClients === Infinity) {
+      this.insights.push({
+        type: 'alert',
+        severity: 'critical',
+        category: 'breakeven',
+        title: 'Cannot Break Even',
+        message: 'No offering earns a positive margin per client, so no client count covers your fixed costs. Raise prices or cut per-client costs.',
+        metric: clients,
+        actionable: true
+      });
+    } else if (breakEvenClients > 0) {
       const percentToBE = (clients / breakEvenClients) * 100;
 
       if (percentToBE < 80 && clients < breakEvenClients) {
@@ -204,7 +233,9 @@ export class InsightsEngine {
           severity: 'high',
           category: 'breakeven',
           title: 'Close to Break-Even',
-          message: `Only ${(breakEvenClients - clients).toFixed(0)} clients from break-even. Small changes significantly impact profitability.`,
+          message: clients >= breakEvenClients
+            ? `Only ${clients - breakEvenClients} clients above break-even. Small changes significantly impact profitability.`
+            : `Only ${breakEvenClients - clients} clients from break-even. Small changes significantly impact profitability.`,
           metric: clients,
           target: breakEvenClients,
           actionable: true
@@ -217,60 +248,32 @@ export class InsightsEngine {
    * Generate auto what-if scenarios based on current state
    */
   generateWhatIfScenarios() {
-    const scenarios = [];
-    const { offerings, fullTimeEmployees, targetUtilizationPct } = this.state;
-    const { capacityPct, income } = this.metrics;
+    const { offerings, employees, targetUtilizationPct } = this.state;
+    const baseIncome = this.metrics.income;
+    const list = Array.isArray(offerings) ? offerings : [];
 
-    // Scenario 1: Price increase (10%)
-    scenarios.push({
-      name: 'Price increase 10%',
-      description: 'Increase all service prices by 10%',
-      changes: {
-        offerings: offerings.map((o: any) => ({
-          ...o,
-          priceMonthly: Math.round(o.priceMonthly * 1.1)
-        }))
-      },
-      estimatedImpact: `+${((income * 0.1 * 0.85).toFixed(0))} to income (accounting for potential client loss)`
-    });
+    // Impact comes from re-running the calc engine on the changed state, not from rules of thumb
+    const impact = (changes: Record<string, any>) => {
+      const delta = calc({ ...this.state, ...changes }).income - baseIncome;
+      return `${delta >= 0 ? '+' : '-'}${this.money(Math.abs(Math.round(delta)))}/yr net profit`;
+    };
 
-    // Scenario 2: Hire one more employee
-    scenarios.push({
-      name: 'Add 1 employee',
-      description: 'Increase capacity by adding one full-time employee',
-      changes: {
-        fullTimeEmployees: fullTimeEmployees + 1
-      },
-      estimatedImpact: `Increases capacity to ${(capacityPct * fullTimeEmployees / (fullTimeEmployees + 1)).toFixed(1)}%`
-    });
+    const priceChanges = { offerings: list.map((o: any) => ({ ...o, priceMonthly: Math.round(o.priceMonthly * 1.1) })) };
+    const costChanges = { offerings: list.map((o: any) => ({ ...o, variableCostPerSession: Math.round(o.variableCostPerSession * 0.9) })) };
+    const paidHours = Number(this.state.totalAnnualPaidHours) || 0;
+    const hireChanges = { employees: (Number(employees) || 0) + 1, ...(paidHours ? { totalAnnualPaidHours: paidHours + HOURS_PER_YEAR } : {}) };
+    const utilChanges = this.state.mode === 'forecast'
+      ? { productiveUtilizationPct: Math.min(100, (Number(this.state.productiveUtilizationPct) || 0) + 10) }
+      : { offerings: list.map((o: any) => ({ ...o, currentClients: Math.ceil((o.currentClients || 0) * 1.1) })) };
 
-    // Scenario 3: Cost reduction (10% reduction in variable costs)
-    scenarios.push({
-      name: 'Reduce variable costs 10%',
-      description: 'Reduce variable costs through efficiency gains',
-      changes: {
-        offerings: offerings.map((o: any) => ({
-          ...o,
-          variableCostPerSession: Math.round(o.variableCostPerSession * 0.9)
-        }))
-      },
-      estimatedImpact: 'Improves margin on all offerings'
-    });
-
-    // Scenario 4: Improve utilization
-    scenarios.push({
-      name: 'Reach target utilization',
-      description: `Increase clients to achieve ${targetUtilizationPct}% utilization`,
-      changes: {
-        offerings: offerings.map((o: any) => ({
-          ...o,
-          currentClients: Math.ceil(o.currentClients * (targetUtilizationPct / capacityPct))
-        }))
-      },
-      estimatedImpact: `+${Math.round(income * 0.25)} to income estimate`
-    });
-
-    return scenarios;
+    return [
+      { name: 'Price increase 10%', description: 'Increase all service prices by 10%', changes: priceChanges, estimatedImpact: impact(priceChanges) },
+      { name: 'Add 1 employee', description: 'Increase capacity by adding one full-time employee', changes: hireChanges, estimatedImpact: impact(hireChanges) },
+      { name: 'Reduce variable costs 10%', description: 'Reduce variable costs through efficiency gains', changes: costChanges, estimatedImpact: impact(costChanges) },
+      this.state.mode === 'forecast'
+        ? { name: 'Productive time +10 points', description: 'Raise productive utilization by 10 points', changes: utilChanges, estimatedImpact: impact(utilChanges) }
+        : { name: 'Grow clients 10%', description: `Add ~10% more clients (target utilization ${targetUtilizationPct}%)`, changes: utilChanges, estimatedImpact: impact(utilChanges) }
+    ];
   }
 
   /**
