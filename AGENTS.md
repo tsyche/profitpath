@@ -52,7 +52,7 @@ src/
 │   ├── marketPosition.ts # Optional market low/avg/high per offering and the green/yellow/red price badge; display only
 │   ├── currency.ts       # Scenario currency allowlist + shared fmtMoney0 (display only)
 │   ├── offeringMeta.ts   # Per-offering confidence tag (verified/estimated/guess) and note sanitizers; display only
-│   ├── ranges.ts         # Optional low/high bounds (fill %, current clients): calcRange min/base/max band, bound sanitizers
+│   ├── ranges.ts         # Optional low/high bounds (fill %, current clients): calcRange min/base/max band, bound sanitizers, suggestRanges (confidence-tag presets), calcRangeDrivers (profit swing per offering)
 │   └── expenses.ts       # Expense line items: categories, frequencies, sanitizer, annualization, cost-by-category breakdown
 ├── insights/           # AI/rules-based insights, reverse calculator, mix optimizer
 │   ├── insightsEngine.js   # Rules-based profitability insights
@@ -199,7 +199,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (573 unit tests across 54 files — 572 passing, 1 skipped — plus 326 Playwright e2e tests across 24 files, chromium + firefox)
+#### Test Coverage (582 unit tests across 55 files — 581 passing, 1 skipped — plus 330 Playwright e2e tests across 24 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

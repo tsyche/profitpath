@@ -89,6 +89,37 @@ function performSave(name: any) {
   }
 }
 
+// "X copy", then "X copy 2", ... so a duplicate never collides with an existing name
+export function uniqueCopyName(name: string, existing: string[]) {
+  const taken = new Set(existing.map(n => String(n).trim().toLowerCase()));
+  let candidate = `${name} copy`;
+  for (let i = 2; taken.has(candidate.toLowerCase()); i++) candidate = `${name} copy ${i}`;
+  return candidate;
+}
+
+export function duplicateScenario(scenarioId: any) {
+  try {
+    const scenarios = getAllScenarios();
+    const source = scenarios.find((s: any) => s.id === scenarioId);
+    if (!source) return;
+    const copy = {
+      ...JSON.parse(JSON.stringify(source)),
+      id: uuid(),
+      name: uniqueCopyName(String(source.name || 'Unnamed scenario'), scenarios.map((s: any) => s.name)),
+      timestamp: new Date().toLocaleString(),
+      createdAt: new Date().toISOString(),
+    };
+    scenarios.push(copy);
+    localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
+    renderScenariosList();
+    import('./miscService').then(m => m.populateComparisonDropdowns(document.querySelector('.modal-overlay')));
+    showToast(`Duplicated as "${copy.name}"`, 'success');
+  } catch (e) {
+    console.error('Failed to duplicate scenario:', e);
+    showToast('Failed to duplicate scenario', 'error');
+  }
+}
+
 export function loadScenario(scenarioId: any) {
   try {
     const scenarios = getAllScenarios();

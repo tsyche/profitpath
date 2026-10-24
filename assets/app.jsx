@@ -1,6 +1,6 @@
 import { calc, getCacheStats, normalizeOfferingType } from '../src/calculations/index';
 import { floorStatus, rankOfferings } from '../src/calculations/offeringRanking';
-import { calcRange, sanitizeOfferingRange } from '../src/calculations/ranges';
+import { calcRange, calcRangeDrivers, suggestRanges, sanitizeOfferingRange } from '../src/calculations/ranges';
 import { marketBadge, sanitizeOfferingMarket } from '../src/calculations/marketPosition';
 import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../src/calculations/offeringMeta';
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
@@ -488,6 +488,14 @@ function renderRangeBand() {
   const r = calcRange(state);
   const moves = r && RANGE_ROWS.some(({ metric: m }) => r[m].min !== r[m].max);
   wrap.hidden = !moves;
+  const drivers = $('#rangeDrivers');
+  if (drivers) {
+    const top = moves ? calcRangeDrivers(state).slice(0, 3) : [];
+    drivers.hidden = top.length === 0;
+    drivers.textContent = top.length
+      ? 'Biggest drivers of net profit: ' + top.map(d => d.name + (d.confidence ? ' (' + CONFIDENCE_LABELS[d.confidence] + ')' : '') + ' swings ' + fmtMoney0(d.swing) + '/yr').join('; ')
+      : '';
+  }
   body.innerHTML = moves
     ? RANGE_ROWS.map(({ metric: m, label, fmt }) => '<tr data-metric="' + m + '"><td>' + label + '</td><td class="mono">' + fmt(r[m].min) +
       '</td><td class="mono">' + fmt(r[m].base) + '</td><td class="mono">' + fmt(r[m].max) + '</td></tr>').join('')
@@ -1148,6 +1156,17 @@ $$('#controls select').forEach((el) => {
   }
 }
 {
+  const btn = $('#suggestRangesBtn');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      pushHistory();
+      _lastHistoryField = null;
+      state.offerings.forEach(o => Object.assign(o, suggestRanges(o, state.mode)));
+      persistState();
+      renderRangesTable();
+      renderRangeBand();
+    });
+  }
   const body = $('#rangesBody');
   if (body) {
     body.addEventListener('input', onRangeInput);

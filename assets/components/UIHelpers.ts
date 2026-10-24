@@ -30,6 +30,7 @@ export function openScenarioModal() {
       </div>
       <div class="scenario-item-actions">
         <button class="btn small load-btn" data-scenario-id="${id}">📂 Load</button>
+            <button class="btn small duplicate-btn" data-scenario-id="${id}">📑 Duplicate</button>
         <button class="btn small danger delete-btn" data-scenario-id="${id}">🗑️ Delete</button>
       </div>
     </div>
@@ -115,7 +116,7 @@ export function openScenarioModal() {
   // Set up event delegation for scenario buttons
   modal.addEventListener('click', (e) => {
     if (!(e.target instanceof Element)) return;
-    const btn = e.target.closest<HTMLElement>('.load-btn, .delete-btn');
+    const btn = e.target.closest<HTMLElement>('.load-btn, .delete-btn, .duplicate-btn');
     if (!btn) return;
 
     const scenarioId = btn.dataset.scenarioId;
@@ -139,6 +140,8 @@ export function openScenarioModal() {
           }
         ]
       });
+    } else if (btn.classList.contains('duplicate-btn')) {
+      import('../services/scenarioService').then(svc => svc.duplicateScenario(scenarioId));
     } else if (btn.classList.contains('delete-btn')) {
       showDeleteConfirmation(scenarioId, async () => {
         await deleteScenario(scenarioId);

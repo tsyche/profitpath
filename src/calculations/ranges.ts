@@ -1,5 +1,5 @@
 import { calc } from './index';
-import type { CalcResult, CalcState, Offering } from '../types';
+import type { CalcResult, CalcState, Confidence, Offering } from '../types';
 
 /**
  * Low/high bounds for the two guessable per-offering inputs: forecast fill %
@@ -106,4 +106,59 @@ export function calcRange(state: CalcState): RangeResult | null {
     out[m] = { min: Math.min(...values), base: base[m], max: Math.max(...values) };
   }
   return out;
+}
+
+/** Spread applied around the base value for each confidence tag; verified and untagged get no bounds. */
+export const CONFIDENCE_SPREAD_PCT: Partial<Record<Confidence, number>> = { estimated: 15, guess: 30 };
+
+/**
+ * Suggested bounds from the offering's confidence tag, for the inputs the mode actually uses
+ * (fill % for group offerings in Forecast, current clients in Current). Only empty bounds are filled,
+ * so typed values are never overwritten.
+ */
+export function suggestRanges(o: Offering, mode: string): Partial<Pick<Offering, 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh'>> {
+  const spread = o.confidence ? CONFIDENCE_SPREAD_PCT[o.confidence] : undefined;
+  if (!spread) return {};
+  const lo = 1 - spread / 100;
+  const hi = 1 + spread / 100;
+  const out: ReturnType<typeof suggestRanges> = {};
+  if (mode === 'forecast') {
+    if (o.type !== 'group') return out;
+    const base = clampFill(o.fillPct) ?? 100;
+    if (o.fillPctLow === undefined) out.fillPctLow = clampFill(Math.round(base * lo));
+    if (o.fillPctHigh === undefined) out.fillPctHigh = clampFill(Math.round(base * hi));
+  } else {
+    const base = clampClients(o.currentClients) ?? 0;
+    if (o.currentClientsLow === undefined) out.currentClientsLow = clampClients(Math.floor(base * lo));
+    if (o.currentClientsHigh === undefined) out.currentClientsHigh = clampClients(Math.ceil(base * hi));
+  }
+  return out;
+}
+
+export interface RangeDriver {
+  name: string;
+  confidence?: Confidence;
+  swing: number;
+}
+
+/** Net-profit swing caused by each offering's bounds alone (others held at base), biggest first. */
+export function calcRangeDrivers(state: CalcState): RangeDriver[] {
+  const offerings = Array.isArray(state.offerings) ? state.offerings : [];
+  if (!hasRanges(offerings)) return [];
+  const boundKeys = ['fillPctLow', 'fillPctHigh', 'currentClientsLow', 'currentClientsHigh'] as const;
+  const base = calc(state).income;
+  const drivers: RangeDriver[] = [];
+  offerings.forEach((o, i) => {
+    if (!o || !hasRanges([o])) return;
+    const only = offerings.map((p, j) => {
+      if (j === i || !p) return p;
+      const copy = { ...p };
+      for (const k of boundKeys) delete copy[k];
+      return copy;
+    });
+    const incomes = [calc({ ...state, offerings: withBounds(only, 'low') }).income, base, calc({ ...state, offerings: withBounds(only, 'high') }).income];
+    const swing = Math.max(...incomes) - Math.min(...incomes);
+    if (swing > 0) drivers.push({ name: String(o.name), confidence: o.confidence, swing });
+  });
+  return drivers.sort((a, b) => b.swing - a.swing);
 }

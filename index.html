@@ -518,6 +518,10 @@
             Guessing fill or client counts? Enter a low and high; Outputs shows the min and max across all lows together and all highs together.
             Leave blank for no range. Tag how much you trust each offering's numbers and jot a source or caveat.
           </div>
+          <div class="smallprint">
+            <button class="btn small" id="suggestRangesBtn" type="button"
+              title="Fills empty bounds for tagged offerings: Estimated ±15%, Guess ±30% around the base value. Typed bounds are kept.">Fill ranges from confidence</button>
+          </div>
           <div class="table-wrap">
             <table class="table ranges-table" id="rangesTable" aria-label="Low and high assumptions">
               <thead>
@@ -652,6 +656,7 @@
             <thead><tr><th>Metric</th><th>Min</th><th>Base</th><th>Max</th></tr></thead>
             <tbody id="rangeBandBody"></tbody>
           </table>
+          <div class="smallprint" id="rangeDrivers" hidden></div>
         </div>
 
         <div id="offeringRanking" class="cost-breakdown" hidden>

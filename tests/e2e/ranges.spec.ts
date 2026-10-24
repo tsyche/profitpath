@@ -43,6 +43,24 @@ test.describe('Ranged inputs (low / high)', () => {
     await expect(band(page)).toBeVisible();
   });
 
+  test('fill-from-confidence sets bounds for tagged rows and names the biggest driver', async ({ page }) => {
+    await makeFirstRowGroup(page);
+    await expect(page.locator('#rangeDrivers')).toBeHidden();
+
+    await page.locator('#rangesBody select[data-k="confidence"]').first().selectOption('guess');
+    await page.locator('#suggestRangesBtn').click();
+
+    await expect(lowFill(page)).toHaveValue('42');
+    await expect(highFill(page)).toHaveValue('78');
+    await expect(band(page)).toBeVisible();
+    await expect(page.locator('#rangeDrivers')).toContainText('(Guess)');
+
+    // A typed bound survives a second fill
+    await lowFill(page).fill('10');
+    await page.locator('#suggestRangesBtn').click();
+    await expect(lowFill(page)).toHaveValue('10');
+  });
+
   test('clearing both bounds hides the band again', async ({ page }) => {
     await makeFirstRowGroup(page);
     await lowFill(page).fill('30');

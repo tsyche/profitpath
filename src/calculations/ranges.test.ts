@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { clearCalculationCache } from './index'
-import { calcRange, hasRanges, sanitizeRangeBound, sanitizeOfferingRange, rangeCsvCells } from './ranges'
+import { calcRange, calcRangeDrivers, suggestRanges, hasRanges, sanitizeRangeBound, sanitizeOfferingRange, rangeCsvCells } from './ranges'
 import { sanitizeScenarioState, importFromCSV, buildCSV } from '../../assets/services/miscService'
 
 // Roadmap 24c: low/base/high bounds on fill % and current clients.
@@ -145,5 +145,52 @@ describe('best-case discount persistence (roadmap 24d)', () => {
   it('legacy 15-column CSV rows import with no discount', () => {
     const csv = 'Offerings\nName,P,S,H,V,M,C,L,T,Seats,Fill,a,b,c,d\nYoga,100,12,1,0,100,0,0,group,10,60,,,,'
     expect((importFromCSV(csv) as any).data.offerings[0].discountPct).toBe(0)
+  })
+})
+
+describe('suggestRanges (roadmap 22 / 24c)', () => {
+  it('forecast: group fill gets ±15% for estimated and ±30% for guess', () => {
+    expect(suggestRanges({ ...group, confidence: 'estimated' } as any, 'forecast')).toEqual({ fillPctLow: 64, fillPctHigh: 86 })
+    expect(suggestRanges({ ...group, confidence: 'guess' } as any, 'forecast')).toEqual({ fillPctLow: 53, fillPctHigh: 98 })
+  })
+
+  it('clamps fill to 1-100', () => {
+    expect(suggestRanges({ ...group, fillPct: 95, confidence: 'guess' } as any, 'forecast').fillPctHigh).toBe(100)
+  })
+
+  it('current: client bounds widen outward, floor/ceil', () => {
+    expect(suggestRanges({ ...group, currentClients: 10, confidence: 'guess' } as any, 'current'))
+      .toEqual({ currentClientsLow: 7, currentClientsHigh: 13 })
+  })
+
+  it('leaves verified, untagged and non-group forecast rows alone', () => {
+    expect(suggestRanges({ ...group, confidence: 'verified' } as any, 'forecast')).toEqual({})
+    expect(suggestRanges({ ...group } as any, 'forecast')).toEqual({})
+    expect(suggestRanges({ ...group, type: 'subscription', confidence: 'guess' } as any, 'forecast')).toEqual({})
+  })
+
+  it('never overwrites a typed bound', () => {
+    expect(suggestRanges({ ...group, confidence: 'guess', fillPctLow: 10 } as any, 'forecast')).toEqual({ fillPctHigh: 98 })
+  })
+})
+
+describe('calcRangeDrivers', () => {
+  beforeEach(() => clearCalculationCache())
+
+  it('is empty without bounds', () => {
+    expect(calcRangeDrivers({ ...base, mode: 'forecast', offerings: [group] } as any)).toEqual([])
+  })
+
+  it('ranks by profit swing and isolates each offering', () => {
+    const small = { ...group, name: 'Small', mixPct: 50, fillPctLow: 70, fillPctHigh: 80, confidence: 'estimated' }
+    const big = { ...group, name: 'Big', mixPct: 50, fillPctLow: 20, fillPctHigh: 100, confidence: 'guess' }
+    const state = { ...base, mode: 'forecast', offerings: [small, big] } as any
+    const d = calcRangeDrivers(state)
+    expect(d.map(x => x.name)).toEqual(['Big', 'Small'])
+    expect(d[0].confidence).toBe('guess')
+    // Big alone moves profit more than Small alone, and each is smaller than the combined envelope
+    const full = calcRange(state)!.income
+    expect(d[0].swing).toBeLessThanOrEqual(full.max - full.min + 1e-6)
+    expect(d[0].swing).toBeGreaterThan(d[1].swing)
   })
 })
