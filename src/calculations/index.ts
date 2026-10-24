@@ -18,6 +18,7 @@ import type {
   ModeResults,
   MixResult,
   Offering,
+  OfferingType,
   SanitizedOffering,
   TaxEstimate
 } from '../types';
@@ -92,6 +93,7 @@ function generateCacheKey(state: CalcState) {
       hoursPerSession: o.hoursPerSession,
       variableCostPerSession: o.variableCostPerSession,
       laborPctOfPrice: o.laborPctOfPrice,
+      type: o.type,
       mixPct: o.mixPct,
       currentClients: o.currentClients
     }))
@@ -131,6 +133,13 @@ function annualVariableCostPerClient(o: SanitizedOffering): number {
   return o.sessionsPerYear * o.variableCostPerSession + (o.laborPctOfPrice / 100) * o.priceMonthly * 12;
 }
 
+const OFFERING_TYPES: readonly OfferingType[] = ['subscription', 'group'];
+
+/** Single fallback point: anything unrecognized is a subscription. */
+export function normalizeOfferingType(v: unknown): OfferingType {
+  return OFFERING_TYPES.includes(v as OfferingType) ? (v as OfferingType) : 'subscription';
+}
+
 /**
  * Sanitizes and validates offering data
  */
@@ -145,6 +154,7 @@ function sanitizeOfferings(offerings: Offering[]): SanitizedOffering[] {
       hoursPerSession: clamp(toFinite(o.hoursPerSession), 0, MAX_COUNT),
       variableCostPerSession: clamp(toFinite(o.variableCostPerSession), 0, MAX_MONEY),
       laborPctOfPrice: clamp(toFinite(o.laborPctOfPrice), 0, 100),
+      type: normalizeOfferingType(o.type),
       mixPct: clamp(toFinite(o.mixPct), 0, 100),
       currentClients: clamp(Math.floor(toFinite(o.currentClients)), 0, MAX_COUNT),
     }))

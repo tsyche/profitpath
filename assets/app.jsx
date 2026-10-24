@@ -472,6 +472,7 @@ function addOffering() {
     hoursPerSession: 1.0,
     variableCostPerSession: 0,
     laborPctOfPrice: 0,
+    type: 'subscription',
     mixPct: 0,
     currentClients: 0,
   });

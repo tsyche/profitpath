@@ -4,6 +4,9 @@
 
 export type Mode = 'forecast' | 'current';
 
+/** Only types with behavior live here; per-session/one-time arrive with roadmap items 18/19. */
+export type OfferingType = 'subscription' | 'group';
+
 /** A service offering as stored in app state (user-editable, may be partially filled). */
 export interface Offering {
   id?: string;
@@ -14,6 +17,8 @@ export interface Offering {
   variableCostPerSession?: number;
   /** Contractor pay as % of list price (0-100), added to variable cost. */
   laborPctOfPrice?: number;
+  /** Missing or unknown values behave as 'subscription'. */
+  type?: OfferingType;
   mixPct?: number;
   currentClients?: number;
 }
@@ -26,6 +31,7 @@ export interface SanitizedOffering extends Offering {
   hoursPerSession: number;
   variableCostPerSession: number;
   laborPctOfPrice: number;
+  type: OfferingType;
   mixPct: number;
   currentClients: number;
 }
@@ -54,8 +60,8 @@ export interface CalcState {
 }
 
 /** An offering in app state: the UI always fills every field. */
-// laborPctOfPrice stays optional: older saved states and templates omit it (treated as 0)
-export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice'>> & { laborPctOfPrice?: number };
+// laborPctOfPrice and type stay optional: older saved states and templates omit them (0 / subscription)
+export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'type'>> & { laborPctOfPrice?: number; type?: OfferingType };
 
 /**
  * The live app `state` global. calc() input stays CalcState because it also accepts the
