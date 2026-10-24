@@ -1470,10 +1470,12 @@ export function importFromCSV(csvText: any) {
 
     let section: 'settings' | 'offerings' | 'expenses' | 'none' = 'none';
     let headerSeen = false;
+    let sawExpenses = false;
 
     for (const line of lines) {
       const next = csvSectionOf(line);
       if (next) {
+        if (next === 'expenses') sawExpenses = true;
         section = next;
         headerSeen = false;
         continue;
@@ -1554,7 +1556,8 @@ export function importFromCSV(csvText: any) {
       }
     }
 
-    const expenses = sanitizeExpenses(rawExpenses, uuid);
+    // undefined means the CSV had no expenses section (legacy file): callers keep existing expenses
+    const expenses = sawExpenses ? sanitizeExpenses(rawExpenses, uuid) : undefined;
 
     // Validate offerings
     if (offerings.length === 0) {

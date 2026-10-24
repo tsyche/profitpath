@@ -53,8 +53,18 @@ describe('CSV export -> import round trip', () => {
 describe('importFromCSV expenses section', () => {
   const offerings = 'Offerings\nName,P,S,H,V,M,C\nA,100,12,1,0,100,0\n';
 
-  it('legacy CSV without the section gives no expenses', () => {
-    expect((importFromCSV(offerings) as any).data.expenses).toEqual([]);
+  it('legacy CSV without the section leaves expenses undefined so existing ones are kept', () => {
+    expect((importFromCSV(offerings) as any).data.expenses).toBeUndefined();
+  });
+
+  it('an empty section gives an empty list so existing expenses are cleared', () => {
+    const csv = offerings + 'Expenses\nName,Category,Amount,Frequency\n';
+    expect((importFromCSV(csv) as any).data.expenses).toEqual([]);
+  });
+
+  it('round-trips a scenario with zero expenses to an empty list', () => {
+    const st = { ...state, expenses: [] };
+    expect((importFromCSV(buildCSV(st, results)) as any).data.expenses).toEqual([]);
   });
 
   it('works for the "# Fixed Expenses" template header', () => {

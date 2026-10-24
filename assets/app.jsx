@@ -1791,7 +1791,7 @@ function handleCSVImport(file) {
 
     // Apply imported offerings; expenses only when the CSV had that section
     if (offerings.length > 0) state.offerings = offerings;
-    if (expenses.length > 0) state.expenses = expenses;
+    if (expenses !== undefined) state.expenses = expenses;
 
     persistState();
     render();

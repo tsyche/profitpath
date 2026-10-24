@@ -38,6 +38,26 @@ test.describe('Fixed expenses table', () => {
     expect(await fixedCosts(page)).toBe(before);
   });
 
+  test('importing a CSV with an empty expenses section clears existing expenses', async ({ page }) => {
+    await page.locator('#addExpenseBtn').click();
+    await rows(page).first().locator('input[data-k="amount"]').fill('50');
+    await expect(rows(page)).toHaveCount(1);
+
+    const offerings = 'Offerings\nName,Price,Sessions,Hours,Var,Mix,Clients\nA,100,12,1,0,100,0\n';
+    const importCsv = (csv: string) => page.locator('#csvFileInput').setInputFiles({
+      name: 'in.csv', mimeType: 'text/csv', buffer: Buffer.from(csv)
+    });
+
+    // Legacy CSV (no expenses section) keeps existing expenses
+    await importCsv(offerings);
+    await expect(page.locator('.toast', { hasText: 'Imported' }).first()).toBeVisible();
+    await expect(rows(page)).toHaveCount(1);
+
+    // An explicit empty section clears them
+    await importCsv(offerings + 'FIXED EXPENSES\nName,Category,Amount,Frequency\n');
+    await expect(rows(page)).toHaveCount(0);
+  });
+
   test('survives a share link', async ({ page }) => {
     await page.locator('#addExpenseBtn').click();
     await rows(page).first().locator('input[data-k="amount"]').fill('75');
