@@ -1259,8 +1259,7 @@ document.querySelectorAll('.export-option').forEach(option => {
 {
   const notesEl = $('#scenarioNotes');
   if (notesEl) {
-    // Populate from current state (loaded from URL or localStorage)
-    notesEl.value = state.notes || '';
+    // Value is filled in wire(), after URL/localStorage state is applied
     notesEl.addEventListener('input', () => {
       state.notes = notesEl.value.slice(0, 2000);
       persistState();
@@ -2055,6 +2054,10 @@ if (tempCompareData && compareStatesParam) {
 // import it without causing a transpile error. The real application replaces
 // this by calling `wire()` from the bundled entrypoint.
 function wire() {
+  // Fill notes now that URL/localStorage state has been applied
+  const notesInput = $('#scenarioNotes');
+  if (notesInput) notesInput.value = state.notes || '';
+
   // Call render in test environment to ensure calculations run
   if (typeof render === 'function') {
     render();
