@@ -162,13 +162,14 @@ function annualStaffHoursPerClient(o: SanitizedOffering): number {
 }
 
 /** Per-client unit economics, independent of how many clients there are. */
-function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHour' | 'maxDiscountPct' | 'discountPct' | 'discountedMarginPerHour'> {
+function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHour' | 'maxDiscountPct' | 'discountPct' | 'discountedMarginPerHour' | 'contributionPerClientMonthly'> {
   const revenue = o.priceMonthly * 12;
   const contribution = revenue - annualVariableCostPerClient(o);
   const hours = annualStaffHoursPerClient(o);
   // Best-case discount comes off the price only; variable and labor cost stay priced off list
   const discountedContribution = revenue * (1 - o.discountPct / 100) - annualVariableCostPerClient(o);
   return {
+    contributionPerClientMonthly: contribution / 12,
     marginPerHour: hours > 0 ? contribution / hours : 0,
     discountPct: o.discountPct,
     discountedMarginPerHour: hours > 0 ? discountedContribution / hours : 0,

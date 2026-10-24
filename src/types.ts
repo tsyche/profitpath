@@ -189,6 +189,8 @@ export interface OfferingMetric {
   variableCosts: number;
   margin: number;
   marginPct: number;
+  /** Price minus variable and labor cost for one client for one month (independent of client count). */
+  contributionPerClientMonthly: number;
   /** Contribution per delivered staff hour, per client basis (independent of client count). */
   marginPerHour: number;
   /** Deepest discount (% of price) before delivery costs exceed revenue. */

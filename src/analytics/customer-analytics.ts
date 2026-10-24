@@ -41,7 +41,7 @@ export function calculateLTV(metrics: Record<string, any>, averageCustomerLifesp
 
   // Calculate LTV per offering
   const byOffering = metrics.offeringMetrics.map((offering: any, idx: any) => {
-    if (!offering || offering.sessionsPerYear === 0) {
+    if (!offering) {
       return {
         offeringIndex: idx,
         monthlyValue: 0,
@@ -49,8 +49,8 @@ export function calculateLTV(metrics: Record<string, any>, averageCustomerLifesp
       };
     }
 
-    // Monthly client value = monthly price
-    const monthlyValue = offering.priceMonthly || 0;
+    // Monthly client value = contribution per client (price minus variable and labor cost)
+    const monthlyValue = Math.max(0, offering.contributionPerClientMonthly || 0);
 
     // LTV accounting for retention: sum of monthly payments over lifespan, accounting for churn
     let ltv = 0;
