@@ -1,5 +1,6 @@
 import { calc, getCacheStats, normalizeOfferingType } from '../src/calculations/index';
 import { rankOfferings } from '../src/calculations/offeringRanking';
+import { calcRange, sanitizeOfferingRange } from '../src/calculations/ranges';
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
@@ -486,6 +487,71 @@ function renderOfferingRanking(metrics) {
     '</td><td data-status="' + r.status + '" style="color:' + FLOOR_COLORS[r.status] + '">' + FLOOR_LABELS[r.status] + '</td></tr>').join('');
 }
 
+/** @type {{ metric: import('../src/calculations/ranges').RangeMetric, label: string, fmt: (n: number) => string }[]} */
+const RANGE_ROWS = [
+  { metric: 'revenue', label: 'Annual revenue', fmt: fmtMoney0 },
+  { metric: 'income', label: 'Net profit', fmt: fmtMoney0 },
+  { metric: 'clients', label: 'Clients', fmt: fmtInt },
+  { metric: 'capacityPct', label: 'Utilization', fmt: fmtPct1 },
+  { metric: 'breakEvenClients', label: 'Break-even clients', fmt: (/** @type {number} */ n) => (Number.isFinite(n) ? fmtInt(n) : '∞') }
+];
+
+// Hidden unless some bound actually moves a headline number (e.g. client bounds in Forecast mode do nothing).
+function renderRangeBand() {
+  const wrap = $('#rangeBand');
+  const body = $('#rangeBandBody');
+  if (!wrap || !body) return;
+  const r = calcRange(state);
+  const moves = r && RANGE_ROWS.some(({ metric: m }) => r[m].min !== r[m].max);
+  wrap.hidden = !moves;
+  body.innerHTML = moves
+    ? RANGE_ROWS.map(({ metric: m, label, fmt }) => '<tr data-metric="' + m + '"><td>' + label + '</td><td class="mono">' + fmt(r[m].min) +
+      '</td><td class="mono">' + fmt(r[m].base) + '</td><td class="mono">' + fmt(r[m].max) + '</td></tr>').join('')
+    : '';
+}
+
+// Fill bounds apply to group rows in Forecast; client bounds apply in Current. Other cells show a dash like the main table.
+function renderRangesTable() {
+  const tbody = $('#rangesBody');
+  if (!tbody) return;
+  const isForecast = state.mode === 'forecast';
+  /** @param {any} o @param {number} idx @param {string} k @param {string} label @param {boolean} on */
+  const cell = (o, idx, k, label, on) => on
+    ? '<td class="cell-edit" data-label="' + label + '"><input aria-label="' + label + ' for ' + escapeHtml(o.name) + '" type="number" min="' + (k.startsWith('fill') ? 1 : 0) +
+      '"' + (k.startsWith('fill') ? ' max="100"' : '') + ' step="1" placeholder="none" value="' + (o[k] ?? '') + '" data-k="' + k + '" data-i="' + idx + '"/></td>'
+    : '<td data-label="' + label + '"><span class="muted">—</span></td>';
+  tbody.innerHTML = state.offerings.map((o, idx) => {
+    const fill = o.type === 'group' && isForecast;
+    return '<tr><td data-label="Offering">' + escapeHtml(o.name) + '</td>' +
+      cell(o, idx, 'fillPctLow', 'Fill % low', fill) + cell(o, idx, 'fillPctHigh', 'Fill % high', fill) +
+      cell(o, idx, 'currentClientsLow', 'Clients low', !isForecast) + cell(o, idx, 'currentClientsHigh', 'Clients high', !isForecast) + '</tr>';
+  }).join('');
+}
+
+/** @param {any} e */
+function onRangeInput(e) {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement)) return;
+  const k = el.dataset.k;
+  const o = /** @type {Record<string, any>} */ (state.offerings[Number(el.dataset.i)]);
+  if (!k || !o) return;
+  const fieldKey = `rng-${el.dataset.i}-${k}`;
+  if (fieldKey !== _lastHistoryField) {
+    pushHistory();
+    _lastHistoryField = fieldKey;
+  }
+  // The shared sanitizer is the single source of truth; blank or junk clears the bound
+  const clean = /** @type {Record<string, any>} */ (sanitizeOfferingRange({ [k]: el.value }));
+  if (clean[k] === undefined) delete o[k];
+  else o[k] = clean[k];
+  persistState();
+  try {
+    renderRangeBand();
+  } catch (err) {
+    console.warn('Failed to refresh range band:', err);
+  }
+}
+
 function renderExpenses() {
   const tbody = $('#expensesBody');
   if (!tbody) return;
@@ -768,6 +834,7 @@ function render() {
 
   restoreTableFocus(focus);
   renderExpenses();
+  renderRangesTable();
 
   // Mix/mode note (used as the "what am I editing" banner, especially on small screens).
   const mixNote = $('#mixNote');
@@ -824,6 +891,7 @@ function render() {
   setKpi('kpiFixedCosts', fmtMoney0(metrics.annualFixedCosts));
   renderCostBreakdown();
   renderOfferingRanking(metrics);
+  renderRangeBand();
   setKpi('kpiPayroll', fmtMoney0(metrics.annualPayroll));
   setKpi('kpiVariableCosts', fmtMoney0(metrics.variableCosts));
   setKpi('kpiBreakEvenClients', fmtInt(metrics.breakEvenClients));
@@ -905,6 +973,7 @@ function updateOutputs(metrics) {
     if (kpiFixedCosts) kpiFixedCosts.textContent = fmtMoney0(metrics.annualFixedCosts);
     renderCostBreakdown();
     renderOfferingRanking(metrics);
+    renderRangeBand();
     if (kpiPayroll) kpiPayroll.textContent = fmtMoney0(metrics.annualPayroll);
     if (kpiVariableCosts) kpiVariableCosts.textContent = fmtMoney0(metrics.variableCosts);
 
@@ -1011,6 +1080,13 @@ $$('#controls select').forEach((el) => {
 {
   const btn = $('#addOfferingBtn');
   if (btn) btn.addEventListener('click', addOffering);
+}
+{
+  const body = $('#rangesBody');
+  if (body) {
+    body.addEventListener('input', onRangeInput);
+    body.addEventListener('blur', () => { _lastHistoryField = null; }, true);
+  }
 }
 {
   const btn = $('#addExpenseBtn');

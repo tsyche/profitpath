@@ -48,6 +48,11 @@ export interface Offering {
   seats?: number;
   /** Group only: forecast fill, % of seats taken (1-100). */
   fillPct?: number;
+  /** Optional low/high bounds for the guessable inputs; absent means no range (see calcRange). */
+  fillPctLow?: number;
+  fillPctHigh?: number;
+  currentClientsLow?: number;
+  currentClientsHigh?: number;
   mixPct?: number;
   currentClients?: number;
 }
@@ -93,11 +98,15 @@ export interface CalcState {
 
 /** An offering in app state: the UI always fills every field. */
 // laborPctOfPrice, type, seats and fillPct stay optional: older saved states and templates omit them (0 / subscription / 1 / 100)
-export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'type' | 'seats' | 'fillPct'>> & {
+export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'type' | 'seats' | 'fillPct' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh'>> & {
   laborPctOfPrice?: number;
   type?: OfferingType;
   seats?: number;
   fillPct?: number;
+  fillPctLow?: number;
+  fillPctHigh?: number;
+  currentClientsLow?: number;
+  currentClientsHigh?: number;
 };
 
 /**

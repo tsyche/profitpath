@@ -245,9 +245,10 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - Design: implement as one value of a per-offering **type** field shared with items 18 and 19 (`subscription | per-session | group | one-time`), not as a new app mode or a business-type toggle. Each row picks its shape, so mixed businesses (memberships + hourly + classes) work in one scenario; the table shows only the columns a row's type uses; industry templates just preset default types. Keeps the calc one path per type rather than forked per mode.
     - Effort: ~4-6 hours
 
-24c. **Ranged inputs for assumptions (low / base / high)**
+24c. **Ranged inputs for assumptions (low / base / high)** *(PARTIAL, 2026-10-24: optional low/high on group fill % (Forecast) and current clients (Current); collapsed "Ranges" table under Fixed Expenses; Outputs band shows min / base / max for revenue, profit, clients, utilization and break-even clients; persisted via share URL, CSV (cols 12-15) and sanitizers. Remaining: visit frequency range, per-offering and chart ranges, item 22 confidence-tag link)*
     - Let any guessed input (fill %, visit frequency, client count) carry a low/base/high value and show results as a range. Pairs with item 22 (confidence tags) as the input side of item 24's range output.
     - Covers "known capacity, unknown demand" in Current mode: real counts stay point values, guesses become ranges.
+    - Design note: the band is a scenario envelope (all lows together, all highs together via `calcRange` in `src/calculations/ranges.ts`), not a statistical interval; min/max are taken across the runs, so it stays honest when more clients means more loss.
     - Effort: ~3-4 hours on top of item 24
 
 24d. **Per-offering margin per staff hour + discount floor check** *(PARTIAL, 2026-10-23: Outputs table ranks offerings by profit per staff hour with max-discount headroom and an OK / Thin (<15%) / Below cost flag; remaining: per-offering named discounts (member, prepaid credit) and market low/high/avg position badges)*

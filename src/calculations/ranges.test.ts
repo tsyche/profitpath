@@ -1,0 +1,129 @@
+import { describe, it, expect, beforeEach } from 'vitest'
+import { clearCalculationCache } from './index'
+import { calcRange, hasRanges, sanitizeRangeBound, sanitizeOfferingRange, rangeCsvCells } from './ranges'
+import { sanitizeScenarioState, importFromCSV, buildCSV } from '../../assets/services/miscService'
+
+// Roadmap 24c: low/base/high bounds on fill % and current clients.
+const base = {
+  employees: 2,
+  employeePay: 50000,
+  monthlyCosts: 1000,
+  productiveUtilizationPct: 80,
+  targetUtilizationPct: 100
+}
+const group = {
+  name: 'Class',
+  type: 'group',
+  priceMonthly: 100,
+  sessionsPerYear: 50,
+  hoursPerSession: 1,
+  variableCostPerSession: 0,
+  mixPct: 100,
+  seats: 8,
+  fillPct: 75,
+  currentClients: 8
+}
+
+describe('calcRange', () => {
+  beforeEach(() => clearCalculationCache())
+
+  it('returns null when no offering has a bound', () => {
+    expect(calcRange({ ...base, mode: 'forecast', offerings: [group] } as any)).toBeNull()
+  })
+
+  it('forecast: fill bounds widen the band around base, min <= base <= max', () => {
+    const r = calcRange({ ...base, mode: 'forecast', offerings: [{ ...group, fillPctLow: 50, fillPctHigh: 100 }] } as any)!
+    expect(r.income.min).toBeLessThan(r.income.base)
+    expect(r.income.max).toBeGreaterThan(r.income.base)
+    for (const b of Object.values(r)) {
+      expect(b.min).toBeLessThanOrEqual(b.base)
+      expect(b.base).toBeLessThanOrEqual(b.max)
+    }
+  })
+
+  it('current: client bounds move revenue and utilization', () => {
+    const r = calcRange({ ...base, mode: 'current', offerings: [{ ...group, currentClientsLow: 4, currentClientsHigh: 16 }] } as any)!
+    expect(r.revenue).toEqual({ min: 4 * 1200, base: 8 * 1200, max: 16 * 1200 })
+    expect(r.clients).toEqual({ min: 4, base: 8, max: 16 })
+  })
+
+  it('a bound on the wrong side of base never crosses it', () => {
+    const r = calcRange({ ...base, mode: 'current', offerings: [{ ...group, currentClientsLow: 20, currentClientsHigh: 2 }] } as any)!
+    expect(r.clients).toEqual({ min: 8, base: 8, max: 8 })
+  })
+
+  it('one-sided range collapses the other side to base', () => {
+    const r = calcRange({ ...base, mode: 'current', offerings: [{ ...group, currentClientsHigh: 12 }] } as any)!
+    expect(r.clients).toEqual({ min: 8, base: 8, max: 12 })
+  })
+
+  it('shows the real spread when more clients means more loss', () => {
+    const losing = { ...group, type: 'subscription', variableCostPerSession: 100, currentClientsLow: 2, currentClientsHigh: 20 }
+    const r = calcRange({ ...base, mode: 'current', offerings: [losing] } as any)!
+    expect(r.income.min).toBeLessThan(r.income.base)
+    expect(r.income.min).toBeLessThanOrEqual(r.income.max)
+  })
+
+  it.each([NaN, Infinity, 'abc', null, {}, -5, 1e12])('hostile bound %s never yields NaN', (bad) => {
+    const r = calcRange({ ...base, mode: 'forecast', offerings: [{ ...group, fillPctLow: bad, fillPctHigh: bad, currentClientsLow: bad }] } as any)
+    if (r) for (const b of Object.values(r)) expect([b.min, b.max].every((v) => !Number.isNaN(v))).toBe(true)
+  })
+})
+
+describe('range sanitizers', () => {
+  it('sanitizeRangeBound: blank and junk are absent, numbers clamp', () => {
+    expect(sanitizeRangeBound('', 1, 100)).toBeUndefined()
+    expect(sanitizeRangeBound('  ', 1, 100)).toBeUndefined()
+    expect(sanitizeRangeBound('x', 1, 100)).toBeUndefined()
+    expect(sanitizeRangeBound(null, 1, 100)).toBeUndefined()
+    expect(sanitizeRangeBound('40', 1, 100)).toBe(40)
+    expect(sanitizeRangeBound(0, 1, 100)).toBe(1)
+    expect(sanitizeRangeBound(900, 1, 100)).toBe(100)
+  })
+
+  it('sanitizeOfferingRange keeps only present bounds and floors client counts', () => {
+    expect(sanitizeOfferingRange({})).toEqual({})
+    expect(sanitizeOfferingRange({ fillPctLow: '40', currentClientsHigh: 9.9, evil: 1 })).toEqual({ fillPctLow: 40, currentClientsHigh: 9 })
+  })
+
+  it('hasRanges', () => {
+    expect(hasRanges([{}, { fillPctLow: 10 }])).toBe(true)
+    expect(hasRanges([{}, { fillPctLow: undefined }])).toBe(false)
+    expect(hasRanges(undefined)).toBe(false)
+  })
+
+  it('rangeCsvCells leaves absent bounds blank', () => {
+    expect(rangeCsvCells({ fillPctLow: 40, currentClientsHigh: 9 })).toBe('40,,,9')
+  })
+})
+
+describe('range persistence', () => {
+  const ranged = { ...group, fillPctLow: 40, fillPctHigh: 90, currentClientsLow: 4, currentClientsHigh: 12 }
+
+  it('share-URL sanitizer keeps bounds and omits absent ones', () => {
+    const o = sanitizeScenarioState({ offerings: [ranged, { ...group, name: 'Plain' }] })!.offerings
+    expect(o[0]).toMatchObject({ fillPctLow: 40, fillPctHigh: 90, currentClientsLow: 4, currentClientsHigh: 12 })
+    expect(Object.keys(o[1])).not.toContain('fillPctLow')
+  })
+
+  it('share-URL sanitizer clamps hostile bounds', () => {
+    const o = sanitizeScenarioState({ offerings: [{ ...group, fillPctLow: -9, fillPctHigh: 'x', currentClientsHigh: 1e99 }] })!.offerings[0]
+    expect(o.fillPctLow).toBe(1)
+    expect(o.fillPctHigh).toBeUndefined()
+    expect(o.currentClientsHigh).toBe(1e6)
+  })
+
+  it('CSV round-trips bounds', () => {
+    const st = { ...base, mode: 'forecast', offerings: [ranged, { ...group, name: 'Plain' }], expenses: [] }
+    const r: any = importFromCSV(buildCSV(st, { revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 }))
+    expect(r.data.offerings[0]).toMatchObject({ fillPctLow: 40, fillPctHigh: 90, currentClientsLow: 4, currentClientsHigh: 12 })
+    expect(Object.keys(r.data.offerings[1])).not.toContain('fillPctLow')
+  })
+
+  it('legacy 11-column CSV rows import with no bounds', () => {
+    const csv = 'Offerings\nName,P,S,H,V,M,C,L,T,Seats,Fill\nYoga,100,12,1,0,100,0,0,group,10,60'
+    const o = (importFromCSV(csv) as any).data.offerings[0]
+    expect(Object.keys(o)).not.toContain('fillPctLow')
+    expect(o.fillPct).toBe(60)
+  })
+})

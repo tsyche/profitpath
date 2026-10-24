@@ -10,6 +10,7 @@ export function getShareBase() {
 }
 import { clamp } from '../utils/helpers';
 import { normalizeOfferingType } from '../../src/calculations/index';
+import { rangeCsvCells, sanitizeOfferingRange } from '../../src/calculations/ranges';
 import { sanitizeExpenses, totalMonthlyOverhead } from '../../src/calculations/expenses';
 import { showToast } from './modalService';
 import { createModal } from '../components/Modal';
@@ -88,7 +89,8 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
       seats: Math.floor(toFiniteNumber(o.seats, 1, 1, 100000)),
       fillPct: toFiniteNumber(o.fillPct, 100, 1, 100),
       mixPct: toFiniteNumber(o.mixPct, 0, 0, 100),
-      currentClients: Math.floor(toFiniteNumber(o.currentClients, 0, 0, 1e7))
+      currentClients: Math.floor(toFiniteNumber(o.currentClients, 0, 0, 1e7)),
+      ...sanitizeOfferingRange(o)
     }));
 
   if (offerings.length === 0) return null;
@@ -231,12 +233,12 @@ export function buildCSV(st: any, results: any) {
     'Capacity Utilization,' + (fmtPct1(results.capacityPct || 0)) + ',%',
     '',
     'SERVICE OFFERINGS',
-    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %',
+    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High',
   ];
 
   st.offerings.forEach((o: any) => {
     lines.push(
-      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100)
+      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100) + ',' + rangeCsvCells(o)
     );
   });
 
@@ -747,12 +749,12 @@ export function exportAsExcel() {
     'Target Utilization,' + fmtPct(state.targetUtilizationPct),
     '',
     'SERVICE OFFERINGS',
-    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients,Labor % of Price,Type,Seats,Fill %'
+    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients,Labor % of Price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High'
   ];
 
   state.offerings.forEach((o) => {
     lines.push(
-      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${o.laborPctOfPrice || 0},${normalizeOfferingType(o.type)},${o.seats || 1},${o.fillPct || 100}`
+      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${o.laborPctOfPrice || 0},${normalizeOfferingType(o.type)},${o.seats || 1},${o.fillPct || 100},${rangeCsvCells(o)}`
     );
   });
 
@@ -1511,7 +1513,11 @@ export function importFromCSV(csvText: any) {
           type: normalizeOfferingType(values[8]),
           // Columns 10-11 are optional: group seats and forecast fill
           seats: Math.max(1, Math.floor(parseFloat(values[9]) || 1)),
-          fillPct: Math.max(1, Math.min(100, parseFloat(values[10]) || 100))
+          fillPct: Math.max(1, Math.min(100, parseFloat(values[10]) || 100)),
+          // Columns 12-15 are optional low/high bounds; blank means no range
+          ...sanitizeOfferingRange({
+            fillPctLow: values[11], fillPctHigh: values[12], currentClientsLow: values[13], currentClientsHigh: values[14]
+          })
         };
 
         // Validate offering

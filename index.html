@@ -517,6 +517,28 @@
             Added on top of Overhead (monthly) in the inputs. Weekly is x52 per year, monthly x12.
           </div>
         </div>
+
+        <details class="section-box ranges-section" id="rangesSection">
+          <summary><h3 style="display: inline">Ranges (optional)</h3></summary>
+          <div class="smallprint">
+            Guessing fill or client counts? Enter a low and high; Outputs shows the min and max across all lows together and all highs together.
+            Leave blank for no range.
+          </div>
+          <div class="table-wrap">
+            <table class="table ranges-table" id="rangesTable" aria-label="Low and high assumptions">
+              <thead>
+                <tr>
+                  <th>Offering</th>
+                  <th title="Group offerings, Forecast mode: lowest expected % of seats filled">Fill % low</th>
+                  <th title="Group offerings, Forecast mode: highest expected % of seats filled">Fill % high</th>
+                  <th title="Current mode: fewest clients you might have">Clients low</th>
+                  <th title="Current mode: most clients you might have">Clients high</th>
+                </tr>
+              </thead>
+              <tbody id="rangesBody"></tbody>
+            </table>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -599,6 +621,16 @@
           <div class="muted" style="font-size: 12px;">Fixed costs by category (annual)</div>
           <table class="table" aria-label="Fixed costs by category">
             <tbody id="costBreakdownBody"></tbody>
+          </table>
+        </div>
+
+        <div id="rangeBand" class="cost-breakdown" hidden>
+          <div class="muted" style="font-size: 12px;"
+            title="Min and max across running every low bound together and every high bound together. A scenario envelope, not a statistical interval.">
+            Range across your low / high assumptions</div>
+          <table class="table" aria-label="Result range">
+            <thead><tr><th>Metric</th><th>Min</th><th>Base</th><th>Max</th></tr></thead>
+            <tbody id="rangeBandBody"></tbody>
           </table>
         </div>
 
