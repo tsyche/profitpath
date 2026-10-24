@@ -64,3 +64,35 @@ test.describe('Ranged inputs (low / high)', () => {
     await expect(page.locator('#rangeBandBody tr[data-metric="clients"]')).toBeVisible();
   });
 });
+
+test.describe('Confidence tags and notes', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      try { localStorage.setItem('onboardingCompleted', 'true'); } catch { /* ignore */ }
+    });
+    await page.goto('/');
+    await waitForPageReady(page);
+    await page.locator('#rangesSection summary').click();
+  });
+
+  const sel = (page) => page.locator('#rangesBody select[data-k="confidence"]').first();
+  const note = (page) => page.locator('#rangesBody input[data-k="note"]').first();
+
+  test('tag and note persist across reload and a hostile note stays inert text', async ({ page }) => {
+    await sel(page).selectOption('guess');
+    await expect(sel(page)).toHaveAttribute('data-confidence', 'guess');
+    await note(page).fill('<img src=x onerror=window.__pwned=1> from site');
+    await page.reload();
+    await waitForPageReady(page);
+    await page.locator('#rangesSection summary').click();
+    await expect(sel(page)).toHaveValue('guess');
+    await expect(note(page)).toHaveValue('<img src=x onerror=window.__pwned=1> from site');
+    expect(await page.evaluate(() => (window as any).__pwned)).toBeUndefined();
+  });
+
+  test('choosing Untagged clears the tag', async ({ page }) => {
+    await sel(page).selectOption('verified');
+    await sel(page).selectOption('');
+    expect(await page.evaluate(() => 'confidence' in (window as any).state.offerings[0])).toBe(false);
+  });
+});

@@ -19,6 +19,7 @@ import type {
   ModeResults,
   MixResult,
   Offering,
+  OfferingMetric,
   OfferingType,
   SanitizedOffering,
   TaxEstimate
@@ -95,6 +96,7 @@ function generateCacheKey(state: CalcState) {
       hoursPerSession: o.hoursPerSession,
       variableCostPerSession: o.variableCostPerSession,
       laborPctOfPrice: o.laborPctOfPrice,
+      discountPct: o.discountPct,
       type: o.type,
       seats: o.seats,
       fillPct: o.fillPct,
@@ -160,12 +162,16 @@ function annualStaffHoursPerClient(o: SanitizedOffering): number {
 }
 
 /** Per-client unit economics, independent of how many clients there are. */
-function unitEconomics(o: SanitizedOffering): { marginPerHour: number; maxDiscountPct: number } {
+function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHour' | 'maxDiscountPct' | 'discountPct' | 'discountedMarginPerHour'> {
   const revenue = o.priceMonthly * 12;
   const contribution = revenue - annualVariableCostPerClient(o);
   const hours = annualStaffHoursPerClient(o);
+  // Best-case discount comes off the price only; variable and labor cost stay priced off list
+  const discountedContribution = revenue * (1 - o.discountPct / 100) - annualVariableCostPerClient(o);
   return {
     marginPerHour: hours > 0 ? contribution / hours : 0,
+    discountPct: o.discountPct,
+    discountedMarginPerHour: hours > 0 ? discountedContribution / hours : 0,
     // Deepest discount before delivery costs eat the whole price
     maxDiscountPct: revenue > 0 ? Math.max(0, (contribution / revenue) * 100) : 0
   };
@@ -194,6 +200,7 @@ function sanitizeOfferings(offerings: Offering[]): SanitizedOffering[] {
       hoursPerSession: clamp(toFinite(o.hoursPerSession), 0, MAX_COUNT),
       variableCostPerSession: clamp(toFinite(o.variableCostPerSession), 0, MAX_MONEY),
       laborPctOfPrice: clamp(toFinite(o.laborPctOfPrice), 0, 100),
+      discountPct: clamp(toFinite(o.discountPct), 0, 100),
       type: normalizeOfferingType(o.type),
       seats: Math.floor(clamp(finiteOr(o.seats, 1), 1, MAX_COUNT)),
       fillPct: clamp(finiteOr(o.fillPct, 100), 1, 100),

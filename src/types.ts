@@ -42,6 +42,8 @@ export interface Offering {
   variableCostPerSession?: number;
   /** Contractor pay as % of list price (0-100), added to variable cost. */
   laborPctOfPrice?: number;
+  /** Best-case discount (member, prepaid) as % of list price (0-100); only feeds the floor check, never revenue. */
+  discountPct?: number;
   /** Missing or unknown values behave as 'subscription'. */
   type?: OfferingType;
   /** Group only: seats per run (>= 1). */
@@ -53,9 +55,15 @@ export interface Offering {
   fillPctHigh?: number;
   currentClientsLow?: number;
   currentClientsHigh?: number;
+  /** Optional reliability tag and short note; display only, never used by calc. */
+  confidence?: Confidence;
+  note?: string;
   mixPct?: number;
   currentClients?: number;
 }
+
+/** How much to trust an offering's numbers. */
+export type Confidence = 'verified' | 'estimated' | 'guess';
 
 /** An offering after sanitizeOfferings(): every numeric field is a clamped finite number. */
 export interface SanitizedOffering extends Offering {
@@ -65,6 +73,7 @@ export interface SanitizedOffering extends Offering {
   hoursPerSession: number;
   variableCostPerSession: number;
   laborPctOfPrice: number;
+  discountPct: number;
   type: OfferingType;
   seats: number;
   fillPct: number;
@@ -98,8 +107,9 @@ export interface CalcState {
 
 /** An offering in app state: the UI always fills every field. */
 // laborPctOfPrice, type, seats and fillPct stay optional: older saved states and templates omit them (0 / subscription / 1 / 100)
-export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'type' | 'seats' | 'fillPct' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh'>> & {
+export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'confidence' | 'note'>> & {
   laborPctOfPrice?: number;
+  discountPct?: number;
   type?: OfferingType;
   seats?: number;
   fillPct?: number;
@@ -107,6 +117,8 @@ export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'type' | '
   fillPctHigh?: number;
   currentClientsLow?: number;
   currentClientsHigh?: number;
+  confidence?: Confidence;
+  note?: string;
 };
 
 /**
@@ -172,6 +184,10 @@ export interface OfferingMetric {
   marginPerHour: number;
   /** Deepest discount (% of price) before delivery costs exceed revenue. */
   maxDiscountPct: number;
+  /** Best-case discount the user entered for this offering (0 when none). */
+  discountPct: number;
+  /** Contribution per staff hour after the best-case discount. */
+  discountedMarginPerHour: number;
 }
 
 export interface ModeResults {

@@ -469,6 +469,7 @@
                   <th title="Hours required per session">Hours / session</th>
                   <th title="Variable costs per session">Var $ / session</th>
                   <th title="Contractor pay as a percent of list price">Labor % of price</th>
+                  <th title="Deepest discount you offer (member, prepaid); tests the price floor in Outputs, never changes revenue">Best discount %</th>
                   <th title="Subscription or group class">Type</th>
                   <th title="Seats per class (group only)">Seats</th>
                   <th title="Average percent of seats filled (group, forecast mode)">Fill % (forecast)</th>
@@ -476,6 +477,9 @@
                   <th title="Number of current active clients">Clients (current)</th>
                   <th title="Estimated clients needed">Est. clients</th>
                   <th title="Estimated total sessions per year">Est. sessions</th>
+                  <th title="Annual revenue from this offering">Annual revenue</th>
+                  <th title="Profit as a percent of revenue">Margin %</th>
+                  <th title="Annual profit from this offering">Annual profit</th>
                   <th></th>
                 </tr>
               </thead>
@@ -519,10 +523,10 @@
         </div>
 
         <details class="section-box ranges-section" id="rangesSection">
-          <summary><h3 style="display: inline">Ranges (optional)</h3></summary>
+          <summary><h3 style="display: inline">Ranges &amp; confidence (optional)</h3></summary>
           <div class="smallprint">
             Guessing fill or client counts? Enter a low and high; Outputs shows the min and max across all lows together and all highs together.
-            Leave blank for no range.
+            Leave blank for no range. Tag how much you trust each offering's numbers and jot a source or caveat.
           </div>
           <div class="table-wrap">
             <table class="table ranges-table" id="rangesTable" aria-label="Low and high assumptions">
@@ -533,6 +537,8 @@
                   <th title="Group offerings, Forecast mode: highest expected % of seats filled">Fill % high</th>
                   <th title="Current mode: fewest clients you might have">Clients low</th>
                   <th title="Current mode: most clients you might have">Clients high</th>
+                  <th title="How much to trust this offering's numbers">Confidence</th>
+                  <th title="Where the numbers came from, or what to double-check">Note</th>
                 </tr>
               </thead>
               <tbody id="rangesBody"></tbody>
@@ -639,7 +645,7 @@
             title="Contribution (price - variable and labor costs) per delivered staff hour. Max discount is the deepest cut before delivery costs exceed the price.">
             Offerings by profit per staff hour</div>
           <table class="table" aria-label="Offerings ranked by profit per staff hour">
-            <thead><tr><th>Offering</th><th>Per hour</th><th>Max discount</th><th>Floor</th></tr></thead>
+            <thead><tr><th>Offering</th><th>Per hour</th><th title="Per hour at the best-case discount">At best discount</th><th>Max discount</th><th>Floor</th></tr></thead>
             <tbody id="offeringRankingBody"></tbody>
           </table>
         </div>

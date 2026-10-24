@@ -127,3 +127,23 @@ describe('range persistence', () => {
     expect(o.fillPct).toBe(60)
   })
 })
+
+describe('best-case discount persistence (roadmap 24d)', () => {
+  it('share-URL sanitizer keeps and clamps discountPct', () => {
+    const o = sanitizeScenarioState({ offerings: [{ ...group, discountPct: 25 }, { ...group, discountPct: 999 }, { ...group, discountPct: 'x' }, group] })!.offerings
+    expect(o.map((x) => x.discountPct)).toEqual([25, 100, 0, 0])
+  })
+
+  it('CSV round-trips discountPct as column 16', () => {
+    const st = { ...base, mode: 'forecast', offerings: [{ ...group, discountPct: 30 }, { ...group, name: 'Plain' }], expenses: [] }
+    const csv = buildCSV(st, { revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 })
+    expect(csv).toContain('Best Discount %')
+    const o = (importFromCSV(csv) as any).data.offerings
+    expect(o.map((x: any) => x.discountPct)).toEqual([30, 0])
+  })
+
+  it('legacy 15-column CSV rows import with no discount', () => {
+    const csv = 'Offerings\nName,P,S,H,V,M,C,L,T,Seats,Fill,a,b,c,d\nYoga,100,12,1,0,100,0,0,group,10,60,,,,'
+    expect((importFromCSV(csv) as any).data.offerings[0].discountPct).toBe(0)
+  })
+})

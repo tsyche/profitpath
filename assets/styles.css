@@ -4949,3 +4949,7 @@ input[type="checkbox"] {
     transition-duration: 0.01ms !important;
   }
 }
+
+.confidence-select[data-confidence="verified"] { color: var(--good); }
+.confidence-select[data-confidence="estimated"] { color: var(--warn); }
+.confidence-select[data-confidence="guess"] { color: var(--bad); }

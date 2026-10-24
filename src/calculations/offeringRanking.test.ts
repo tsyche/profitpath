@@ -66,3 +66,48 @@ describe('rankOfferings', () => {
     ])
   })
 })
+
+describe('best-case discount (roadmap 24d)', () => {
+  beforeEach(() => clearCalculationCache())
+
+  // price 100/mo, no variable cost beyond 50% labor: max discount is exactly 50%
+  const half = { variableCostPerSession: 0, laborPctOfPrice: 50 }
+  const row = (o: object) => rankOfferings([metric({ ...half, ...o })])[0]
+
+  it('absent or zero discount reproduces the plain headroom check', () => {
+    expect(row({}).status).toBe('ok')
+    expect(row({ discountPct: 0 })).toMatchObject({ status: 'ok', discountedMarginPerHour: 50 })
+  })
+
+  it('status flips as the discount eats the headroom, exactly at break-even', () => {
+    expect(row({ discountPct: 30 }).status).toBe('ok') // 20 points left
+    expect(row({ discountPct: 40 }).status).toBe('thin') // 10 points left
+    expect(row({ discountPct: 50 }).status).toBe('loss') // price == cost
+    expect(row({ discountPct: 60 }).status).toBe('loss')
+  })
+
+  it('discounted margin per hour drops by the discount on price only', () => {
+    expect(row({ discountPct: 20 }).discountedMarginPerHour).toBeCloseTo(30) // (960 - 600) / 12h
+    expect(row({ discountPct: 20 }).marginPerHour).toBeCloseTo(50) // list ranking unchanged
+  })
+
+  it('discount never changes revenue, income or break-even', () => {
+    const run = (discountPct: number) => calc({ ...base, offerings: [{ ...sub, ...half, discountPct, currentClients: 20 }] } as any)
+    const a = run(0)
+    const b = run(40)
+    expect(b.revenue).toBe(a.revenue)
+    expect(b.income).toBe(a.income)
+    expect(b.breakEvenClients).toBe(a.breakEvenClients)
+  })
+
+  it('edits bypass the calc cache', () => {
+    expect(row({ discountPct: 10 }).discountPct).toBe(10)
+    expect(row({ discountPct: 20 }).discountPct).toBe(20)
+  })
+
+  it('junk or out-of-range discounts are clamped', () => {
+    expect(row({ discountPct: 'abc' }).discountPct).toBe(0)
+    expect(row({ discountPct: -5 }).discountPct).toBe(0)
+    expect(row({ discountPct: 500 }).discountPct).toBe(100)
+  })
+})

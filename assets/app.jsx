@@ -1,6 +1,7 @@
 import { calc, getCacheStats, normalizeOfferingType } from '../src/calculations/index';
 import { rankOfferings } from '../src/calculations/offeringRanking';
 import { calcRange, sanitizeOfferingRange } from '../src/calculations/ranges';
+import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../src/calculations/offeringMeta';
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
@@ -381,7 +382,7 @@ function onTableInput(e) {
     } else {
       value = parsed;
     }
-  } else if (k === 'laborPctOfPrice') {
+  } else if (k === 'laborPctOfPrice' || k === 'discountPct') {
     value = Math.min(100, Math.max(0, safeParseNumber(value, 0)));
   } else if (k === 'type') {
     value = normalizeOfferingType(value);
@@ -483,7 +484,7 @@ function renderOfferingRanking(metrics) {
   if (!wrap || !body) return;
   const rows = rankOfferings(metrics?.offeringMetrics || []);
   wrap.hidden = rows.length === 0;
-  body.innerHTML = rows.map(r => '<tr><td>' + escapeHtml(r.name) + '</td><td class="mono">' + fmtMoney0(r.marginPerHour) + '/hr</td><td class="mono">' + fmtPct1(r.maxDiscountPct) +
+  body.innerHTML = rows.map(r => '<tr><td>' + escapeHtml(r.name) + '</td><td class="mono">' + fmtMoney0(r.marginPerHour) + '/hr</td><td class="mono">' + (r.discountPct > 0 ? fmtMoney0(r.discountedMarginPerHour) + '/hr (' + fmtPct1(r.discountPct) + ' off)' : '—') + '</td><td class="mono">' + fmtPct1(r.maxDiscountPct) +
     '</td><td data-status="' + r.status + '" style="color:' + FLOOR_COLORS[r.status] + '">' + FLOOR_LABELS[r.status] + '</td></tr>').join('');
 }
 
@@ -524,14 +525,17 @@ function renderRangesTable() {
     const fill = o.type === 'group' && isForecast;
     return '<tr><td data-label="Offering">' + escapeHtml(o.name) + '</td>' +
       cell(o, idx, 'fillPctLow', 'Fill % low', fill) + cell(o, idx, 'fillPctHigh', 'Fill % high', fill) +
-      cell(o, idx, 'currentClientsLow', 'Clients low', !isForecast) + cell(o, idx, 'currentClientsHigh', 'Clients high', !isForecast) + '</tr>';
+      cell(o, idx, 'currentClientsLow', 'Clients low', !isForecast) + cell(o, idx, 'currentClientsHigh', 'Clients high', !isForecast) +
+      '<td class="cell-edit" data-label="Confidence"><select class="confidence-select" aria-label="Confidence for ' + escapeHtml(o.name) + '" data-k="confidence" data-i="' + idx + '" data-confidence="' + (o.confidence || '') + '">' +
+      '<option value="">Untagged</option>' + CONFIDENCE_LEVELS.map(c => '<option value="' + c + '"' + (o.confidence === c ? ' selected' : '') + '>' + CONFIDENCE_LABELS[c] + '</option>').join('') + '</select></td>' +
+      '<td class="cell-edit" data-label="Note"><input aria-label="Note for ' + escapeHtml(o.name) + '" type="text" maxlength="' + MAX_NOTE_LENGTH + '" placeholder="Source or caveat" value="' + escapeHtml(o.note || '') + '" data-k="note" data-i="' + idx + '"/></td></tr>';
   }).join('');
 }
 
 /** @param {any} e */
 function onRangeInput(e) {
   const el = e.target;
-  if (!(el instanceof HTMLInputElement)) return;
+  if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement)) return;
   const k = el.dataset.k;
   const o = /** @type {Record<string, any>} */ (state.offerings[Number(el.dataset.i)]);
   if (!k || !o) return;
@@ -541,9 +545,11 @@ function onRangeInput(e) {
     _lastHistoryField = fieldKey;
   }
   // The shared sanitizer is the single source of truth; blank or junk clears the bound
-  const clean = /** @type {Record<string, any>} */ (sanitizeOfferingRange({ [k]: el.value }));
+  const isMeta = k === 'confidence' || k === 'note';
+  const clean = /** @type {Record<string, any>} */ (isMeta ? sanitizeOfferingMeta({ [k]: el.value }) : sanitizeOfferingRange({ [k]: el.value }));
   if (clean[k] === undefined) delete o[k];
   else o[k] = clean[k];
+  if (k === 'confidence') el.dataset.confidence = clean[k] || '';
   persistState();
   try {
     renderRangeBand();
@@ -639,6 +645,7 @@ function addOffering() {
     hoursPerSession: 1.0,
     variableCostPerSession: 0,
     laborPctOfPrice: 0,
+    discountPct: 0,
     type: 'subscription',
     seats: 1,
     fillPct: 100,
@@ -817,6 +824,7 @@ function render() {
       '<td class="cell-edit group-inputs" data-label="Hours / session"><input aria-label="Hours per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="0.1" value="' + (o.hoursPerSession) + '" data-k="hoursPerSession" data-i="' + (idx) + '" data-tooltip="Duration of each service session in hours"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Var $ / session"><input aria-label="Variable cost per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.variableCostPerSession) + '" data-k="variableCostPerSession" data-i="' + (idx) + '" data-tooltip="Cost per session (materials, supplies, delivery, etc.)"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Labor % of price"><input aria-label="Labor percent of list price for ' + (escapeHtml(o.name)) + '" type="number" min="0" max="100" step="1" value="' + (o.laborPctOfPrice || 0) + '" data-k="laborPctOfPrice" data-i="' + (idx) + '" data-tooltip="Contractor pay as a % of list price (added to Var $ / session)"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Best discount %"><input aria-label="Best-case discount percent for ' + (escapeHtml(o.name)) + '" type="number" min="0" max="100" step="1" value="' + (o.discountPct || 0) + '" data-k="discountPct" data-i="' + (idx) + '" data-tooltip="Deepest discount you offer (member, prepaid). Tests the price floor in Outputs; revenue stays at list price"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Type">' + (typeCell) + '</td>' +
       '<td class="cell-edit group-inputs" data-label="Seats">' + (seatsCell) + '</td>' +
       '<td class="cell-edit group-inputs group-end" data-label="Fill % (forecast)">' + (fillCell) + '</td>' +

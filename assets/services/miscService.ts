@@ -11,6 +11,7 @@ export function getShareBase() {
 import { clamp } from '../utils/helpers';
 import { normalizeOfferingType } from '../../src/calculations/index';
 import { rangeCsvCells, sanitizeOfferingRange } from '../../src/calculations/ranges';
+import { normalizeConfidence, sanitizeNote, sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
 import { sanitizeExpenses, totalMonthlyOverhead } from '../../src/calculations/expenses';
 import { showToast } from './modalService';
 import { createModal } from '../components/Modal';
@@ -85,12 +86,14 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
       hoursPerSession: toFiniteNumber(o.hoursPerSession, 1, 0.1, 10000),
       variableCostPerSession: toFiniteNumber(o.variableCostPerSession, 0, 0, 1e9),
       laborPctOfPrice: toFiniteNumber(o.laborPctOfPrice, 0, 0, 100),
+      discountPct: toFiniteNumber(o.discountPct, 0, 0, 100),
       type: normalizeOfferingType(o.type),
       seats: Math.floor(toFiniteNumber(o.seats, 1, 1, 100000)),
       fillPct: toFiniteNumber(o.fillPct, 100, 1, 100),
       mixPct: toFiniteNumber(o.mixPct, 0, 0, 100),
       currentClients: Math.floor(toFiniteNumber(o.currentClients, 0, 0, 1e7)),
-      ...sanitizeOfferingRange(o)
+      ...sanitizeOfferingRange(o),
+      ...sanitizeOfferingMeta(o)
     }));
 
   if (offerings.length === 0) return null;
@@ -233,12 +236,12 @@ export function buildCSV(st: any, results: any) {
     'Capacity Utilization,' + (fmtPct1(results.capacityPct || 0)) + ',%',
     '',
     'SERVICE OFFERINGS',
-    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High',
+    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High,Best Discount %,Confidence,Note',
   ];
 
   st.offerings.forEach((o: any) => {
     lines.push(
-      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100) + ',' + rangeCsvCells(o)
+      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100) + ',' + rangeCsvCells(o) + ',' + (o.discountPct || 0) + ',' + (normalizeConfidence(o.confidence) || '') + ',' + csvCell(sanitizeNote(o.note) || '')
     );
   });
 
@@ -749,12 +752,12 @@ export function exportAsExcel() {
     'Target Utilization,' + fmtPct(state.targetUtilizationPct),
     '',
     'SERVICE OFFERINGS',
-    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients,Labor % of Price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High'
+    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients,Labor % of Price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High,Best Discount %,Confidence,Note'
   ];
 
   state.offerings.forEach((o) => {
     lines.push(
-      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${o.laborPctOfPrice || 0},${normalizeOfferingType(o.type)},${o.seats || 1},${o.fillPct || 100},${rangeCsvCells(o)}`
+      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${o.laborPctOfPrice || 0},${normalizeOfferingType(o.type)},${o.seats || 1},${o.fillPct || 100},${rangeCsvCells(o)},${o.discountPct || 0},${normalizeConfidence(o.confidence) || ''},${csvCell(sanitizeNote(o.note) || '')}`
     );
   });
 
@@ -1517,7 +1520,11 @@ export function importFromCSV(csvText: any) {
           // Columns 12-15 are optional low/high bounds; blank means no range
           ...sanitizeOfferingRange({
             fillPctLow: values[11], fillPctHigh: values[12], currentClientsLow: values[13], currentClientsHigh: values[14]
-          })
+          }),
+          // Column 16 is optional: best-case discount %
+          discountPct: Math.max(0, Math.min(100, parseFloat(values[15]) || 0)),
+          // Columns 17-18 are optional: confidence tag and note
+          ...sanitizeOfferingMeta({ confidence: values[16], note: values[17] })
         };
 
         // Validate offering
