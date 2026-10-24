@@ -43,7 +43,14 @@ function performSave(name: any) {
       state: scenarioState,
     };
 
-    scenarios.push(scenario);
+    // Same name (ignoring case) updates that scenario in place instead of adding a twin
+    const existingIdx = scenarios.findIndex((s: any) => String(s.name).trim().toLowerCase() === name.toLowerCase());
+    if (existingIdx >= 0) {
+      const existing = scenarios[existingIdx];
+      scenarios[existingIdx] = { ...existing, ...scenario, id: existing.id, createdAt: existing.createdAt ?? createdAt };
+    } else {
+      scenarios.push(scenario);
+    }
     localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
 
     // Track scenario save
@@ -75,7 +82,7 @@ function performSave(name: any) {
     }
 
     // Show success notification
-    showToast('Scenario saved successfully!', 'success');
+    showToast(existingIdx >= 0 ? 'Scenario updated' : 'Scenario saved successfully!', 'success');
   } catch (e) {
     console.error('Failed to save scenario:', e);
     showToast('Failed to save scenario', 'error');
