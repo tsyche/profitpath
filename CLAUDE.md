@@ -15,7 +15,7 @@ This document provides comprehensive information for AI agents and developers wo
 ## Technical Architecture
 
 ### Frontend Architecture
-- **Build System**: Vite v8.0.16 with JSX support
+- **Build System**: Vite v8.3.5 with JSX support
 - **Testing**: Vitest v4.0.18 with jsdom environment
 - **Code Quality**: ESLint with comprehensive rules
 - **Language**: JavaScript migrating to TypeScript (`checkJs` on, `strict` off; see `docs/plans/typescript-migration.md`)
@@ -50,6 +50,7 @@ src/
 │   ├── index.ts          # Core calculation engine with caching
 │   ├── offeringRanking.ts # Profit-per-staff-hour ranking and discount-floor status
 │   ├── marketPosition.ts # Optional market low/avg/high per offering and the green/yellow/red price badge; display only
+│   ├── currency.ts       # Scenario currency allowlist + shared fmtMoney0 (display only)
 │   ├── offeringMeta.ts   # Per-offering confidence tag (verified/estimated/guess) and note sanitizers; display only
 │   ├── ranges.ts         # Optional low/high bounds (fill %, current clients): calcRange min/base/max band, bound sanitizers
 │   └── expenses.ts       # Expense line items: categories, frequencies, sanitizer, annualization, cost-by-category breakdown
@@ -57,7 +58,6 @@ src/
 │   ├── insightsEngine.js   # Rules-based profitability insights
 │   ├── reverseCalculator.js # "What would it take?" reverse calculations
 │   └── mixOptimizer.js     # Suggests optimal offering mix for profit/utilization
-├── localization/       # Localization & formatting infrastructure
 ├── settings/          # Experience levels and feature gating
 │   └── index.js          # Settings management and feature gates
 └── test/             # Vitest unit/integration tests (incl. fuzz tests)
@@ -157,7 +157,7 @@ Each template includes appropriate pricing, frequency, and cost structures.
 
 `origin` pushes to both GitHub and GitLab (`git remote get-url --all --push origin`) — one `git push` updates both.
 
-CI is designed to auto-bump the patch version on every push to `main` (commits back with `[skip ci]`), which normally means the remote is 1 commit ahead by the time you're ready to push. **Note:** GitHub Actions has not been triggering on push since 2026-07-23 (suspected tied to a flagged GitHub account, support case open) — auto-bump commits are not currently landing. The rebase habit below is still worth keeping since it'll matter again once Actions resumes, and costs nothing while it's down. Always rebase before committing or pushing:
+CI is designed to auto-bump the patch version on every push to `main` (commits back with `[skip ci]`), which normally means the remote is 1 commit ahead by the time you're ready to push. Actions stopped triggering on push from 2026-07-23 (flagged GitHub account) and was working again by 2026-09-12, so the bump commits land again. Always rebase before committing or pushing:
 
 ```bash
 git pull --rebase
@@ -195,24 +195,11 @@ npm run lint         # Check code quality
 
 ### Testing Scenarios
 
-`assets/app.jsx` defines a `TEST_SCENARIOS` object with 2 entries (`basic`, `freelancer`) intended to be loadable via URL parameters (`?loadTestScenarios`, `?testScenario=name`).
-
-> **Known gap**: `loadTestScenarios()` and `loadSpecificTestScenario()` in
-> `assets/services/miscService.js` are currently empty no-op stubs, so this
-> URL-loading path does not actually populate the app yet. The scenario data
-> exists but nothing wires it up. Prior versions of this doc described 9 named
-> scenarios (`default`, `high-profit`, `loss-making`, etc.) — those never
-> existed in code and have been removed here; implement the loader or update
-> `TEST_SCENARIOS` before re-documenting this feature.
-
-To manually exercise different business situations for testing, edit the
-`TEST_SCENARIOS` object in `assets/app.jsx` or use the Templates menu, which
-loads real (working) `INDUSTRY_TEMPLATES` configs for consulting, cleaning,
-landscaping, fitness, photography, and handyman.
+To exercise different business situations, use the Templates menu, which loads real `INDUSTRY_TEMPLATES` configs for consulting, cleaning, landscaping, fitness, photography, and handyman.
 
 ### Testing Strategy
 
-#### Test Coverage (560 unit tests across 51 files — 559 passing, 1 skipped — plus 314 Playwright e2e tests across 21 files, chromium + firefox)
+#### Test Coverage (573 unit tests across 54 files — 572 passing, 1 skipped — plus 326 Playwright e2e tests across 24 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)
