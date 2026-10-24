@@ -47,7 +47,8 @@ assets/
 src/
 ├── analytics/          # Analytics, feedback, and dashboard modules
 ├── calculations/       # Modular calculation engine
-│   └── index.js          # Core calculation engine with caching
+│   ├── index.ts          # Core calculation engine with caching
+│   └── expenses.ts       # Expense line items: categories, frequencies, sanitizer, annualization
 ├── insights/           # AI/rules-based insights, reverse calculator, mix optimizer
 │   ├── insightsEngine.js   # Rules-based profitability insights
 │   ├── reverseCalculator.js # "What would it take?" reverse calculations
@@ -64,7 +65,7 @@ manifest.json        # PWA configuration
 
 ### Core Modules
 
-#### 1. Calculation Engine (`src/calculations/index.js`)
+#### 1. Calculation Engine (`src/calculations/index.ts`)
 - **Purpose**: Handles all business logic calculations with caching and debugging support
 - **Key Features**:
   - Caching system with configurable cache size (default: 100 entries)
@@ -207,7 +208,7 @@ landscaping, fitness, photography, and handyman.
 
 ### Testing Strategy
 
-#### Test Coverage (476 unit tests across 45 files — 475 passing, 1 skipped — plus 282 Playwright e2e tests across 17 files, chromium + firefox)
+#### Test Coverage (489 unit tests across 46 files — 488 passing, 1 skipped — plus 282 Playwright e2e tests across 17 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

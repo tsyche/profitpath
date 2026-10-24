@@ -250,6 +250,7 @@ const state = {
   fullTimeEmployeePay: 60000,
   partTimeEmployeePay: 30000,
   monthlyCosts: 250,
+  expenses: [],
   productiveUtilizationPct: 80, // percent of hours available for service delivery
   targetUtilizationPct: 75, // forecasting target
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings

@@ -10,6 +10,7 @@ export function getShareBase() {
 }
 import { clamp } from '../utils/helpers';
 import { normalizeOfferingType } from '../../src/calculations/index';
+import { sanitizeExpenses } from '../../src/calculations/expenses';
 import { showToast } from './modalService';
 import { createModal } from '../components/Modal';
 import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizations, updateBreakEvenAnalysis } from './visualizationService';
@@ -104,7 +105,8 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
     targetUtilizationPct: toFiniteNumber(data.targetUtilizationPct, 75, 1, 150),
     lockMix: data.lockMix === true,
     loadedTemplate: typeof data.loadedTemplate === 'string' ? data.loadedTemplate.slice(0, 100) : null,
-    notes: typeof data.notes === 'string' ? data.notes.slice(0, 2000) : ''
+    notes: typeof data.notes === 'string' ? data.notes.slice(0, 2000) : '',
+    expenses: sanitizeExpenses(data.expenses, uuid)
   };
 }
 

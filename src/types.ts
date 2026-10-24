@@ -7,6 +7,31 @@ export type Mode = 'forecast' | 'current';
 /** Only types with behavior live here; per-session/one-time arrive with roadmap items 18/19. */
 export type OfferingType = 'subscription' | 'group';
 
+export type ExpenseFrequency = 'weekly' | 'monthly' | 'annual';
+
+export type ExpenseCategory =
+  | 'Rent/Lease'
+  | 'Utilities'
+  | 'Insurance'
+  | 'Software/Subscriptions'
+  | 'Marketing'
+  | 'Equipment'
+  | 'Loan Payments'
+  | 'Professional Services'
+  | 'Supplies/COGS'
+  | 'Payment Processing'
+  | 'Contractor/1099'
+  | 'Other';
+
+/** A fixed cost line item. monthlyCosts stays as the free-form "other overhead" on top of these. */
+export interface Expense {
+  id: string;
+  name: string;
+  category: ExpenseCategory;
+  amount: number;
+  frequency: ExpenseFrequency;
+}
+
 /** A service offering as stored in app state (user-editable, may be partially filled). */
 export interface Offering {
   id?: string;
@@ -57,6 +82,7 @@ export interface CalcState {
   hoursPerWeek?: number;
   employeePay?: number;
   monthlyCosts?: number;
+  expenses?: Expense[];
   productiveUtilizationPct?: number;
   targetUtilizationPct?: number;
   /** App-only fields, ignored by calc(). */
@@ -115,6 +141,8 @@ export interface CostParams {
   employees: number;
   employeePay: number;
   monthlyCosts: number;
+  /** Annualized total of expense line items, on top of monthlyCosts. */
+  annualExpenses?: number;
 }
 
 export interface Costs {
@@ -174,6 +202,7 @@ export interface Sanitization {
   employees: number;
   employeePay: number;
   monthlyCosts: number;
+  annualExpenses: number;
   productiveUtilizationPct: number;
   targetUtilizationPct: number;
   offerings?: SanitizedOffering[];
@@ -261,4 +290,5 @@ export interface SanitizedScenarioState extends CalcState {
   lockMix: boolean;
   loadedTemplate: string | null;
   notes: string;
+  expenses: Expense[];
 }

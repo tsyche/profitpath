@@ -3,6 +3,7 @@
  * Handles all business logic calculations with caching and debugging support
  */
 
+import { annualExpenseTotal, sanitizeExpenses } from './expenses';
 import { clamp } from '../../assets/utils/helpers';
 import type {
   BreakEven,
@@ -84,6 +85,7 @@ function generateCacheKey(state: CalcState) {
     mode: state.mode,
     ...employeeKey,
     monthlyCosts: state.monthlyCosts,
+    expenses: sanitizeExpenses(state.expenses).map(e => [e.category, e.amount, e.frequency]),
     productiveUtilizationPct: state.productiveUtilizationPct,
     targetUtilizationPct: state.targetUtilizationPct,
     offerings: (Array.isArray(state.offerings) ? state.offerings : []).filter(o => o && typeof o === 'object').map(o => ({
@@ -210,9 +212,9 @@ function calculateCapacity(params: CapacityParams): Capacity {
  * Calculates cost metrics
  */
 function calculateCosts(params: CostParams): Costs {
-  const { employees, employeePay, monthlyCosts } = params;
+  const { employees, employeePay, monthlyCosts, annualExpenses = 0 } = params;
 
-  const annualFixedCosts = monthlyCosts * 12;
+  const annualFixedCosts = monthlyCosts * 12 + annualExpenses;
   const annualPayroll = employees * employeePay;
 
   return {
@@ -506,6 +508,7 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
   const employeePay = employees > 0 ? totalPayroll / employees : 0; // Average pay per employee
 
   const monthlyCosts = clamp(toFinite(input.monthlyCosts), 0, MAX_MONEY);
+  const annualExpenses = annualExpenseTotal(sanitizeExpenses(input.expenses));
   const productiveUtilizationPct = clamp(toFinite(input.productiveUtilizationPct), 0, 100);
   const targetUtilizationPct = clamp(toFinite(input.targetUtilizationPct), 0, 150);
 
@@ -519,6 +522,7 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
     employees,
     employeePay,
     monthlyCosts,
+    annualExpenses,
     productiveUtilizationPct,
     targetUtilizationPct
   };
@@ -532,7 +536,7 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
   // Early return for no offerings
   if (!offerings.length) {
     const capacity = calculateCapacity({ employees, productiveUtilizationPct, targetUtilizationPct, totalAnnualPaidHours });
-    const costs = calculateCosts({ employees, employeePay, monthlyCosts });
+    const costs = calculateCosts({ employees, employeePay, monthlyCosts, annualExpenses });
 
     const income = -costs.totalFixedCosts;
     const result: CalcResult = {
@@ -565,7 +569,7 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
 
   // Calculate capacity and costs
   const capacity = calculateCapacity({ employees, productiveUtilizationPct, targetUtilizationPct, totalAnnualPaidHours });
-  const costs = calculateCosts({ employees, employeePay: totalPayroll / (employees || 1), monthlyCosts });
+  const costs = calculateCosts({ employees, employeePay: totalPayroll / (employees || 1), monthlyCosts, annualExpenses });
 
   intermediate.capacity = capacity;
   intermediate.costs = costs;

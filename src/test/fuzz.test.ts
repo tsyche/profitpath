@@ -62,6 +62,16 @@ function fuzzState(rand) {
       ? pick(rand, [null, undefined, 'nope', 42, {}])
       : Array.from({ length: offeringCount }, () => fuzzOffering(rand)),
     monthlyCosts: fuzzNumber(rand, 0, 100000),
+    expenses: rand() < 0.1
+      ? pick(rand, [null, undefined, 'nope', 42, {}])
+      : Array.from({ length: Math.floor(rand() * 5) }, () => rand() < 0.05
+        ? pick(rand, [null, 42, 'junk'])
+        : {
+          name: pick(rand, ['Rent', 'x', ...HOSTILE_VALUES]),
+          category: pick(rand, ['Rent/Lease', 'Marketing', 'Bogus', null, 5]),
+          amount: fuzzNumber(rand, 0, 20000),
+          frequency: pick(rand, ['weekly', 'monthly', 'annual', 'daily', null, 3])
+        }),
     productiveUtilizationPct: fuzzNumber(rand, 0, 100),
     targetUtilizationPct: fuzzNumber(rand, 0, 150)
   };
@@ -164,12 +174,17 @@ describe('Fuzz: sanitizeScenarioState', () => {
         'mode', 'offerings', 'fullTimeEmployees', 'partTimeEmployees',
         'fullTimeEmployeePay', 'partTimeEmployeePay', 'monthlyCosts',
         'productiveUtilizationPct', 'targetUtilizationPct', 'lockMix', 'loadedTemplate',
-        'notes'
+        'notes', 'expenses'
       ]);
       for (const key of Object.keys(result)) {
         expect(allowed.has(key), `unexpected key ${key} at iteration=${i}`).toBe(true);
       }
 
+      expect(Array.isArray(result.expenses)).toBe(true);
+      for (const e of result.expenses) {
+        expect(Number.isFinite(e.amount) && e.amount >= 0).toBe(true);
+        expect(['weekly', 'monthly', 'annual']).toContain(e.frequency);
+      }
       expect(['forecast', 'current']).toContain(result.mode);
       expect(Number.isFinite(result.fullTimeEmployees)).toBe(true);
       expect(result.productiveUtilizationPct).toBeGreaterThanOrEqual(1);
