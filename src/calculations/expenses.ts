@@ -62,3 +62,24 @@ export function scaleOverhead<T extends { monthlyCosts?: number; expenses?: unkn
     expenses: sanitizeExpenses(state.expenses).map((e) => ({ ...e, amount: e.amount * factor })),
   };
 }
+
+export interface CostBreakdownRow {
+  label: string;
+  annual: number;
+  pct: number;
+}
+
+/** Annual overhead by category (plus the free-form 'Other overhead' field), largest first. Ties out to annualFixedCosts. */
+export function costBreakdown(state: { monthlyCosts?: unknown; expenses?: unknown }): CostBreakdownRow[] {
+  const totals = new Map<string, number>();
+  const other = Number(state.monthlyCosts);
+  if (Number.isFinite(other) && other > 0) totals.set('Other overhead', other * 12);
+  for (const e of sanitizeExpenses(state.expenses)) {
+    totals.set(e.category, (totals.get(e.category) || 0) + annualizeExpense(e));
+  }
+  const sum = [...totals.values()].reduce((s, v) => s + v, 0);
+  return [...totals.entries()]
+    .filter(([, annual]) => annual > 0)
+    .map(([label, annual]) => ({ label, annual, pct: (annual / sum) * 100 }))
+    .sort((a, b) => b.annual - a.annual);
+}

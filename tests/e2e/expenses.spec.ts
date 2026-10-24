@@ -49,4 +49,15 @@ test.describe('Fixed expenses table', () => {
     await expect(rows(page)).toHaveCount(1);
     await expect(rows(page).first().locator('select[data-k="category"]')).toHaveValue('Insurance');
   });
+
+  test('cost breakdown appears with expenses, groups by category, and ties out to fixed costs', async ({ page }) => {
+    await expect(page.locator('#costBreakdown')).toBeHidden();
+    await page.locator('#addExpenseBtn').click();
+    await rows(page).first().locator('input[data-k="amount"]').fill('100');
+    await rows(page).first().locator('select[data-k="category"]').selectOption('Marketing');
+    await expect(page.locator('#costBreakdown')).toBeVisible();
+    await expect(page.locator('#costBreakdownBody tr', { hasText: 'Marketing' })).toContainText('$1,200');
+    await rows(page).first().locator('button[data-action="removeExpense"]').click();
+    await expect(page.locator('#costBreakdown')).toBeHidden();
+  });
 });

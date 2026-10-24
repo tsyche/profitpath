@@ -1585,6 +1585,14 @@ button:focus {
   min-width: 520px;
 }
 
+.cost-breakdown {
+  margin-top: 10px;
+}
+
+.cost-breakdown td:not(:first-child) {
+  text-align: right;
+}
+
 .expenses-table td select {
   min-width: 140px;
 }

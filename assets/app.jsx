@@ -1,5 +1,5 @@
 import { calc, getCacheStats, normalizeOfferingType } from '../src/calculations/index';
-import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, scaleOverhead, sanitizeExpenses } from '../src/calculations/expenses';
+import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
@@ -461,6 +461,16 @@ function addExpense() {
   render();
 }
 
+// Only shown once there are expense line items; with just the free-form field it would repeat the KPI.
+function renderCostBreakdown() {
+  const wrap = $('#costBreakdown');
+  const body = $('#costBreakdownBody');
+  if (!wrap || !body) return;
+  const rows = state.expenses.length ? costBreakdown(state) : [];
+  wrap.hidden = rows.length === 0;
+  body.innerHTML = rows.map(r => '<tr><td>' + escapeHtml(r.label) + '</td><td class="mono">' + fmtMoney0(r.annual) + '</td><td class="mono">' + fmtPct1(r.pct) + '</td></tr>').join('');
+}
+
 function renderExpenses() {
   const tbody = $('#expensesBody');
   if (!tbody) return;
@@ -797,6 +807,7 @@ function render() {
   setKpi('kpiCapacity', fmtPct1(metrics.capacityPct));
   setKpi('kpiRevenue', fmtMoney0(metrics.revenue));
   setKpi('kpiFixedCosts', fmtMoney0(metrics.annualFixedCosts));
+  renderCostBreakdown();
   setKpi('kpiPayroll', fmtMoney0(metrics.annualPayroll));
   setKpi('kpiVariableCosts', fmtMoney0(metrics.variableCosts));
   setKpi('kpiBreakEvenClients', fmtInt(metrics.breakEvenClients));
@@ -876,6 +887,7 @@ function updateOutputs(metrics) {
     }
     if (kpiRevenue) kpiRevenue.textContent = fmtMoney0(metrics.revenue);
     if (kpiFixedCosts) kpiFixedCosts.textContent = fmtMoney0(metrics.annualFixedCosts);
+    renderCostBreakdown();
     if (kpiPayroll) kpiPayroll.textContent = fmtMoney0(metrics.annualPayroll);
     if (kpiVariableCosts) kpiVariableCosts.textContent = fmtMoney0(metrics.variableCosts);
 

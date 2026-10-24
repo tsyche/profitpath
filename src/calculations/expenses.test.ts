@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calc, clearCalculationCache } from './index'
-import { annualizeExpense, sanitizeExpenses, scaleOverhead, totalMonthlyOverhead, EXPENSE_CATEGORIES } from './expenses'
+import { annualizeExpense, costBreakdown, sanitizeExpenses, scaleOverhead, totalMonthlyOverhead, EXPENSE_CATEGORIES } from './expenses'
 import { sanitizeScenarioState } from '../../assets/services/miscService'
 
 // Roadmap 27: structured expense line items. monthlyCosts stays as "other overhead".
@@ -130,3 +130,28 @@ describe('overhead helpers', () => {
     expect(a.income - b.income).toBeCloseTo(0.5 * (12000 + 5200), 6)
   })
 })
+
+describe('costBreakdown', () => {
+  const ex = (category: string, amount: number, frequency = 'monthly') => ({ id: category + amount, name: 'x', category, amount, frequency });
+
+  it('sums annualized amounts per category, largest first, and ties out to fixed costs', () => {
+    const state = { monthlyCosts: 100, expenses: [ex('Insurance', 1200, 'annual'), ex('Rent/Lease', 1000), ex('Insurance', 10, 'weekly')] };
+    const rows = costBreakdown(state);
+    expect(rows.map((r) => [r.label, r.annual])).toEqual([
+      ['Rent/Lease', 12000],
+      ['Other overhead', 1200],
+      ['Insurance', 1720],
+    ].sort((a, b) => (b[1] as number) - (a[1] as number)));
+    expect(rows.reduce((s, r) => s + r.annual, 0)).toBe(totalMonthlyOverhead(state) * 12);
+    expect(rows.reduce((s, r) => s + r.pct, 0)).toBeCloseTo(100);
+  });
+
+  it('returns nothing when there are no costs', () => {
+    expect(costBreakdown({ monthlyCosts: 0, expenses: [] })).toEqual([]);
+  });
+
+  it('keeps Other-category expenses and other overhead as separate rows', () => {
+    const rows = costBreakdown({ monthlyCosts: 50, expenses: [ex('Other', 10)] });
+    expect(rows.map((r) => r.label).sort()).toEqual(['Other', 'Other overhead']);
+  });
+});
