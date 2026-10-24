@@ -48,7 +48,7 @@ function fuzzOffering(rand) {
     hoursPerSession: fuzzNumber(rand, 0, 24),
     variableCostPerSession: fuzzNumber(rand, 0, 500),
     laborPctOfPrice: fuzzNumber(rand, 0, 150),
-    type: pick(rand, ['subscription', 'group', 'bogus', null, undefined, 42, {}]),
+    type: pick(rand, ['subscription', 'group', 'per-session', 'bogus', null, undefined, 42, {}]),
     mixPct: fuzzNumber(rand, 0, 100),
     currentClients: fuzzNumber(rand, 0, 1000)
   };

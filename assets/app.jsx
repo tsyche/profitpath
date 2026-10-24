@@ -1,5 +1,6 @@
 import { calc, getCacheStats, normalizeOfferingType } from '../src/calculations/index';
 import { floorStatus, rankOfferings } from '../src/calculations/offeringRanking';
+import { displayPrice, isPerSession, monthlyFromPerSession, priceMonthlyForNewVisits } from '../src/calculations/offeringPrice';
 import { calcRange, calcRangeDrivers, suggestRanges, sanitizeOfferingRange } from '../src/calculations/ranges';
 import { marketBadge, sanitizeOfferingMarket } from '../src/calculations/marketPosition';
 import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../src/calculations/offeringMeta';
@@ -351,7 +352,7 @@ function onTableInput(e) {
   let value = el.value;
   let validationError = null;
 
-  if (k === 'priceMonthly') {
+  if (k === 'priceMonthly' || k === 'pricePerSession') {
     const parsed = safeParseNumber(value, 0);
     if (parsed <= 0) {
       validationError = 'Price must be greater than $0';
@@ -419,6 +420,13 @@ function onTableInput(e) {
     o.name = el.value;
   } else if (k === 'mixPct' && state.mode === 'forecast' && state.lockMix) {
     businessLogic.rebalanceMix(i, value);
+  } else if (k === 'pricePerSession') {
+    // Entry lens only: priceMonthly stays the canonical price everything else reads
+    o.priceMonthly = monthlyFromPerSession(Number(value), o.sessionsPerYear);
+  } else if (k === 'sessionsPerYear' && isPerSession(o)) {
+    // Visits are an assumption separate from the per-visit price, which stays put
+    o.priceMonthly = priceMonthlyForNewVisits(o, Number(value));
+    o.sessionsPerYear = Number(value);
   } else {
     o[k] = value;
   }
@@ -531,7 +539,7 @@ const BADGE_COLORS = { green: 'var(--good)', yellow: 'var(--warn)', red: 'var(--
 /** @param {any} o @param {any} metric */
 function marketBadgeHtml(o, metric) {
   const status = metric ? floorStatus(metric.maxDiscountPct, o.discountPct || 0) : 'ok';
-  const b = marketBadge(Number(o.priceMonthly) || 0, o, status);
+  const b = marketBadge(Number(displayPrice(o)) || 0, o, status);
   if (!b) return '<span class="muted">—</span>';
   const arrow = b.direction === 'below' ? ' ▼' : b.direction === 'above' ? ' ▲' : '';
   return '<span data-level="' + b.level + '" style="color:' + BADGE_COLORS[b.level] + '">' + BADGE_LABELS[b.level] + arrow + '</span>';
@@ -545,7 +553,7 @@ function renderMarketTable(metrics) {
   const num = (o, idx, k, label) => '<td class="cell-edit" data-label="' + label + '"><input aria-label="Market ' + label.toLowerCase() + ' for ' + escapeHtml(o.name) +
     '" type="number" min="0" step="1" placeholder="none" value="' + (o[k] ?? '') + '" data-k="' + k + '" data-i="' + idx + '"/></td>';
   tbody.innerHTML = state.offerings.map((o, idx) => '<tr><td data-label="Offering">' + escapeHtml(o.name) + '</td>' +
-    '<td class="mono" data-label="Your price">' + fmtMoney0(o.priceMonthly) + '</td>' +
+    '<td class="mono" data-label="Your price">' + fmtMoney0(displayPrice(o)) + (isPerSession(o) ? '/session' : '/mo') + '</td>' +
     num(o, idx, 'marketLow', 'Low') + num(o, idx, 'marketAvg', 'Avg') + num(o, idx, 'marketHigh', 'High') +
     '<td class="cell-edit" data-label="Source / date"><input aria-label="Market source for ' + escapeHtml(o.name) + '" type="text" maxlength="' + MAX_NOTE_LENGTH +
     '" placeholder="Source, date" value="' + escapeHtml(o.marketNote || '') + '" data-k="marketNote" data-i="' + idx + '"/></td>' +
@@ -857,9 +865,15 @@ function render() {
       : '<input aria-label="Clients for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" step="1" value="' + (o.currentClients ?? 0) + '" data-k="currentClients" data-i="' + (idx) + '" data-tooltip="Number of active clients for this offering" />';
 
     const isGroup = o.type === 'group';
-    const typeCell = '<select aria-label="Type for ' + (escapeHtml(o.name)) + '" data-k="type" data-i="' + (idx) + '" data-tooltip="Subscription: one client at a time. Group: clients share a class with limited seats">' +
-      '<option value="subscription"' + (isGroup ? '' : ' selected') + '>Subscription</option>' +
+    const perSession = isPerSession(o);
+    const typeCell = '<select aria-label="Type for ' + (escapeHtml(o.name)) + '" data-k="type" data-i="' + (idx) + '" data-tooltip="Subscription: monthly price per client. Per-session: price per visit times visits a year. Group: clients share a class with limited seats">' +
+      '<option value="subscription"' + (o.type === 'group' || perSession ? '' : ' selected') + '>Subscription</option>' +
+      '<option value="per-session"' + (perSession ? ' selected' : '') + '>Per-session</option>' +
       '<option value="group"' + (isGroup ? ' selected' : '') + '>Group</option></select>';
+    const priceCell = perSession
+      ? '<input aria-label="Price per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (Math.round(displayPrice(o) * 100) / 100) + '" data-k="pricePerSession" data-i="' + (idx) + '" data-tooltip="What one visit costs. Annual revenue per client is this times Sessions / yr"/><span class="unit-suffix muted">/session</span>'
+      : '<input aria-label="Price per month for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="10" value="' + (o.priceMonthly) + '" data-k="priceMonthly" data-i="' + (idx) + '" data-tooltip="Monthly billing price per client"/><span class="unit-suffix muted">/mo</span>';
+    const sessionsTip = perSession ? 'Assumption: how many visits each client books per year (the price per session stays fixed)' : 'How many times per year this service is delivered to each client';
     const seatsCell = isGroup
       ? '<input aria-label="Seats per class for ' + (escapeHtml(o.name)) + '" type="number" min="1" step="1" value="' + (o.seats || 1) + '" data-k="seats" data-i="' + (idx) + '" data-tooltip="Seats per class run. Sessions / yr is how many classes each enrolled client attends"/>'
       : '<span class="muted">—</span>';
@@ -876,8 +890,8 @@ function render() {
       : Math.round((o.currentClients || 0) * o.sessionsPerYear);
 
     tr.innerHTML = '<td class="cell-edit group-start group-inputs" data-label="Offering"><input aria-label="Offering name" type="text" value="' + (escapeHtml(o.name)) + '" data-k="name" data-i="' + (idx) + '" data-tooltip="Name of this service offering"/></td>' +
-      '<td class="cell-edit group-inputs" data-label="Price / mo"><input aria-label="Price per month for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="10" value="' + (o.priceMonthly) + '" data-k="priceMonthly" data-i="' + (idx) + '" data-tooltip="Monthly billing price per client"/></td>' +
-      '<td class="cell-edit group-inputs" data-label="Sessions / yr"><input aria-label="Sessions per year for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.sessionsPerYear) + '" data-k="sessionsPerYear" data-i="' + (idx) + '" data-tooltip="How many times per year this service is delivered to each client"/></td>' +
+      '<td class="cell-edit group-inputs" data-label="Price">' + (priceCell) + '</td>' +
+      '<td class="cell-edit group-inputs" data-label="Sessions / yr"><input aria-label="Sessions per year for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.sessionsPerYear) + '" data-k="sessionsPerYear" data-i="' + (idx) + '" data-tooltip="' + sessionsTip + '"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Hours / session"><input aria-label="Hours per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="0.1" value="' + (o.hoursPerSession) + '" data-k="hoursPerSession" data-i="' + (idx) + '" data-tooltip="Duration of each service session in hours"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Var $ / session"><input aria-label="Variable cost per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.variableCostPerSession) + '" data-k="variableCostPerSession" data-i="' + (idx) + '" data-tooltip="Cost per session (materials, supplies, delivery, etc.)"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Labor % of price"><input aria-label="Labor percent of list price for ' + (escapeHtml(o.name)) + '" type="number" min="0" max="100" step="1" value="' + (o.laborPctOfPrice || 0) + '" data-k="laborPctOfPrice" data-i="' + (idx) + '" data-tooltip="Contractor pay as a % of list price (added to Var $ / session)"/></td>' +

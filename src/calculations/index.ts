@@ -139,7 +139,7 @@ function annualVariableCostPerClient(o: SanitizedOffering): number {
   return o.sessionsPerYear * o.variableCostPerSession + (o.laborPctOfPrice / 100) * o.priceMonthly * 12;
 }
 
-const OFFERING_TYPES: readonly OfferingType[] = ['subscription', 'group'];
+const OFFERING_TYPES: readonly OfferingType[] = ['subscription', 'group', 'per-session'];
 
 /** Single fallback point: anything unrecognized is a subscription. */
 export function normalizeOfferingType(v: unknown): OfferingType {

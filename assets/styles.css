@@ -2743,6 +2743,13 @@ input[type="checkbox"] {
 
 /* good */
 
+/* Unit hint after the Price input (/mo or /session). */
+.table td .unit-suffix {
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+  white-space: nowrap;
+}
+
 /* Make edit vs read-only visually distinct. */
 .table td.cell-edit {
   background: var(--overlay-2);

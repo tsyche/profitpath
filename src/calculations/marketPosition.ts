@@ -4,7 +4,7 @@ import { sanitizeNote } from './offeringMeta';
 import type { RankStatus } from './offeringRanking';
 
 /**
- * Optional market low / high / average per offering (same units as Price / mo),
+ * Optional market low / high / average per offering (same units as the row's Price: per month, or per session for per-session rows),
  * with a green / yellow / red badge: green inside the range and clearing the
  * floor, yellow near an edge or with a thin floor, red outside the range or
  * below cost. The arrow says which way to fix it. Display only, never used by calc.

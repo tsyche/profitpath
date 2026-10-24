@@ -6,8 +6,8 @@ import type { CurrencyCode } from './calculations/currency';
 
 export type Mode = 'forecast' | 'current';
 
-/** Only types with behavior live here; per-session/one-time arrive with roadmap items 18/19. */
-export type OfferingType = 'subscription' | 'group';
+/** Only types with behavior live here; one-time arrives with roadmap item 19. */
+export type OfferingType = 'subscription' | 'group' | 'per-session';
 
 export type ExpenseFrequency = 'weekly' | 'monthly' | 'annual';
 
