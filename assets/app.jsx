@@ -7,6 +7,7 @@ import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOffering
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, DEFAULT_LIFE_YEARS, monthlyCategorySpend, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
 import { sanitizeResources } from '../src/calculations/resources';
 import { pruneMembership } from '../src/calculations/membership';
+import { initMembershipPanel, renderMembershipPanel, renderMembershipResults } from './components/MembershipPanel';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
@@ -1052,6 +1053,7 @@ function render() {
   renderExpenses();
   renderResources();
   renderRangesTable();
+  renderMembershipPanel();
 
   // Mix/mode note (used as the "what am I editing" banner, especially on small screens).
   const mixNote = $('#mixNote');
@@ -1195,6 +1197,7 @@ function updateOutputs(metrics) {
     renderOfferingRanking(metrics);
     renderMarketTable(metrics);
     renderRangeBand();
+    renderMembershipResults();
     if (!$('#insightsBody')?.classList.contains('collapsed')) renderInsightsPanel();
     scheduleReverseRefresh();
     if (kpiPayroll) kpiPayroll.textContent = fmtMoney0(metrics.annualPayroll);
@@ -2825,6 +2828,15 @@ function renderInsightsPanel() {
   el.innerHTML = list + table;
 }
 
+function initMembershipSection() {
+  initMembershipPanel({
+    getState: () => state,
+    persist: persistState,
+    pushHistory
+  });
+  bindPanelToggle('#membershipToggle', '#membershipBody', renderMembershipPanel);
+}
+
 function initInsightsPanel() {
   bindPanelToggle('#insightsToggle', '#insightsBody', renderInsightsPanel);
 }
@@ -3373,6 +3385,7 @@ try {
   initCustomerAnalyticsPanel();
   initMixOptimizerPanel();
   initInsightsPanel();
+  initMembershipSection();
   initReversePanel();
   initAdvancedChartsPanel();
   initWhatIfWizard();

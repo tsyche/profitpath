@@ -2,7 +2,7 @@
 
 **TL;DR:** A display-only what-if panel: define up to 3 plans (monthly fee, included credits, member discount, eligible services) and up to 3 member profiles (visits per month per service), priced from the scenario's own offerings. For each plan x profile it shows what the member actually saves and what the business keeps, with every percentage naming its denominator. It never feeds `calc()` totals, so credits can't be double counted as revenue.
 
-**Status:** Decided
+**Status:** Building (phases 1-3 done, 4 finalize left)
 **Fold into:** [AGENTS.md](../../AGENTS.md) / [CLAUDE.md](../../CLAUDE.md) "Core Modules" (calculation engine) and [experience-levels.md](../experience-levels.md).
 
 ## Problem

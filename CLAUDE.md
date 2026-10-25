@@ -28,7 +28,7 @@ assets/
 ├── app.jsx              # Main application logic and UI management (entry point)
 ├── styles.css           # Styling and responsive design
 ├── accessibility.js     # Accessibility enhancements
-├── components/          # UI components (Modal.js, UIHelpers.js)
+├── components/          # UI components (Modal.js, UIHelpers.js, MembershipPanel.ts)
 ├── hooks/              # Custom hooks (useTableFocus.js)
 ├── services/           # Business logic modules
 │   ├── businessLogic.js    # Core business rules and validation
@@ -55,7 +55,7 @@ src/
 │   ├── offeringMeta.ts   # Per-offering confidence tag (verified/estimated/guess) and note sanitizers; display only
 │   ├── ranges.ts         # Optional low/high bounds (fill %, current clients): calcRange min/base/max band, bound sanitizers, suggestRanges (confidence-tag presets), calcRangeDrivers (profit swing per offering)
 │   ├── resources.ts      # Optional extra capacity pools (booth, room): sanitizer and annual hours; calc() caps forecast clients per pool and reports poolUtilization + bottleneck
-│   ├── membership.ts     # Membership / prepaid-credit what-if: one plan vs one member profile priced from the offerings; credits at list by default, stacking opt-in per plan; display only, never feeds calc() (persisted in scenarios, share URL and CSV as membershipPlans/memberProfiles; UI pending, docs/plans/membership-calculator.md)
+│   ├── membership.ts     # Membership / prepaid-credit what-if: one plan vs one member profile priced from the offerings; credits at list by default, stacking opt-in per plan; display only, never feeds calc() (persisted in scenarios, share URL and CSV as membershipPlans/memberProfiles; panel in assets/components/MembershipPanel.ts, docs/plans/membership-calculator.md)
 │   └── expenses.ts       # Expense line items: categories, frequencies (weekly, monthly, annual, one-time amortized over lifeYears), sanitizer, annualization, cost-by-category breakdown
 ├── insights/           # Rules-based insights + what-ifs, reverse calculator (both built on calc()), mix optimizer
 │   ├── insightsEngine.ts   # Rules-based insights; what-if impacts re-run calc()
@@ -203,7 +203,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (668 unit tests across 64 files — 667 passing, 1 skipped — plus 394 Playwright e2e tests across 33 files, chromium + firefox)
+#### Test Coverage (668 unit tests across 64 files — 667 passing, 1 skipped — plus 406 Playwright e2e tests across 34 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)
