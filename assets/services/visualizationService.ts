@@ -360,9 +360,8 @@ export function renderSimpleChart(metrics: any) {
     const rev = Number(m.revenue) || 0;
     const variable = Number(m.variableCosts) || 0;
     const contrib = Math.max(0, rev - variable);
-    const serviceHoursPerClient = Number(o.sessionsPerYear || 0) * Number(o.hoursPerSession || 0);
     const pct = totalRevenue > 0 ? (rev / totalRevenue) : 0;
-    return { name: o.name || 'Offering ' + (idx + 1), rev, variable, contrib, serviceHoursPerClient, pct };
+    return { name: o.name || 'Offering ' + (idx + 1), rev, variable, contrib, pct };
   });
 
   // SVG: draw each offering as variable (red) then contribution (green) adjacent; x coord in percentage of totalRevenue
@@ -375,12 +374,12 @@ export function renderSimpleChart(metrics: any) {
 
     // variable rect
     if (varPct > 0) {
-      rects.push({ x: x, w: varPct, color: 'rgba(251,113,133,0.6)', offering: d.name, type: 'variable', varVal: d.variable, contribVal: d.contrib, pct: d.pct, hours: d.serviceHoursPerClient });
+      rects.push({ x: x, w: varPct, color: 'rgba(251,113,133,0.6)', offering: d.name, type: 'variable', varVal: d.variable, contribVal: d.contrib, pct: d.pct });
     }
 
     // contribution rect (may be zero)
     if (contribPct > 0) {
-      rects.push({ x: x + varPct, w: contribPct, color: 'rgba(52,211,153,0.6)', offering: d.name, type: 'contrib', varVal: d.variable, contribVal: d.contrib, pct: d.pct, hours: d.serviceHoursPerClient });
+      rects.push({ x: x + varPct, w: contribPct, color: 'rgba(52,211,153,0.6)', offering: d.name, type: 'contrib', varVal: d.variable, contribVal: d.contrib, pct: d.pct });
     }
 
     // (no per-offering labels rendered here to avoid overlap/size issues)
@@ -398,8 +397,7 @@ export function renderSimpleChart(metrics: any) {
     const varAttr = escapeHtml(fmtMoney0(r.varVal || 0));
     const contribAttr = escapeHtml(fmtMoney0(r.contribVal || 0));
     const pctAttr = escapeHtml(((r.pct || 0) * 100).toFixed(0) + '%');
-    const hoursAttr = escapeHtml((r.hours || 0).toFixed(1));
-    svgParts.push('<rect x="' + (xPos) + '" y="2" width="' + (w) + '" height="16" rx="3" fill="' + (r.color) + '" data-offering="' + (offeringAttr) + '" data-type="' + (typeAttr) + '" data-var="' + (varAttr) + '" data-contrib="' + (contribAttr) + '" data-pct="' + (pctAttr) + '" data-hours="' + (hoursAttr) + '" style="pointer-events:auto;cursor:pointer;" class="chart-rect"></rect>');
+    svgParts.push('<rect x="' + (xPos) + '" y="2" width="' + (w) + '" height="16" rx="3" fill="' + (r.color) + '" data-offering="' + (offeringAttr) + '" data-type="' + (typeAttr) + '" data-var="' + (varAttr) + '" data-contrib="' + (contribAttr) + '" data-pct="' + (pctAttr) + '" style="pointer-events:auto;cursor:pointer;" class="chart-rect"></rect>');
   });
 
   // intentionally do not render per-offering inline labels (legend below provides totals)

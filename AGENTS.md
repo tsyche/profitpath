@@ -34,6 +34,7 @@ assets/
 │   ├── businessLogic.js    # Core business rules and validation
 │   ├── miscService.js      # Utility functions, exports, scenario URL sharing
 │   ├── modalService.js     # Modal and toast handling
+│   ├── industryTemplates.ts # INDUSTRY_TEMPLATES presets (Templates menu)
 │   ├── scenarioService.js  # Scenario management
 │   ├── stateManager.js     # State persistence helpers
 │   ├── visualizationService.js # Chart and visualization logic (gauge, waterfall)
@@ -204,7 +205,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (676 unit tests across 64 files — 675 passing, 1 skipped — plus 412 Playwright e2e tests across 35 files, chromium + firefox)
+#### Test Coverage (683 unit tests across 65 files — 682 passing, 1 skipped — plus 412 Playwright e2e tests across 35 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

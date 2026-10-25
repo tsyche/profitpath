@@ -9,7 +9,7 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 ## Recommended Next 3
 
 1. **Items 25 and 26, tabs and sticky mini-summary**: the Setup column keeps growing (expenses, resources, ranges, market) and the experience-level gating of those sections is still ad hoc. Ranges & confidence, Market position and Capacity resources are now gated to intermediate+; item 25 should cover the remaining Setup sections.
-2. **12o remainder / 24c remainder / 24b remainder (template row, waterfall hours)**: small follow-ups on partly shipped items (see their entries).
+2. **12o remainder / 24c remainder**: small follow-ups on partly shipped items (see their entries).
 3. **`labor-pct.spec.ts` flake** (12s): parked, not reproducible (see its entry).
 
 Shipped 2026-10-24/25: multi-resource capacity pools (20), Duplicate offering button (12k), new rows take the unassigned mix (12l), one-time expenses amortized over useful life (30), processing fee % (29), Marketing expenses driving CAC (28), loans via Loan Payments (31), reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
@@ -95,7 +95,7 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - Add `@axe-core/playwright` and a spec that scans each main panel and the modals at each experience level; fail on Critical/Serious.
     - Feeds Phase 0 of [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md) (items 25/26).
 
-24b. **Group / cohort offerings (seats, sessions run, fill rate)** *(PARTIAL, 2026-10-23: `type` field (`subscription | group`) with Seats and Fill % columns shipped; SHIPPED 2026-10-25: `costPerRun` (per cohort in Current, per filled seat in Forecast) and per-offering break-even fill in the "Group runs" table; remaining: fitness template's group row, waterfall hours still per-client)*
+24b. **Group / cohort offerings (seats, sessions run, fill rate)** *(SHIPPED 2026-10-25; first slice 2026-10-23: `type` field (`subscription | group`) with Seats and Fill % columns shipped; SHIPPED 2026-10-25: `costPerRun` (per cohort in Current, per filled seat in Forecast) and per-offering break-even fill in the "Group runs" table; fitness template's class is now a group row, and the unread per-client waterfall hours attribute was removed. Photography template retuned: it ran at 254% utilization)*
     - Today staff hours scale with clients (`hoursPerSession` per client), so a group class must be faked as a fractional hour per student (2 hr ÷ 8 seats = 0.25). An under-filled class then looks cheaper to deliver than it is: the instructor still works the full 2 hours.
     - Add an offering type with seats per session, sessions run per year, and expected fill % (Forecast) or average enrolled (Current). Staff hours and fixed per-run costs count per run; revenue and per-seat costs count per filled seat. Output break-even fill (seats needed to cover the run's cost).
     - Motivated by the 2026-10-23 trial: seats are known capacity, fill is only known after booking — it felt like needing Current and Forecast mode at once. This item plus 24c removes that tension without a hybrid mode.
