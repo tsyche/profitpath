@@ -15,7 +15,7 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Insights & What-Ifs, What Would It Take?: OFF
   - Advanced charts (heat map, radar, funnel): OFF
   - Capacity resources (booth, room pools): OFF
-  - Membership What-If: OFF
+  - Membership What-If, Group runs: OFF
   - Ranges & confidence, Market position: OFF
   - Debug panel: OFF
   - Performance metrics: OFF
@@ -29,7 +29,7 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Client mix optimizer: ON
   - Insights & What-Ifs, What Would It Take?: ON
   - Capacity resources (booth, room pools): ON
-  - Membership What-If: ON
+  - Membership What-If, Group runs: ON
   - Ranges & confidence, Market position: ON
   - Advanced charts (heat map, radar, funnel): OFF
   - Debug panel: OFF
@@ -44,7 +44,7 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Client mix optimizer: ON
   - Insights & What-Ifs, What Would It Take?: ON
   - Capacity resources (booth, room pools): ON
-  - Membership What-If: ON
+  - Membership What-If, Group runs: ON
   - Ranges & confidence, Market position: ON
   - Advanced charts (heat map, radar, funnel): ON
   - Debug panel: ON
@@ -72,6 +72,7 @@ The app hides/shows elements by toggling display on selectors tied to feature ke
 - `.insights-wrapper` — collapsible insights and what-if estimates panel (`showInsights`)
 - `.reverse-calculator-wrapper` — collapsible "What Would It Take?" panel (`showReverseCalculator`)
 - `.membership-wrapper` — collapsible Membership What-If panel (`.advanced-feature`, so intermediate and up)
+- `#groupRunsSection` — collapsible Group runs table: fixed cost per run and break-even fill (`.advanced-feature`, so intermediate and up)
 - `.advanced-charts-wrapper` — collapsible advanced charts panel (heat map, radar, funnel)
 - The "What if?" wizard (`#whatIfModal`, header and drawer) is not gated: it is available at every level.
 

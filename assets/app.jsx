@@ -7,6 +7,7 @@ import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOffering
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, DEFAULT_LIFE_YEARS, monthlyCategorySpend, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
 import { sanitizeResources } from '../src/calculations/resources';
 import { pruneMembership } from '../src/calculations/membership';
+import { initGroupRunsPanel, renderGroupRunResults, renderGroupRunsTable } from './components/GroupRunsPanel';
 import { initMembershipPanel, renderMembershipPanel, renderMembershipResults } from './components/MembershipPanel';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
@@ -1053,6 +1054,7 @@ function render() {
   renderExpenses();
   renderResources();
   renderRangesTable();
+  renderGroupRunsTable();
   renderMembershipPanel();
 
   // Mix/mode note (used as the "what am I editing" banner, especially on small screens).
@@ -1198,6 +1200,7 @@ function updateOutputs(metrics) {
     renderMarketTable(metrics);
     renderRangeBand();
     renderMembershipResults();
+    renderGroupRunResults();
     if (!$('#insightsBody')?.classList.contains('collapsed')) renderInsightsPanel();
     scheduleReverseRefresh();
     if (kpiPayroll) kpiPayroll.textContent = fmtMoney0(metrics.annualPayroll);
@@ -2828,6 +2831,11 @@ function renderInsightsPanel() {
   el.innerHTML = list + table;
 }
 
+function initGroupRunsSection() {
+  initGroupRunsPanel({ getState: () => state, pushHistory, refresh: refreshAfterResourceEdit });
+  renderGroupRunsTable();
+}
+
 function initMembershipSection() {
   initMembershipPanel({
     getState: () => state,
@@ -3386,6 +3394,7 @@ try {
   initMixOptimizerPanel();
   initInsightsPanel();
   initMembershipSection();
+  initGroupRunsSection();
   initReversePanel();
   initAdvancedChartsPanel();
   initWhatIfWizard();

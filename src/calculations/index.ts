@@ -5,6 +5,7 @@
 
 import { annualExpenseTotal, sanitizeExpenses } from './expenses';
 import { activeResources, resourceAnnualHours, sanitizeResources, STAFF_POOL_ID } from './resources';
+import { breakEvenSeats, sanitizeCostPerRun } from './groupRuns';
 import { clamp } from '../../assets/utils/helpers';
 import type {
   BreakEven,
@@ -105,6 +106,7 @@ function generateCacheKey(state: CalcState) {
       type: o.type,
       seats: o.seats,
       fillPct: o.fillPct,
+      costPerRun: o.costPerRun,
       resource: o.resource,
       mixPct: o.mixPct,
       currentClients: o.currentClients
@@ -141,8 +143,23 @@ export function normalizeMix(offerings: Offering[]): MixResult {
  * global processing fee, both as a % of list price. Priced off priceMonthly (list price) so a future discount
  * model (roadmap 24a) must not change the base; the business absorbs discounts.
  */
-function annualVariableCostPerClient(o: SanitizedOffering): number {
+function baseVariableCostPerClient(o: SanitizedOffering): number {
   return o.sessionsPerYear * o.variableCostPerSession + ((o.laborPctOfPrice + (o.feePct || 0)) / 100) * o.priceMonthly * 12;
+}
+
+/** Forecast share of a group run's fixed cost carried by each filled seat; 0 for other types. */
+function runCostPerClient(o: SanitizedOffering): number {
+  return o.type === 'group' ? o.costPerRun / (o.seats * (o.fillPct / 100)) : 0;
+}
+
+function annualVariableCostPerClient(o: SanitizedOffering): number {
+  return baseVariableCostPerClient(o) + runCostPerClient(o);
+}
+
+/** Current-mode annual delivery cost: per-client costs plus one run cost per cohort (ceil(enrolled/seats)). */
+function currentVariableCost(o: SanitizedOffering): number {
+  const runs = o.type === 'group' ? Math.ceil(o.currentClients / o.seats) : 0;
+  return o.currentClients * baseVariableCostPerClient(o) + runs * (o.type === 'group' ? o.costPerRun : 0);
 }
 
 const OFFERING_TYPES: readonly OfferingType[] = ['subscription', 'group', 'per-session', 'one-time'];
@@ -167,8 +184,15 @@ function annualStaffHoursPerClient(o: SanitizedOffering): number {
   return o.type === 'group' ? perClient / (o.seats * (o.fillPct / 100)) : perClient;
 }
 
+/** Group rows with a run cost: seats a run needs to cover itself, and that as % of its seats (Infinity when unreachable). */
+function groupBreakEven(o: SanitizedOffering, annualRevenue: number): Pick<OfferingMetric, 'breakEvenSeats' | 'breakEvenFillPct'> {
+  if (o.type !== 'group' || o.costPerRun <= 0) return {};
+  const seats = breakEvenSeats(o.costPerRun, annualRevenue - baseVariableCostPerClient(o));
+  return { breakEvenSeats: seats, breakEvenFillPct: (seats / o.seats) * 100 };
+}
+
 /** Per-client unit economics, independent of how many clients there are. */
-function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHour' | 'maxDiscountPct' | 'discountPct' | 'discountedMarginPerHour' | 'contributionPerClientMonthly' | 'hourFree'> {
+function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHour' | 'maxDiscountPct' | 'discountPct' | 'discountedMarginPerHour' | 'contributionPerClientMonthly' | 'hourFree' | 'breakEvenSeats' | 'breakEvenFillPct'> {
   const revenue = o.priceMonthly * 12;
   const contribution = revenue - annualVariableCostPerClient(o);
   const hours = annualStaffHoursPerClient(o);
@@ -179,6 +203,7 @@ function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHou
     marginPerHour: hours > 0 ? contribution / hours : 0,
     discountPct: o.discountPct,
     hourFree: hours <= 0,
+    ...groupBreakEven(o, revenue),
     discountedMarginPerHour: hours > 0 ? discountedContribution / hours : 0,
     // Deepest discount before delivery costs eat the whole price
     maxDiscountPct: revenue > 0 ? Math.max(0, (contribution / revenue) * 100) : 0
@@ -214,6 +239,7 @@ function sanitizeOfferings(offerings: Offering[], feePct = 0, resourceIds: Reado
       type: normalizeOfferingType(o.type),
       seats: Math.floor(clamp(finiteOr(o.seats, 1), 1, MAX_COUNT)),
       fillPct: clamp(finiteOr(o.fillPct, 100), 1, 100),
+      costPerRun: sanitizeCostPerRun(o.costPerRun),
       // A tag naming a missing or unset resource behaves as untagged
       resource: typeof o.resource === 'string' && resourceIds.has(o.resource) ? o.resource : undefined,
       mixPct: clamp(toFinite(o.mixPct), 0, 100),
@@ -361,7 +387,7 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
   offerings.forEach(o => {
     const offeringSessions = o.currentClients * o.sessionsPerYear;
     const offeringRevenue = o.currentClients * (o.priceMonthly * 12);
-    const offeringVariableCosts = o.currentClients * annualVariableCostPerClient(o);
+    const offeringVariableCosts = currentVariableCost(o);
     const offeringServiceHours = currentStaffHours(o);
 
     clients += o.currentClients;
@@ -380,7 +406,7 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
   const offeringMetrics = offerings.map(o => {
     const offeringSessions = o.currentClients * o.sessionsPerYear;
     const offeringRevenue = o.currentClients * (o.priceMonthly * 12);
-    const offeringVariableCosts = o.currentClients * annualVariableCostPerClient(o);
+    const offeringVariableCosts = currentVariableCost(o);
     const offeringMargin = offeringRevenue - offeringVariableCosts;
 
     return {
@@ -421,7 +447,8 @@ function calculateBreakEven(results: ModeResults, costs: Costs): BreakEven {
     sum + metric.margin, 0);
 
   const contributionMarginPerClient = clients > 0 ? totalContributionMargin / clients : 0;
-  const contributionMarginRatio = revenue > 0 ? totalContributionMargin / revenue : 0;
+  // A near-zero revenue divisor is capped so the ratio stays finite (same rule as utilizationPct)
+  const contributionMarginRatio = revenue > 0 ? clamp(totalContributionMargin / revenue, -1e9, 1e9) : 0;
 
   const breakEvenClients = contributionMarginPerClient > 0 ?
     Math.ceil(costs.totalFixedCosts / contributionMarginPerClient) : Infinity;

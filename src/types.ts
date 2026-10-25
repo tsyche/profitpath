@@ -91,6 +91,8 @@ export interface Offering {
   seats?: number;
   /** Group only: forecast fill, % of seats taken (1-100). */
   fillPct?: number;
+  /** Group only: fixed cost of one run (room, hired instructor, consumables), in dollars; 0 when absent. */
+  costPerRun?: number;
   /** Optional low/high bounds for the guessable inputs; absent means no range (see calcRange). */
   fillPctLow?: number;
   fillPctHigh?: number;
@@ -127,6 +129,7 @@ export interface SanitizedOffering extends Offering {
   type: OfferingType;
   seats: number;
   fillPct: number;
+  costPerRun: number;
   mixPct: number;
   currentClients: number;
 }
@@ -165,12 +168,13 @@ export interface CalcState {
 
 /** An offering in app state: the UI always fills every field. */
 // laborPctOfPrice, type, seats and fillPct stay optional: older saved states and templates omit them (0 / subscription / 1 / 100)
-export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'confidence' | 'note' | 'marketLow' | 'marketHigh' | 'marketAvg' | 'marketNote' | 'resource'>> & {
+export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'costPerRun' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'confidence' | 'note' | 'marketLow' | 'marketHigh' | 'marketAvg' | 'marketNote' | 'resource'>> & {
   laborPctOfPrice?: number;
   discountPct?: number;
   type?: OfferingType;
   seats?: number;
   fillPct?: number;
+  costPerRun?: number;
   fillPctLow?: number;
   fillPctHigh?: number;
   currentClientsLow?: number;
@@ -256,6 +260,10 @@ export interface OfferingMetric {
   discountedMarginPerHour: number;
   /** True when delivery uses no staff hours (one-time sales), so the per-hour figures are not meaningful. */
   hourFree?: boolean;
+  /** Group rows with a run cost: seats one run needs to cover its own cost (Infinity when a seat contributes nothing). */
+  breakEvenSeats?: number;
+  /** The same as % of the run's seats; above 100 means the run cannot break even even when full. */
+  breakEvenFillPct?: number;
 }
 
 export interface ModeResults {

@@ -143,3 +143,67 @@ describe('importFromCSV seats/fill columns', () => {
     expect(parse('Yoga,100,12,1,0,100,0')).toMatchObject({ seats: 1, fillPct: 100 })
   })
 })
+
+// Roadmap 24b: fixed cost per run and break-even fill
+describe('group offering, cost per run', () => {
+  beforeEach(() => clearCalculationCache())
+  const withRun = { ...group, costPerRun: 400 }
+
+  it('current mode charges one run cost per cohort', () => {
+    const one = calc({ ...base, mode: 'current', offerings: [{ ...withRun, currentClients: 8 }] } as any)
+    const two = calc({ ...base, mode: 'current', offerings: [{ ...withRun, currentClients: 9 }] } as any)
+    const none = calc({ ...base, mode: 'current', offerings: [{ ...group, currentClients: 8 }] } as any)
+    expect(one.variableCosts - none.variableCosts).toBe(400)
+    expect(two.variableCosts - calc({ ...base, mode: 'current', offerings: [{ ...group, currentClients: 9 }] } as any).variableCosts).toBe(800)
+  })
+
+  it('forecast spreads the run cost over filled seats, so under-fill costs more per client', () => {
+    const full = calc({ ...base, mode: 'forecast', offerings: [{ ...withRun, fillPct: 100 }] } as any)
+    const half = calc({ ...base, mode: 'forecast', offerings: [{ ...withRun, fillPct: 50 }] } as any)
+    const perClient = (r: any) => r.offeringMetrics[0].contributionPerClientMonthly
+    // 400 / 8 seats = 50 per client per year at full; 400 / 4 = 100 at half
+    expect(perClient(full)).toBeCloseTo(100 - 50 / 12, 6)
+    expect(perClient(half)).toBeCloseTo(100 - 100 / 12, 6)
+  })
+
+  it('reports break-even seats and fill from the run cost', () => {
+    // 1200 revenue per seat per year, 400 run cost: one seat covers it
+    const m = calc({ ...base, mode: 'current', offerings: [withRun] } as any).offeringMetrics[0]
+    expect(m.breakEvenSeats).toBe(1)
+    expect(m.breakEvenFillPct).toBeCloseTo(12.5, 6)
+    const pricey = calc({ ...base, mode: 'current', offerings: [{ ...withRun, costPerRun: 3000 }] } as any).offeringMetrics[0]
+    expect(pricey.breakEvenSeats).toBe(3)
+  })
+
+  it('break-even is unreachable when a seat contributes nothing', () => {
+    const m = calc({ ...base, mode: 'current', offerings: [{ ...withRun, variableCostPerSession: 24 }] } as any).offeringMetrics[0]
+    expect(m.breakEvenSeats).toBe(Infinity)
+  })
+
+  it('omits break-even without a run cost and for non-group rows', () => {
+    expect(calc({ ...base, mode: 'current', offerings: [group] } as any).offeringMetrics[0].breakEvenSeats).toBeUndefined()
+    const sub = { ...withRun, type: 'subscription' }
+    const r = calc({ ...base, mode: 'current', offerings: [sub] } as any)
+    expect(r.offeringMetrics[0].breakEvenSeats).toBeUndefined()
+    expect(r.variableCosts).toBe(0)
+  })
+
+  it('sanitizes garbage cost per run to 0', () => {
+    for (const bad of [undefined, null, 'abc', -5, NaN, Infinity]) {
+      const r = calc({ ...base, mode: 'current', offerings: [{ ...group, costPerRun: bad }] } as any)
+      expect(r.variableCosts).toBe(0)
+    }
+  })
+
+  it('round-trips through scenario sanitizing', () => {
+    const s = sanitizeScenarioState({ ...base, mode: 'current', offerings: [withRun] } as any)
+    expect(s.offerings[0].costPerRun).toBe(400)
+    expect(sanitizeScenarioState({ ...base, mode: 'current', offerings: [{ ...withRun, costPerRun: -9 }] } as any).offerings[0].costPerRun).toBe(0)
+  })
+
+  it('imports column 24 and defaults older CSVs to 0', () => {
+    const parse = (row: string) => (importFromCSV(`Offerings\nName,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients\n${row}`) as any).data.offerings[0]
+    expect(parse('Yoga,100,12,1,0,100,0,0,group,10,60' + ','.repeat(13) + '250').costPerRun).toBe(250)
+    expect(parse('Yoga,100,12,1,0,100,0,0,group,10,60').costPerRun).toBe(0)
+  })
+})
