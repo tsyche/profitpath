@@ -28,6 +28,24 @@ test.describe('Fixed expenses table', () => {
     expect(await fixedCosts(page)).toBe(before + 5200);
   });
 
+  test('a one-time purchase is spread over its life and the life input only enables for one-time', async ({ page }) => {
+    const before = await fixedCosts(page);
+    await page.locator('#addExpenseBtn').click();
+    const row = rows(page).first();
+    await row.locator('input[data-k="amount"]').fill('3000');
+    await expect(row.locator('input[data-k="lifeYears"]')).toBeDisabled();
+    await row.locator('select[data-k="frequency"]').selectOption('one-time');
+    await expect(row.locator('input[data-k="lifeYears"]')).toBeEnabled();
+    await expect.poll(() => fixedCosts(page)).toBe(before + 1000);
+    await row.locator('input[data-k="lifeYears"]').fill('5');
+    await expect.poll(() => fixedCosts(page)).toBe(before + 600);
+
+    await page.reload();
+    await waitForPageReady(page);
+    await expect(rows(page).first().locator('input[data-k="lifeYears"]')).toHaveValue('5');
+    expect(await fixedCosts(page)).toBe(before + 600);
+  });
+
   test('removing a row drops its cost', async ({ page }) => {
     const before = await fixedCosts(page);
     await page.locator('#addExpenseBtn').click();

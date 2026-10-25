@@ -9,10 +9,10 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 ## Recommended Next 3
 
 1. **Item 20, multi-resource capacity pools** (~6-8 hrs): the biggest remaining accuracy gap for facility-based businesses.
-2. **Item 30, one-time / capital expenses** (needs a decision: amortize over N years, or count fully in year 1). 28, 29 and 31 shipped 2026-10-24.
+2. **12k + 12l**, duplicate-offering button and Mix % default for new rows (~1 hr together). The cost rework (28-31) is done.
 3. **`labor-pct.spec.ts` flake** (12s): parked, not reproducible (see its entry).
 
-Shipped 2026-10-24: processing fee % (29), Marketing expenses driving CAC (28), loans via Loan Payments (31), reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
+Shipped 2026-10-24: one-time expenses amortized over useful life (30), processing fee % (29), Marketing expenses driving CAC (28), loans via Loan Payments (31), reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
 
 ---
 
@@ -127,11 +127,6 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
 **Cost Modeling Rework** *(new category — Tim's read after this session: "the entire pp could use a rework around costs and money out... seems like it's mostly recurring fees and employee stuff right now")*
 
 The revenue side of the app is rich: an unlimited, per-offering table with its own price/frequency/mix fields. The cost side, by contrast, is three flat numbers: Overhead (monthly), Full-time payroll, Part-time payroll, plus a per-offering Var $/Session field almost nobody in this session's trial ended up using (all 12 offerings landed on $0). Real small businesses have much richer cost structures than that — rent, insurance, software, equipment, loan payments, contractor pay, marketing spend, payment processing fees, one-time capital purchases. Right now none of those have a home.
-
-30. **One-time / capital expenses, separate from recurring monthly costs** *(OPEN: item 27 shipped weekly/monthly/annual only; a one-time frequency still needs the amortization decision above)*
-    - Equipment purchases, buildout costs, and other one-time capital outlays are a different shape than recurring monthly overhead — today there's nowhere to put a "bought a new recording rig for $3,000 this year" line without distorting the monthly Overhead number
-    - Covered by item 27's frequency field (one-time vs. monthly vs. annual) rather than needing its own separate feature — listed here mainly to make sure item 27's design explicitly accounts for this case rather than assuming everything recurs monthly
-    - Effort: included in item 27's scope
 
 **Mobile & Platform Support (Deferred — needs full Xcode)**
 

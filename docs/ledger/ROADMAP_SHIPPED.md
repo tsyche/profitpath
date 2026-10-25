@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-10-25 — 30. One-time / capital expenses, amortized over useful life
 - [x] 2026-10-24 — 28. Marketing spend as a real P&L cost, not just a Customer Analytics input
 - [x] 2026-10-24 — 29. Payment processing fees
 - [x] 2026-10-24 — 31. Loan / debt payments
@@ -44,6 +45,13 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-10-25 — 30. One-time / capital expenses, amortized over useful life
+
+30. **One-time / capital expenses, separate from recurring monthly costs** *(SHIPPED 2026-10-25: new 'one-time' expense frequency; amount is the purchase price, spread evenly over a per-row Life (yrs) input, default 3, range 1-30. CSV gains a Life (yrs) column. Year-1 cash outlay is not modeled.)*
+    - Equipment purchases, buildout costs, and other one-time capital outlays are a different shape than recurring monthly overhead — today there's nowhere to put a "bought a new recording rig for $3,000 this year" line without distorting the monthly Overhead number
+    - Covered by item 27's frequency field (one-time vs. monthly vs. annual) rather than needing its own separate feature — listed here mainly to make sure item 27's design explicitly accounts for this case rather than assuming everything recurs monthly
+    - Effort: included in item 27's scope
 
 ### 2026-10-24 — 28. Marketing spend as a real P&L cost, not just a Customer Analytics input
 

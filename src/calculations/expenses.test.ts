@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calc, clearCalculationCache } from './index'
 import { annualizeExpense, costBreakdown, monthlyCategorySpend, sanitizeExpenses, scaleOverhead, totalMonthlyOverhead, EXPENSE_CATEGORIES } from './expenses'
-import { sanitizeScenarioState } from '../../assets/services/miscService'
+import { buildCSV, importFromCSV, sanitizeScenarioState } from '../../assets/services/miscService'
 
 // Roadmap 27: structured expense line items. monthlyCosts stays as "other overhead".
 const base = {
@@ -162,5 +162,38 @@ describe('monthlyCategorySpend', () => {
     const state = { expenses: [e('Marketing', 100, 'monthly'), e('Marketing', 1200, 'annual'), e('Rent/Lease', 900, 'monthly')] }
     expect(monthlyCategorySpend(state as any, 'Marketing')).toBeCloseTo(200)
     expect(monthlyCategorySpend({} as any, 'Marketing')).toBe(0)
+  })
+})
+
+// Roadmap 30: a one-time purchase is spread evenly over its useful life.
+describe('one-time expenses', () => {
+  it('annualizes amount over lifeYears, defaulting to 3 and never dividing by less than 1', () => {
+    expect(annualizeExpense({ amount: 3000, frequency: 'one-time', lifeYears: 5 })).toBe(600)
+    expect(annualizeExpense({ amount: 3000, frequency: 'one-time' })).toBe(1000)
+    expect(annualizeExpense({ amount: 3000, frequency: 'one-time', lifeYears: 0.1 })).toBe(3000)
+    expect(annualizeExpense({ amount: 3000, frequency: 'one-time', lifeYears: 1 })).toBe(3000)
+  })
+
+  it('sanitizer clamps life to 1..30 and falls back to 3 for junk or blank', () => {
+    const life = (v: unknown) => sanitizeExpenses([exp(100, 'one-time', { lifeYears: v })])[0].lifeYears
+    expect(life(5)).toBe(5)
+    expect(life(0)).toBe(1)
+    expect(life(999)).toBe(30)
+    for (const v of ['', null, undefined, 'abc', NaN]) expect(life(v)).toBe(3)
+  })
+
+  it('calc adds amount / life to annual fixed costs and busts the cache when life changes', () => {
+    const none = calc(base as any)
+    const three = calc({ ...base, expenses: [exp(3000, 'one-time', { lifeYears: 3 })] } as any)
+    const five = calc({ ...base, expenses: [exp(3000, 'one-time', { lifeYears: 5 })] } as any)
+    expect(three.annualFixedCosts - none.annualFixedCosts).toBeCloseTo(1000)
+    expect(five.annualFixedCosts - none.annualFixedCosts).toBeCloseTo(600)
+  })
+
+  it('survives scenario sanitizing and a CSV round trip', () => {
+    const st = sanitizeScenarioState({ ...base, expenses: [exp(3000, 'one-time', { lifeYears: 5 })] })
+    expect(st?.expenses?.[0]).toMatchObject({ frequency: 'one-time', lifeYears: 5 })
+    const parsed: any = importFromCSV(buildCSV(st, calc(base as any)))
+    expect(parsed.data.expenses[0]).toMatchObject({ amount: 3000, frequency: 'one-time', lifeYears: 5 })
   })
 })

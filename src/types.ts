@@ -9,7 +9,7 @@ export type Mode = 'forecast' | 'current';
 /** One-time: a single sale per client (1 delivery, no staff hours); price is per sale. */
 export type OfferingType = 'subscription' | 'group' | 'per-session' | 'one-time';
 
-export type ExpenseFrequency = 'weekly' | 'monthly' | 'annual';
+export type ExpenseFrequency = 'weekly' | 'monthly' | 'annual' | 'one-time';
 
 export type ExpenseCategory =
   | 'Rent/Lease'
@@ -32,6 +32,8 @@ export interface Expense {
   category: ExpenseCategory;
   amount: number;
   frequency: ExpenseFrequency;
+  /** Useful life in years; a 'one-time' purchase is spread evenly over it. Ignored for other frequencies. */
+  lifeYears: number;
 }
 
 /** A service offering as stored in app state (user-editable, may be partially filled). */

@@ -251,9 +251,9 @@ export function buildCSV(st: any, results: any) {
     );
   });
 
-  lines.push('', 'FIXED EXPENSES', 'Name,Category,Amount,Frequency');
+  lines.push('', 'FIXED EXPENSES', 'Name,Category,Amount,Frequency,Life (yrs)');
   sanitizeExpenses(st.expenses).forEach((e) => {
-    lines.push(csvCell(e.name) + ',' + csvCell(e.category) + ',' + e.amount + ',' + e.frequency);
+    lines.push(csvCell(e.name) + ',' + csvCell(e.category) + ',' + e.amount + ',' + e.frequency + ',' + e.lifeYears);
   });
 
   return lines.join('\n');
@@ -1507,8 +1507,8 @@ export function importFromCSV(csvText: any) {
 
       if (section === 'expenses') {
         if (!headerSeen) { headerSeen = true; continue; }
-        const [name, category, amount, frequency] = splitCsvLine(line);
-        if (name) rawExpenses.push({ name, category, amount: parseFloat(amount), frequency: (frequency || '').toLowerCase() });
+        const [name, category, amount, frequency, lifeYears] = splitCsvLine(line);
+        if (name) rawExpenses.push({ name, category, amount: parseFloat(amount), frequency: (frequency || '').toLowerCase(), lifeYears: parseFloat(lifeYears) });
       }
 
       if (section === 'offerings') {

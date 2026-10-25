@@ -4,7 +4,7 @@ import { displayPrice, isOneTime, isPerSession, monthlyFromPerSession, priceMont
 import { calcRange, calcRangeDrivers, suggestRanges, sanitizeOfferingRange } from '../src/calculations/ranges';
 import { marketBadge, sanitizeOfferingMarket } from '../src/calculations/marketPosition';
 import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../src/calculations/offeringMeta';
-import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, monthlyCategorySpend, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
+import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, DEFAULT_LIFE_YEARS, monthlyCategorySpend, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
@@ -466,7 +466,7 @@ function onTableInput(e) {
 }
 
 function addExpense() {
-  state.expenses.push({ id: uuid(), name: 'Expense ' + (state.expenses.length + 1), category: 'Other', amount: 0, frequency: 'monthly' });
+  state.expenses.push({ id: uuid(), name: 'Expense ' + (state.expenses.length + 1), category: 'Other', amount: 0, frequency: 'monthly', lifeYears: DEFAULT_LIFE_YEARS });
   persistState();
   render();
 }
@@ -637,6 +637,7 @@ function renderExpenses() {
       '<td class="cell-edit" data-label="Category"><select aria-label="Category for ' + escapeHtml(e.name) + '" data-k="category" data-i="' + idx + '">' + opts(EXPENSE_CATEGORIES, e.category) + '</select></td>' +
       '<td class="cell-edit" data-label="Amount"><input aria-label="Amount for ' + escapeHtml(e.name) + '" type="number" min="0" step="1" value="' + e.amount + '" data-k="amount" data-i="' + idx + '"/></td>' +
       '<td class="cell-edit" data-label="Frequency"><select aria-label="Frequency for ' + escapeHtml(e.name) + '" data-k="frequency" data-i="' + idx + '">' + opts(EXPENSE_FREQUENCIES, e.frequency) + '</select></td>' +
+      '<td class="cell-edit" data-label="Life (yrs)"><input aria-label="Useful life in years for ' + escapeHtml(e.name) + '" type="number" min="1" max="30" step="1" value="' + e.lifeYears + '"' + (e.frequency === 'one-time' ? '' : ' disabled') + ' data-k="lifeYears" data-i="' + idx + '"/></td>' +
       '<td class="cell-edit" data-label="Actions"><button class="btn small danger" data-action="removeExpense" data-i="' + idx + '" aria-label="Remove ' + escapeHtml(e.name) + '">Remove</button></td>';
     tbody.appendChild(tr);
   });
@@ -662,6 +663,10 @@ function onExpenseInput(e) {
     // Per-row sanitizer is the single source of truth for clamping and fallbacks
     const [clean] = sanitizeExpenses([{ ...row, [k]: el.value }], () => row.id);
     row[k] = clean[k];
+    if (k === 'frequency') {
+      const life = el.closest('tr')?.querySelector('[data-k="lifeYears"]');
+      if (life instanceof HTMLInputElement) life.disabled = row.frequency !== 'one-time';
+    }
   }
   persistState();
   try {

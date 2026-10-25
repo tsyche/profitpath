@@ -87,7 +87,7 @@ function generateCacheKey(state: CalcState) {
     ...employeeKey,
     monthlyCosts: state.monthlyCosts,
     processingFeePct: state.processingFeePct,
-    expenses: sanitizeExpenses(state.expenses).map(e => [e.category, e.amount, e.frequency]),
+    expenses: sanitizeExpenses(state.expenses).map(e => [e.category, e.amount, e.frequency, e.lifeYears]),
     productiveUtilizationPct: state.productiveUtilizationPct,
     targetUtilizationPct: state.targetUtilizationPct,
     offerings: (Array.isArray(state.offerings) ? state.offerings : []).filter(o => o && typeof o === 'object').map(o => ({
