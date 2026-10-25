@@ -18,8 +18,13 @@ describe('What-If wizard', () => {
     const state = makeState(mode);
 
     it('every scenario previews finite before/after numbers at its default value', () => {
-      for (const s of wizardScenarios(state)) {
-        const p = previewScenario(state, s.id, s.param.value);
+      // Part-time and market scenarios need the app headcount fields and a market average to be buildable
+      const full = {
+        ...state, fullTimeEmployees: 2, partTimeEmployees: 0, fullTimeEmployeePay: 50000, partTimeEmployeePay: 20000,
+        offerings: [{ ...offerings[0], marketAvg: 400 }, offerings[1]]
+      };
+      for (const s of wizardScenarios(full)) {
+        const p = previewScenario(full, s.id, s.param.value);
         expect(p.changes, s.id).not.toBeNull();
         for (const m of [p.before, p.after!]) {
           for (const v of Object.values(m)) expect(Number.isFinite(v), `${s.id} ${v}`).toBe(true);
@@ -85,5 +90,62 @@ describe('What-If wizard', () => {
     const state = { ...makeState('current'), offerings: [] };
     expect(() => wizardScenarios(state)).not.toThrow();
     expect(() => previewScenario(state, 'price', 10)).not.toThrow();
+  });
+
+  describe('combined, part-time and market scenarios', () => {
+    const app = (mode: string, extra = {}): any => ({
+      ...makeState(mode), fullTimeEmployees: 2, partTimeEmployees: 0, fullTimeEmployeePay: 50000, partTimeEmployeePay: 20000, ...extra
+    });
+
+    it('part-time hire adds to partTimeEmployees and costs payroll', () => {
+      const p = previewScenario(app('current'), 'hirePart', 2);
+      expect(p.changes).toEqual({ partTimeEmployees: 2 });
+      expect(p.after!.income).toBeLessThan(p.before.income);
+    });
+
+    it('part-time hire warns when part-time pay is zero, and is unavailable on a legacy state', () => {
+      expect(previewScenario(app('current', { partTimeEmployeePay: 0 }), 'hirePart', 1).note).toContain('pay is 0');
+      const legacy = previewScenario(makeState('current'), 'hirePart', 1);
+      expect(legacy.changes).toBeNull();
+      expect(legacy.note).toContain('part-time');
+    });
+
+    it('price + hire changes both payroll headcount and prices', () => {
+      const state = app('current');
+      const p = previewScenario(state, 'priceHire', 10);
+      expect(p.changes!.fullTimeEmployees).toBe(3);
+      expect(p.changes!.offerings[0].priceMonthly).toBe(330);
+      expect(p.after!.takeHome).toBe(calc({ ...state, ...p.changes }).takeHome);
+    });
+
+    it('price + volume scales both in Current mode and price + utilization in Forecast mode', () => {
+      const cur = previewScenario(app('current'), 'priceVolume', 10);
+      expect(cur.changes!.offerings[0]).toMatchObject({ priceMonthly: 330, currentClients: 22 });
+      const fc = previewScenario(app('forecast'), 'priceVolume', 10);
+      expect(fc.changes!.targetUtilizationPct).toBe(66);
+      expect(fc.changes!.offerings[0].priceMonthly).toBe(330);
+      expect(fc.note).toContain('Forecast');
+    });
+
+    it('market scenario moves only rows with an average, per display unit, and 0% leaves prices alone', () => {
+      const rows = [
+        { ...offerings[0], marketAvg: 400 },
+        { ...offerings[1], type: 'per-session', marketAvg: 300 }, // 900/mo at 4 visits = 2700 per visit
+        { name: 'No avg', priceMonthly: 50, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 0, currentClients: 1 }
+      ];
+      const state = app('current', { offerings: rows });
+      const full = previewScenario(state, 'market', 100).changes!.offerings;
+      expect(full[0].priceMonthly).toBe(400);
+      expect(full[1].priceMonthly).toBe(100); // 300 per visit * 4 visits / 12
+      expect(full[2].priceMonthly).toBe(50);
+      expect(previewScenario(state, 'market', 50).changes!.offerings[0].priceMonthly).toBe(350);
+      expect(previewScenario(state, 'market', 0).changes!.offerings[0].priceMonthly).toBe(300);
+    });
+
+    it('market scenario explains itself when no average is entered', () => {
+      const p = previewScenario(app('current'), 'market', 100);
+      expect(p.changes).toBeNull();
+      expect(p.note).toContain('market average');
+    });
   });
 });

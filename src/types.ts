@@ -202,6 +202,8 @@ export interface OfferingMetric {
   discountPct: number;
   /** Contribution per staff hour after the best-case discount. */
   discountedMarginPerHour: number;
+  /** True when delivery uses no staff hours (one-time sales), so the per-hour figures are not meaningful. */
+  hourFree?: boolean;
 }
 
 export interface ModeResults {

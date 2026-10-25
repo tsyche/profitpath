@@ -33,4 +33,9 @@ test.describe('One-time offering type', () => {
     await type.selectOption('subscription');
     await expect(row(page).locator('input[data-k="hoursPerSession"]')).toHaveValue('1');
   });
+
+  test('ranking table shows n/a per hour for a one-time row', async ({ page }) => {
+    await row(page).locator('select[data-k="type"]').selectOption('one-time');
+    await expect(page.locator('#offeringRankingBody tr').first().locator('td').nth(1)).toHaveText('n/a');
+  });
 });

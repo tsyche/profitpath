@@ -8,11 +8,11 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **Reverse calculator follow-ups** (12r) and the **"What If?" wizard follow-ups** (12v): auto-refresh, a combined pricing and volume lever, and wizard scenarios that combine levers.
-2. **`labor-pct.spec.ts` flake** (12s): parked, not reproducible (see its entry).
-3. **Item 20, multi-resource capacity pools** (~6-8 hrs): the biggest remaining accuracy gap for facility-based businesses.
+1. **Item 20, multi-resource capacity pools** (~6-8 hrs): the biggest remaining accuracy gap for facility-based businesses.
+2. **Item 28/29/30/31, cost modeling rework** (marketing spend, payment fees, one-time expenses, loans): the app only models recurring fees and payroll.
+3. **`labor-pct.spec.ts` flake** (12s): parked, not reproducible (see its entry).
 
-Shipped 2026-10-24: share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
+Shipped 2026-10-24: reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
 
 ---
 
@@ -36,20 +36,6 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - Effort: ~4-5 hours
 
 **Cleanup / Small Wins**
-
-12r. **Reverse calculator follow-ups** *(new, split off shipped 4b)*
-   - Auto-refresh results when inputs change (today: press Calculate again); add a lever that combines pricing with volume
-   - Effort: ~2-3 hours
-
-12w. **One-time rows in analytics** *(new, split off shipped 19)*
-   - Mix Optimizer fixed 2026-10-24: one-time rows keep their mix share fixed (they have no hours or demand cap, so the search piled 99% into them)
-   - Remaining: the offering ranking shows one-time rows at margin/hr 0 with status "ok"; show "n/a" instead
-   - Effort: ~30 min
-
-12v. **What-If wizard follow-ups** *(new, split off shipped 12)*
-   - Combine levers in one scenario (price + hire); a market-aware "match market average" scenario; a "what's new" tie-in
-   - Wizard hire counts full-time only; add a part-time option if asked for
-   - Effort: ~2 hours
 
 12s. **Fix: `labor-pct.spec.ts` flakes under full-suite load** *(new)*
    - Passes alone, fails intermittently in the full Playwright run; find the race or timeout instead of retrying it away

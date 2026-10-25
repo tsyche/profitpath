@@ -4,7 +4,8 @@
  */
 
 import { calc } from '../calculations/index';
-import { hirePatch } from './insightsEngine';
+import { hirePatch, partTimeHirePatch } from './insightsEngine';
+import { isOneTime, isPerSession, monthlyFromPerSession, displayPrice } from '../calculations/offeringPrice';
 import { getReverseCalculation } from './reverseCalculator';
 
 export interface WizardScenario {
@@ -44,9 +45,13 @@ export function wizardScenarios(state: any): WizardScenario[] {
   const goal = Math.max(10000, Math.ceil((takeHome * 1.25) / 1000) * 1000);
   return [
     { id: 'hire', title: 'Hire more people', blurb: 'Adds capacity. Costs payroll, earns only if you can fill the hours.', param: { label: 'New employees', unit: '', min: 1, max: 5, step: 1, value: 1 } },
+    { id: 'hirePart', title: 'Hire part-time', blurb: 'Adds part-time capacity at your part-time pay rate.', param: { label: 'New part-time employees', unit: '', min: 1, max: 5, step: 1, value: 1 } },
     { id: 'price', title: 'Change my prices', blurb: 'Scales every offering’s price by the same percentage.', param: { label: 'Price change', unit: '%', min: -20, max: 50, step: 1, value: 15 } },
     { id: 'clients', title: 'Gain or lose clients', blurb: 'Scales client volume across every offering.', param: { label: 'Client change', unit: '%', min: -50, max: 50, step: 5, value: -20 } },
     { id: 'costs', title: 'Cut variable costs', blurb: 'Scales the per-session cost of every offering.', param: { label: 'Cost reduction', unit: '%', min: 0, max: 50, step: 1, value: 10 } },
+    { id: 'priceVolume', title: 'Change prices and volume together', blurb: 'Applies the same percentage to every price and to client volume.', param: { label: 'Change to both', unit: '%', min: -20, max: 30, step: 1, value: 10 } },
+    { id: 'priceHire', title: 'Raise prices and hire one person', blurb: 'Scales every price, and adds one full-time hire to match.', param: { label: 'Price change', unit: '%', min: 0, max: 50, step: 1, value: 15 } },
+    { id: 'market', title: 'Move prices toward the market average', blurb: 'Shifts each offering that has a market average entered; others stay as they are.', param: { label: 'Share of the gap closed', unit: '%', min: 0, max: 100, step: 10, value: 100 } },
     { id: 'goal', title: 'Reach a take-home goal', blurb: 'Finds the price increase that gets you to a target after estimated tax.', param: { label: 'Desired annual take-home', unit: '$', min: 1000, max: 10000000, step: 1000, value: goal } }
   ];
 }
@@ -56,17 +61,52 @@ function buildChanges(state: any, id: string, value: number): { changes: Record<
   const scaleEach = (key: string, factor: number, round: (n: number) => number) =>
     ({ offerings: list.map((o: any) => ({ ...o, [key]: round((Number(o[key]) || 0) * factor) })) });
 
+  const scaleClients = (pct: number): { changes: Record<string, any>; note: string } => {
+    if (state.mode === 'forecast') {
+      const util = Math.max(1, (Number(state.targetUtilizationPct) || 0) * (1 + pct / 100));
+      return { changes: { targetUtilizationPct: Math.round(util * 10) / 10 }, note: 'Forecast mode: scales target utilization, which sets client volume.' };
+    }
+    return { changes: scaleEach('currentClients', 1 + pct / 100, (n) => Math.max(0, Math.round(n))), note: '' };
+  };
+
   switch (id) {
     case 'hire':
       return { changes: hirePatch(state, value), note: '' };
+    case 'hirePart': {
+      const changes = partTimeHirePatch(state, value);
+      if (!changes) return { changes: null, note: 'This scenario has no part-time headcount field to add to.' };
+      return { changes, note: Number(state.partTimeEmployeePay) > 0 ? '' : 'Part-time pay is 0 in your inputs, so these hires cost nothing. Set a part-time pay rate for a real answer.' };
+    }
+    case 'priceVolume': {
+      const volume = scaleClients(value);
+      const prices = scaleEach('priceMonthly', 1 + value / 100, Math.round);
+      // Both patches touch offerings in Current mode: layer prices over the scaled client counts
+      const offerings = volume.changes.offerings
+        ? prices.offerings.map((o: any, i: number) => ({ ...o, currentClients: volume.changes.offerings[i].currentClients }))
+        : prices.offerings;
+      return { changes: { ...volume.changes, offerings }, note: volume.note };
+    }
+    case 'priceHire':
+      return { changes: { ...hirePatch(state, 1), ...scaleEach('priceMonthly', 1 + value / 100, Math.round) }, note: '' };
+    case 'market': {
+      const t = Math.min(100, Math.max(0, value)) / 100;
+      let moved = 0;
+      const offerings = list.map((o: any) => {
+        const avg = Number(o.marketAvg);
+        if (!(avg > 0)) return o;
+        moved++;
+        const cur = displayPrice(o);
+        const target = cur + (avg - cur) * t;
+        const priceMonthly = isOneTime(o) ? target / 12 : isPerSession(o) ? monthlyFromPerSession(target, Number(o.sessionsPerYear) || 0) : target;
+        return { ...o, priceMonthly: Math.round(priceMonthly * 100) / 100 };
+      });
+      if (moved === 0) return { changes: null, note: 'No offering has a market average entered. Add one in the market columns first.' };
+      return { changes: { offerings }, note: '' };
+    }
     case 'price':
       return { changes: scaleEach('priceMonthly', 1 + value / 100, Math.round), note: '' };
     case 'clients':
-      if (state.mode === 'forecast') {
-        const util = Math.max(1, (Number(state.targetUtilizationPct) || 0) * (1 + value / 100));
-        return { changes: { targetUtilizationPct: Math.round(util * 10) / 10 }, note: 'Forecast mode: scales target utilization, which sets client volume.' };
-      }
-      return { changes: scaleEach('currentClients', 1 + value / 100, (n) => Math.max(0, Math.round(n))), note: '' };
+      return scaleClients(value);
     case 'costs':
       return { changes: scaleEach('variableCostPerSession', 1 - value / 100, (n) => Math.round(n * 100) / 100), note: '' };
     case 'goal': {

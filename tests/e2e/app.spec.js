@@ -26,4 +26,17 @@ test.describe('ProfitPath App Tests', () => {
     
     expect(errors).toHaveLength(0);
   });
+
+  // updateOutputs catches render errors and only console.warns them, so pageerror alone never sees a broken render
+  test('no swallowed render errors on load or re-render', async ({ page }) => {
+    const warnings = [];
+    page.on('console', msg => { if (/updateOutputs error|render.*error/i.test(msg.text())) warnings.push(msg.text()); });
+
+    await page.goto('/');
+    await page.waitForFunction(() => typeof window.render === 'function');
+    await page.evaluate(() => window.render());
+    await page.waitForTimeout(500);
+
+    expect(warnings).toEqual([]);
+  });
 });

@@ -162,7 +162,7 @@ function annualStaffHoursPerClient(o: SanitizedOffering): number {
 }
 
 /** Per-client unit economics, independent of how many clients there are. */
-function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHour' | 'maxDiscountPct' | 'discountPct' | 'discountedMarginPerHour' | 'contributionPerClientMonthly'> {
+function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHour' | 'maxDiscountPct' | 'discountPct' | 'discountedMarginPerHour' | 'contributionPerClientMonthly' | 'hourFree'> {
   const revenue = o.priceMonthly * 12;
   const contribution = revenue - annualVariableCostPerClient(o);
   const hours = annualStaffHoursPerClient(o);
@@ -172,6 +172,7 @@ function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHou
     contributionPerClientMonthly: contribution / 12,
     marginPerHour: hours > 0 ? contribution / hours : 0,
     discountPct: o.discountPct,
+    hourFree: hours <= 0,
     discountedMarginPerHour: hours > 0 ? discountedContribution / hours : 0,
     // Deepest discount before delivery costs eat the whole price
     maxDiscountPct: revenue > 0 ? Math.max(0, (contribution / revenue) * 100) : 0

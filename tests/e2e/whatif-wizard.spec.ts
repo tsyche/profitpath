@@ -19,7 +19,7 @@ test.describe('What-if wizard', () => {
 
   test('available at beginner level and lists the scenarios', async ({ page }) => {
     await open(page);
-    await expect(page.locator('#whatIfBody [data-wi]')).toHaveCount(5);
+    await expect(page.locator('#whatIfBody [data-wi]')).toHaveCount(9);
   });
 
   test('previewing changes nothing until Apply, then Apply updates inputs and is undoable', async ({ page }) => {
@@ -67,6 +67,19 @@ test.describe('What-if wizard', () => {
     await expect(page.locator('#wiResults')).toContainText('already exceed');
     await expect(page.locator('#wiApply')).toBeDisabled();
     await page.locator('[data-wi-back]').click();
-    await expect(page.locator('#whatIfBody [data-wi]')).toHaveCount(5);
+    await expect(page.locator('#whatIfBody [data-wi]')).toHaveCount(9);
+  });
+
+  test('market scenario moves a priced row to its market average and Apply sticks', async ({ page }) => {
+    await open(page);
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.offerings[0].marketAvg = 777;
+      w.state.offerings[0].type = 'subscription';
+    });
+    await page.locator('[data-wi="market"]').click();
+    await expect(page.locator('#wiResults')).toContainText('Take-home');
+    await page.locator('#wiApply').click();
+    await expect.poll(() => page.evaluate(() => (window as any).state.offerings[0].priceMonthly)).toBe(777);
   });
 });

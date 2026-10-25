@@ -40,7 +40,7 @@ test.describe('Insights and Reverse Calculator panels', () => {
     await expect(page.locator('#insightsResults')).not.toHaveText(before);
   });
 
-  test('reverse calculator: rejects blank input, then solves all four levers', async ({ page }) => {
+  test('reverse calculator: rejects blank input, then solves all five levers', async ({ page }) => {
     await open(page, gated);
     await page.locator('#reverseToggle').click();
     await page.locator('#reverseRun').click();
@@ -48,9 +48,26 @@ test.describe('Insights and Reverse Calculator panels', () => {
 
     await page.locator('#reverseTarget').fill('80000');
     await page.locator('#reverseRun').click();
-    await expect(page.locator('#reverseResults li')).toHaveCount(4);
+    await expect(page.locator('#reverseResults li')).toHaveCount(5);
+    await expect(page.locator('#reverseResults li[data-strategy="combined"]')).toContainText('Raise prices');
     await expect(page.locator('#reverseResults')).not.toContainText(/NaN|Infinity|undefined/);
     await expect(page.locator('#reverseResults li[data-strategy="pricing"]')).toContainText('take-home');
+  });
+
+  test('reverse calculator: results refresh on their own when inputs change after a run', async ({ page }) => {
+    await open(page, gated);
+    await page.locator('#reverseToggle').click();
+    await page.locator('#reverseTarget').fill('80000');
+    await page.locator('#reverseRun').click();
+    const pricing = page.locator('#reverseResults li[data-strategy="pricing"]');
+    await expect(pricing).toContainText('take-home');
+    const before = await pricing.textContent();
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.offerings.forEach((o) => { o.priceMonthly = o.priceMonthly * 0.5; });
+      w.render();
+    });
+    await expect(pricing).not.toHaveText(before as string);
   });
 
   test('reverse calculator: an absurd target is reported as not realistic, never as Recommended', async ({ page }) => {

@@ -61,6 +61,17 @@ describe('Reverse Calculator - "What Would It Take?"', () => {
       expect(r.fixedCostReduction + r.variableCostReduction).toBeCloseTo(r.costReductionNeeded, -1);
     });
 
+    it('combined: needs a smaller price rise than pricing alone, and the volume lever moves too', () => {
+      const alone: any = calculator.calculateRequiredPricing(target);
+      const r: any = calculator.calculateRequiredCombined(target);
+      expect(r.requiresChange).toBe(true);
+      expect(r.priceIncreasePct).toBeGreaterThan(0);
+      expect(r.priceIncreasePct).toBeLessThan(alone.priceIncreasePct);
+      expect(r.targetClients).toBeGreaterThanOrEqual(metrics.clients);
+      expect(r.message).not.toMatch(/NaN|Infinity/);
+      expect(r.message).toContain(mode === 'forecast' ? 'utilization' : 'clients');
+    });
+
     it('returns "no change needed" when the target is already met', () => {
       for (const r of Object.values(calculator.getAllResults(1)) as any[]) {
         expect(r.requiresChange).toBe(false);
@@ -108,8 +119,8 @@ describe('Reverse Calculator - "What Would It Take?"', () => {
       expect((getReverseCalculation(state, m, target, 'costReduction') as any).strategy).toBe('costReduction');
     });
 
-    it('returns all four strategies without a type', () => {
-      expect(Object.keys(getReverseCalculation(state, m, target) as any).sort()).toEqual(['clients', 'costs', 'pricing', 'utilization']);
+    it('returns all five strategies without a type', () => {
+      expect(Object.keys(getReverseCalculation(state, m, target) as any).sort()).toEqual(['clients', 'combined', 'costs', 'pricing', 'utilization']);
     });
   });
 });

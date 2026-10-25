@@ -192,6 +192,55 @@ export class ReverseCalculator {
   }
 
   /**
+   * Calculate a balanced price + volume mix: one multiple applied to both, so neither lever
+   * has to carry the whole gap. Volume is client counts (Current) or target utilization (Forecast).
+   * @param {number} desiredTakeHome - Target annual take-home
+   * @returns {Object} - Price and volume change that together reach the target
+   */
+  calculateRequiredCombined(desiredTakeHome: any) {
+    if (!desiredTakeHome || desiredTakeHome <= 0) return null;
+    if (this.currentMetrics.takeHome >= desiredTakeHome) return this.alreadyThere(desiredTakeHome);
+
+    const forecast = this.state.mode === 'forecast';
+    const utilization = Math.max(Number(this.state.targetUtilizationPct) || 0, 1);
+    const changes = (x: number) => ({
+      ...(forecast ? { targetUtilizationPct: Math.min(utilization * x, MAX_FORECAST_UTILIZATION_PCT) } : {}),
+      offerings: this.offerings().map((o: any) => ({
+        ...o,
+        priceMonthly: Math.ceil(o.priceMonthly * x),
+        ...(forecast ? {} : { currentClients: Math.ceil((o.currentClients || 0) * x) })
+      }))
+    });
+    const base = this.base(desiredTakeHome, 'combined');
+    const k = solveUp((x) => this.takeHomeWith(changes(x)), 1, MAX_PRICE_MULTIPLE, desiredTakeHome);
+
+    if (k === null) {
+      return {
+        ...base,
+        feasible: false,
+        message: `Raising prices and volume together cannot reach ${this.money(desiredTakeHome)} take-home, even at ${MAX_PRICE_MULTIPLE}x both.`,
+        warning: null
+      };
+    }
+
+    const { currentMetrics } = this;
+    const r = calc({ ...this.state, ...changes(k) });
+    const priceIncreasePct = k - 1;
+    const volume = forecast
+      ? `lift target utilization to ${r.capacityPct.toFixed(1)}%`
+      : `add ~${Math.max(0, r.clients - currentMetrics.clients)} clients (from ${currentMetrics.clients} to ${r.clients})`;
+    return {
+      ...base,
+      feasible: r.capacityPct <= 100 && priceIncreasePct <= 1,
+      priceIncreasePct,
+      targetClients: r.clients,
+      targetCapacity: r.capacityPct,
+      message: `Raise prices ~${(priceIncreasePct * 100).toFixed(1)}% and ${volume} to reach ${this.money(desiredTakeHome)} take-home.`,
+      warning: r.capacityPct > 100 ? `Warning: This requires ${r.capacityPct.toFixed(1)}% utilization` : null
+    };
+  }
+
+  /**
    * Calculate required cost reduction to achieve desired take-home
    * @param {number} desiredTakeHome - Target annual take-home
    * @returns {Object} - Required cost reductions
@@ -236,6 +285,7 @@ export class ReverseCalculator {
       pricing: this.calculateRequiredPricing(desiredTakeHome),
       clients: this.calculateRequiredClients(desiredTakeHome),
       utilization: this.calculateRequiredUtilization(desiredTakeHome),
+      combined: this.calculateRequiredCombined(desiredTakeHome),
       costs: this.calculateRequiredCostReduction(desiredTakeHome)
     };
   }
@@ -266,14 +316,16 @@ export class ReverseCalculator {
     // Rank strategies by practicality:
     // 1. Pricing (lowest effort)
     // 2. Cost reduction (medium effort)
-    // 3. Client growth (high effort)
-    // 4. Utilization (high effort, requires infrastructure)
+    // 3. Price + volume together (spreads the gap over two levers)
+    // 4. Client growth (high effort)
+    // 5. Utilization (high effort, requires infrastructure)
 
     const strategyRank = {
       pricing: 1,
       costs: 2,
-      clients: 3,
-      utilization: 4
+      combined: 3,
+      clients: 4,
+      utilization: 5
     };
 
     return strategies.sort((a, b) => (strategyRank as any)[a.name] - (strategyRank as any)[b.name])[0];
@@ -293,6 +345,7 @@ export function getReverseCalculation(state: any, metrics: any, desiredTakeHome:
       'clients': 'calculateRequiredClients',
       'growth': 'calculateRequiredClients',
       'utilization': 'calculateRequiredUtilization',
+      'combined': 'calculateRequiredCombined',
       'costs': 'calculateRequiredCostReduction',
       'costreduction': 'calculateRequiredCostReduction'
     };

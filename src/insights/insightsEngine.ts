@@ -17,6 +17,17 @@ export function hirePatch(state: any, count: number): Record<string, number> {
   return { employees: (Number(state.employees) || 0) + count };
 }
 
+/**
+ * State patch that adds part-time hires, or null for a legacy state with only `employees`
+ * (no part-time field to put them in).
+ */
+export function partTimeHirePatch(state: any, count: number): Record<string, number> | null {
+  if ('fullTimeEmployees' in state && 'partTimeEmployees' in state) {
+    return { partTimeEmployees: (Number(state.partTimeEmployees) || 0) + count };
+  }
+  return null;
+}
+
 export class InsightsEngine {
   metrics: any;
   state: any;

@@ -4,6 +4,9 @@
 
 ## Shipped index
 
+- [x] 2026-10-24 — 12r. Reverse calculator auto-refreshes and gains a combined price + volume lever
+- [x] 2026-10-24 — 12v. Wizard: part-time hire, price + volume, price + hire, market-average scenarios
+- [x] 2026-10-24 — 12w. One-time rows handled in the Mix Optimizer and offering ranking
 - [x] 2026-10-24 — 12. Guided "What If?" wizard (also fixed the Insights "Add 1 employee" what-if showing +$0)
 - [x] 2026-10-24 — 12c. E2E coverage for Mix Optimizer & Advanced Charts panels (found and fixed an XSS)
 - [x] 2026-10-24 — 12u. Share dialog warns that links are point-in-time snapshots
@@ -38,6 +41,13 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-10-24 — 12r, 12v, 12w. Insights follow-ups
+
+- 12r: results re-run (debounced 300 ms) when inputs change after a first Calculate; new 'combined' lever applies one multiple to prices and volume (client counts in Current, target utilization in Forecast), ranked after cost reduction.
+- 12v: four new wizard scenarios (part-time hire, price + volume, price + hire, move prices toward market average). Market scenario converts the display price (per month, visit or sale) back to priceMonthly; rows without a market average are left alone. Still open: a "what's new" tie-in.
+- 12w: Mix Optimizer fixes one-time rows' mix share (they have no hours or demand cap, so it piled 99% into them); ranking table shows 'n/a' per hour for hour-free rows (`hourFree` on `OfferingMetric`) and sorts them last.
+- Also added: an e2e guard for swallowed `updateOutputs` render errors (a top-level `let` read before initialization only surfaced as a console warning).
 
 Dates are the documented ship date; where the roadmap gave only a month, that month is shown.
 

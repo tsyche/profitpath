@@ -489,7 +489,7 @@ function renderOfferingRanking(metrics) {
   if (!wrap || !body) return;
   const rows = rankOfferings(metrics?.offeringMetrics || []);
   wrap.hidden = rows.length === 0;
-  body.innerHTML = rows.map(r => '<tr><td>' + escapeHtml(r.name) + '</td><td class="mono">' + fmtMoney0(r.marginPerHour) + '/hr</td><td class="mono">' + (r.discountPct > 0 ? fmtMoney0(r.discountedMarginPerHour) + '/hr (' + fmtPct1(r.discountPct) + ' off)' : '—') + '</td><td class="mono">' + fmtPct1(r.maxDiscountPct) +
+  body.innerHTML = rows.map(r => '<tr><td>' + escapeHtml(r.name) + '</td><td class="mono">' + (r.hourFree ? 'n/a' : fmtMoney0(r.marginPerHour) + '/hr') + '</td><td class="mono">' + (r.discountPct > 0 && !r.hourFree ? fmtMoney0(r.discountedMarginPerHour) + '/hr (' + fmtPct1(r.discountPct) + ' off)' : '—') + '</td><td class="mono">' + fmtPct1(r.maxDiscountPct) +
     '</td><td data-status="' + r.status + '" style="color:' + FLOOR_COLORS[r.status] + '">' + FLOOR_LABELS[r.status] + '</td></tr>').join('');
 }
 
@@ -765,6 +765,11 @@ function updateTemplateBadge() {
     }
   }
 }
+
+// Reverse-calculator auto-refresh state; declared before render() so the first render can read it
+let reverseHasRun = false;
+/** @type {ReturnType<typeof setTimeout> | undefined} */
+let reverseRefreshTimer;
 
 function render() {
   syncCurrencySelect();
@@ -1074,6 +1079,7 @@ function updateOutputs(metrics) {
     renderMarketTable(metrics);
     renderRangeBand();
     if (!$('#insightsBody')?.classList.contains('collapsed')) renderInsightsPanel();
+    scheduleReverseRefresh();
     if (kpiPayroll) kpiPayroll.textContent = fmtMoney0(metrics.annualPayroll);
     if (kpiVariableCosts) kpiVariableCosts.textContent = fmtMoney0(metrics.variableCosts);
 
@@ -2672,10 +2678,18 @@ function initInsightsPanel() {
 }
 
 /** @type {Record<string, string>} */
-const REVERSE_LABELS = { pricing: 'Raise prices', clients: 'Add clients', utilization: 'Raise utilization', costs: 'Cut costs' };
+const REVERSE_LABELS = { pricing: 'Raise prices', combined: 'Prices + volume', clients: 'Add clients', utilization: 'Raise utilization', costs: 'Cut costs' };
 
 // What Would It Take?: solve each lever for a desired take-home
+// Keep shown results current as inputs change; debounced because every lever is a bisection over calc()
+function scheduleReverseRefresh() {
+  if (!reverseHasRun || $('#reverseBody')?.classList.contains('collapsed')) return;
+  clearTimeout(reverseRefreshTimer);
+  reverseRefreshTimer = setTimeout(renderReverseResults, 300);
+}
+
 function renderReverseResults() {
+  reverseHasRun = true;
   const el = $('#reverseResults');
   const input = $('#reverseTarget');
   if (!el || !input) return;

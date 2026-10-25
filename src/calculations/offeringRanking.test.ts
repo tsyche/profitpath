@@ -56,6 +56,19 @@ describe('marginPerHour and maxDiscountPct', () => {
   })
 })
 
+describe('one-time offerings in the ranking', () => {
+  beforeEach(() => clearCalculationCache())
+
+  it('flags hour-free rows and ranks them after rows with staff hours, even negative ones', () => {
+    const oneTime = { name: 'Ebook', type: 'one-time', priceMonthly: 20, variableCostPerSession: 2, mixPct: 0, currentClients: 5 }
+    const losing = { ...sub, name: 'Loss', priceMonthly: 10, variableCostPerSession: 50 }
+    const rows = rankOfferings(calc({ ...base, offerings: [oneTime, losing] } as any).offeringMetrics as any)
+    expect(rows.map(r => r.name)).toEqual(['Loss', 'Ebook'])
+    expect(rows[1].hourFree).toBe(true)
+    expect(rows[0].hourFree).toBe(false)
+  })
+})
+
 describe('rankOfferings', () => {
   const m = (name: string, marginPerHour: number, maxDiscountPct: number) => ({ name, marginPerHour, maxDiscountPct }) as any
 
