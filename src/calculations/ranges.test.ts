@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { clearCalculationCache } from './index'
-import { calcRange, calcRangeDrivers, suggestRanges, hasRanges, sanitizeRangeBound, sanitizeOfferingRange, rangeCsvCells } from './ranges'
+import { bandMoves, sanitizeSpreads, calcRange, calcRangeDrivers, suggestRanges, hasRanges, sanitizeRangeBound, sanitizeOfferingRange, rangeCsvCells } from './ranges'
 import { sanitizeScenarioState, importFromCSV, buildCSV } from '../../assets/services/miscService'
 
 // Roadmap 24c: low/base/high bounds on fill % and current clients.
@@ -192,5 +192,26 @@ describe('calcRangeDrivers', () => {
     const full = calcRange(state)!.income
     expect(d[0].swing).toBeLessThanOrEqual(full.max - full.min + 1e-6)
     expect(d[0].swing).toBeGreaterThan(d[1].swing)
+  })
+})
+
+describe('configurable spreads (roadmap 22)', () => {
+  it('suggestRanges honours custom spreads', () => {
+    expect(suggestRanges({ ...group, confidence: 'guess' } as any, 'forecast', { guess: 50 })).toEqual({ fillPctLow: 38, fillPctHigh: 100 })
+    expect(suggestRanges({ ...group, confidence: 'estimated' } as any, 'forecast', { estimated: 0 })).toEqual({})
+  })
+
+  it('sanitizeSpreads clamps to 0-100, rounds, and falls back to defaults on junk', () => {
+    expect(sanitizeSpreads(null)).toEqual({ estimated: 15, guess: 30 })
+    expect(sanitizeSpreads({ estimated: '20.4', guess: 500 })).toEqual({ estimated: 20, guess: 100 })
+    expect(sanitizeSpreads({ estimated: 'abc', guess: -5 })).toEqual({ estimated: 15, guess: 0 })
+  })
+})
+
+describe('bandMoves', () => {
+  it('is false for null and for a band that does not move', () => {
+    expect(bandMoves(null)).toBe(false)
+    const flat = { min: 1, base: 1, max: 1 }
+    expect(bandMoves({ revenue: flat, income: flat, clients: flat, capacityPct: flat, breakEvenClients: flat })).toBe(false)
   })
 })

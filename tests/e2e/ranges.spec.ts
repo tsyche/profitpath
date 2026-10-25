@@ -120,3 +120,101 @@ test.describe('Confidence tags and notes', () => {
     expect(await page.evaluate(() => 'confidence' in (window as any).state.offerings[0])).toBe(false);
   });
 });
+
+test.describe('Range case lens, spreads and badge', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('onboardingCompleted', 'true');
+        localStorage.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'intermediate' }));
+      } catch { /* ignore */ }
+    });
+    await page.goto('/');
+    await waitForPageReady(page);
+  });
+
+  const band = (page) => page.locator('#rangeBand');
+  const lowFill = (page) => page.locator('#rangesBody input[data-k="fillPctLow"]').first();
+  const highFill = (page) => page.locator('#rangesBody input[data-k="fillPctHigh"]').first();
+
+  async function makeFirstRowGroup(page) {
+    await page.locator('#offeringsBody tr').first().locator('select[data-k="type"]').selectOption('group');
+    await page.locator('#offeringsBody tr').first().locator('input[data-k="seats"]').fill('8');
+    await page.locator('#offeringsBody tr').first().locator('input[data-k="fillPct"]').fill('60');
+    await page.locator('#rangesSection summary').click();
+  }
+
+  const kpiRevenue = (page) => page.locator('#kpiRevenue');
+  const money = async (loc) => Number((await loc.textContent())!.replace(/[^0-9.-]/g, ''));
+
+  test('case toggle drives every output, tags it, and never rewrites the typed inputs', async ({ page }) => {
+    await makeFirstRowGroup(page);
+    await lowFill(page).fill('30');
+    await highFill(page).fill('100');
+    const baseRev = await money(kpiRevenue(page));
+
+    await page.locator('#rangeCaseToggle [data-case="conservative"]').click();
+    const lowRev = await money(kpiRevenue(page));
+    expect(lowRev).toBeLessThan(baseRev);
+    await expect(page.locator('.range-case-chip').first()).toHaveText('Conservative case');
+    // calc() itself follows the case, so anything built on it (exports, charts, insights) agrees with the KPI
+    expect(await page.evaluate(() => Math.round((window as any).calc((window as any).state).revenue))).toBe(lowRev);
+    // The editable fill cell still shows what was typed, not the swapped value
+    await expect(page.locator('#offeringsBody tr').first().locator('input[data-k="fillPct"]')).toHaveValue('60');
+
+    await page.locator('#rangeCaseToggle [data-case="optimistic"]').click();
+    expect(await money(kpiRevenue(page))).toBeGreaterThan(baseRev);
+
+    await page.locator('#rangeCaseToggle [data-case="base"]').click();
+    expect(await money(kpiRevenue(page))).toBe(baseRev);
+    await expect(page.locator('.range-case-chip').first()).toBeHidden();
+  });
+
+  test('a case snaps back to base when the bounds go away, and never survives a reload', async ({ page }) => {
+    await makeFirstRowGroup(page);
+    await lowFill(page).fill('30');
+    const baseRev = await money(kpiRevenue(page));
+    await page.locator('#rangeCaseToggle [data-case="conservative"]').click();
+    await expect(page.locator('.range-case-chip').first()).toBeVisible();
+
+    await lowFill(page).fill('');
+    await expect(band(page)).toBeHidden();
+    await expect(page.locator('.range-case-chip').first()).toBeHidden();
+    expect(await money(kpiRevenue(page))).toBe(baseRev);
+
+    await lowFill(page).fill('30');
+    await page.locator('#rangeCaseToggle [data-case="conservative"]').click();
+    await page.reload();
+    await waitForPageReady(page);
+    await expect(page.locator('.range-case-chip').first()).toBeHidden();
+    expect(await money(kpiRevenue(page))).toBe(baseRev);
+  });
+
+  test('configurable spreads feed the fill button and persist', async ({ page }) => {
+    await makeFirstRowGroup(page);
+    await page.locator('#rangesBody select[data-k="confidence"]').first().selectOption('guess');
+    await page.locator('#spreadGuess').fill('50');
+    await page.locator('#spreadGuess').blur();
+    await page.locator('#suggestRangesBtn').click();
+    await expect(lowFill(page)).toHaveValue('30');
+    await expect(highFill(page)).toHaveValue('90');
+
+    await page.locator('#spreadGuess').fill('999');
+    await page.locator('#spreadGuess').blur();
+    await expect(page.locator('#spreadGuess')).toHaveValue('100');
+
+    await page.reload();
+    await waitForPageReady(page);
+    await page.locator('#rangesSection summary').click();
+    await expect(page.locator('#spreadGuess')).toHaveValue('100');
+    await expect(page.locator('#spreadEstimated')).toHaveValue('15');
+  });
+
+  test('a tagged offering shows its confidence badge in the main table', async ({ page }) => {
+    await page.locator('#rangesSection summary').click();
+    await expect(page.locator('#offeringsBody .conf-badge')).toHaveCount(0);
+    await page.locator('#rangesBody select[data-k="confidence"]').first().selectOption('estimated');
+    await page.locator('#offeringsBody tr').first().locator('input[data-k="priceMonthly"]').fill('123');
+    await expect(page.locator('#offeringsBody tr').first().locator('.conf-badge')).toHaveText('Estimated');
+  });
+});

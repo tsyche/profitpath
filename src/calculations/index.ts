@@ -5,6 +5,7 @@
 
 import { annualExpenseTotal, sanitizeExpenses } from './expenses';
 import { activeResources, resourceAnnualHours, sanitizeResources, STAFF_POOL_ID } from './resources';
+import { applyRangeCase, getRangeCase } from './rangeCase';
 import { breakEvenSeats, sanitizeCostPerRun } from './groupRuns';
 import { clamp } from '../../assets/utils/helpers';
 import type {
@@ -539,7 +540,13 @@ export function calculateTax(income: number): TaxEstimate {
  * Main calculation engine with caching and debugging support
  */
 export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcResult {
-  const { enableCache = true, debug = false } = options;
+  const { enableCache = true, debug = false, ignoreCase = false } = options;
+  // Optimistic/conservative lens: re-enter once with the case's bounds applied, so the
+  // cache key sees the swapped fill/clients and every caller follows the case.
+  if (!ignoreCase && getRangeCase() !== 'base') {
+    const base = stateInput || globalThis.state;
+    if (base) return calc(applyRangeCase(base), { ...options, ignoreCase: true });
+  }
   const startTime = performance.now();
   totalCalcs++;
 

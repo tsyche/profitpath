@@ -54,7 +54,8 @@ src/
 │   ├── marketPosition.ts # Optional market low/avg/high per offering and the green/yellow/red price badge; display only
 │   ├── currency.ts       # Scenario currency allowlist + shared fmtMoney0 (display only)
 │   ├── offeringMeta.ts   # Per-offering confidence tag (verified/estimated/guess) and note sanitizers; display only
-│   ├── ranges.ts         # Optional low/high bounds (fill %, current clients): calcRange min/base/max band, bound sanitizers, suggestRanges (confidence-tag presets), calcRangeDrivers (profit swing per offering)
+│   ├── rangeCase.ts      # Conservative / base / optimistic lens: calc() applies the active case's bounds itself (`ignoreCase` opts out), so every output, chart and export follows it; session-only, never persisted; panel in assets/components/RangeCasePanel.ts
+│   ├── ranges.ts         # Optional low/high bounds (fill %, current clients): calcRange min/base/max band (always from the true base), bound sanitizers, suggestRanges (confidence-tag presets, user-set spreads), calcRangeDrivers (profit swing per offering)
 │   ├── resources.ts      # Optional extra capacity pools (booth, room): sanitizer and annual hours; optional `staffFree` flag (tagged offerings draw no staff hours); calc() caps forecast clients per pool and reports poolUtilization + bottleneck
 │   ├── groupRuns.ts      # Group offerings: costPerRun sanitizer and breakEvenSeats; calc() charges the run cost per cohort (Current) or per filled seat (Forecast); table in assets/components/GroupRunsPanel.ts
 │   ├── membership.ts     # Membership / prepaid-credit what-if: one plan vs one member profile priced from the offerings; credits at list by default, stacking opt-in per plan; display only, never feeds calc() (persisted in scenarios, share URL and CSV as membershipPlans/memberProfiles; panel in assets/components/MembershipPanel.ts, docs/plans/archive/membership-calculator.md)
@@ -205,7 +206,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (693 unit tests across 65 files — 692 passing, 1 skipped — plus 414 Playwright e2e tests across 35 files, chromium + firefox)
+#### Test Coverage (705 unit tests across 66 files — 704 passing, 1 skipped — plus 422 Playwright e2e tests across 35 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

@@ -11,6 +11,7 @@ export function getShareBase() {
 import { deflateSync, inflateSync, strToU8, strFromU8 } from 'fflate';
 import { clamp } from '../utils/helpers';
 import { normalizeOfferingType } from '../../src/calculations/index';
+import { rangeCaseTag } from '../../src/calculations/rangeCase';
 import { rangeCsvCells, sanitizeOfferingRange } from '../../src/calculations/ranges';
 import { marketCsvCells, sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
 import { normalizeConfidence, sanitizeNote, sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
@@ -223,6 +224,12 @@ export function shareScenario() {
 
 // Quote a CSV cell: double embedded quotes, and prefix a ' on values starting
 // with = + - @ so spreadsheet apps don't execute them as formulas
+/** ' (Conservative case)' off the base case, '' on it; appended to export titles so a lens is never mistaken for the inputs. */
+function caseSuffix() {
+  const t = rangeCaseTag();
+  return t ? ' (' + t + ')' : '';
+}
+
 export function csvCell(value: any) {
   let s = String(value == null ? '' : value);
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
@@ -240,6 +247,7 @@ export function buildCSV(st: any, results: any) {
     'ProfitPath Business Analysis Report',
     'Generated: ' + csvCell(new Date().toLocaleString()),
     'Mode: ' + (st.mode === 'forecast' ? 'Forecast' : 'Current'),
+    ...(rangeCaseTag() ? ['Range case: ' + rangeCaseTag()] : []),
     '',
     'BUSINESS PARAMETERS',
     'Parameter,Value,Unit',
@@ -803,7 +811,7 @@ export function exportAsExcel() {
   const fmtPct = (n: any) => n.toFixed(1) + '%';
 
   const lines = [
-    'ProfitPath Analysis Report',
+    'ProfitPath Analysis Report' + caseSuffix(),
     'Generated: ' + new Date().toLocaleString(),
     '',
     'BUSINESS OVERVIEW',
@@ -868,7 +876,7 @@ export function exportAsPDF() {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>ProfitPath Analysis Report</title>
+      <title>ProfitPath Analysis Report${caseSuffix()}</title>
       <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         h1 { color: #333; }
@@ -880,7 +888,7 @@ export function exportAsPDF() {
       </style>
     </head>
     <body>
-      <h1>ProfitPath Analysis Report</h1>
+      <h1>ProfitPath Analysis Report${caseSuffix()}</h1>
       <p>Generated: ${new Date().toLocaleString()}</p>
       
       <div class="section">
@@ -946,7 +954,7 @@ export function exportAsHTML() {
   const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
-  <title>ProfitPath Analysis Report</title>
+  <title>ProfitPath Analysis Report${caseSuffix()}</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
     h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
@@ -962,7 +970,7 @@ export function exportAsHTML() {
   </style>
 </head>
 <body>
-  <h1>ProfitPath Analysis Report</h1>
+  <h1>ProfitPath Analysis Report${caseSuffix()}</h1>
   <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
   
   <div class="section">
@@ -1057,7 +1065,7 @@ export function exportAsFinancialReport() {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ProfitPath Financial Report</title>
+  <title>ProfitPath Financial Report${caseSuffix()}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; font-size: 13px; color: #222; padding: 32px; max-width: 900px; margin: 0 auto; }
@@ -1082,7 +1090,7 @@ export function exportAsFinancialReport() {
   </style>
 </head>
 <body>
-  <h1>ProfitPath Financial Report</h1>
+  <h1>ProfitPath Financial Report${caseSuffix()}</h1>
   <p class="meta">Generated ${dateStr} &nbsp;|&nbsp; Mode: ${metrics.mode === 'forecast' ? 'Forecast' : 'Current'} &nbsp;|&nbsp; ${Math.round(metrics.clients || 0)} clients</p>
 
   <h2>Business Performance Summary</h2>
@@ -1189,7 +1197,7 @@ export function shareViaEmail() {
     `- ${o.name}: ${fmtMoney0(o.priceMonthly)}/month, ${o.sessionsPerYear} sessions/year, ${fmtPct(o.mixPct)} mix`
   ).join('\n');
 
-  const subject = encodeURIComponent('ProfitPath Analysis Report');
+  const subject = encodeURIComponent('ProfitPath Analysis Report' + caseSuffix());
   const body = encodeURIComponent(
     `Check out my ProfitPath analysis:\n\n` +
     `Business Overview:\n` +

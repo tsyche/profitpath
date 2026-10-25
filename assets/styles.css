@@ -4974,3 +4974,18 @@ input[type="checkbox"] {
 .wi-up { color: var(--good, #34d399); }
 .wi-down { color: var(--bad); }
 .wi-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+/* Range case lens (ROADMAP 24) and confidence spreads / badge (ROADMAP 22) */
+.range-case { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: transparent; color: inherit; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--border); }
+.seg button.active { background: var(--accent); color: #fff; }
+.range-case-chip { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--warn); color: #000; vertical-align: middle; }
+.range-case-chip[hidden] { display: none; }
+.spread-field { font-size: 12px; margin-left: 8px; white-space: nowrap; }
+.spread-field input { width: 52px; margin: 0 2px; }
+.conf-badge { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 10px; border: 1px solid currentColor; vertical-align: middle; }
+.conf-badge[data-confidence="verified"] { color: var(--good); }
+.conf-badge[data-confidence="estimated"] { color: var(--warn); }
+.conf-badge[data-confidence="guess"] { color: var(--bad); }

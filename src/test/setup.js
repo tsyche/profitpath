@@ -1,9 +1,13 @@
 // Test setup file
-import { expect, vi } from 'vitest'
+import { afterEach, expect, vi } from 'vitest'
+import { setRangeCase } from '../calculations/rangeCase'
 import * as matchers from '@testing-library/jest-dom/matchers'
 
 // extends Vitest's expect method with methods from jest-dom
 expect.extend(matchers)
+
+// The optimistic/conservative lens is module state; never let it leak between tests
+afterEach(() => setRangeCase('base'))
 
 // Mock browser APIs that might not be available in test environment
 /** @param {string} selector */

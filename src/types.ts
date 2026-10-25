@@ -207,6 +207,8 @@ export type AppState = Omit<CalcState, 'offerings' | 'employees' | 'hoursPerWeek
 export interface CalcOptions {
   enableCache?: boolean;
   debug?: boolean;
+  /** Skip the active optimistic/conservative case and calculate the true base (range maths only). */
+  ignoreCase?: boolean;
 }
 
 export interface MixResult {

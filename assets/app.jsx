@@ -1,7 +1,9 @@
 import { calc, getCacheStats, normalizeOfferingType } from '../src/calculations/index';
 import { floorStatus, rankOfferings } from '../src/calculations/offeringRanking';
 import { displayPrice, isOneTime, isPerSession, monthlyFromPerSession, priceMonthlyForNewVisits } from '../src/calculations/offeringPrice';
-import { calcRange, calcRangeDrivers, suggestRanges, sanitizeOfferingRange } from '../src/calculations/ranges';
+import { bandMoves, calcRange, calcRangeDrivers, suggestRanges, sanitizeOfferingRange } from '../src/calculations/ranges';
+import { getRangeCase } from '../src/calculations/rangeCase';
+import { confidenceBadgeHtml, getSpreads, initRangeCase, initSpreadInputs, renderRangeCase, syncConfidenceBadge } from './components/RangeCasePanel';
 import { marketBadge, sanitizeOfferingMarket } from '../src/calculations/marketPosition';
 import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../src/calculations/offeringMeta';
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, DEFAULT_LIFE_YEARS, monthlyCategorySpend, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
@@ -406,8 +408,9 @@ function renderRangeBand() {
   const body = $('#rangeBandBody');
   if (!wrap || !body) return;
   const r = calcRange(state);
-  const moves = r && RANGE_ROWS.some(({ metric: m }) => r[m].min !== r[m].max);
+  const moves = bandMoves(r);
   wrap.hidden = !moves;
+  renderRangeCase(moves);
   const drivers = $('#rangeDrivers');
   if (drivers) {
     const top = moves ? calcRangeDrivers(state).slice(0, 3) : [];
@@ -512,10 +515,20 @@ function onRangeInput(e) {
   const clean = /** @type {Record<string, any>} */ (isMeta ? sanitizeOfferingMeta({ [k]: el.value }) : sanitizeOfferingRange({ [k]: el.value }));
   if (clean[k] === undefined) delete o[k];
   else o[k] = clean[k];
-  if (k === 'confidence') el.dataset.confidence = clean[k] || '';
+  if (k === 'confidence') {
+    el.dataset.confidence = clean[k] || '';
+    syncConfidenceBadge(Number(el.dataset.i), clean[k]);
+  }
   persistState();
   try {
-    renderRangeBand();
+    // Under an optimistic/conservative case a bound edit moves every output, so redraw them all
+    if (getRangeCase() !== 'base' && k !== 'confidence' && k !== 'note') {
+      render();
+      const again = document.querySelector(`#rangesBody [data-i="${el.dataset.i}"][data-k="${k}"]`);
+      if (again instanceof HTMLElement) again.focus();
+    } else {
+      renderRangeBand();
+    }
   } catch (err) {
     console.warn('Failed to refresh range band:', err);
   }
@@ -881,6 +894,8 @@ function render() {
 
   metrics.offerings.forEach((o, idx) => {
     const tr = document.createElement('tr');
+    // Inputs always show what the user typed; metrics.offerings carries the active range case's fill and clients
+    const raw = getRangeCase() === 'base' ? o : (state.offerings[idx] || o);
 
     const mixCell = isForecast
       ? '<input aria-label="Mix % for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" max="100" step="1" value="' + ((o.mixPct ?? 0).toFixed(1)) + '" data-k="mixPct" data-i="' + (idx) + '" data-tooltip="Percentage of total clients using this offering" />'
@@ -888,7 +903,7 @@ function render() {
 
     const clientsCell = isForecast
       ? '<span class="muted">—</span>'
-      : '<input aria-label="Clients for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" step="1" value="' + (o.currentClients ?? 0) + '" data-k="currentClients" data-i="' + (idx) + '" data-tooltip="Number of active clients for this offering" />';
+      : '<input aria-label="Clients for ' + (escapeHtml(o.name)) + '" class="mode-edit" type="number" min="0" step="1" value="' + (raw.currentClients ?? 0) + '" data-k="currentClients" data-i="' + (idx) + '" data-tooltip="Number of active clients for this offering" />';
 
     const isGroup = o.type === 'group';
     const perSession = isPerSession(o);
@@ -908,7 +923,7 @@ function render() {
       ? '<input aria-label="Seats per class for ' + (escapeHtml(o.name)) + '" type="number" min="1" step="1" value="' + (o.seats || 1) + '" data-k="seats" data-i="' + (idx) + '" data-tooltip="Seats per class run. Sessions / yr is how many classes each enrolled client attends"/>'
       : '<span class="muted">—</span>';
     const fillCell = isGroup && isForecast
-      ? '<input aria-label="Fill percent for ' + (escapeHtml(o.name)) + '" type="number" min="1" max="100" step="1" value="' + (o.fillPct ?? 100) + '" data-k="fillPct" data-i="' + (idx) + '" data-tooltip="Forecast: average % of seats filled. Current mode derives fill from Clients"/>'
+      ? '<input aria-label="Fill percent for ' + (escapeHtml(o.name)) + '" type="number" min="1" max="100" step="1" value="' + (raw.fillPct ?? 100) + '" data-k="fillPct" data-i="' + (idx) + '" data-tooltip="Forecast: average % of seats filled. Current mode derives fill from Clients"/>'
       : '<span class="muted">—</span>';
 
     const estClients = isForecast
@@ -919,7 +934,7 @@ function render() {
       ? Math.round(estClients * o.sessionsPerYear)
       : Math.round((o.currentClients || 0) * o.sessionsPerYear);
 
-    tr.innerHTML = '<td class="cell-edit group-start group-inputs" data-label="Offering"><input aria-label="Offering name" type="text" value="' + (escapeHtml(o.name)) + '" data-k="name" data-i="' + (idx) + '" data-tooltip="Name of this service offering"/></td>' +
+    tr.innerHTML = '<td class="cell-edit group-start group-inputs" data-label="Offering"><input aria-label="Offering name" type="text" value="' + (escapeHtml(o.name)) + '" data-k="name" data-i="' + (idx) + '" data-tooltip="Name of this service offering"/>' + confidenceBadgeHtml(state.offerings[idx]?.confidence) + '</td>' +
       '<td class="cell-edit group-inputs" data-label="Price">' + (priceCell) + '</td>' +
       '<td class="cell-edit group-inputs" data-label="Sessions / yr">' + (oneTime ? '<span class="muted">—</span>' : '<input aria-label="Sessions per year for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.sessionsPerYear) + '" data-k="sessionsPerYear" data-i="' + (idx) + '" data-tooltip="' + sessionsTip + '"/>') + '</td>' +
       '<td class="cell-edit group-inputs" data-label="Hours / session">' + (oneTime ? '<span class="muted">—</span>' : '<input aria-label="Hours per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="0.1" value="' + (o.hoursPerSession) + '" data-k="hoursPerSession" data-i="' + (idx) + '" data-tooltip="Duration of each service session in hours"/>') + '</td>' +
@@ -1225,15 +1240,16 @@ $$('#controls select').forEach((el) => {
   }
 }
 {
+  initSpreadInputs();
+  initRangeCase(() => render());
   const btn = $('#suggestRangesBtn');
   if (btn) {
     btn.addEventListener('click', () => {
       pushHistory();
       _lastHistoryField = null;
-      state.offerings.forEach(o => Object.assign(o, suggestRanges(o, state.mode)));
+      state.offerings.forEach(o => Object.assign(o, suggestRanges(o, state.mode, getSpreads())));
       persistState();
-      renderRangesTable();
-      renderRangeBand();
+      render();
     });
   }
   const body = $('#rangesBody');

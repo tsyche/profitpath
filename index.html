@@ -116,6 +116,7 @@
       <span class="ab-kpi k-rev"><i>Revenue</i><b id="abkRevenue">—</b></span>
       <span class="ab-kpi k-net"><i>Net income</i><b id="abkIncome">—</b></span>
       <span class="ab-kpi k-util"><i>Utilization</i><b id="abkUtil">—</b></span>
+      <span class="range-case-chip" hidden></span>
     </button>
 
     <button class="ab-badge" id="modeBadgeBtn" type="button" aria-pressed="false" data-tooltip="Forecast mode — tap to switch to Current" onclick="ppToggleMode()"><span class="dot"></span><span class="ab-badge-text">Forecast</span></button>
@@ -583,7 +584,9 @@
           </div>
           <div class="smallprint">
             <button class="btn small" id="suggestRangesBtn" type="button"
-              title="Fills empty bounds for tagged offerings: Estimated ±15%, Guess ±30% around the base value. Typed bounds are kept.">Fill ranges from confidence</button>
+              title="Fills empty bounds for tagged offerings by the spreads at right, around the base value. Typed bounds are kept.">Fill ranges from confidence</button>
+            <label class="spread-field">Estimated ±<input id="spreadEstimated" type="number" min="0" max="100" step="1" inputmode="numeric" aria-label="Estimated spread percent"/>%</label>
+            <label class="spread-field">Guess ±<input id="spreadGuess" type="number" min="0" max="100" step="1" inputmode="numeric" aria-label="Guess spread percent"/>%</label>
           </div>
           <div class="table-wrap">
             <table class="table ranges-table" id="rangesTable" aria-label="Low and high assumptions">
@@ -651,7 +654,7 @@
 
     <aside class="card">
       <div class="card-h">
-        <h2>Outputs</h2>
+        <h2>Outputs <span class="range-case-chip" role="status" hidden></span></h2>
         <div class="pill">
           <span class="muted">Net income</span>
           <strong id="kpiIncome" style="font-family: var(--mono)">$0</strong>
@@ -733,6 +736,15 @@
         </div>
 
         <div id="rangeBand" class="cost-breakdown" hidden>
+          <div class="range-case" id="rangeCaseWrap">
+            <span class="muted" id="rangeCaseLabel" style="font-size: 12px;">View the whole app as</span>
+            <div class="seg" id="rangeCaseToggle" role="radiogroup" aria-labelledby="rangeCaseLabel"
+              title="Conservative applies every low bound, Optimistic every high bound, across all outputs, charts and exports. Base is your typed inputs.">
+              <button type="button" role="radio" data-case="conservative" aria-checked="false"></button>
+              <button type="button" role="radio" data-case="base" aria-checked="true"></button>
+              <button type="button" role="radio" data-case="optimistic" aria-checked="false"></button>
+            </div>
+          </div>
           <div class="muted" style="font-size: 12px;"
             title="Min and max across running every low bound together and every high bound together. A scenario envelope, not a statistical interval.">
             Range across your low / high assumptions</div>
