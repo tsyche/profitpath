@@ -36,6 +36,28 @@ export interface Expense {
   lifeYears: number;
 }
 
+/** A membership / prepaid-credit plan for the what-if panel; display only, never used by calc. */
+export interface MembershipPlan {
+  id: string;
+  name: string;
+  monthlyFee: number;
+  /** List-price dollars of credit granted each month. */
+  creditsPerMonth: number;
+  /** Member discount (0-100) on eligible cash purchases. */
+  memberDiscountPct: number;
+  /** Opt-in stacking: credits draw down at the member price instead of list. Default off. */
+  creditsAtMemberPrice?: boolean;
+  /** Offering ids the credits and discount apply to. */
+  eligible: string[];
+}
+
+/** A typical member: visits per month by offering id. */
+export interface MemberProfile {
+  id: string;
+  name: string;
+  visits: Record<string, number>;
+}
+
 /** A capacity pool other than staff (booth, room, bay) that tagged offerings also consume. */
 export interface Resource {
   id: string;

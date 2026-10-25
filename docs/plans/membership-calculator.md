@@ -2,7 +2,7 @@
 
 **TL;DR:** A display-only what-if panel: define up to 3 plans (monthly fee, included credits, member discount, eligible services) and up to 3 member profiles (visits per month per service), priced from the scenario's own offerings. For each plan x profile it shows what the member actually saves and what the business keeps, with every percentage naming its denominator. It never feeds `calc()` totals, so credits can't be double counted as revenue.
 
-**Status:** Draft
+**Status:** Decided
 **Fold into:** [AGENTS.md](../../AGENTS.md) / [CLAUDE.md](../../CLAUDE.md) "Core Modules" (calculation engine) and [experience-levels.md](../experience-levels.md).
 
 ## Problem
@@ -17,10 +17,10 @@
 
 ### Model (all monthly, steady state)
 
-- **Catalog:** the scenario's offerings supply price, `Var $ / session`, labor %, and hours per session. No second price list.
-- **Plan:** `{ name, monthlyFee, creditsPerMonth ($ value), memberDiscountPct, eligible: offering ids }`.
+- **Catalog:** the scenario's offerings supply price per session (one-time: per sale), `Var $ / session`, labor %, and hours per session. No second price list. An offering's own `discountPct` is never read, so discounts can't stack implicitly.
+- **Plan:** `{ name, monthlyFee, creditsPerMonth ($ value), memberDiscountPct, creditsAtMemberPrice, eligible: offering ids }`.
 - **Profile:** `{ name, visits: { offeringId: visitsPerMonth } }`.
-- **Redemption rule:** for eligible services, the member price is `price x (1 - memberDiscountPct)`. Credits draw down at the member price. Anything beyond credits is paid in cash at the member price. Ineligible services are paid in cash at list price.
+- **Redemption rule:** credits are list-price dollars, so eligible services draw down credits at list price. Anything beyond the credits is paid in cash at the member price, `price x (1 - memberDiscountPct)`. Ineligible services are paid in cash at list price. Stacking is opt-in per plan: `creditsAtMemberPrice` (default off) makes credits draw down at the member price. The default matches the Sound Stage rule (no stacking), but the tool does not forbid stacking, since other businesses differ.
 - **Per plan x profile result:**
   - Member side: regular spend (all at list), member spend (`fee + cash`), savings $ and %, credits used, credits unused.
   - Business side: revenue (`fee + cash`), delivery cost for all services consumed, margin, staff hours consumed.
@@ -53,7 +53,7 @@ Each label states its denominator in the text, e.g. "Savings (% of regular spend
 
 ## Phases
 
-1. **Calc module:** `membership.ts` plus sanitizers and hand-computed unit tests (worked example, ineligible service, discount + credits, zero-fee plan, credits exceeding spend, empty profile, fuzz keys).
+1. **Calc module:** `membership.ts` plus sanitizers and hand-computed unit tests (worked example, ineligible service, discount + credits with and without stacking, offering `discountPct` ignored, zero-fee plan, credits exceeding spend, empty profile, fuzz keys).
    **Gate:** unit, lint, typecheck at or below baseline.
 2. **Persistence:** `types.ts`, miscService allowlist, share URL, storage, CSV (both paths, import), default/reset/template, fuzz allowed-key set.
    **Gate:** round-trip tests.
@@ -78,4 +78,6 @@ Each label states its denominator in the text, e.g. "Savings (% of regular spend
 
 | Date | Decision |
 |---|---|
+| 2026-10-25 | Credits redeem at list price; discount applies only to cash beyond credits (Claude's recommendation; Tim undecided) |
+| 2026-10-25 | Stacking is a per-plan opt-in (`creditsAtMemberPrice`, default off) in v1. No-stacking is a TSS rule, not a tool limit |
 | 2026-10-25 | 24a is next, ahead of the UI pass; membership design at TSS is still open, so this is a general tool |
