@@ -54,6 +54,7 @@ src/
 │   ├── currency.ts       # Scenario currency allowlist + shared fmtMoney0 (display only)
 │   ├── offeringMeta.ts   # Per-offering confidence tag (verified/estimated/guess) and note sanitizers; display only
 │   ├── ranges.ts         # Optional low/high bounds (fill %, current clients): calcRange min/base/max band, bound sanitizers, suggestRanges (confidence-tag presets), calcRangeDrivers (profit swing per offering)
+│   ├── resources.ts      # Optional extra capacity pools (booth, room): sanitizer and annual hours; calc() caps forecast clients per pool and reports poolUtilization + bottleneck
 │   └── expenses.ts       # Expense line items: categories, frequencies (weekly, monthly, annual, one-time amortized over lifeYears), sanitizer, annualization, cost-by-category breakdown
 ├── insights/           # Rules-based insights + what-ifs, reverse calculator (both built on calc()), mix optimizer
 │   ├── insightsEngine.ts   # Rules-based insights; what-if impacts re-run calc()
@@ -201,7 +202,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (614 unit tests across 60 files — 613 passing, 1 skipped — plus 386 Playwright e2e tests across 32 files, chromium + firefox)
+#### Test Coverage (634 unit tests across 61 files — 633 passing, 1 skipped — plus 386 Playwright e2e tests across 32 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

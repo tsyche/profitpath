@@ -4,6 +4,7 @@
  */
 
 import { annualExpenseTotal, sanitizeExpenses } from './expenses';
+import { activeResources, resourceAnnualHours, sanitizeResources, STAFF_POOL_ID } from './resources';
 import { clamp } from '../../assets/utils/helpers';
 import type {
   BreakEven,
@@ -21,6 +22,8 @@ import type {
   Offering,
   OfferingMetric,
   OfferingType,
+  PoolUtilization,
+  Resource,
   SanitizedOffering,
   TaxEstimate
 } from '../types';
@@ -88,6 +91,7 @@ function generateCacheKey(state: CalcState) {
     monthlyCosts: state.monthlyCosts,
     processingFeePct: state.processingFeePct,
     expenses: sanitizeExpenses(state.expenses).map(e => [e.category, e.amount, e.frequency, e.lifeYears]),
+    resources: sanitizeResources(state.resources).map(r => [r.id, r.hoursPerWeek, r.weeksPerYear]),
     productiveUtilizationPct: state.productiveUtilizationPct,
     targetUtilizationPct: state.targetUtilizationPct,
     offerings: (Array.isArray(state.offerings) ? state.offerings : []).filter(o => o && typeof o === 'object').map(o => ({
@@ -101,6 +105,7 @@ function generateCacheKey(state: CalcState) {
       type: o.type,
       seats: o.seats,
       fillPct: o.fillPct,
+      resource: o.resource,
       mixPct: o.mixPct,
       currentClients: o.currentClients
     }))
@@ -192,7 +197,7 @@ function currentStaffHours(o: SanitizedOffering): number {
 /**
  * Sanitizes and validates offering data
  */
-function sanitizeOfferings(offerings: Offering[], feePct = 0): SanitizedOffering[] {
+function sanitizeOfferings(offerings: Offering[], feePct = 0, resourceIds: ReadonlySet<string> = new Set()): SanitizedOffering[] {
   return offerings
     .filter((o) => o && typeof o === 'object')
     .map((o) => ({
@@ -209,6 +214,8 @@ function sanitizeOfferings(offerings: Offering[], feePct = 0): SanitizedOffering
       type: normalizeOfferingType(o.type),
       seats: Math.floor(clamp(finiteOr(o.seats, 1), 1, MAX_COUNT)),
       fillPct: clamp(finiteOr(o.fillPct, 100), 1, 100),
+      // A tag naming a missing or unset resource behaves as untagged
+      resource: typeof o.resource === 'string' && resourceIds.has(o.resource) ? o.resource : undefined,
       mixPct: clamp(toFinite(o.mixPct), 0, 100),
       currentClients: clamp(Math.floor(toFinite(o.currentClients)), 0, MAX_COUNT),
     }))
@@ -248,10 +255,20 @@ function calculateCosts(params: CostParams): Costs {
   };
 }
 
+/** Staff plus each active resource, with the busiest pool as the bottleneck (staff wins ties). */
+function buildPools(staffPct: number, resources: Resource[], usedHours: number[]): { poolUtilization: PoolUtilization[]; bottleneck: PoolUtilization } {
+  const poolUtilization: PoolUtilization[] = [
+    { id: STAFF_POOL_ID, name: 'Staff', pct: staffPct },
+    ...resources.map((r, i) => ({ id: r.id, name: r.name, pct: (usedHours[i] / resourceAnnualHours(r)) * 100 }))
+  ];
+  const bottleneck = poolUtilization.reduce((top, p) => (p.pct > top.pct ? p : top));
+  return { poolUtilization, bottleneck };
+}
+
 /**
  * Calculates metrics for forecast mode
  */
-function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacity, _costs: Costs): ModeResults {
+function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacity, _costs: Costs, resources: Resource[], targetUtilizationPct: number): ModeResults {
   const { sum: mixSum, needsNormalization: mixNormalized, shares } = normalizeMix(offerings);
 
   // Per-customer expectations (weighted by mix shares)
@@ -269,15 +286,24 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
   const variableCostPerClient = offerings.reduce((acc, o, idx) =>
     acc + (shares[idx] || 0) * annualVariableCostPerClient(o), 0);
 
-  const clients = serviceHoursPerClient > 0 ?
+  const staffClients = serviceHoursPerClient > 0 ?
     Math.floor(capacity.targetServiceHours / serviceHoursPerClient) : 0;
+
+  // Each resource caps clients too: its tagged hours per client against its own target hours
+  const poolHoursPerClient = resources.map((r) => offerings.reduce((acc, o, idx) =>
+    o.resource === r.id ? acc + (shares[idx] || 0) * annualStaffHoursPerClient(o) : acc, 0));
+  const clients = resources.reduce((cap, r, i) => poolHoursPerClient[i] > 0 ?
+    Math.min(cap, Math.floor(resourceAnnualHours(r) * (targetUtilizationPct / 100) / poolHoursPerClient[i])) : cap, staffClients);
 
   const totalSessions = clients * sessionsPerClient;
   const revenue = clients * revenuePerClient;
   const variableCosts = clients * variableCostPerClient;
 
-  const capacityPct = capacity.annualServiceHours > 0 ?
-    (capacity.targetServiceHours / capacity.annualServiceHours) * 100 : 0;
+  // A resource that binds leaves staff under target; otherwise staff sits at target as before
+  const serviceHours = clients < staffClients ? clients * serviceHoursPerClient : capacity.targetServiceHours;
+  const staffPct = capacity.annualServiceHours > 0 ? (serviceHours / capacity.annualServiceHours) * 100 : 0;
+  const { poolUtilization, bottleneck } = buildPools(staffPct, resources, poolHoursPerClient.map((h) => h * clients));
+  const capacityPct = bottleneck.pct;
 
   // Per-offering metrics
   const offeringMetrics = offerings.map((o, idx) => {
@@ -303,8 +329,10 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
   return {
     clients,
     totalSessions,
-    serviceHours: capacity.targetServiceHours,
+    serviceHours,
     capacityPct,
+    poolUtilization,
+    bottleneck,
     revenue,
     variableCosts,
     offeringMetrics,
@@ -317,7 +345,7 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
 /**
  * Calculates metrics for current operations mode
  */
-function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity, _costs: Costs): ModeResults {
+function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity, _costs: Costs, resources: Resource[]): ModeResults {
   let clients = 0;
   let totalSessions = 0;
   let serviceHours = 0;
@@ -338,8 +366,11 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
     variableCosts += offeringVariableCosts;
   });
 
-  const capacityPct = capacity.annualServiceHours > 0 ?
+  const staffPct = capacity.annualServiceHours > 0 ?
     (serviceHours / capacity.annualServiceHours) * 100 : 0;
+  const { poolUtilization, bottleneck } = buildPools(staffPct, resources,
+    resources.map((r) => offerings.reduce((acc, o) => o.resource === r.id ? acc + currentStaffHours(o) : acc, 0)));
+  const capacityPct = bottleneck.pct;
 
   // Per-offering metrics
   const offeringMetrics = offerings.map(o => {
@@ -365,6 +396,8 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
     totalSessions,
     serviceHours,
     capacityPct,
+    poolUtilization,
+    bottleneck,
     revenue,
     variableCosts,
     offeringMetrics,
@@ -556,7 +589,8 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
   };
 
   // Sanitize offerings
-  const offerings = sanitizeOfferings(Array.isArray(input.offerings) ? input.offerings : [], processingFeePct);
+  const resources = activeResources(input.resources);
+  const offerings = sanitizeOfferings(Array.isArray(input.offerings) ? input.offerings : [], processingFeePct, new Set(resources.map((r) => r.id)));
   intermediate.sanitization.offerings = offerings;
 
   const mode = input.mode;
@@ -576,6 +610,8 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
       totalSessions: 0,
       serviceHours: 0,
       capacityPct: 0,
+      poolUtilization: [{ id: STAFF_POOL_ID, name: 'Staff', pct: 0 }],
+      bottleneck: { id: STAFF_POOL_ID, name: 'Staff', pct: 0 },
       revenue: 0,
       variableCosts: 0,
       income,
@@ -604,8 +640,8 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
 
   // Calculate mode-specific results
   const modeResults = mode === 'forecast' ?
-    calculateForecastMode(offerings, capacity, costs) :
-    calculateCurrentMode(offerings, capacity, costs);
+    calculateForecastMode(offerings, capacity, costs, resources, targetUtilizationPct) :
+    calculateCurrentMode(offerings, capacity, costs, resources);
 
   intermediate.modeResults = modeResults;
 

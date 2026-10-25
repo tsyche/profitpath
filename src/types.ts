@@ -36,6 +36,21 @@ export interface Expense {
   lifeYears: number;
 }
 
+/** A capacity pool other than staff (booth, room, bay) that tagged offerings also consume. */
+export interface Resource {
+  id: string;
+  name: string;
+  hoursPerWeek: number;
+  weeksPerYear: number;
+}
+
+/** One pool's load: staff plus each active resource. */
+export interface PoolUtilization {
+  id: string;
+  name: string;
+  pct: number;
+}
+
 /** A service offering as stored in app state (user-editable, may be partially filled). */
 export interface Offering {
   id?: string;
@@ -67,6 +82,8 @@ export interface Offering {
   marketHigh?: number;
   marketAvg?: number;
   marketNote?: string;
+  /** Optional id of a Resource this offering also consumes (same hours as its staff time). */
+  resource?: string;
   mixPct?: number;
   currentClients?: number;
 }
@@ -110,6 +127,8 @@ export interface CalcState {
   /** Card/payment processing fee as a % of list-price revenue; applied as a variable cost. */
   processingFeePct?: number;
   expenses?: Expense[];
+  /** Optional extra capacity pools; staff is always the implicit first pool. */
+  resources?: Resource[];
   productiveUtilizationPct?: number;
   targetUtilizationPct?: number;
   /** App-only fields, ignored by calc(). */
@@ -121,7 +140,7 @@ export interface CalcState {
 
 /** An offering in app state: the UI always fills every field. */
 // laborPctOfPrice, type, seats and fillPct stay optional: older saved states and templates omit them (0 / subscription / 1 / 100)
-export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'confidence' | 'note' | 'marketLow' | 'marketHigh' | 'marketAvg' | 'marketNote'>> & {
+export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'confidence' | 'note' | 'marketLow' | 'marketHigh' | 'marketAvg' | 'marketNote' | 'resource'>> & {
   laborPctOfPrice?: number;
   discountPct?: number;
   type?: OfferingType;
@@ -137,15 +156,17 @@ export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountP
   marketHigh?: number;
   marketAvg?: number;
   marketNote?: string;
+  resource?: string;
 };
 
 /**
  * The live app `state` global. calc() input stays CalcState because it also accepts the
  * legacy employees/hoursPerWeek/employeePay trio, which the app never sets.
  */
-export type AppState = Omit<CalcState, 'offerings' | 'employees' | 'hoursPerWeek' | 'employeePay'> &
-  Required<Omit<CalcState, 'offerings' | 'employees' | 'hoursPerWeek' | 'employeePay'>> & {
+export type AppState = Omit<CalcState, 'offerings' | 'employees' | 'hoursPerWeek' | 'employeePay' | 'resources'> &
+  Required<Omit<CalcState, 'offerings' | 'employees' | 'hoursPerWeek' | 'employeePay' | 'resources'>> & {
     offerings: AppOffering[];
+    resources?: Resource[];
     /** Legacy aliases read by scenario and sensitivity UI; absent in current app state. */
     employees?: number;
     hoursPerWeek?: number;
@@ -216,7 +237,10 @@ export interface ModeResults {
   clients: number;
   totalSessions: number;
   serviceHours: number;
+  /** Busiest pool's utilization (staff alone when no resources are active). */
   capacityPct: number;
+  poolUtilization: PoolUtilization[];
+  bottleneck: PoolUtilization;
   revenue: number;
   variableCosts: number;
   offeringMetrics: OfferingMetric[];
