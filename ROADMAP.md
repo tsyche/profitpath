@@ -8,11 +8,11 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **Item 20, multi-resource capacity pools** (~6-8 hrs): the biggest remaining accuracy gap for facility-based businesses.
-2. **12o remainder / 24c remainder / 24b remainder**: small follow-ups on partly shipped items (see their entries). The real-business trial UX items (12j-12l) and the cost rework (28-31) are done.
+1. **Items 25 and 26, tabs and sticky mini-summary**: the Setup column keeps growing (expenses, resources, ranges, market) and the experience-level gating of those sections is still ad hoc. Ranges & confidence, Market position and Capacity resources are now gated to intermediate+; item 25 should cover the remaining Setup sections.
+2. **12o remainder / 24c remainder / 24b remainder**: small follow-ups on partly shipped items (see their entries).
 3. **`labor-pct.spec.ts` flake** (12s): parked, not reproducible (see its entry).
 
-Shipped 2026-10-24/25: Duplicate offering button (12k), new rows take the unassigned mix (12l), one-time expenses amortized over useful life (30), processing fee % (29), Marketing expenses driving CAC (28), loans via Loan Payments (31), reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
+Shipped 2026-10-24/25: multi-resource capacity pools (20), Duplicate offering button (12k), new rows take the unassigned mix (12l), one-time expenses amortized over useful life (30), processing fee % (29), Marketing expenses driving CAC (28), loans via Loan Payments (31), reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
 
 ---
 
@@ -72,12 +72,6 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - Effort: ~2 hours
 
 **Business Model Fidelity** *(new category — found trialing a real hybrid subscription+hourly business, The Sound Stage, a voice/acting/recording studio)*
-
-20. **Multi-resource capacity pools**
-    - The single "Service Hours" capacity pool assumes every offering competes for the same bottleneck resource — true for a solo consultant, false for any facility-based business with genuinely separate constraints (e.g. a recording booth, a rehearsal room, and staff time, which can all run in parallel)
-    - Today the app could flag "over capacity" even when the actual constraining resource still has headroom, because everything funnels into one utilization number
-    - A multi-pool model (or at minimum optional resource tagging per offering, with capacity computed per resource) would meaningfully improve accuracy for any facility/studio/gym-style business, not just this one
-    - Effort: ~6-8 hours (meaningful capacity-model rework)
 
 22. **Per-offering confidence tagging (Verified / Estimated / Guess) + per-offering notes** *(PARTIAL, 2026-10-24: optional tag + 200-char note per offering, edited in the "Ranges & confidence" table; persisted via share URL, localStorage and CSV cols 17-18. SHIPPED link to outputs 2026-10-24: a "Fill ranges from confidence" button writes editable bounds (Estimated ±15%, Guess ±30%, Verified/untagged none; typed bounds kept) and the Outputs band lists the top 3 profit-swing drivers with their tags. The tag never silently weights a number. Remaining: user-configurable spread percentages if wanted, and a badge outside the Ranges table)*
     - Building a scenario before real data exists means mixing genuinely-known numbers (real list prices, verified from the business's own site) with invented ones (visit frequency, client counts) — today the *only* place to flag that distinction is one free-text Presentation Notes box for the entire scenario, which doesn't scale past a few offerings and ends up as one long disclaimer paragraph nobody reads closely enough to know which of 12 rows a given caveat applies to

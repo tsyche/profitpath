@@ -4,7 +4,10 @@ import { waitForPageReady } from './helpers';
 test.describe('Ranged inputs (low / high)', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
-      try { localStorage.setItem('onboardingCompleted', 'true'); } catch { /* ignore */ }
+      try {
+        localStorage.setItem('onboardingCompleted', 'true');
+        localStorage.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'intermediate' }));
+      } catch { /* ignore */ }
     });
     await page.goto('/');
     await waitForPageReady(page);
@@ -86,7 +89,10 @@ test.describe('Ranged inputs (low / high)', () => {
 test.describe('Confidence tags and notes', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
-      try { localStorage.setItem('onboardingCompleted', 'true'); } catch { /* ignore */ }
+      try {
+        localStorage.setItem('onboardingCompleted', 'true');
+        localStorage.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'intermediate' }));
+      } catch { /* ignore */ }
     });
     await page.goto('/');
     await waitForPageReady(page);

@@ -4,7 +4,10 @@ import { waitForPageReady } from './helpers';
 test.describe('Market position badge', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
-      try { localStorage.setItem('onboardingCompleted', 'true'); } catch { /* ignore */ }
+      try {
+        localStorage.setItem('onboardingCompleted', 'true');
+        localStorage.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'intermediate' }));
+      } catch { /* ignore */ }
     });
     await page.goto('/');
     await waitForPageReady(page);

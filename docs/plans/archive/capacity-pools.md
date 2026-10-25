@@ -1,8 +1,10 @@
 # Multi-resource capacity pools (ROADMAP item 20)
 
+> Archived 2026-10-25: shipped (ROADMAP 20); folded into AGENTS.md/CLAUDE.md Core Modules and docs/experience-levels.md.
+
 **TL;DR:** Let a scenario define optional named resources (booth, room, bay) with annual hours, and tag offerings to one. Each pool gets its own utilization; the busiest pool is the bottleneck and drives `capacityPct`, so untagged scenarios and every existing consumer behave exactly as today.
 
-**Status:** Building (Phases 1 calc and 2 persistence done 2026-10-25)
+**Status:** Shipped 2026-10-25
 **Fold into:** [AGENTS.md](../../AGENTS.md) "Core Modules" (calculation engine) and `docs/experience-levels.md`.
 
 ## Problem

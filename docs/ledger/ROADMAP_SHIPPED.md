@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-10-25 — 20. Multi-resource capacity pools
 - [x] 2026-10-25 — 12j. Offerings table view (closed, already satisfied)
 - [x] 2026-10-25 — 12k. Duplicate offering button
 - [x] 2026-10-25 — 12l. New offerings take the unassigned Mix %
@@ -324,3 +325,11 @@ Superseded by item 18: the per-session type does this conversion in the Price ce
     - Step-by-step flow walking users through 3-5 common scenarios ("what if I hired one more person?", "what if I raised prices 15%?") without requiring them to know which inputs to change
     - Natural delivery mechanism for the Reverse Calculator (live since 2026-10-24)
     - Effort: ~2-3 hours
+
+### 2026-10-25 — 20. Multi-resource capacity pools
+
+20. ✅ **Multi-resource capacity pools** *(SHIPPED 2026-10-25: optional named resources (booth, room, bay) with hours/week and weeks/year; offerings tag one resource and use it on top of staff time; `calc()` caps forecast clients per pool and reports `poolUtilization` and `bottleneck`, and `capacityPct` is the busiest pool. Untagged scenarios are unchanged. Setup "Capacity resources" section is intermediate+; Outputs shows a bottleneck line. Persisted via share URL, localStorage and CSV (RESOURCES section, offering Resource column by name). `src/calculations/resources.ts`, tests `resources.test.ts`, `resources-persistence.test.ts`, `tests/e2e/resources.spec.ts`)*
+    - The single "Service Hours" capacity pool assumes every offering competes for the same bottleneck resource — true for a solo consultant, false for any facility-based business with genuinely separate constraints (e.g. a recording booth, a rehearsal room, and staff time, which can all run in parallel)
+    - Today the app could flag "over capacity" even when the actual constraining resource still has headroom, because everything funnels into one utilization number
+    - A multi-pool model (or at minimum optional resource tagging per offering, with capacity computed per resource) would meaningfully improve accuracy for any facility/studio/gym-style business, not just this one
+    - Effort: ~6-8 hours (meaningful capacity-model rework)

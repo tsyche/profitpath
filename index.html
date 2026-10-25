@@ -535,7 +535,45 @@
           </div>
         </div>
 
-        <details class="section-box ranges-section" id="rangesSection">
+        <div class="section-box resources-section advanced-feature" id="resourcesSection">
+          <div class="section-h">
+            <h3>Capacity resources (optional)</h3>
+            <div class="section-actions">
+              <button class="btn" id="addResourceBtn" type="button"
+                title="Add a shared pool such as a booth, room, or bay that caps how many clients you can serve">Add resource</button>
+            </div>
+          </div>
+          <div class="smallprint">
+            Staff hours are one pool. Add a booth, room, or bay with its own weekly hours, then tag the offerings that use it.
+            A tagged offering uses both staff time and the resource; Outputs shows whichever fills first as the bottleneck.
+          </div>
+          <div class="table-wrap">
+            <table class="table resources-table" id="resourcesTable" aria-label="Capacity resources">
+              <thead>
+                <tr>
+                  <th title="What the resource is, for example Tanning booth">Resource</th>
+                  <th title="Hours per week it can be used">Hours/week</th>
+                  <th title="Weeks per year it is available">Weeks/year</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="resourcesBody"></tbody>
+            </table>
+          </div>
+          <div class="table-wrap" id="resourceTagWrap" hidden>
+            <table class="table resource-tag-table" id="resourceTagTable" aria-label="Which resource each offering uses">
+              <thead>
+                <tr>
+                  <th>Offering</th>
+                  <th title="The resource this offering also uses, besides staff time">Uses resource</th>
+                </tr>
+              </thead>
+              <tbody id="resourceTagBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <details class="section-box advanced-feature ranges-section" id="rangesSection">
           <summary><h3 style="display: inline">Ranges &amp; confidence (optional)</h3></summary>
           <div class="smallprint">
             Guessing fill or client counts? Enter a low and high; Outputs shows the min and max across all lows together and all highs together.
@@ -563,7 +601,7 @@
           </div>
         </details>
 
-        <details class="section-box market-section" id="marketSection">
+        <details class="section-box advanced-feature market-section" id="marketSection">
           <summary><h3 style="display: inline">Market position (optional)</h3></summary>
           <div class="smallprint">
             Enter what the market charges in the same units as your Price (per month, or per session for per-session rows). Green: inside the range and clears the price floor.
@@ -604,6 +642,7 @@
             <div id="capacityLabel" style="font-weight: 650; margin-top: 4px;"
               title="Current team utilization: how much of available billable hours are being used">Utilization: 0.0%
             </div>
+            <div id="bottleneckLine" class="smallprint" hidden></div>
           </div>
           <div class="meter" aria-hidden="true"
             title="Current team utilization: how much of available billable hours are being used">

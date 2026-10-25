@@ -5,6 +5,7 @@ import { calcRange, calcRangeDrivers, suggestRanges, sanitizeOfferingRange } fro
 import { marketBadge, sanitizeOfferingMarket } from '../src/calculations/marketPosition';
 import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../src/calculations/offeringMeta';
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, DEFAULT_LIFE_YEARS, monthlyCategorySpend, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
+import { sanitizeResources } from '../src/calculations/resources';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
@@ -644,6 +645,95 @@ function renderExpenses() {
   });
 }
 
+function addResource() {
+  const list = state.resources || (state.resources = []);
+  pushHistory();
+  list.push({ id: uuid(), name: 'Resource ' + (list.length + 1), hoursPerWeek: 40, weeksPerYear: 52 });
+  persistState();
+  render();
+}
+
+function renderResources() {
+  const tbody = $('#resourcesBody');
+  if (!tbody) return;
+  const list = state.resources || [];
+  tbody.innerHTML = list.map((r, idx) =>
+    '<tr><td class="cell-edit" data-label="Resource"><input aria-label="Resource name" type="text" maxlength="100" value="' + escapeHtml(r.name) + '" data-k="name" data-i="' + idx + '"/></td>' +
+    '<td class="cell-edit" data-label="Hours/week"><input aria-label="Hours per week for ' + escapeHtml(r.name) + '" type="number" min="0" max="168" step="1" value="' + r.hoursPerWeek + '" data-k="hoursPerWeek" data-i="' + idx + '"/></td>' +
+    '<td class="cell-edit" data-label="Weeks/year"><input aria-label="Weeks per year for ' + escapeHtml(r.name) + '" type="number" min="0" max="52" step="1" value="' + r.weeksPerYear + '" data-k="weeksPerYear" data-i="' + idx + '"/></td>' +
+    '<td class="cell-edit" data-label="Actions"><button class="btn small danger" data-action="removeResource" data-i="' + idx + '" aria-label="Remove ' + escapeHtml(r.name) + '">Remove</button></td></tr>').join('');
+  renderResourceTags();
+}
+
+function renderResourceTags() {
+  const wrap = $('#resourceTagWrap');
+  const body = $('#resourceTagBody');
+  if (!wrap || !body) return;
+  const list = state.resources || [];
+  wrap.hidden = list.length === 0;
+  body.innerHTML = list.length === 0 ? '' : state.offerings.map((o, idx) =>
+    '<tr><td data-label="Offering">' + escapeHtml(o.name) + '</td>' +
+    '<td class="cell-edit" data-label="Uses resource"><select aria-label="Resource used by ' + escapeHtml(o.name) + '" data-i="' + idx + '"><option value="">Staff only</option>' +
+    list.map(r => '<option value="' + escapeHtml(r.id) + '"' + (o.resource === r.id ? ' selected' : '') + '>' + escapeHtml(r.name) + '</option>').join('') + '</select></td></tr>').join('');
+}
+
+function refreshAfterResourceEdit() {
+  persistState();
+  try {
+    const metrics = calc(state);
+    window.lastMetrics = metrics;
+    updateOutputs(metrics);
+    updateValidationDisplay();
+  } catch (err) {
+    console.warn('Failed to refresh outputs on resource edit:', err);
+  }
+}
+
+/** @param {any} e */
+function onResourceInput(e) {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement)) return;
+  const k = el.dataset.k;
+  const row = /** @type {Record<string, any> | undefined} */ ((state.resources || [])[Number(el.dataset.i)]);
+  if (!k || !row) return;
+  const fieldKey = `res-${el.dataset.i}-${k}`;
+  if (fieldKey !== _lastHistoryField) {
+    pushHistory();
+    _lastHistoryField = fieldKey;
+  }
+  // Per-row sanitizer is the single source of truth for clamping and fallbacks
+  const clean = /** @type {Record<string, any>} */ (sanitizeResources([{ ...row, [k]: el.value }], () => row.id)[0]);
+  row[k] = clean[k];
+  refreshAfterResourceEdit();
+}
+
+/** @param {any} e */
+function onResourceTagChange(e) {
+  const el = e.target;
+  if (!(el instanceof HTMLSelectElement)) return;
+  const o = /** @type {Record<string, any> | undefined} */ (state.offerings[Number(el.dataset.i)]);
+  if (!o) return;
+  pushHistory();
+  // Only ids that exist are accepted; anything else clears the tag
+  if ((state.resources || []).some(r => r.id === el.value)) o.resource = el.value;
+  else delete o.resource;
+  refreshAfterResourceEdit();
+}
+
+/** @param {any} e */
+function onResourceClick(e) {
+  const btn = e.target.closest('button[data-action="removeResource"]');
+  if (!btn) return;
+  const i = Number(btn.dataset.i);
+  const list = state.resources || [];
+  if (!Number.isFinite(i) || !list[i]) return;
+  pushHistory();
+  const [gone] = list.splice(i, 1);
+  state.offerings.forEach(o => { if (o.resource === gone.id) delete o.resource; });
+  persistState();
+  render();
+}
+
 /** @param {any} e */
 function onExpenseInput(e) {
   const el = e.target;
@@ -955,6 +1045,7 @@ function render() {
 
   restoreTableFocus(focus);
   renderExpenses();
+  renderResources();
   renderRangesTable();
 
   // Mix/mode note (used as the "what am I editing" banner, especially on small screens).
@@ -1174,6 +1265,17 @@ function updateOutputs(metrics) {
         : 'Utilization: ' + (fmtPct1(metrics.capacityPct));
     }
 
+    const bottleneckLine = $('#bottleneckLine');
+    if (bottleneckLine) {
+      /** @type {import('../src/types').PoolUtilization[]} */
+      const pools = metrics.poolUtilization || [];
+      bottleneckLine.hidden = pools.length < 2;
+      if (pools.length >= 2) {
+        const others = pools.filter(p => p.id !== metrics.bottleneck.id).map(p => p.name + ' ' + fmtPct1(p.pct));
+        bottleneckLine.textContent = 'Bottleneck: ' + metrics.bottleneck.name + ' at ' + fmtPct1(metrics.bottleneck.pct) + ' (' + others.join(', ') + ')';
+      }
+    }
+
     // Lazy load simple revenue composition chart when visible
     if (typeof lazyLoadChart === 'function') lazyLoadChart(metrics);
 
@@ -1237,6 +1339,20 @@ $$('#controls select').forEach((el) => {
     body.addEventListener('input', onRangeInput);
     body.addEventListener('blur', () => { _lastHistoryField = null; }, true);
   }
+}
+{
+  const btn = $('#addResourceBtn');
+  if (btn) btn.addEventListener('click', addResource);
+  const body = $('#resourcesBody');
+  if (body) {
+    body.addEventListener('input', onResourceInput);
+    body.addEventListener('click', onResourceClick);
+    // A rename only lands in the tag dropdowns once editing finishes, so typing keeps focus
+    body.addEventListener('change', renderResourceTags);
+    body.addEventListener('blur', () => { _lastHistoryField = null; }, true);
+  }
+  const tagBody = $('#resourceTagBody');
+  if (tagBody) tagBody.addEventListener('change', onResourceTagChange);
 }
 {
   const btn = $('#addExpenseBtn');

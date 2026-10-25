@@ -14,6 +14,8 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Client mix optimizer: OFF
   - Insights & What-Ifs, What Would It Take?: OFF
   - Advanced charts (heat map, radar, funnel): OFF
+  - Capacity resources (booth, room pools): OFF
+  - Ranges & confidence, Market position: OFF
   - Debug panel: OFF
   - Performance metrics: OFF
   - Tooltips: ON
@@ -25,6 +27,8 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Sensitivity analysis: ON
   - Client mix optimizer: ON
   - Insights & What-Ifs, What Would It Take?: ON
+  - Capacity resources (booth, room pools): ON
+  - Ranges & confidence, Market position: ON
   - Advanced charts (heat map, radar, funnel): OFF
   - Debug panel: OFF
   - Performance metrics: OFF
@@ -37,6 +41,8 @@ These levels are implemented as feature gates in `src/settings/index.js` (see `F
   - Sensitivity analysis: ON
   - Client mix optimizer: ON
   - Insights & What-Ifs, What Would It Take?: ON
+  - Capacity resources (booth, room pools): ON
+  - Ranges & confidence, Market position: ON
   - Advanced charts (heat map, radar, funnel): ON
   - Debug panel: ON
   - Performance metrics: ON
