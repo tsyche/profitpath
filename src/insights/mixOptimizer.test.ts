@@ -114,6 +114,31 @@ describe('Client Mix Optimizer', () => {
     });
   });
 
+  describe('one-time offerings', () => {
+    const withOneTime = (state) => ({
+      ...state,
+      offerings: [
+        { ...state.offerings[0], mixPct: 35 },
+        { ...state.offerings[1], mixPct: 35 },
+        { name: 'Ebook', type: 'one-time', priceMonthly: 20, sessionsPerYear: 1, hoursPerSession: 0, variableCostPerSession: 2, mixPct: 30, currentClients: 10 }
+      ]
+    });
+
+    it('keeps the one-time share fixed instead of piling mix into hour-free sales', () => {
+      const state = withOneTime(mockState);
+      const result = optimizeMix(state, calc(state, { enableCache: false }), 'profit');
+      const mix = Object.fromEntries(result.suggestedMix.map((o) => [o.name, o.mixPct]));
+      expect(mix.Ebook).toBe(30);
+      expect(mix['High Margin'] + mix['Low Margin']).toBeCloseTo(70, 5);
+    });
+
+    it('returns null when fewer than two recurring offerings can move', () => {
+      const state = withOneTime(mockState);
+      state.offerings = [state.offerings[0], state.offerings[2]];
+      expect(optimizeMix(state, calc(state, { enableCache: false }), 'profit')).toBeNull();
+    });
+  });
+
   describe('optimizeMix() public API', () => {
     it('returns the same shape as MixOptimizer.optimize()', () => {
       const result = optimizeMix(mockState, mockMetrics, 'profit');

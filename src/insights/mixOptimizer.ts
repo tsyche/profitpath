@@ -4,7 +4,7 @@
  * (mixPct per offering) that maximizes profit or utilization within capacity.
  */
 
-import { calc } from '../calculations/index';
+import { calc, normalizeOfferingType } from '../calculations/index';
 
 const GRID_STEPS = 11; // 0%, 10%, ..., 100% per offering
 const MAX_GRID_OFFERINGS = 5; // grid search combinations grow combinatorially; beyond this, hill-climb only
@@ -88,13 +88,29 @@ export class MixOptimizer {
    */
   optimize(objective = 'profit') {
     const offerings = this.state?.offerings;
-    if (!Array.isArray(offerings) || offerings.length < 2) {
+    if (!Array.isArray(offerings)) {
       return null;
     }
 
+    // One-time sales use no staff hours and have no demand cap in the model, so the
+    // search would pour all mix into them. Keep their share fixed and search the rest.
+    const movable = offerings.map((o, idx) => idx).filter((idx) => normalizeOfferingType(offerings[idx].type) !== 'one-time');
+    if (movable.length < 2) {
+      return null;
+    }
+    const pinnedPct = offerings.reduce((sum, o, idx) => movable.includes(idx) ? sum : sum + (Number(o.mixPct) || 0), 0);
+    const budget = Math.max(0, 100 - pinnedPct);
+
+    // Maps a mix vector over the movable offerings (sums to 100) to a full mix vector.
+    const expand = (vec: number[]) => offerings.map((o, idx) => {
+      const k = movable.indexOf(idx);
+      return k === -1 ? (Number(o.mixPct) || 0) : vec[k] * budget / 100;
+    });
+
     const scoreOf = (result: any) => objective === 'utilization' ? result.capacityPct : result.income;
 
-    const runMix = (mixVector: any) => {
+    const runMix = (vec: any) => {
+      const mixVector = expand(vec);
       const testState = {
         ...this.state,
         mode: 'forecast',
@@ -103,8 +119,9 @@ export class MixOptimizer {
       return calc(testState, { enableCache: false });
     };
 
-    const candidates = offerings.length <= MAX_GRID_OFFERINGS ? generateGridCandidates(offerings.length) : [];
-    let bestMix = offerings.map((o) => Number(o.mixPct) || 0);
+    const candidates = movable.length <= MAX_GRID_OFFERINGS ? generateGridCandidates(movable.length) : [];
+    const movableTotal = movable.reduce((sum, idx) => sum + (Number(offerings[idx].mixPct) || 0), 0);
+    let bestMix = movable.map((idx) => movableTotal > 0 ? (Number(offerings[idx].mixPct) || 0) * 100 / movableTotal : 100 / movable.length);
     let bestResult = runMix(bestMix);
     let bestScore = scoreOf(bestResult);
 
@@ -125,6 +142,7 @@ export class MixOptimizer {
       bestResult = refinedResult;
       bestScore = scoreOf(refinedResult);
     }
+    const bestFullMix = expand(bestMix);
 
     const currentIncome = this.metrics?.income ?? 0;
     const currentCapacityPct = this.metrics?.capacityPct ?? 0;
@@ -132,7 +150,7 @@ export class MixOptimizer {
     return {
       objective,
       currentMix: offerings.map((o) => ({ name: o.name, mixPct: Number(o.mixPct) || 0 })),
-      suggestedMix: offerings.map((o, idx) => ({ name: o.name, mixPct: Math.round(bestMix[idx] * 10) / 10 })),
+      suggestedMix: offerings.map((o, idx) => ({ name: o.name, mixPct: Math.round(bestFullMix[idx] * 10) / 10 })),
       currentIncome,
       projectedIncome: bestResult.income,
       incomeDelta: bestResult.income - currentIncome,

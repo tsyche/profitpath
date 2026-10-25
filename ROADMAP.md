@@ -41,6 +41,11 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
    - Auto-refresh results when inputs change (today: press Calculate again); add a lever that combines pricing with volume
    - Effort: ~2-3 hours
 
+12w. **One-time rows in analytics** *(new, split off shipped 19)*
+   - Mix Optimizer fixed 2026-10-24: one-time rows keep their mix share fixed (they have no hours or demand cap, so the search piled 99% into them)
+   - Remaining: the offering ranking shows one-time rows at margin/hr 0 with status "ok"; show "n/a" instead
+   - Effort: ~30 min
+
 12v. **What-If wizard follow-ups** *(new, split off shipped 12)*
    - Combine levers in one scenario (price + hire); a market-aware "match market average" scenario; a "what's new" tie-in
    - Wizard hire counts full-time only; add a part-time option if asked for
