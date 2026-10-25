@@ -3,7 +3,7 @@
   "version": "0.8.55-beta",
   "description": "A lightweight client-side simulator for recurring service businesses",
   "type": "module",
-  "main": "assets/app.jsx",
+  "main": "assets/app.ts",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -25,13 +25,13 @@
     "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@vitejs/plugin-legacy": "^8.0.2",
-    "@vitest/ui": "^4.0.18",
+    "@vitest/ui": "^4.1.12",
     "eslint": "^10.1.0",
     "jsdom": "^28.1.0",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.71.2",
     "vite": "^8.3.5",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.12"
   },
   "keywords": [
     "business",

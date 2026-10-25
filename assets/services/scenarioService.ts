@@ -168,7 +168,7 @@ export function performLoad(scenario: any) {
     Object.assign(window.state, sanitized);
     window.state.loadedTemplate = null; // Clear template badge when loading scenarios
 
-    // Save loaded scenario as current state (app.jsx's zero-arg persistState)
+    // Save loaded scenario as current state (appState's zero-arg persistState)
     if (typeof window.persistState === 'function') window.persistState();
     window.render();
     // Don't close modal - let user continue working
@@ -238,7 +238,7 @@ export function initializeScenarios() {
   const scenariosBtn = document.getElementById('scenariosBtn');
   if (scenariosBtn) {
     scenariosBtn.addEventListener('click', () => {
-      // Open scenarios modal - this will be handled by the app.jsx
+      // Open scenarios modal - this will be handled by app.ts
       const modal = document.getElementById('scenariosModal');
       if (modal) {
         modal.classList.remove('hidden');

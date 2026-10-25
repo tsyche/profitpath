@@ -1,8 +1,8 @@
 # TypeScript migration
 
-**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-3b and Phase 4 steps 1-2 are done: `noImplicitAny` and `strictNullChecks` are on, and the CI ratchet is 94 errors, all in `assets/app.jsx` (Phase 5 split in progress). Vite and Vitest already handle `.ts`, so there is no build change.
+**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-5 and Phase 4 steps 1-2 are done: `noImplicitAny` and `strictNullChecks` are on, `assets/app.jsx` is split and renamed to `app.ts` (300 lines of boot wiring), and the CI ratchet is 0 errors. Remaining: the other strict flags (Phase 4 steps 3+) and Phase 6. Vite and Vitest already handle `.ts`, so there is no build change.
 
-**Status:** Building (Phases 0-3b done 2026-10-15; Phase 4 steps 1-2 done 2026-10-16)
+**Status:** Building (Phases 0-3b done 2026-10-15; Phase 4 steps 1-2 done 2026-10-16; Phase 5 done 2026-10-25)
 **Fold into:** [AGENTS.md](../../AGENTS.md) "TypeScript Support" section, then delete this plan.
 
 ## Why
@@ -18,7 +18,7 @@
 | `checkJs`, `strict: false` (current) | 301 |
 | `checkJs`, `strict: true` (target) | 1,235 |
 
-- **Non-strict hot spots:** `assets/app.jsx` 139, `assets/services/miscService.js` 27, `src/analytics/analytics-ui.js` 18, `assets/services/scenarioService.js` 16.
+- **Non-strict hot spots:** `assets/app.jsx` 139 (since split), `assets/services/miscService.js` 27, `src/analytics/analytics-ui.js` 18, `assets/services/scenarioService.js` 16.
 - **Non-strict causes:** mostly TS2339 (property does not exist, 241), usually untyped globals (`state`, `$`, `$$`, `XLSX`, `html2canvas`) and DOM elements typed as plain `Element`.
 - **Strict adds:** about 450 implicit-any parameters (TS7006) and about 460 property errors. This is where real typing work lives.
 - **Unaffected:** `vite build` passes unchanged; `tsc` is check-only (`noEmit`).
@@ -31,7 +31,7 @@ flowchart LR
   P1 --> P2[2. Shared types]
   P2 --> P3[3. Rename leaf-first]
   P3 --> P4[4. Strictness ladder]
-  P3 --> P5[5. Split and convert app.jsx]
+  P3 --> P5[5. Split and convert app.jsx, done]
   P4 --> P6[6. strict true, lock in]
   P5 --> P6
 ```
@@ -89,11 +89,13 @@ Turn flags on one at a time, fixing each before the next, in this order:
 3. `strictFunctionTypes`, `strictBindCallApply`, the rest
 4. `"strict": true` and delete the individual flags
 
-### Phase 5: `assets/app.jsx`
+### Phase 5: `assets/app.jsx` (done 2026-10-25)
 
-- Split in progress (2026-10-25): about 2,240 lines left, 94 errors. Step 1 done: onboarding/tour/help/tooltips (`Onboarding.ts`), debug/perf panels (`DebugPanel.ts`) and scenario comparison/CSV import (`ScenarioComparison.ts`) moved to `assets/components/` (deps-injected like the other panels). Step 2 done: sensitivity/sliders (`SensitivityPanel.ts`) and customer analytics, mix optimizer, insights, reverse, what-if wizard, advanced charts (`AnalysisPanels.ts`); `reverseHasRun`/timer now live in the module, so the top-level `let` ordering risk is gone for them. Next: then state, handler clusters, `render()`. No real JSX (it uses a custom `h` factory through a Vite `oxc.jsx` pragma override).
-- **Split first:** pull cohesive blocks into modules (dashboard, scenarios, export, etc.), then convert each as a normal Phase 3 file. Converting the monolith in place would be one unreviewable change.
-- Finish by renaming the entry to `app.ts`, updating `index.html` (`src="assets/app.jsx"`) and `package.json` `main`, and dropping the `oxc.jsx` pragma override in `vite.config.js`.
+- `app.jsx` (4,362 lines) is now `assets/app.ts` (about 300 lines: boot order, `window.*` globals, URL/localStorage load, `wire()`). The ratchet went 217 to 0.
+- **Modules:** `assets/state/{appState,hooks}.ts` (state, persistence, undo/redo; render callbacks for handlers) and `assets/components/{Onboarding,DebugPanel,ScenarioComparison,SensitivityPanel,AnalysisPanels,OfferingsTable,ExpensesPanel,ResourcesPanel,RangesMarketPanel,SettingsPanel,AppMenus,AppRender}.ts`, plus `assets/utils/{format,dom}.ts`.
+- **Pattern:** panels export `initX({ getState, ... })` or `bindX()`, called from `app.ts` where the old block ran. Handlers import `state`, `persistState`, `pushHistoryOnce` from `appState` and call `render` through `hooks.ts`, which avoids a cycle with `AppRender.ts`.
+- The custom `h` JSX pragma override is gone from `vite.config.js`; `index.html` and `package.json` `main` point at `app.ts`.
+- Bug found and fixed on the way: `wire()` ran twice, so Ctrl+Z undid two steps (`tests/e2e/undo-redo.spec.ts`).
 
 ### Phase 6: lock in
 

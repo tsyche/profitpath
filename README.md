@@ -12,7 +12,7 @@ Client-side profitability and capacity simulator for recurring service businesse
 
 ## What's included
 
-- `index.html`, `assets/app.jsx`, `assets/styles.css` — main app code (vanilla JS with Vite build system)
+- `index.html`, `assets/app.ts`, `assets/styles.css` — main app code (vanilla JS with Vite build system)
 - `src/calculations/` — modular calculation engine with caching and debug capabilities
 - `src/settings/` — experience level management and feature gating
 - `ROADMAP.md` — consolidated roadmap with completed features and planned improvements (single source of truth)

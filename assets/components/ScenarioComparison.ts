@@ -479,3 +479,74 @@ window.getComparisonEmbedCode = function (id1: string, id2: string) {
   });
 };
 
+/** Wires the Import CSV button and its drop zone; safe to call more than once. */
+export function bindCsvImport(): void {
+  const importBtn: any = document.querySelector('#importCSVBtn');
+  const csvFileInput: any = document.querySelector('#csvFileInput');
+  if (!importBtn || !csvFileInput || importBtn._importWired) return;
+  importBtn._importWired = true;
+
+  importBtn.addEventListener('click', () => {
+    createModal({
+      title: 'Import from CSV',
+      content: `
+        <p>Upload a CSV file to import your business settings and offerings.</p>
+        <div id="csvDropZone" style="border: 2px dashed #5eead4; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; background: rgba(94, 234, 212, 0.05);">
+          <div style="color: #5eead4; font-weight: 600; margin-bottom: 8px;">Click to select or drag and drop CSV</div>
+          <div style="font-size: 12px; color: var(--muted);">Supported: .csv files with business settings and offerings</div>
+        </div>
+      `,
+      size: 'medium'
+    });
+
+    // Wire the drop zone after modal renders
+    setTimeout(() => {
+      const zone = document.getElementById('csvDropZone');
+      if (!zone) return;
+
+      zone.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const input: any = document.getElementById('csvFileInput');
+        if (input && !input._pickerOpen) {
+          input._pickerOpen = true;
+          input.click();
+        }
+      });
+
+      zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        zone.style.borderColor = '#60a5fa';
+        zone.style.background = 'rgba(96, 165, 250, 0.1)';
+      });
+
+      zone.addEventListener('dragleave', () => {
+        zone.style.borderColor = '#5eead4';
+        zone.style.background = 'rgba(94, 234, 212, 0.05)';
+      });
+
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.style.borderColor = '#5eead4';
+        zone.style.background = 'rgba(94, 234, 212, 0.05)';
+        const file = e.dataTransfer?.files[0];
+        if (file) handleCSVImport(file);
+      });
+    }, 50);
+  });
+
+  csvFileInput.addEventListener('change', (e: any) => {
+    csvFileInput._pickerOpen = false;
+    if (e.target.files[0]) {
+      handleCSVImport(e.target.files[0]);
+    } else {
+      window.closeModal();
+    }
+    csvFileInput.value = '';
+  });
+
+  // Also clear the guard on cancel (browsers that fire 'cancel' instead of 'change')
+  csvFileInput.addEventListener('cancel', () => {
+    csvFileInput._pickerOpen = false;
+  });
+}

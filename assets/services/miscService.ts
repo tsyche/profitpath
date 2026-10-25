@@ -670,7 +670,7 @@ export function populateComparisonDropdowns(modalContext: any = null) {
   dropdown2.addEventListener('change', saveSelection);
 }
 
-// Additional functions needed by app.jsx
+// Additional functions needed by app.ts
 export function closeMobileMenu() {
   const overlay = document.getElementById('mobileMenuOverlay');
   const hamburger = document.getElementById('hamburgerBtn');
@@ -701,7 +701,7 @@ export function loadScenarioFromURL() {
     if (!sanitized) return false;
 
     // Mutate the existing state object in place — replacing window.state would
-    // orphan the reference app.jsx holds and the app would keep rendering the
+    // orphan the reference app.ts holds and the app would keep rendering the
     // old state
     Object.assign(window.state, sanitized);
     if (typeof window.render === 'function') window.render();

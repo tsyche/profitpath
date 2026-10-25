@@ -55,6 +55,6 @@ git pull --rebase && git push
 If you add a setting that should be gated by experience level:
 1. Add the key to `DEFAULT_SETTINGS` and all three `FEATURE_GATES` tiers in
    `src/settings/index.js`
-2. Add the DOM selector to `elementsToToggle` in `assets/app.jsx`'s
+2. Add the DOM selector to `elementsToToggle` in `assets/components/SettingsPanel.ts`'s
    `updateUIForSettings()`
 3. Update `docs/experience-levels.md`

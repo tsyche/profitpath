@@ -2,7 +2,7 @@
 
 ProfitPath exposes three experience levels that control which UI features are visible by default and which advanced controls are available in the Settings panel.
 
-These levels are implemented as feature gates in `src/settings/index.js` (see `FEATURE_GATES`) and applied in the UI by `assets/app.jsx` (`updateUIForSettings`). Use the Settings panel to change levels; the selection is persisted to `localStorage`.
+These levels are implemented as feature gates in `src/settings/index.js` (see `FEATURE_GATES`) and applied in the UI by `assets/components/SettingsPanel.ts` (`updateUIForSettings`). Use the Settings panel to change levels; the selection is persisted to `localStorage`.
 
 ## Levels and feature mapping (current)
 
@@ -76,7 +76,7 @@ The app hides/shows elements by toggling display on selectors tied to feature ke
 - `.advanced-charts-wrapper` — collapsible advanced charts panel (heat map, radar, funnel)
 - The "What if?" wizard (`#whatIfModal`, header and drawer) is not gated: it is available at every level.
 
-When adding a new feature flag, update `FEATURE_GATES` in `src/settings/index.js` and ensure the corresponding DOM elements are toggled in `assets/app.jsx`'s `updateUIForSettings`.
+When adding a new feature flag, update `FEATURE_GATES` in `src/settings/index.js` and ensure the corresponding DOM elements are toggled in `assets/components/SettingsPanel.ts`'s `updateUIForSettings`.
 
 ## Developer notes
 

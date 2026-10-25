@@ -9,7 +9,7 @@ declare global {
   // Test runner globals (vitest `globals: true`)
   var vi: any;
 
-  // DOM helpers defined in assets/app.jsx
+  // DOM helpers defined in assets/utils/dom.ts
   var $: any;
   var $$: any;
 

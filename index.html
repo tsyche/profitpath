@@ -1054,7 +1054,7 @@
   <script type="module" src="/src/analytics/feedback.ts"></script>
   <script type="module" src="/src/analytics/feedback-ui.ts"></script>
   <script type="module" src="/src/analytics/advanced-dashboard.ts"></script>
-  <script type="module" src="assets/app.jsx"></script>
+  <script type="module" src="assets/app.ts"></script>
   <script>
     function showAnalyticsDashboard() {
       try {
@@ -1108,7 +1108,7 @@
     };
 
     // Flip light/dark, persist the choice, and keep the toggle icon + browser
-    // theme-color in sync. Kept as a plain global so it needs no app.jsx wiring.
+    // theme-color in sync. Kept as a plain global so it needs no app.ts wiring.
     function applyThemeIcon(theme) {
       var btn = document.getElementById('themeToggleBtn');
       if (btn) {
