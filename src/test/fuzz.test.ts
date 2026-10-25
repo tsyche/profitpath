@@ -62,6 +62,16 @@ function fuzzState(rand) {
       ? pick(rand, [null, undefined, 'nope', 42, {}])
       : Array.from({ length: offeringCount }, () => fuzzOffering(rand)),
     monthlyCosts: fuzzNumber(rand, 0, 100000),
+    resources: rand() < 0.1
+      ? pick(rand, [null, undefined, 'nope', 42, {}])
+      : Array.from({ length: Math.floor(rand() * 4) }, () => rand() < 0.05
+        ? pick(rand, [null, 42, 'junk'])
+        : {
+          id: pick(rand, ['booth', 'staff', 'booth', '', null, 7]),
+          name: pick(rand, ['Booth', ...HOSTILE_VALUES]),
+          hoursPerWeek: fuzzNumber(rand, 0, 300),
+          weeksPerYear: fuzzNumber(rand, 0, 80)
+        }),
     expenses: rand() < 0.1
       ? pick(rand, [null, undefined, 'nope', 42, {}])
       : Array.from({ length: Math.floor(rand() * 5) }, () => rand() < 0.05
@@ -174,10 +184,25 @@ describe('Fuzz: sanitizeScenarioState', () => {
         'mode', 'offerings', 'fullTimeEmployees', 'partTimeEmployees',
         'fullTimeEmployeePay', 'partTimeEmployeePay', 'monthlyCosts', 'processingFeePct',
         'productiveUtilizationPct', 'targetUtilizationPct', 'lockMix', 'loadedTemplate',
-        'notes', 'currency', 'expenses'
+        'notes', 'currency', 'expenses', 'resources'
       ]);
       for (const key of Object.keys(result)) {
         expect(allowed.has(key), `unexpected key ${key} at iteration=${i}`).toBe(true);
+      }
+
+      expect(Array.isArray(result.resources)).toBe(true);
+      const resourceIds = new Set<string>();
+      for (const r of result.resources) {
+        expect(r.id).not.toBe('staff');
+        expect(resourceIds.has(r.id)).toBe(false);
+        resourceIds.add(r.id);
+        expect(r.hoursPerWeek).toBeGreaterThanOrEqual(0);
+        expect(r.hoursPerWeek).toBeLessThanOrEqual(168);
+        expect(r.weeksPerYear).toBeGreaterThanOrEqual(0);
+        expect(r.weeksPerYear).toBeLessThanOrEqual(52);
+      }
+      for (const o of result.offerings) {
+        if (o.resource !== undefined) expect(resourceIds.has(o.resource)).toBe(true);
       }
 
       expect(Array.isArray(result.expenses)).toBe(true);

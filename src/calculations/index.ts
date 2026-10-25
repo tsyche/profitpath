@@ -222,6 +222,11 @@ function sanitizeOfferings(offerings: Offering[], feePct = 0, resourceIds: Reado
     .filter((o) => o.name.length > 0);
 }
 
+/** Staff load as a % of capacity; a near-zero capacity divisor is capped so the result stays finite. */
+function utilizationPct(hours: number, capacityHours: number): number {
+  return capacityHours > 0 ? Math.min((hours / capacityHours) * 100, 1e9) : 0;
+}
+
 /**
  * Calculates capacity and utilization metrics
  */
@@ -301,7 +306,7 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
 
   // A resource that binds leaves staff under target; otherwise staff sits at target as before
   const serviceHours = clients < staffClients ? clients * serviceHoursPerClient : capacity.targetServiceHours;
-  const staffPct = capacity.annualServiceHours > 0 ? (serviceHours / capacity.annualServiceHours) * 100 : 0;
+  const staffPct = utilizationPct(serviceHours, capacity.annualServiceHours);
   const { poolUtilization, bottleneck } = buildPools(staffPct, resources, poolHoursPerClient.map((h) => h * clients));
   const capacityPct = bottleneck.pct;
 
@@ -366,8 +371,7 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
     variableCosts += offeringVariableCosts;
   });
 
-  const staffPct = capacity.annualServiceHours > 0 ?
-    (serviceHours / capacity.annualServiceHours) * 100 : 0;
+  const staffPct = utilizationPct(serviceHours, capacity.annualServiceHours);
   const { poolUtilization, bottleneck } = buildPools(staffPct, resources,
     resources.map((r) => offerings.reduce((acc, o) => o.resource === r.id ? acc + currentStaffHours(o) : acc, 0)));
   const capacityPct = bottleneck.pct;

@@ -242,6 +242,7 @@ const state = {
   monthlyCosts: 250,
   processingFeePct: 0, // card/payment fee as % of revenue
   expenses: [],
+  resources: [], // extra capacity pools (booth, room) offerings can be tagged with
   productiveUtilizationPct: 80, // percent of hours available for service delivery
   targetUtilizationPct: 75, // forecasting target
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings
@@ -754,6 +755,7 @@ function resetDefaults() {
   state.monthlyCosts = 250;
   state.processingFeePct = 0;
   state.expenses = [];
+  state.resources = [];
   state.productiveUtilizationPct = 80;
   state.targetUtilizationPct = 75;
   state.mode = 'forecast';
@@ -1841,7 +1843,7 @@ function handleCSVImport(file) {
       return;
     }
 
-    const { settings, offerings, expenses } = /** @type {any} */ (result.data);
+    const { settings, offerings, expenses, resources } = /** @type {any} */ (result.data);
 
     // Apply imported settings to state
     if (settings.employees !== undefined) state.fullTimeEmployees = settings.employees;
@@ -1853,9 +1855,10 @@ function handleCSVImport(file) {
     if (settings.productiveUtilizationPct !== undefined) state.productiveUtilizationPct = settings.productiveUtilizationPct;
     if (settings.targetUtilizationPct !== undefined) state.targetUtilizationPct = settings.targetUtilizationPct;
 
-    // Apply imported offerings; expenses only when the CSV had that section
+    // Apply imported offerings; expenses and resources only when the CSV had that section
     if (offerings.length > 0) state.offerings = offerings;
     if (expenses !== undefined) state.expenses = expenses;
+    if (resources !== undefined) state.resources = resources;
 
     persistState();
     render();
@@ -3550,6 +3553,7 @@ function loadOnboardingIndustryTemplate(industryId) {
     state.monthlyCosts = config.monthlyCosts || 250;
     state.processingFeePct = config.processingFeePct || 0;
     state.expenses = [];
+    state.resources = [];
     state.productiveUtilizationPct = config.productiveUtilizationPct || 80;
     state.targetUtilizationPct = config.targetUtilizationPct || 85;
 

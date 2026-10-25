@@ -371,4 +371,5 @@ export interface SanitizedScenarioState extends CalcState {
   notes: string;
   currency: CurrencyCode;
   expenses: Expense[];
+  resources: Resource[];
 }

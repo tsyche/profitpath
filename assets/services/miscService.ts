@@ -15,6 +15,7 @@ import { rangeCsvCells, sanitizeOfferingRange } from '../../src/calculations/ran
 import { marketCsvCells, sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
 import { normalizeConfidence, sanitizeNote, sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
 import { sanitizeExpenses, totalMonthlyOverhead } from '../../src/calculations/expenses';
+import { sanitizeResources } from '../../src/calculations/resources';
 import { fmtMoney0, normalizeCurrency, taxBasisNote } from '../../src/calculations/currency';
 import { showToast } from './modalService';
 import { createModal } from '../components/Modal';
@@ -76,6 +77,8 @@ const MAX_NAME_LENGTH = 120;
 export function sanitizeScenarioState(data: Record<string, any>): import('../../src/types').SanitizedScenarioState | null {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
 
+  const resources = sanitizeResources(data.resources, uuid);
+  const resourceIds = new Set(resources.map((r) => r.id));
   const rawOfferings = Array.isArray(data.offerings) ? data.offerings.slice(0, MAX_OFFERINGS) : [];
   const offerings = rawOfferings
     .filter((o) => o && typeof o === 'object')
@@ -95,7 +98,9 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
       currentClients: Math.floor(toFiniteNumber(o.currentClients, 0, 0, 1e7)),
       ...sanitizeOfferingRange(o),
       ...sanitizeOfferingMeta(o),
-      ...sanitizeOfferingMarket(o)
+      ...sanitizeOfferingMarket(o),
+      // A tag pointing at a resource that no longer exists is dropped
+      ...(typeof o.resource === 'string' && resourceIds.has(o.resource) ? { resource: o.resource } : {})
     }));
 
   if (offerings.length === 0) return null;
@@ -115,7 +120,8 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
     loadedTemplate: typeof data.loadedTemplate === 'string' ? data.loadedTemplate.slice(0, 100) : null,
     notes: typeof data.notes === 'string' ? data.notes.slice(0, 2000) : '',
     currency: normalizeCurrency(data.currency),
-    expenses: sanitizeExpenses(data.expenses, uuid)
+    expenses: sanitizeExpenses(data.expenses, uuid),
+    resources
   };
 }
 
@@ -215,6 +221,11 @@ export function csvCell(value: any) {
   return '"' + s.replace(/"/g, '""') + '"';
 }
 
+// Name of the resource an offering is tagged with, or '' (CSV carries names; import resolves them back to ids)
+function resourceName(o: any, resources: unknown): string {
+  return sanitizeResources(resources).find((r) => r.id === o.resource)?.name || '';
+}
+
 // Builds the CSV report; importFromCSV reads the parameters, offerings and expenses sections back
 export function buildCSV(st: any, results: any) {
   const lines = [
@@ -242,18 +253,23 @@ export function buildCSV(st: any, results: any) {
     'Capacity Utilization,' + (fmtPct1(results.capacityPct || 0)) + ',%',
     '',
     'SERVICE OFFERINGS',
-    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High,Best Discount %,Confidence,Note,Market Low,Market High,Market Avg,Market Note',
+    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High,Best Discount %,Confidence,Note,Market Low,Market High,Market Avg,Market Note,Resource',
   ];
 
   st.offerings.forEach((o: any) => {
     lines.push(
-      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100) + ',' + rangeCsvCells(o) + ',' + (o.discountPct || 0) + ',' + (normalizeConfidence(o.confidence) || '') + ',' + csvCell(sanitizeNote(o.note) || '') + ',' + marketCsvCells(o).join(',') + ',' + csvCell(sanitizeNote(o.marketNote) || '')
+      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100) + ',' + rangeCsvCells(o) + ',' + (o.discountPct || 0) + ',' + (normalizeConfidence(o.confidence) || '') + ',' + csvCell(sanitizeNote(o.note) || '') + ',' + marketCsvCells(o).join(',') + ',' + csvCell(sanitizeNote(o.marketNote) || '') + ',' + csvCell(resourceName(o, st.resources))
     );
   });
 
   lines.push('', 'FIXED EXPENSES', 'Name,Category,Amount,Frequency,Life (yrs)');
   sanitizeExpenses(st.expenses).forEach((e) => {
     lines.push(csvCell(e.name) + ',' + csvCell(e.category) + ',' + e.amount + ',' + e.frequency + ',' + e.lifeYears);
+  });
+
+  lines.push('', 'RESOURCES', 'Name,Hours/week,Weeks/year');
+  sanitizeResources(st.resources).forEach((r) => {
+    lines.push(csvCell(r.name) + ',' + r.hoursPerWeek + ',' + r.weeksPerYear);
   });
 
   return lines.join('\n');
@@ -737,6 +753,7 @@ export function loadIndustryTemplate(templateId: any) {
     window.state.partTimeEmployeePay = config.partTimeEmployeePay || 30000;
     window.state.monthlyCosts = config.monthlyCosts;
     window.state.expenses = [];
+    window.state.resources = [];
     window.state.productiveUtilizationPct = config.productiveUtilizationPct;
     window.state.targetUtilizationPct = config.targetUtilizationPct;
 
@@ -775,12 +792,12 @@ export function exportAsExcel() {
     'Target Utilization,' + fmtPct(state.targetUtilizationPct),
     '',
     'SERVICE OFFERINGS',
-    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients,Labor % of Price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High,Best Discount %,Confidence,Note,Market Low,Market High,Market Avg,Market Note'
+    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients,Labor % of Price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High,Best Discount %,Confidence,Note,Market Low,Market High,Market Avg,Market Note,Resource'
   ];
 
   state.offerings.forEach((o) => {
     lines.push(
-      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${o.laborPctOfPrice || 0},${normalizeOfferingType(o.type)},${o.seats || 1},${o.fillPct || 100},${rangeCsvCells(o)},${o.discountPct || 0},${normalizeConfidence(o.confidence) || ''},${csvCell(sanitizeNote(o.note) || '')},${marketCsvCells(o).join(',')},${csvCell(sanitizeNote(o.marketNote) || '')}`
+      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${o.laborPctOfPrice || 0},${normalizeOfferingType(o.type)},${o.seats || 1},${o.fillPct || 100},${rangeCsvCells(o)},${o.discountPct || 0},${normalizeConfidence(o.confidence) || ''},${csvCell(sanitizeNote(o.note) || '')},${marketCsvCells(o).join(',')},${csvCell(sanitizeNote(o.marketNote) || '')},${csvCell(resourceName(o, state.resources))}`
     );
   });
 
@@ -1456,11 +1473,12 @@ const SETTINGS_KEYS: Record<string, string> = {
   targetutilizationpct: 'targetUtilizationPct', 'target utilization': 'targetUtilizationPct'
 };
 
-function csvSectionOf(line: string): 'settings' | 'offerings' | 'expenses' | 'none' | null {
+function csvSectionOf(line: string): 'settings' | 'offerings' | 'expenses' | 'resources' | 'none' | null {
   const isComment = line.startsWith('#');
   const text = line.replace(/^#\s*/, '').trim();
   if (text.includes(',')) return null;
   if (/^(fixed )?expenses$/i.test(text)) return 'expenses';
+  if (/^resources$/i.test(text)) return 'resources';
   if (/^(service )?offerings$/i.test(text)) return 'offerings';
   if (/^(business )?(settings|parameters)$/i.test(text)) return 'settings';
   return isComment ? null : 'none';
@@ -1471,18 +1489,22 @@ export function importFromCSV(csvText: any) {
   const settings: Record<string, any> = {};
   const offerings = [];
   const rawExpenses: Array<Record<string, unknown>> = [];
+  const rawResources: Array<Record<string, unknown>> = [];
+  const resourceNames: string[] = []; // per imported offering, aligned with `offerings`
 
   try {
     const lines = csvText.split('\n').map((line: any) => line.trim()).filter((line: any) => line);
 
-    let section: 'settings' | 'offerings' | 'expenses' | 'none' = 'none';
+    let section: 'settings' | 'offerings' | 'expenses' | 'resources' | 'none' = 'none';
     let headerSeen = false;
     let sawExpenses = false;
+    let sawResources = false;
 
     for (const line of lines) {
       const next = csvSectionOf(line);
       if (next) {
         if (next === 'expenses') sawExpenses = true;
+        if (next === 'resources') sawResources = true;
         section = next;
         headerSeen = false;
         continue;
@@ -1509,6 +1531,12 @@ export function importFromCSV(csvText: any) {
         if (!headerSeen) { headerSeen = true; continue; }
         const [name, category, amount, frequency, lifeYears] = splitCsvLine(line);
         if (name) rawExpenses.push({ name, category, amount: parseFloat(amount), frequency: (frequency || '').toLowerCase(), lifeYears: parseFloat(lifeYears) });
+      }
+
+      if (section === 'resources') {
+        if (!headerSeen) { headerSeen = true; continue; }
+        const [name, hoursPerWeek, weeksPerYear] = splitCsvLine(line);
+        if (name) rawResources.push({ name, hoursPerWeek: parseFloat(hoursPerWeek), weeksPerYear: parseFloat(weeksPerYear) });
       }
 
       if (section === 'offerings') {
@@ -1561,11 +1589,22 @@ export function importFromCSV(csvText: any) {
         }
 
         offerings.push(offering);
+        // Column 23 is optional: the tagged resource's name, resolved to an id below
+        resourceNames.push(values[22] || '');
       }
     }
 
     // undefined means the CSV had no expenses section (legacy file): callers keep existing expenses
     const expenses = sawExpenses ? sanitizeExpenses(rawExpenses, uuid) : undefined;
+
+    // undefined means the CSV had no resources section: callers keep existing resources and tags
+    const resources = sawResources ? sanitizeResources(rawResources, uuid) : undefined;
+    if (resources) {
+      offerings.forEach((o: any, i) => {
+        const match = resources.find((r) => r.name === resourceNames[i]);
+        if (match) o.resource = match.id;
+      });
+    }
 
     // Validate offerings
     if (offerings.length === 0) {
@@ -1574,7 +1613,7 @@ export function importFromCSV(csvText: any) {
     }
 
     // Success
-    return { success: true, data: { settings, offerings, expenses }, errors };
+    return { success: true, data: { settings, offerings, expenses, resources }, errors };
   } catch (e) {
     return { success: false, errors: [`Parse error: ${e.message}`] };
   }
