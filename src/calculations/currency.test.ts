@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { normalizeCurrency, formatMoney0, fmtMoney0, fmtMoneyK } from './currency';
+import { normalizeCurrency, formatMoney0, fmtMoney0, fmtMoneyK, taxBasisNote } from './currency';
 import { sanitizeScenarioState } from '../../assets/services/miscService';
 
 const base = { offerings: [{ name: 'A', priceMonthly: 100 }] };
@@ -34,5 +34,13 @@ describe('currency', () => {
     expect(sanitizeScenarioState({ ...base, currency: 'EUR' })?.currency).toBe('EUR');
     expect(sanitizeScenarioState({ ...base, currency: 'bogus' })?.currency).toBe('USD');
     expect(sanitizeScenarioState(base)?.currency).toBe('USD');
+  });
+
+  it('taxBasisNote is silent for USD and names the currency otherwise (12t)', () => {
+    expect(taxBasisNote('USD')).toBe('');
+    expect(taxBasisNote(undefined)).toBe('');
+    expect(taxBasisNote('bogus')).toBe('');
+    expect(taxBasisNote('EUR')).toContain('EUR');
+    expect(taxBasisNote('EUR')).toContain('US tax rules');
   });
 });

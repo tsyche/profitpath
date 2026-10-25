@@ -6,6 +6,7 @@
 
 - [x] 2026-10-24 — 12. Guided "What If?" wizard (also fixed the Insights "Add 1 employee" what-if showing +$0)
 - [x] 2026-10-24 — 12c. E2E coverage for Mix Optimizer & Advanced Charts panels (found and fixed an XSS)
+- [x] 2026-10-24 — 12t. Tax section and report say US rules apply in non-USD scenarios
 - [x] 2026-10-24 — 12f. App version shown in Settings
 - [x] 2026-10-24 — 18. First-class per-session pricing type
 - [x] 2026-10-24 — 19. One-time / bundled purchase line items
@@ -38,6 +39,14 @@
 ## Archived entries
 
 Dates are the documented ship date; where the roadmap gave only a month, that month is shown.
+
+### 2026-10-24 — 12t. Tax section and report say US rules apply in non-USD scenarios
+
+12t. **Tax report shows US-tax figures in non-USD scenarios** *(new, left over from 12e)*
+   - Label the report as US-tax-based or hide the tax section when the scenario currency is not USD
+   - Effort: ~1 hour
+
+**Shipped 2026-10-24 as a label, not a hide:** `taxBasisNote()` in `src/calculations/currency.ts` adds 'US tax rules applied to EUR amounts' to the on-screen Tax Estimates disclaimer and the financial report's tax section. Numbers are unchanged (take-home feeds the reverse calculator). Tests `currency.test.ts`, `tests/e2e/currency.spec.ts`.
 
 ### 2026-10-24 — 18. First-class per-session pricing type
 

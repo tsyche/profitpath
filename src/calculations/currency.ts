@@ -28,3 +28,9 @@ export function fmtMoneyK(n: number): string {
   const symbol = fmtMoney0(0).replace(/[\d\s.,]/g, '');
   return symbol + Math.round(n / 1000) + 'k';
 }
+
+/** Tax figures always apply US rules (calculateTax); outside USD the amounts are not a local tax estimate. */
+export function taxBasisNote(currency: unknown): string {
+  const code = normalizeCurrency(currency);
+  return code === 'USD' ? '' : `US tax rules applied to ${code} amounts, not a ${code} tax estimate`;
+}

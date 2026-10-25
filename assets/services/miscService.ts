@@ -15,7 +15,7 @@ import { rangeCsvCells, sanitizeOfferingRange } from '../../src/calculations/ran
 import { marketCsvCells, sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
 import { normalizeConfidence, sanitizeNote, sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
 import { sanitizeExpenses, totalMonthlyOverhead } from '../../src/calculations/expenses';
-import { fmtMoney0, normalizeCurrency } from '../../src/calculations/currency';
+import { fmtMoney0, normalizeCurrency, taxBasisNote } from '../../src/calculations/currency';
 import { showToast } from './modalService';
 import { createModal } from '../components/Modal';
 import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizations, updateBreakEvenAnalysis } from './visualizationService';
@@ -978,6 +978,8 @@ export function exportAsFinancialReport() {
   }
 
   const fmt = fmtMoney0;
+  const basis = taxBasisNote((globalThis as any).state?.currency);
+  const taxNote = basis ? `<p class="tax-note"><strong>${basis}.</strong></p>` : '';
   const fmtPct = (n: any) => (typeof n === 'number' ? n.toFixed(1) : '0.0') + '%';
   const today = new Date();
   const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -1098,6 +1100,7 @@ export function exportAsFinancialReport() {
   <p class="tax-note">Note: Quarterly figures assume uniform distribution. Actual results may vary with seasonality.</p>
 
   <h2>Tax Liability Estimate — ${year}</h2>
+  ${taxNote}
   <table>
     <tr><th>Tax Component</th><th>Amount</th><th>Notes</th></tr>
     <tr><td>Self-Employment Tax (SE)</td><td>${fmt(metrics.seTax || 0)}</td><td>15.3% on first $168,600; 2.9% above (on 92.35% of income)</td></tr>

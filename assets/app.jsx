@@ -17,7 +17,7 @@ import { getAllScenarios, encodeScenarioToURL, decodeScenarioFromURL, isReadOnly
 import { uuid, clamp } from './utils/helpers';
 import { showToast } from './services/modalService';
 import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui';
-import { fmtMoney0, normalizeCurrency } from '../src/calculations/currency';
+import { fmtMoney0, normalizeCurrency, taxBasisNote } from '../src/calculations/currency';
 import { optimizeMix } from '../src/insights/mixOptimizer';
 import { generateInsights, generateWhatIfScenarios } from '../src/insights/insightsEngine';
 import { wizardScenarios, previewScenario } from '../src/insights/whatIfWizard';
@@ -1109,6 +1109,11 @@ function updateOutputs(metrics) {
     }
 
     // Tax estimates
+    const taxDisclaimer = $('#taxDisclaimer');
+    if (taxDisclaimer) {
+      const basis = taxBasisNote(state.currency);
+      taxDisclaimer.textContent = (basis ? basis + ' · ' : '') + 'Simplified US federal only · Consult a tax professional';
+    }
     const kpiSeTax = $('#kpiSeTax');
     const kpiFederalTax = $('#kpiFederalTax');
     const kpiQuarterly = $('#kpiQuarterly');

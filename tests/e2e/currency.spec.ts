@@ -23,6 +23,12 @@ test.describe('Scenario currency', () => {
     await expect(page.locator('#kpiRevenue')).not.toContainText('$');
   });
 
+  test('the tax section says US rules apply once the currency is not USD', async ({ page }) => {
+    await expect(page.locator('#taxDisclaimer')).not.toContainText('US tax rules applied');
+    await pickEuro(page);
+    await expect(page.locator('#taxDisclaimer')).toContainText('US tax rules applied to EUR amounts');
+  });
+
   test('the Excel export uses the selected currency', async ({ page }) => {
     await pickEuro(page);
     const [download] = await Promise.all([

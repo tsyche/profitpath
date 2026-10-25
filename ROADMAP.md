@@ -10,9 +10,9 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 1. **Reverse calculator follow-ups** (12r) and the **"What If?" wizard follow-ups** (12v): auto-refresh, a combined pricing and volume lever, and wizard scenarios that combine levers.
 2. **Fix `labor-pct.spec.ts` flake** (12s, ~1 hr).
-3. **Tax report shows US-tax figures in non-USD scenarios** (12t).
+3. **Share links are point-in-time snapshots** warning (12u, ~30 min).
 
-Shipped 2026-10-24: one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
+Shipped 2026-10-24: US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
 
 ---
 
@@ -48,10 +48,6 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
 
 12s. **Fix: `labor-pct.spec.ts` flakes under full-suite load** *(new)*
    - Passes alone, fails intermittently in the full Playwright run; find the race or timeout instead of retrying it away
-   - Effort: ~1 hour
-
-12t. **Tax report shows US-tax figures in non-USD scenarios** *(new, left over from 12e)*
-   - Label the report as US-tax-based or hide the tax section when the scenario currency is not USD
    - Effort: ~1 hour
 
 12u. **Warn that share links are point-in-time snapshots** *(new, 12o option c)*
