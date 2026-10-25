@@ -16,6 +16,7 @@ import { marketCsvCells, sanitizeOfferingMarket } from '../../src/calculations/m
 import { normalizeConfidence, sanitizeNote, sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
 import { sanitizeExpenses, totalMonthlyOverhead } from '../../src/calculations/expenses';
 import { sanitizeResources } from '../../src/calculations/resources';
+import { sanitizePlans, sanitizeProfiles, pruneMembership } from '../../src/calculations/membership';
 import { fmtMoney0, normalizeCurrency, taxBasisNote } from '../../src/calculations/currency';
 import { showToast } from './modalService';
 import { createModal } from '../components/Modal';
@@ -105,6 +106,9 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
 
   if (offerings.length === 0) return null;
 
+  // Plans and profiles reference offerings by id; references to missing offerings are dropped
+  const membership = pruneMembership(sanitizePlans(data.membershipPlans, uuid), sanitizeProfiles(data.memberProfiles, uuid), new Set(offerings.map((o) => o.id)));
+
   return {
     mode: data.mode === 'current' ? 'current' : 'forecast',
     offerings,
@@ -121,7 +125,9 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
     notes: typeof data.notes === 'string' ? data.notes.slice(0, 2000) : '',
     currency: normalizeCurrency(data.currency),
     expenses: sanitizeExpenses(data.expenses, uuid),
-    resources
+    resources,
+    membershipPlans: membership.plans,
+    memberProfiles: membership.profiles
   };
 }
 
@@ -270,6 +276,19 @@ export function buildCSV(st: any, results: any) {
   lines.push('', 'RESOURCES', 'Name,Hours/week,Weeks/year');
   sanitizeResources(st.resources).forEach((r) => {
     lines.push(csvCell(r.name) + ',' + r.hoursPerWeek + ',' + r.weeksPerYear);
+  });
+
+  // Plans and profiles carry offering names (as JSON cells, so any character survives); import resolves them back to ids
+  const nameOf = new Map<string, string>((st.offerings || []).map((o: any) => [o.id, o.name]));
+  const namesOf = (ids: string[]) => ids.map((id) => nameOf.get(id)).filter((n) => n !== undefined);
+  lines.push('', 'MEMBERSHIP PLANS', 'Name,Monthly Fee,Credits/month,Member Discount %,Credits At Member Price,Eligible Offerings');
+  sanitizePlans(st.membershipPlans).forEach((p) => {
+    lines.push([csvCell(p.name), p.monthlyFee, p.creditsPerMonth, p.memberDiscountPct, p.creditsAtMemberPrice ? 'yes' : 'no', csvCell(JSON.stringify(namesOf(p.eligible)))].join(','));
+  });
+  lines.push('', 'MEMBER PROFILES', 'Name,Visits/month by offering');
+  sanitizeProfiles(st.memberProfiles).forEach((p) => {
+    const visits = Object.fromEntries(Object.entries(p.visits).filter(([id]) => nameOf.has(id)).map(([id, v]) => [nameOf.get(id), v]));
+    lines.push(csvCell(p.name) + ',' + csvCell(JSON.stringify(visits)));
   });
 
   return lines.join('\n');
@@ -754,6 +773,8 @@ export function loadIndustryTemplate(templateId: any) {
     window.state.monthlyCosts = config.monthlyCosts;
     window.state.expenses = [];
     window.state.resources = [];
+    window.state.membershipPlans = [];
+    window.state.memberProfiles = [];
     window.state.productiveUtilizationPct = config.productiveUtilizationPct;
     window.state.targetUtilizationPct = config.targetUtilizationPct;
 
@@ -1473,15 +1494,29 @@ const SETTINGS_KEYS: Record<string, string> = {
   targetutilizationpct: 'targetUtilizationPct', 'target utilization': 'targetUtilizationPct'
 };
 
-function csvSectionOf(line: string): 'settings' | 'offerings' | 'expenses' | 'resources' | 'none' | null {
+type CsvSection = 'settings' | 'offerings' | 'expenses' | 'resources' | 'plans' | 'profiles' | 'none';
+
+function csvSectionOf(line: string): CsvSection | null {
   const isComment = line.startsWith('#');
   const text = line.replace(/^#\s*/, '').trim();
   if (text.includes(',')) return null;
   if (/^(fixed )?expenses$/i.test(text)) return 'expenses';
   if (/^resources$/i.test(text)) return 'resources';
+  if (/^membership plans$/i.test(text)) return 'plans';
+  if (/^member profiles$/i.test(text)) return 'profiles';
   if (/^(service )?offerings$/i.test(text)) return 'offerings';
   if (/^(business )?(settings|parameters)$/i.test(text)) return 'settings';
   return isComment ? null : 'none';
+}
+
+// Parses a JSON cell; undefined when it is blank, malformed or the wrong shape
+function parseJsonCell(cell: string | undefined, isShape: (v: unknown) => boolean): unknown {
+  try {
+    const v = JSON.parse(cell || '');
+    return isShape(v) ? v : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export function importFromCSV(csvText: any) {
@@ -1491,20 +1526,26 @@ export function importFromCSV(csvText: any) {
   const rawExpenses: Array<Record<string, unknown>> = [];
   const rawResources: Array<Record<string, unknown>> = [];
   const resourceNames: string[] = []; // per imported offering, aligned with `offerings`
+  const rawPlans: Array<{ row: Record<string, unknown>; names: string[] }> = [];
+  const rawProfiles: Array<{ name: string; visits: Record<string, number> }> = [];
 
   try {
     const lines = csvText.split('\n').map((line: any) => line.trim()).filter((line: any) => line);
 
-    let section: 'settings' | 'offerings' | 'expenses' | 'resources' | 'none' = 'none';
+    let section: CsvSection = 'none';
     let headerSeen = false;
     let sawExpenses = false;
     let sawResources = false;
+    let sawPlans = false;
+    let sawProfiles = false;
 
     for (const line of lines) {
       const next = csvSectionOf(line);
       if (next) {
         if (next === 'expenses') sawExpenses = true;
         if (next === 'resources') sawResources = true;
+        if (next === 'plans') sawPlans = true;
+        if (next === 'profiles') sawProfiles = true;
         section = next;
         headerSeen = false;
         continue;
@@ -1537,6 +1578,27 @@ export function importFromCSV(csvText: any) {
         if (!headerSeen) { headerSeen = true; continue; }
         const [name, hoursPerWeek, weeksPerYear] = splitCsvLine(line);
         if (name) rawResources.push({ name, hoursPerWeek: parseFloat(hoursPerWeek), weeksPerYear: parseFloat(weeksPerYear) });
+      }
+
+      if (section === 'plans') {
+        if (!headerSeen) { headerSeen = true; continue; }
+        const [name, monthlyFee, creditsPerMonth, memberDiscountPct, atMember, eligible] = splitCsvLine(line);
+        if (name) {
+          rawPlans.push({
+            row: {
+              name, monthlyFee: parseFloat(monthlyFee), creditsPerMonth: parseFloat(creditsPerMonth),
+              memberDiscountPct: parseFloat(memberDiscountPct), creditsAtMemberPrice: /^(yes|true)$/i.test((atMember || '').trim())
+            },
+            names: parseJsonCell(eligible, Array.isArray) as string[] ?? []
+          });
+        }
+      }
+
+      if (section === 'profiles') {
+        if (!headerSeen) { headerSeen = true; continue; }
+        const [name, visits] = splitCsvLine(line);
+        const parsed = parseJsonCell(visits, (v) => !!v && typeof v === 'object' && !Array.isArray(v)) as Record<string, number> | undefined;
+        if (name) rawProfiles.push({ name, visits: parsed ?? {} });
       }
 
       if (section === 'offerings') {
@@ -1606,6 +1668,19 @@ export function importFromCSV(csvText: any) {
       });
     }
 
+    // Plans and profiles name their offerings; resolve to the imported ids. undefined means no such section
+    const idByName = new Map<string, string>();
+    offerings.forEach((o: any) => { if (!idByName.has(o.name)) idByName.set(o.name, o.id); });
+    const membershipPlans = sawPlans
+      ? sanitizePlans(rawPlans.map((p) => ({ ...p.row, eligible: p.names.map((n) => idByName.get(n)).filter(Boolean) })), uuid)
+      : undefined;
+    const memberProfiles = sawProfiles
+      ? sanitizeProfiles(rawProfiles.map((p) => ({
+        name: p.name,
+        visits: Object.fromEntries(Object.entries(p.visits).filter(([n]) => idByName.has(n)).map(([n, v]) => [idByName.get(n), v]))
+      })), uuid)
+      : undefined;
+
     // Validate offerings
     if (offerings.length === 0) {
       errors.push('CSV must contain at least 1 offering');
@@ -1613,7 +1688,7 @@ export function importFromCSV(csvText: any) {
     }
 
     // Success
-    return { success: true, data: { settings, offerings, expenses, resources }, errors };
+    return { success: true, data: { settings, offerings, expenses, resources, membershipPlans, memberProfiles }, errors };
   } catch (e) {
     return { success: false, errors: [`Parse error: ${e.message}`] };
   }

@@ -72,6 +72,28 @@ function fuzzState(rand) {
           hoursPerWeek: fuzzNumber(rand, 0, 300),
           weeksPerYear: fuzzNumber(rand, 0, 80)
         }),
+    membershipPlans: rand() < 0.1
+      ? pick(rand, [null, undefined, 'nope', 42, {}])
+      : Array.from({ length: Math.floor(rand() * 5) }, () => rand() < 0.05
+        ? pick(rand, [null, 42, 'junk'])
+        : {
+          id: pick(rand, ['p1', '', null, 7]),
+          name: pick(rand, ['Gold', ...HOSTILE_VALUES]),
+          monthlyFee: fuzzNumber(rand, -10, 1e10),
+          creditsPerMonth: fuzzNumber(rand, -10, 1e10),
+          memberDiscountPct: fuzzNumber(rand, -50, 500),
+          creditsAtMemberPrice: pick(rand, [true, false, 'yes', 1, null]),
+          eligible: pick(rand, [['x'], [1, null, 'y'], 'nope', null])
+        }),
+    memberProfiles: rand() < 0.1
+      ? pick(rand, [null, undefined, 'nope', 42, {}])
+      : Array.from({ length: Math.floor(rand() * 5) }, () => rand() < 0.05
+        ? pick(rand, [null, 42, 'junk'])
+        : {
+          id: pick(rand, ['m1', '', null, 7]),
+          name: pick(rand, ['Regular', ...HOSTILE_VALUES]),
+          visits: pick(rand, [{ x: fuzzNumber(rand, -5, 1e6), y: 'abc' }, [], 'nope', null])
+        }),
     expenses: rand() < 0.1
       ? pick(rand, [null, undefined, 'nope', 42, {}])
       : Array.from({ length: Math.floor(rand() * 5) }, () => rand() < 0.05
@@ -184,10 +206,28 @@ describe('Fuzz: sanitizeScenarioState', () => {
         'mode', 'offerings', 'fullTimeEmployees', 'partTimeEmployees',
         'fullTimeEmployeePay', 'partTimeEmployeePay', 'monthlyCosts', 'processingFeePct',
         'productiveUtilizationPct', 'targetUtilizationPct', 'lockMix', 'loadedTemplate',
-        'notes', 'currency', 'expenses', 'resources'
+        'notes', 'currency', 'expenses', 'resources', 'membershipPlans', 'memberProfiles'
       ]);
       for (const key of Object.keys(result)) {
         expect(allowed.has(key), `unexpected key ${key} at iteration=${i}`).toBe(true);
+      }
+
+      const offeringIds = new Set(result.offerings.map((o) => o.id));
+      expect(result.membershipPlans.length).toBeLessThanOrEqual(3);
+      for (const p of result.membershipPlans) {
+        expect(p.monthlyFee).toBeGreaterThanOrEqual(0);
+        expect(p.creditsPerMonth).toBeGreaterThanOrEqual(0);
+        expect(p.memberDiscountPct).toBeGreaterThanOrEqual(0);
+        expect(p.memberDiscountPct).toBeLessThanOrEqual(100);
+        expect(p.eligible.every((id) => offeringIds.has(id))).toBe(true);
+      }
+      expect(result.memberProfiles.length).toBeLessThanOrEqual(3);
+      for (const p of result.memberProfiles) {
+        for (const [id, v] of Object.entries(p.visits)) {
+          expect(offeringIds.has(id)).toBe(true);
+          expect(v).toBeGreaterThanOrEqual(0);
+          expect(v).toBeLessThanOrEqual(1000);
+        }
       }
 
       expect(Array.isArray(result.resources)).toBe(true);

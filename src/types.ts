@@ -154,6 +154,9 @@ export interface CalcState {
   productiveUtilizationPct?: number;
   targetUtilizationPct?: number;
   /** App-only fields, ignored by calc(). */
+  /** Membership what-if inputs; display only, calc() never reads them. */
+  membershipPlans?: MembershipPlan[];
+  memberProfiles?: MemberProfile[];
   lockMix?: boolean;
   loadedTemplate?: string | null;
   notes?: string;
@@ -394,4 +397,6 @@ export interface SanitizedScenarioState extends CalcState {
   currency: CurrencyCode;
   expenses: Expense[];
   resources: Resource[];
+  membershipPlans: MembershipPlan[];
+  memberProfiles: MemberProfile[];
 }

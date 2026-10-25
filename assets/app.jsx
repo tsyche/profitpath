@@ -6,6 +6,7 @@ import { marketBadge, sanitizeOfferingMarket } from '../src/calculations/marketP
 import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../src/calculations/offeringMeta';
 import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, DEFAULT_LIFE_YEARS, monthlyCategorySpend, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
 import { sanitizeResources } from '../src/calculations/resources';
+import { pruneMembership } from '../src/calculations/membership';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
@@ -244,6 +245,8 @@ const state = {
   processingFeePct: 0, // card/payment fee as % of revenue
   expenses: [],
   resources: [], // extra capacity pools (booth, room) offerings can be tagged with
+  membershipPlans: [], // membership what-if inputs (display only, never feed calc)
+  memberProfiles: [],
   productiveUtilizationPct: 80, // percent of hours available for service delivery
   targetUtilizationPct: 75, // forecasting target
   lockMix: false, // forecasting-only: keep Mix % totals at 100 by adjusting other offerings
@@ -846,6 +849,8 @@ function resetDefaults() {
   state.processingFeePct = 0;
   state.expenses = [];
   state.resources = [];
+  state.membershipPlans = [];
+  state.memberProfiles = [];
   state.productiveUtilizationPct = 80;
   state.targetUtilizationPct = 75;
   state.mode = 'forecast';
@@ -1959,7 +1964,7 @@ function handleCSVImport(file) {
       return;
     }
 
-    const { settings, offerings, expenses, resources } = /** @type {any} */ (result.data);
+    const { settings, offerings, expenses, resources, membershipPlans, memberProfiles } = /** @type {any} */ (result.data);
 
     // Apply imported settings to state
     if (settings.employees !== undefined) state.fullTimeEmployees = settings.employees;
@@ -1975,6 +1980,12 @@ function handleCSVImport(file) {
     if (offerings.length > 0) state.offerings = offerings;
     if (expenses !== undefined) state.expenses = expenses;
     if (resources !== undefined) state.resources = resources;
+    // Plans and profiles name offerings by id; the import replaced those ids, so references the CSV did not re-link are dropped
+    if (membershipPlans !== undefined) state.membershipPlans = membershipPlans;
+    if (memberProfiles !== undefined) state.memberProfiles = memberProfiles;
+    const pruned = pruneMembership(state.membershipPlans || [], state.memberProfiles || [], new Set(state.offerings.map(o => o.id)));
+    state.membershipPlans = pruned.plans;
+    state.memberProfiles = pruned.profiles;
 
     persistState();
     render();
@@ -3670,6 +3681,8 @@ function loadOnboardingIndustryTemplate(industryId) {
     state.processingFeePct = config.processingFeePct || 0;
     state.expenses = [];
     state.resources = [];
+  state.membershipPlans = [];
+  state.memberProfiles = [];
     state.productiveUtilizationPct = config.productiveUtilizationPct || 80;
     state.targetUtilizationPct = config.targetUtilizationPct || 85;
 

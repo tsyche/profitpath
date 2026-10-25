@@ -102,6 +102,21 @@ export function sanitizeProfiles(raw: unknown, makeId: () => string = () => ''):
     });
 }
 
+/** Drops eligibility and visits that point at offerings that no longer exist. */
+export function pruneMembership(
+  plans: MembershipPlan[],
+  profiles: MemberProfile[],
+  offeringIds: Set<string>
+): { plans: MembershipPlan[]; profiles: MemberProfile[] } {
+  return {
+    plans: plans.map((p) => ({ ...p, eligible: p.eligible.filter((id) => offeringIds.has(id)) })),
+    profiles: profiles.map((p) => ({
+      ...p,
+      visits: Object.fromEntries(Object.entries(p.visits).filter(([id]) => offeringIds.has(id)))
+    }))
+  };
+}
+
 /** List price of one visit: per session, or per sale for one-time rows. */
 function visitPrice(o: CatalogOffering): number {
   return isOneTime(o) ? o.priceMonthly * 12 : pricePerSession(o);
