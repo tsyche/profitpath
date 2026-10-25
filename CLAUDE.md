@@ -201,7 +201,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (609 unit tests across 59 files — 608 passing, 1 skipped — plus 382 Playwright e2e tests across 31 files, chromium + firefox)
+#### Test Coverage (614 unit tests across 60 files — 613 passing, 1 skipped — plus 386 Playwright e2e tests across 32 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

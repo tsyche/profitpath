@@ -295,6 +295,17 @@ export function validateBusinessLogic() {
   return { issues, warnings };
 }
 
+/** Mix % still unassigned, so a new row fills the gap instead of leaving a mid-build total short of 100. */
+export function remainingMix(offerings: any[]): number {
+  const used = offerings.reduce((sum: number, o: any) => sum + (Number(o?.mixPct) || 0), 0);
+  return Math.max(0, Math.round((100 - used) * 100) / 100);
+}
+
+/** Copy of an offering to tweak: new id and name, no existing clients, and only the unassigned mix. */
+export function duplicateOffering(source: any, offerings: any[], makeId: () => string) {
+  return { ...source, id: makeId(), name: String(source.name || 'Offering').slice(0, 90) + ' (copy)', mixPct: remainingMix(offerings), currentClients: 0 };
+}
+
 export function rebalanceMix(changedIdx: any, nextMixPct: any) {
   const n = state.offerings.length;
   if (n <= 1) {

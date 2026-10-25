@@ -9,10 +9,10 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 ## Recommended Next 3
 
 1. **Item 20, multi-resource capacity pools** (~6-8 hrs): the biggest remaining accuracy gap for facility-based businesses.
-2. **12k + 12l**, duplicate-offering button and Mix % default for new rows (~1 hr together). The cost rework (28-31) is done.
+2. **12j, spreadsheet-style table view for offerings** (the last of the real-business trial UX friction items). 12k, 12l and the cost rework (28-31) are done.
 3. **`labor-pct.spec.ts` flake** (12s): parked, not reproducible (see its entry).
 
-Shipped 2026-10-24: one-time expenses amortized over useful life (30), processing fee % (29), Marketing expenses driving CAC (28), loans via Loan Payments (31), reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
+Shipped 2026-10-24/25: Duplicate offering button (12k), new rows take the unassigned mix (12l), one-time expenses amortized over useful life (30), processing fee % (29), Marketing expenses driving CAC (28), loans via Loan Payments (31), reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
 
 ---
 
@@ -51,16 +51,6 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
    - Past ~5 offerings (very normal for a real multi-service business — hit 12 building a real scenario), the vertical card-per-offering layout means a lot of scrolling to review or compare anything at a glance
    - A compact table view (rows = offerings, columns = name/price/sessions/hours/var-cost/mix) as an alternate/toggleable layout would make both bulk entry and review much faster once past a handful of offerings
    - Effort: ~3-4 hours
-
-12k. **No "Duplicate offering" button** *(new — found trialing a real business)*
-   - A real business's price list often has near-identical tiered variants (e.g. a rental service with 4hr/8hr × hands-on/hands-off combinations) — recreating each from scratch felt tedious enough that it directly led to collapsing 4 real pricing tiers into 1 blended estimate rather than modeling them accurately
-   - A duplicate button (copy an existing offering as a starting point, then tweak) would remove the friction that currently nudges users toward under-modeling
-   - Effort: ~1 hour
-
-12l. **New offerings start Mix % at 0%, making the running total read "wrong" through most of a multi-offering build** *(new — found trialing a real business)*
-   - Building a scenario with several offerings means seeing "Mix percentages sum to 37% (should be 100%)"-style warnings through most of the process, since each newly-added row starts at 0 until manually set — expected given auto-normalize, but reads as alarming/broken mid-build rather than just incomplete
-   - Distributing remaining % evenly across newly-added rows (or softening/suppressing the warning until offerings stop being actively added) would read calmer during normal use
-   - Effort: ~1-2 hours
 
 12o. **Share URLs are absurdly long** *(PARTLY SHIPPED 2026-10-24: v2 links are deflated + base64url via `fflate`, about 4-5x shorter, legacy links still decode; staleness of old links and a server-side short ID remain open)* *(new — found trialing a real business; Tim's reaction on seeing one: "lol")*
    - The Share feature encodes the entire scenario JSON (every offering's full field set, plus the full Presentation Notes text) as a base64 blob in a `?scenario=` query param — a 12-offering scenario with a few paragraphs of notes produced a URL several thousand characters long, unusable in most contexts (chat apps, SMS, some URL-length-limited systems) and unpleasant to paste anywhere

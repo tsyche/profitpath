@@ -711,6 +711,14 @@ function onTableClick(e) {
       render();
     }
   }
+  if (action === 'duplicateOffering') {
+    const i = Number(btn.dataset.i);
+    if (Number.isFinite(i) && state.offerings[i]) {
+      pushHistory();
+      state.offerings.splice(i + 1, 0, businessLogic.duplicateOffering(state.offerings[i], state.offerings, uuid));
+      render();
+    }
+  }
 }
 
 function addOffering() {
@@ -726,7 +734,7 @@ function addOffering() {
     type: 'subscription',
     seats: 1,
     fillPct: 100,
-    mixPct: 0,
+    mixPct: businessLogic.remainingMix(state.offerings),
     currentClients: 0,
   });
   render();
@@ -938,7 +946,7 @@ function render() {
       '<td class="cell-readonly group-metrics" data-label="Annual Revenue"><span class="mono">' + (fmtMoney0(metrics.offeringMetrics[idx]?.revenue || 0)) + '</span></td>' +
       '<td class="cell-readonly group-metrics" data-label="Margin %"><span class="mono" style="color:' + ((metrics.offeringMetrics[idx]?.marginPct || 0) > 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtPct1(metrics.offeringMetrics[idx]?.marginPct || 0)) + '</span></td>' +
       '<td class="cell-readonly group-metrics group-end" data-label="Annual Profit"><span class="mono" style="color:' + ((metrics.offeringMetrics[idx]?.margin || 0) > 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtMoney0(metrics.offeringMetrics[idx]?.margin || 0)) + '</span></td>' +
-      '<td class="cell-edit group-actions" data-label="Actions"><button class="btn small danger" data-action="removeOffering" data-i="' + (idx) + '" aria-label="Remove ' + (escapeHtml(o.name)) + '">Remove</button></td>';
+      '<td class="cell-edit group-actions" data-label="Actions"><button class="btn small" data-action="duplicateOffering" data-i="' + (idx) + '" aria-label="Duplicate ' + (escapeHtml(o.name)) + '">Duplicate</button> <button class="btn small danger" data-action="removeOffering" data-i="' + (idx) + '" aria-label="Remove ' + (escapeHtml(o.name)) + '">Remove</button></td>';
 
     tbody.appendChild(tr);
   });

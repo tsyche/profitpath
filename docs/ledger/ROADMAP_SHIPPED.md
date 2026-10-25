@@ -4,6 +4,8 @@
 
 ## Shipped index
 
+- [x] 2026-10-25 — 12k. Duplicate offering button
+- [x] 2026-10-25 — 12l. New offerings take the unassigned Mix %
 - [x] 2026-10-25 — 30. One-time / capital expenses, amortized over useful life
 - [x] 2026-10-24 — 28. Marketing spend as a real P&L cost, not just a Customer Analytics input
 - [x] 2026-10-24 — 29. Payment processing fees
@@ -45,6 +47,20 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-10-25 — 12k. Duplicate offering button
+
+12k. **No "Duplicate offering" button** *(SHIPPED 2026-10-25: Duplicate button per offering row; the copy is inserted below the source, named '(copy)', with 0 current clients and only the unassigned mix.)*
+   - A real business's price list often has near-identical tiered variants (e.g. a rental service with 4hr/8hr × hands-on/hands-off combinations) — recreating each from scratch felt tedious enough that it directly led to collapsing 4 real pricing tiers into 1 blended estimate rather than modeling them accurately
+   - A duplicate button (copy an existing offering as a starting point, then tweak) would remove the friction that currently nudges users toward under-modeling
+   - Effort: ~1 hour
+
+### 2026-10-25 — 12l. New offerings take the unassigned Mix %
+
+12l. **New offerings start Mix % at 0%, making the running total read "wrong" through most of a multi-offering build** *(SHIPPED 2026-10-25: a new row takes the unassigned mix (100 minus current total, min 0), so mid-build totals stay at 100 instead of warning.)*
+   - Building a scenario with several offerings means seeing "Mix percentages sum to 37% (should be 100%)"-style warnings through most of the process, since each newly-added row starts at 0 until manually set — expected given auto-normalize, but reads as alarming/broken mid-build rather than just incomplete
+   - Distributing remaining % evenly across newly-added rows (or softening/suppressing the warning until offerings stop being actively added) would read calmer during normal use
+   - Effort: ~1-2 hours
 
 ### 2026-10-25 — 30. One-time / capital expenses, amortized over useful life
 
