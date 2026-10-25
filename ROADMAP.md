@@ -9,10 +9,10 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 ## Recommended Next 3
 
 1. **Reverse calculator follow-ups** (12r) and the **"What If?" wizard follow-ups** (12v): auto-refresh, a combined pricing and volume lever, and wizard scenarios that combine levers.
-2. **Fix `labor-pct.spec.ts` flake** (12s, ~1 hr).
-3. **Share links are point-in-time snapshots** warning (12u, ~30 min).
+2. **`labor-pct.spec.ts` flake** (12s): parked, not reproducible (see its entry).
+3. **Item 20, multi-resource capacity pools** (~6-8 hrs): the biggest remaining accuracy gap for facility-based businesses.
 
-Shipped 2026-10-24: US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
+Shipped 2026-10-24: share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
 
 ---
 
@@ -48,11 +48,8 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
 
 12s. **Fix: `labor-pct.spec.ts` flakes under full-suite load** *(new)*
    - Passes alone, fails intermittently in the full Playwright run; find the race or timeout instead of retrying it away
+   - 2026-10-24: not reproducible. 160 runs (10-12 workers, 8 CPU burners) all passed, and the last 3 CI `Tests` runs were green. Parked; reopen with the failure output if it recurs, and don't add retries
    - Effort: ~1 hour
-
-12u. **Warn that share links are point-in-time snapshots** *(new, 12o option c)*
-   - One-line note in the Share dialog; old links stay frozen after edits
-   - Effort: ~30 minutes
 
 12d. **"Advisor" unified panel for scattered analytics features** *(new)*
    - Insights Engine, Reverse Calculator, Mix Optimizer, and Advanced Charts are four separate collapsed panels a user has to know to expand individually — low discoverability

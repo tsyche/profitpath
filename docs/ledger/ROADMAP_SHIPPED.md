@@ -6,6 +6,7 @@
 
 - [x] 2026-10-24 — 12. Guided "What If?" wizard (also fixed the Insights "Add 1 employee" what-if showing +$0)
 - [x] 2026-10-24 — 12c. E2E coverage for Mix Optimizer & Advanced Charts panels (found and fixed an XSS)
+- [x] 2026-10-24 — 12u. Share dialog warns that links are point-in-time snapshots
 - [x] 2026-10-24 — 12t. Tax section and report say US rules apply in non-USD scenarios
 - [x] 2026-10-24 — 12f. App version shown in Settings
 - [x] 2026-10-24 — 18. First-class per-session pricing type
@@ -39,6 +40,14 @@
 ## Archived entries
 
 Dates are the documented ship date; where the roadmap gave only a month, that month is shown.
+
+### 2026-10-24 — 12u. Share dialog warns that links are point-in-time snapshots
+
+12u. **Warn that share links are point-in-time snapshots** *(new, 12o option c)*
+   - One-line note in the Share dialog; old links stay frozen after edits
+   - Effort: ~30 minutes
+
+**Shipped 2026-10-24:** a note under the two links in the Share dialog (`shareScenario` in `miscService.ts`). Test `tests/e2e/share-dialog.spec.ts`.
 
 ### 2026-10-24 — 12t. Tax section and report say US rules apply in non-USD scenarios
 

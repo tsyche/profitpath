@@ -188,6 +188,7 @@ export function shareScenario() {
       <p style="margin-top:0;color:var(--muted);font-size:13px">Choose how to share this scenario:</p>
       ${linkRow('View Only', 'Inputs locked — ideal for client presentations', viewUrl, 'shareViewOnlyBtn')}
       ${linkRow('Editable', 'Recipient can adjust all inputs freely', editUrl, 'shareEditableBtn')}
+      <p class="share-snapshot-note" style="margin-bottom:0;color:var(--muted);font-size:12px">Links are snapshots of the scenario as it is now. Later edits won't change links you already sent, so share again after changing it.</p>
     `,
     size: 'medium'
   });
