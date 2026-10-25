@@ -78,5 +78,13 @@ describe('Insights Engine', () => {
       const hire = generateWhatIfScenarios(calc(state), state).find((s: any) => s.name === 'Add 1 employee')!;
       expect(hire.estimatedImpact.startsWith('-')).toBe(true);
     });
+
+    // Regression: the app stores fullTimeEmployees; patching legacy `employees` showed "+$0/yr" for a hire
+    it('adding an employee costs money when state uses the app headcount fields', () => {
+      const state = makeState('current', healthy, { fullTimeEmployees: 2, partTimeEmployees: 0, fullTimeEmployeePay: 50000, partTimeEmployeePay: 0 });
+      const hire = generateWhatIfScenarios(calc(state), state).find((s: any) => s.name === 'Add 1 employee')!;
+      expect(hire.estimatedImpact.startsWith('-')).toBe(true);
+      expect(hire.estimatedImpact).not.toMatch(/\$0\//);
+    });
   });
 });

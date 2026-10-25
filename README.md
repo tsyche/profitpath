@@ -28,6 +28,7 @@ Client-side profitability and capacity simulator for recurring service businesse
 - **Collaboration**: Shareable URLs for sharing scenarios with stakeholders, automatic URL loading on page load
 - **Templates**: Industry-specific templates for consulting, cleaning, landscaping, handyman, fitness, and photography services
 - **UI/UX**: Responsive design, mobile-optimized layout, collapsible debug panel, utilization gauge, profit waterfall charts, polished visual design
+- **Guided "What if?" wizard** (all experience levels): preview hiring, pricing, client, cost and take-home-goal scenarios against your numbers, then apply one with undo
 - **Advanced Analytics**: Client mix optimizer (suggests optimal offering mix for profit/utilization), rules-based insights with what-if estimates, a "What would it take?" reverse calculator for a target take-home, advanced charts (sensitivity heat map, balanced scorecard radar, client capacity funnel)
 - **Privacy-Respecting Site Analytics**: Anonymous GoatCounter visit counting (web + APK) — no cookies, no business data ever leaves the device; see [docs/privacy-policy.md](docs/privacy-policy.md)
 - **Test Coverage**: 427 unit tests (including fuzz tests, 40 files) and 264 Playwright e2e tests across chromium and firefox (14 files) — both run in CI on every push

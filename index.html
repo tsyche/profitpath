@@ -83,6 +83,7 @@
     <g id="ic-menu"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></g>
     <g id="ic-scenarios"><path d="M6 3h9l3 3v15l-6-3-6 3V3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></g>
     <g id="ic-share"><circle cx="6" cy="12" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="6" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="18" cy="18" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8 11l8-4M8 13l8 4" stroke="currentColor" stroke-width="1.7"/></g>
+    <g id="ic-whatif"><path d="M9.2 9a3 3 0 1 1 4.6 2.5c-.9.6-1.8 1.2-1.8 2.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="18" r="1" fill="currentColor"/><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.7"/></g>
     <g id="ic-templates"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/></g>
     <g id="ic-import"><path d="M12 15V4m0 0L8 8m4-4l4 4M5 18h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></g>
     <g id="ic-export"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></g>
@@ -105,6 +106,7 @@
     <nav class="ab-primary" aria-label="Primary actions">
       <button class="ab-btn" id="desktopScenariosBtn" type="button" title="Manage Scenarios" aria-label="Manage saved scenarios"><svg viewBox="0 0 24 24"><use href="#ic-scenarios"/></svg>Scenarios</button>
       <button class="ab-btn" id="templatesBtn" type="button" title="Load industry templates" onclick="ppOpenModal('templatesModal')"><svg viewBox="0 0 24 24"><use href="#ic-templates"/></svg>Templates</button>
+      <button class="ab-btn" id="whatIfBtn" type="button" title="Try common what-if scenarios" onclick="openWhatIfWizard()"><svg viewBox="0 0 24 24"><use href="#ic-whatif"/></svg>What if?</button>
     </nav>
 
     <span class="ab-spacer"></span>
@@ -173,6 +175,7 @@
     <div class="drawer-body">
       <button class="drawer-item" type="button" onclick="ppDelegate('desktopScenariosBtn')"><svg viewBox="0 0 24 24"><use href="#ic-scenarios"/></svg>Scenarios</button>
       <button class="drawer-item" type="button" onclick="closeDrawer(); ppOpenModal('templatesModal')"><svg viewBox="0 0 24 24"><use href="#ic-templates"/></svg>Templates</button>
+      <button class="drawer-item" type="button" onclick="openWhatIfWizard()"><svg viewBox="0 0 24 24"><use href="#ic-whatif"/></svg>What if?</button>
       <button class="drawer-item" type="button" onclick="ppDelegate('shareBtn')"><svg viewBox="0 0 24 24"><use href="#ic-share"/></svg>Share</button>
       <button class="drawer-item" type="button" onclick="ppDelegate('importCSVBtn')"><svg viewBox="0 0 24 24"><use href="#ic-import"/></svg>Import CSV</button>
       <button class="drawer-item" type="button" aria-expanded="false" onclick="ppToggleSub(this,'dwExport')"><svg viewBox="0 0 24 24"><use href="#ic-export"/></svg>Export<svg class="chev" viewBox="0 0 24 24"><use href="#ic-chev"/></svg></button>
@@ -235,6 +238,17 @@
   </div>
 
   <!-- ===== at-a-glance modal (full metric set) ===== -->
+  <div class="pp-sheet" id="whatIfModal" hidden>
+    <div class="pp-sheet-scrim" onclick="ppCloseModal('whatIfModal')"></div>
+    <div class="pp-sheet-card" role="dialog" aria-modal="true" aria-label="What if?">
+      <div class="pp-sheet-head">
+        <h3 id="whatIfTitle">What if?</h3>
+        <button class="pp-sheet-x" type="button" aria-label="Close" onclick="ppCloseModal('whatIfModal')"><svg viewBox="0 0 24 24"><use href="#ic-close"/></svg></button>
+      </div>
+      <div class="pp-sheet-body" id="whatIfBody"></div>
+    </div>
+  </div>
+
   <div class="pp-sheet" id="glanceModal" hidden>
     <div class="pp-sheet-scrim" onclick="ppCloseModal('glanceModal')"></div>
     <div class="pp-sheet-card pp-sheet-card--narrow" role="dialog" aria-modal="true" aria-label="At a glance">
@@ -318,6 +332,7 @@
                 onclick="ppCloseModal('settingsModal'); showAnalyticsDashboard()">📊 View Analytics</button>
             </div>
           </div>
+          <p class="hint" id="appVersion" style="text-align: center; margin: 12px 0 0;"></p>
         </div>
       </div>
     </div>

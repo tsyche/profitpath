@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite'
+import { readFileSync } from 'node:fs'
+
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'))
 
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(version) },
   base: process.env.GITHUB_PAGES ? '/profitpath/' : '/',
   // Custom `h` factory for assets/app.jsx; .ts files use the default oxc transform
   oxc: {

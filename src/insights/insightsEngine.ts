@@ -3,8 +3,19 @@
  * Provides optimization suggestions, automated alerts, and what-if scenarios
  */
 
-import { calc, HOURS_PER_YEAR } from '../calculations/index';
+import { calc } from '../calculations/index';
 import { formatMoney0 } from '../calculations/currency';
+
+/**
+ * State patch that adds full-time hires. calc() reads fullTimeEmployees when the app's
+ * new headcount fields are present and only falls back to the legacy `employees`.
+ */
+export function hirePatch(state: any, count: number): Record<string, number> {
+  if ('fullTimeEmployees' in state && 'partTimeEmployees' in state) {
+    return { fullTimeEmployees: (Number(state.fullTimeEmployees) || 0) + count };
+  }
+  return { employees: (Number(state.employees) || 0) + count };
+}
 
 export class InsightsEngine {
   metrics: any;
@@ -260,8 +271,7 @@ export class InsightsEngine {
 
     const priceChanges = { offerings: list.map((o: any) => ({ ...o, priceMonthly: Math.round(o.priceMonthly * 1.1) })) };
     const costChanges = { offerings: list.map((o: any) => ({ ...o, variableCostPerSession: Math.round(o.variableCostPerSession * 0.9) })) };
-    const paidHours = Number(this.state.totalAnnualPaidHours) || 0;
-    const hireChanges = { employees: (Number(employees) || 0) + 1, ...(paidHours ? { totalAnnualPaidHours: paidHours + HOURS_PER_YEAR } : {}) };
+    const hireChanges = hirePatch(this.state, 1);
     const utilChanges = this.state.mode === 'forecast'
       ? { productiveUtilizationPct: Math.min(100, (Number(this.state.productiveUtilizationPct) || 0) + 10) }
       : { offerings: list.map((o: any) => ({ ...o, currentClients: Math.ceil((o.currentClients || 0) * 1.1) })) };

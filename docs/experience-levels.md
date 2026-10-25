@@ -63,6 +63,7 @@ The app hides/shows elements by toggling display on selectors tied to feature ke
 - `.insights-wrapper` — collapsible insights and what-if estimates panel (`showInsights`)
 - `.reverse-calculator-wrapper` — collapsible "What Would It Take?" panel (`showReverseCalculator`)
 - `.advanced-charts-wrapper` — collapsible advanced charts panel (heat map, radar, funnel)
+- The "What if?" wizard (`#whatIfModal`, header and drawer) is not gated: it is available at every level.
 
 When adding a new feature flag, update `FEATURE_GATES` in `src/settings/index.js` and ensure the corresponding DOM elements are toggled in `assets/app.jsx`'s `updateUIForSettings`.
 

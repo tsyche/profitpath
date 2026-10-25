@@ -20,6 +20,7 @@ import { renderCustomerAnalyticsDashboard } from '../src/analytics/customer-ui';
 import { fmtMoney0, normalizeCurrency } from '../src/calculations/currency';
 import { optimizeMix } from '../src/insights/mixOptimizer';
 import { generateInsights, generateWhatIfScenarios } from '../src/insights/insightsEngine';
+import { wizardScenarios, previewScenario } from '../src/insights/whatIfWizard';
 import { getReverseCalculation, getRecommendedStrategy } from '../src/insights/reverseCalculator';
 import { renderSensitivityHeatmap, renderScorecardRadar, renderClientFunnel } from './services/advancedChartsService';
 
@@ -1241,6 +1242,9 @@ setTimeout(refreshDesktopSettings, 100);
 
 // Settings Cog Button — opens the #settingsModal (consistent with Scenarios /
 // Templates). Refresh values first so radios/checkboxes reflect saved settings.
+const appVersionEl = $('#appVersion');
+if (appVersionEl) appVersionEl.textContent = 'ProfitPath v' + __APP_VERSION__;
+
 const settingsCogBtn = $('#settingsCogBtn');
 if (settingsCogBtn) {
   settingsCogBtn.addEventListener('click', (e) => {
@@ -2585,12 +2589,12 @@ function updateMixOptimizer() {
   let tableHtml = '<table class="sensitivity-comparison"><thead><tr><th title="Service offering">Offering</th><th title="Current mix percentage">Current Mix</th><th title="Suggested mix percentage">Suggested Mix</th></tr></thead><tbody>';
   result.suggestedMix.forEach((o, idx) => {
     const current = result.currentMix[idx]?.mixPct ?? 0;
-    tableHtml += `<tr><td>${o.name}</td><td>${Math.round(current)}%</td><td>${Math.round(o.mixPct)}%</td></tr>`;
+    tableHtml += `<tr><td>${escapeHtml(o.name)}</td><td>${Math.round(current)}%</td><td>${Math.round(o.mixPct)}%</td></tr>`;
   });
   tableHtml += '</tbody></table>';
 
   const summary = result.improved
-    ? `<p style="margin-top: 8px;">${result.message}</p>`
+    ? `<p style="margin-top: 8px;">${escapeHtml(result.message)}</p>`
     : '<p style="margin-top: 8px; color: var(--muted);">Your current mix is already close to optimal for this objective.</p>';
 
   resultsEl.innerHTML = tableHtml + summary;
@@ -2681,6 +2685,104 @@ function initReversePanel() {
   bindPanelToggle('#reverseToggle', '#reverseBody');
   $('#reverseRun')?.addEventListener('click', renderReverseResults);
   $('#reverseTarget')?.addEventListener('keydown', (/** @type {KeyboardEvent} */ e) => { if (e.key === 'Enter') renderReverseResults(); });
+}
+
+// Guided "What If?" wizard: pick a scenario, set one dial, preview calc() before/after, optionally apply (undoable)
+/** @type {{ id: string, value: number } | null} */
+let wizardPick = null;
+
+function renderWizardList() {
+  const body = $('#whatIfBody');
+  if (!body) return;
+  wizardPick = null;
+  $('#whatIfTitle').textContent = 'What if?';
+  body.innerHTML = '<p class="pp-sheet-note">Pick a scenario to preview its effect on your numbers. Nothing changes until you apply it.</p><div class="wi-list">' +
+    wizardScenarios(state).map(s => '<button class="tmpl-card" type="button" data-wi="' + escapeHtml(s.id) + '"><span class="tmpl-name">' + escapeHtml(s.title) + '</span><span class="tmpl-sub">' + escapeHtml(s.blurb) + '</span></button>').join('') + '</div>';
+}
+
+/** @param {string} label @param {number} before @param {number} after @param {(n: number) => string} fmt @param {boolean} [higherIsBetter] */
+function wizardRow(label, before, after, fmt, higherIsBetter = true) {
+  const d = after - before;
+  const cls = d === 0 ? '' : ((d > 0) === higherIsBetter ? 'wi-up' : 'wi-down');
+  return '<tr><td>' + label + '</td><td class="mono">' + fmt(before) + '</td><td class="mono">' + fmt(after) + '</td><td class="mono ' + cls + '">' + (d > 0 ? '+' : '') + fmt(d) + '</td></tr>';
+}
+
+/**
+ * Results table plus note for one scenario value; canApply says whether Apply is allowed.
+ * @param {string} id @param {number} value
+ */
+function wizardResults(id, value) {
+  const preview = previewScenario(state, id, value);
+  const money = (/** @type {number} */ n) => fmtMoney0(Math.round(n));
+  const table = preview.after
+    ? '<table class="wi-table"><thead><tr><th></th><th>Now</th><th>After</th><th>Change</th></tr></thead><tbody>' +
+      wizardRow('Take-home (after est. tax)', preview.before.takeHome, preview.after.takeHome, money) +
+      wizardRow('Net profit', preview.before.income, preview.after.income, money) +
+      wizardRow('Capacity used', preview.before.capacityPct, preview.after.capacityPct, fmtPct1, false) +
+      wizardRow('Clients', preview.before.clients, preview.after.clients, n => String(Math.round(n))) +
+      '</tbody></table>'
+    : '';
+  return { canApply: !!preview.changes, html: table + (preview.note ? '<p class="muted" style="margin-top: 8px;">' + escapeHtml(preview.note) + '</p>' : '') };
+}
+
+/** @param {string} id */
+function renderWizardStep(id) {
+  const body = $('#whatIfBody');
+  const scenario = wizardScenarios(state).find(s => s.id === id);
+  if (!body || !scenario) return;
+  const p = scenario.param;
+  wizardPick = { id, value: p.value };
+  const results = wizardResults(id, p.value);
+  $('#whatIfTitle').textContent = scenario.title;
+  const bounds = 'min="' + p.min + '" max="' + p.max + '" step="' + p.step + '" value="' + p.value + '"';
+  body.innerHTML = '<p class="pp-sheet-note">' + escapeHtml(scenario.blurb) + '</p>' +
+    '<div class="wi-param"><label for="wiValue">' + escapeHtml(p.label) + '</label>' +
+    (p.unit === '$' ? '' : '<input type="range" id="wiRange" ' + bounds + ' aria-label="' + escapeHtml(p.label) + ' slider">') +
+    '<input type="number" id="wiValue" ' + bounds + '><span class="muted">' + (p.unit === '$' ? '' : escapeHtml(p.unit)) + '</span></div>' +
+    '<div id="wiResults">' + results.html + '</div>' +
+    '<div class="wi-actions"><button class="btn secondary" type="button" data-wi-back>Back</button>' +
+    '<button class="btn primary" type="button" id="wiApply" data-wi-apply' + (results.canApply ? '' : ' disabled') + '>Apply to my scenario</button></div>';
+}
+
+function applyWizardPick() {
+  if (!wizardPick) return;
+  const { id, value } = wizardPick;
+  const preview = previewScenario(state, id, value);
+  if (!preview.changes) return;
+  const title = wizardScenarios(state).find(s => s.id === id)?.title || 'What-if';
+  pushHistory();
+  Object.assign(state, preview.changes);
+  persistState();
+  render();
+  resetSliders();
+  ppCloseModal('whatIfModal');
+  showToast('Applied: ' + title + '. Undo with Ctrl+Z.', 'success', 4000);
+}
+
+function initWhatIfWizard() {
+  window.openWhatIfWizard = () => { renderWizardList(); ppOpenModal('whatIfModal'); };
+  const body = $('#whatIfBody');
+  if (!body) return;
+  body.addEventListener('click', (/** @type {MouseEvent} */ e) => {
+    const t = /** @type {HTMLElement} */ (e.target);
+    const card = t.closest('[data-wi]');
+    if (card) return renderWizardStep(card.getAttribute('data-wi') || '');
+    if (t.closest('[data-wi-back]')) return renderWizardList();
+    if (t.closest('[data-wi-apply]')) applyWizardPick();
+  });
+  body.addEventListener('input', (/** @type {Event} */ e) => {
+    const t = /** @type {HTMLInputElement} */ (e.target);
+    if (!wizardPick || (t.id !== 'wiRange' && t.id !== 'wiValue')) return;
+    const n = Number(t.value);
+    if (t.value === '' || !Number.isFinite(n)) return;
+    wizardPick.value = n;
+    // Re-render only the results and keep the slider/number pair in sync, so the focused input keeps focus
+    const other = /** @type {HTMLInputElement | null} */ ($(t.id === 'wiRange' ? '#wiValue' : '#wiRange'));
+    if (other) other.value = t.value;
+    const results = wizardResults(wizardPick.id, n);
+    $('#wiResults').innerHTML = results.html;
+    $('#wiApply').disabled = !results.canApply;
+  });
 }
 
 // Advanced Charts Panel: heat map, radar scorecard, client funnel
@@ -3087,6 +3189,7 @@ try {
   initInsightsPanel();
   initReversePanel();
   initAdvancedChartsPanel();
+  initWhatIfWizard();
 } catch {
   try {
     persistState();

@@ -8,12 +8,11 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **Guided "What If?" Wizard** (item 12, ~2-3 hrs) — front end for the now-live Reverse Calculator; strongest onboarding hook, and the new panels get their first real-browser look as part of it.
-2. **Quick wins** (~2 hrs total): E2E coverage for Mix Optimizer & Advanced Charts (12c) and the in-app version display (12f).
+1. **One-time / bundled purchase line items** (item 19, ~2-3 hrs) — the per-offering `type` field now carries `subscription | group | per-session`, so a `one-time` value is the natural next step.
+2. **Reverse calculator follow-ups** (12r) and the **"What If?" wizard follow-ups** (12v): auto-refresh, a combined pricing and volume lever, and wizard scenarios that combine levers.
+3. **Fix `labor-pct.spec.ts` flake** (12s, ~1 hr).
 
-3. **One-time / bundled purchase line items** (item 19, ~2-3 hrs) — the per-offering `type` field now carries `subscription | group | per-session`, so a `one-time` value is the natural next step.
-
-Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
+Shipped 2026-10-24: What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
 
 ---
 
@@ -36,16 +35,16 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - Geographic pricing variations by region
     - Effort: ~4-5 hours
 
-12. **Guided "What If?" Wizard**
-    - Step-by-step flow walking users through 3-5 common scenarios ("what if I hired one more person?", "what if I raised prices 15%?") without requiring them to know which inputs to change
-    - Natural delivery mechanism for the Reverse Calculator (live since 2026-10-24)
-    - Effort: ~2-3 hours
-
 **Cleanup / Small Wins**
 
 12r. **Reverse calculator follow-ups** *(new, split off shipped 4b)*
    - Auto-refresh results when inputs change (today: press Calculate again); add a lever that combines pricing with volume
    - Effort: ~2-3 hours
+
+12v. **What-If wizard follow-ups** *(new, split off shipped 12)*
+   - Combine levers in one scenario (price + hire); a market-aware "match market average" scenario; a "what's new" tie-in
+   - Wizard hire counts full-time only; add a part-time option if asked for
+   - Effort: ~2 hours
 
 12s. **Fix: `labor-pct.spec.ts` flakes under full-suite load** *(new)*
    - Passes alone, fails intermittently in the full Playwright run; find the race or timeout instead of retrying it away
@@ -59,19 +58,10 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
    - One-line note in the Share dialog; old links stay frozen after edits
    - Effort: ~30 minutes
 
-12c. **E2E coverage for Mix Optimizer & Advanced Charts panels** *(new)*
-   - Current coverage for both is unit-tests-only (compute logic) plus a handful of visual-polish assertions; no e2e test drives the actual panel toggle → run → results flow the way `mobile_layout.spec.js`/`ui-fixes.spec.js` do for other panels
-   - Effort: ~1-2 hours
-
 12d. **"Advisor" unified panel for scattered analytics features** *(new)*
    - Insights Engine, Reverse Calculator, Mix Optimizer, and Advanced Charts are four separate collapsed panels a user has to know to expand individually — low discoverability
    - Consider a single "Advisor" tab/section that surfaces the top insight/suggestion from each, with links to expand the full panel
    - Effort: ~3-4 hours
-
-12f. **Surface the app's own version in the UI** *(new — motivated by this session's Obtainium/versionCode debugging)*
-   - Nothing in the UI currently shows what version is running — not in Settings, not in the debug panel, nowhere (`grep` for version display in `assets/app.jsx`/`index.html` returns nothing)
-   - Now that CI reliably stamps a real `versionCode`/`versionName` and generates real release notes from commits (see the Analytics & APK pipeline entry in [the shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)), showing "vX.Y.Z" somewhere small (Settings footer or debug panel) would let users self-report their version when reporting bugs, and is a natural stepping stone toward an in-app "what's new" surface if release notes are ever curated for end users rather than just commit logs
-   - Effort: ~30-60 minutes
 
 12j. **No table/spreadsheet view for Service Offerings** *(new — found trialing a real business)*
    - Past ~5 offerings (very normal for a real multi-service business — hit 12 building a real scenario), the vertical card-per-offering layout means a lot of scrolling to review or compare anything at a glance
@@ -271,4 +261,4 @@ This section tracks common feature requests, friction points, and competitive ga
   - ✅ **Performance** (cache stats, LRU behavior, timing thresholds, max-size cap)
   - ✅ **Client Mix Optimizer** (9 tests): Profit/utilization objectives, edge cases, public API
   - ✅ **Advanced Charts** (12 tests): Heat map grid, scorecard normalization, funnel stages
-  - ⚠️ **Gap**: Mix Optimizer & Advanced Charts have no e2e panel-interaction coverage yet (see backlog item 12c)
+  - ✅ **E2E**: Mix Optimizer & Advanced Charts panel flows covered in `tests/e2e/advisor-panels.spec.ts` (12c)

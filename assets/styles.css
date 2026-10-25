@@ -4960,3 +4960,17 @@ input[type="checkbox"] {
 .confidence-select[data-confidence="verified"] { color: var(--good); }
 .confidence-select[data-confidence="estimated"] { color: var(--warn); }
 .confidence-select[data-confidence="guess"] { color: var(--bad); }
+
+/* What-if wizard */
+.wi-list { display: grid; gap: 10px; }
+.wi-list .tmpl-card { width: 100%; }
+.wi-param { display: flex; align-items: center; gap: 10px; margin: 6px 0 14px; flex-wrap: wrap; }
+.wi-param label { flex: 1 0 100%; font-weight: 600; font-size: 13px; }
+.wi-param input[type="range"] { flex: 1 1 160px; min-width: 120px; }
+.wi-param input[type="number"] { width: 110px; }
+.wi-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.wi-table th, .wi-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--border); }
+.wi-table th:first-child, .wi-table td:first-child { text-align: left; }
+.wi-up { color: var(--good, #34d399); }
+.wi-down { color: var(--bad); }
+.wi-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }

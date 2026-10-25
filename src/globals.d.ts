@@ -3,6 +3,9 @@
 // `any` until typed; Phase 2 replaces them with real types from src/types.ts as the
 // shapes are verified against the code.
 declare global {
+  // Injected from package.json by Vite `define`
+  const __APP_VERSION__: string;
+
   // Test runner globals (vitest `globals: true`)
   var vi: any;
 
@@ -28,6 +31,8 @@ declare global {
   var copyToClipboard: any;
   var closeModal: any;
   var ppOpenModal: any;
+  var ppCloseModal: any;
+  var openWhatIfWizard: () => void;
   var acquireScrollLock: any;
   var releaseScrollLock: any;
   var hideContextualHelp: any;

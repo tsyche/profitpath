@@ -58,7 +58,8 @@ src/
 ├── insights/           # Rules-based insights + what-ifs, reverse calculator (both built on calc()), mix optimizer
 │   ├── insightsEngine.ts   # Rules-based insights; what-if impacts re-run calc()
 │   ├── reverseCalculator.ts # "What would it take?": bisects each lever against takeHome (after est. tax)
-│   └── mixOptimizer.ts     # Suggests optimal offering mix for profit/utilization
+│   ├── mixOptimizer.ts     # Suggests optimal offering mix for profit/utilization
+│   └── whatIfWizard.ts     # Guided "What If?" wizard: 5 scenarios as state patches, previewed through calc()
 ├── settings/          # Experience levels and feature gating
 │   └── index.js          # Settings management and feature gates
 └── test/             # Vitest unit/integration tests (incl. fuzz tests)
@@ -200,7 +201,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (567 unit tests across 56 files — 566 passing, 1 skipped — plus 346 Playwright e2e tests across 26 files, chromium + firefox)
+#### Test Coverage (583 unit tests across 57 files — 582 passing, 1 skipped — plus 362 Playwright e2e tests across 28 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

@@ -4,6 +4,9 @@
 
 ## Shipped index
 
+- [x] 2026-10-24 — 12. Guided "What If?" wizard (also fixed the Insights "Add 1 employee" what-if showing +$0)
+- [x] 2026-10-24 — 12c. E2E coverage for Mix Optimizer & Advanced Charts panels (found and fixed an XSS)
+- [x] 2026-10-24 — 12f. App version shown in Settings
 - [x] 2026-10-24 — 18. First-class per-session pricing type
 - [x] 2026-10-24 — 23. Inline per-session to monthly-equivalent conversion helper (superseded by 18)
 - [x] 2026-10-24 — Animated KPI Counters, AI Insights Engine & Reverse Calculator
@@ -207,3 +210,23 @@ Superseded by item 18: the per-session type does this conversion in the Price ce
 1. ✅ **Read-only Scenario Sharing & Collaborative Comments**
 2. ✅ **Tax & Financial Report Generator**
 3. ✅ **Performance Optimization & Caching**
+
+### 2026-10-24 — 12c. E2E coverage for Mix Optimizer & Advanced Charts
+
+12c. ✅ **E2E coverage for Mix Optimizer & Advanced Charts panels** *(SHIPPED 2026-10-24: `tests/e2e/advisor-panels.spec.ts`; also fixed an XSS, the Mix Optimizer results table put offering names into innerHTML unescaped, now escaped and covered by a hostile-name test)* *(new)*
+   - Current coverage for both is unit-tests-only (compute logic) plus a handful of visual-polish assertions; no e2e test drives the actual panel toggle → run → results flow the way `mobile_layout.spec.js`/`ui-fixes.spec.js` do for other panels
+   - Effort: ~1-2 hours
+
+### 2026-10-24 — 12f. App version shown in Settings
+
+12f. ✅ **Surface the app's own version in the UI** *(SHIPPED 2026-10-24: Settings footer shows "ProfitPath vX.Y.Z", injected from package.json via Vite `define` as `__APP_VERSION__`; test in `advisor-panels.spec.ts`)* *(new — motivated by this session's Obtainium/versionCode debugging)*
+   - Nothing in the UI currently shows what version is running — not in Settings, not in the debug panel, nowhere (`grep` for version display in `assets/app.jsx`/`index.html` returns nothing)
+   - Now that CI reliably stamps a real `versionCode`/`versionName` and generates real release notes from commits (see the Analytics & APK pipeline entry in [the shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)), showing "vX.Y.Z" somewhere small (Settings footer or debug panel) would let users self-report their version when reporting bugs, and is a natural stepping stone toward an in-app "what's new" surface if release notes are ever curated for end users rather than just commit logs
+   - Effort: ~30-60 minutes
+
+### 2026-10-24 — 12. Guided "What If?" wizard
+
+12. ✅ **Guided "What If?" Wizard** *(SHIPPED 2026-10-24: header and drawer "What if?" opens a modal with 5 scenarios (hire, price, clients, costs, take-home goal); each previews calc() before/after and Apply is undoable; `src/insights/whatIfWizard.ts`, tests `src/insights/whatIfWizard.test.ts`, `tests/e2e/whatif-wizard.spec.ts`. Also fixed the Insights "Add 1 employee" what-if, which patched legacy `employees` that calc() ignores when `fullTimeEmployees` is set, so it always showed +$0)*
+    - Step-by-step flow walking users through 3-5 common scenarios ("what if I hired one more person?", "what if I raised prices 15%?") without requiring them to know which inputs to change
+    - Natural delivery mechanism for the Reverse Calculator (live since 2026-10-24)
+    - Effort: ~2-3 hours
