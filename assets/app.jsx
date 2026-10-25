@@ -555,6 +555,7 @@ function renderResources() {
     '<tr><td class="cell-edit" data-label="Resource"><input aria-label="Resource name" type="text" maxlength="100" value="' + escapeHtml(r.name) + '" data-k="name" data-i="' + idx + '"/></td>' +
     '<td class="cell-edit" data-label="Hours/week"><input aria-label="Hours per week for ' + escapeHtml(r.name) + '" type="number" min="0" max="168" step="1" value="' + r.hoursPerWeek + '" data-k="hoursPerWeek" data-i="' + idx + '"/></td>' +
     '<td class="cell-edit" data-label="Weeks/year"><input aria-label="Weeks per year for ' + escapeHtml(r.name) + '" type="number" min="0" max="52" step="1" value="' + r.weeksPerYear + '" data-k="weeksPerYear" data-i="' + idx + '"/></td>' +
+    '<td class="cell-edit" data-label="Staff-free"><input aria-label="Staff-free: ' + escapeHtml(r.name) + ' needs no staff time" type="checkbox"' + (r.staffFree ? ' checked' : '') + ' data-k="staffFree" data-i="' + idx + '"/></td>' +
     '<td class="cell-edit" data-label="Actions"><button class="btn small danger" data-action="removeResource" data-i="' + idx + '" aria-label="Remove ' + escapeHtml(r.name) + '">Remove</button></td></tr>').join('');
   renderResourceTags();
 }
@@ -596,8 +597,9 @@ function onResourceInput(e) {
     _lastHistoryField = fieldKey;
   }
   // Per-row sanitizer is the single source of truth for clamping and fallbacks
-  const clean = /** @type {Record<string, any>} */ (sanitizeResources([{ ...row, [k]: el.value }], () => row.id)[0]);
-  row[k] = clean[k];
+  const clean = /** @type {Record<string, any>} */ (sanitizeResources([{ ...row, [k]: el.type === 'checkbox' ? el.checked : el.value }], () => row.id)[0]);
+  if (clean[k] === undefined) delete row[k];
+  else row[k] = clean[k];
   refreshAfterResourceEdit();
 }
 

@@ -275,9 +275,9 @@ export function buildCSV(st: any, results: any) {
     lines.push(csvCell(e.name) + ',' + csvCell(e.category) + ',' + e.amount + ',' + e.frequency + ',' + e.lifeYears);
   });
 
-  lines.push('', 'RESOURCES', 'Name,Hours/week,Weeks/year');
+  lines.push('', 'RESOURCES', 'Name,Hours/week,Weeks/year,Staff-free');
   sanitizeResources(st.resources).forEach((r) => {
-    lines.push(csvCell(r.name) + ',' + r.hoursPerWeek + ',' + r.weeksPerYear);
+    lines.push(csvCell(r.name) + ',' + r.hoursPerWeek + ',' + r.weeksPerYear + ',' + (r.staffFree ? 'yes' : 'no'));
   });
 
   // Plans and profiles carry offering names (as JSON cells, so any character survives); import resolves them back to ids
@@ -1578,8 +1578,8 @@ export function importFromCSV(csvText: any) {
 
       if (section === 'resources') {
         if (!headerSeen) { headerSeen = true; continue; }
-        const [name, hoursPerWeek, weeksPerYear] = splitCsvLine(line);
-        if (name) rawResources.push({ name, hoursPerWeek: parseFloat(hoursPerWeek), weeksPerYear: parseFloat(weeksPerYear) });
+        const [name, hoursPerWeek, weeksPerYear, staffFree] = splitCsvLine(line);
+        if (name) rawResources.push({ name, hoursPerWeek: parseFloat(hoursPerWeek), weeksPerYear: parseFloat(weeksPerYear), staffFree: /^(yes|true)$/i.test((staffFree || '').trim()) });
       }
 
       if (section === 'plans') {

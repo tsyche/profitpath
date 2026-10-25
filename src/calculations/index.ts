@@ -92,7 +92,7 @@ function generateCacheKey(state: CalcState) {
     monthlyCosts: state.monthlyCosts,
     processingFeePct: state.processingFeePct,
     expenses: sanitizeExpenses(state.expenses).map(e => [e.category, e.amount, e.frequency, e.lifeYears]),
-    resources: sanitizeResources(state.resources).map(r => [r.id, r.hoursPerWeek, r.weeksPerYear]),
+    resources: sanitizeResources(state.resources).map(r => [r.id, r.hoursPerWeek, r.weeksPerYear, r.staffFree === true]),
     productiveUtilizationPct: state.productiveUtilizationPct,
     targetUtilizationPct: state.targetUtilizationPct,
     offerings: (Array.isArray(state.offerings) ? state.offerings : []).filter(o => o && typeof o === 'object').map(o => ({
@@ -182,6 +182,16 @@ function finiteOr(v: unknown, fallback: number): number {
 function annualStaffHoursPerClient(o: SanitizedOffering): number {
   const perClient = o.sessionsPerYear * o.hoursPerSession;
   return o.type === 'group' ? perClient / (o.seats * (o.fillPct / 100)) : perClient;
+}
+
+/** Ids of active resources whose tagged offerings draw no staff time. */
+function staffFreeIds(resources: Resource[]): ReadonlySet<string> {
+  return new Set(resources.filter((r) => r.staffFree).map((r) => r.id));
+}
+
+/** Forecast hours per client that land on the staff pool (none when the offering runs on a staff-free resource). */
+function staffPoolHoursPerClient(o: SanitizedOffering, free: ReadonlySet<string>): number {
+  return o.resource && free.has(o.resource) ? 0 : annualStaffHoursPerClient(o);
 }
 
 /** Group rows with a run cost: seats a run needs to cover itself, and that as % of its seats (Infinity when unreachable). */
@@ -303,9 +313,10 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
   const { sum: mixSum, needsNormalization: mixNormalized, shares } = normalizeMix(offerings);
 
   // Per-customer expectations (weighted by mix shares)
+  const free = staffFreeIds(resources);
   const serviceHoursPerClient = offerings.reduce((acc, o, idx) => {
     const share = shares[idx] || 0;
-    return acc + share * annualStaffHoursPerClient(o);
+    return acc + share * staffPoolHoursPerClient(o, free);
   }, 0);
 
   const sessionsPerClient = offerings.reduce((acc, o, idx) =>
@@ -317,12 +328,14 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
   const variableCostPerClient = offerings.reduce((acc, o, idx) =>
     acc + (shares[idx] || 0) * annualVariableCostPerClient(o), 0);
 
-  const staffClients = serviceHoursPerClient > 0 ?
-    Math.floor(capacity.targetServiceHours / serviceHoursPerClient) : 0;
-
   // Each resource caps clients too: its tagged hours per client against its own target hours
   const poolHoursPerClient = resources.map((r) => offerings.reduce((acc, o, idx) =>
     o.resource === r.id ? acc + (shares[idx] || 0) * annualStaffHoursPerClient(o) : acc, 0));
+
+  // With every delivery on staff-free resources staff never binds, so only the pools cap clients
+  const staffUnbound = serviceHoursPerClient <= 0 && poolHoursPerClient.some((h) => h > 0);
+  const staffClients = serviceHoursPerClient > 0 ?
+    Math.floor(capacity.targetServiceHours / serviceHoursPerClient) : (staffUnbound ? Infinity : 0);
   const clients = resources.reduce((cap, r, i) => poolHoursPerClient[i] > 0 ?
     Math.min(cap, Math.floor(resourceAnnualHours(r) * (targetUtilizationPct / 100) / poolHoursPerClient[i])) : cap, staffClients);
 
@@ -383,12 +396,14 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
   let revenue = 0;
   let variableCosts = 0;
 
+  const free = staffFreeIds(resources);
+
   // Calculate from actual current clients
   offerings.forEach(o => {
     const offeringSessions = o.currentClients * o.sessionsPerYear;
     const offeringRevenue = o.currentClients * (o.priceMonthly * 12);
     const offeringVariableCosts = currentVariableCost(o);
-    const offeringServiceHours = currentStaffHours(o);
+    const offeringServiceHours = o.resource && free.has(o.resource) ? 0 : currentStaffHours(o);
 
     clients += o.currentClients;
     totalSessions += offeringSessions;

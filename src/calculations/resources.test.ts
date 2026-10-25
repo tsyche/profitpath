@@ -168,3 +168,60 @@ describe('capacity pools, backward compatibility', () => {
     expect(b.clients).toBeGreaterThan(a.clients)
   })
 })
+
+describe('staff-free resources', () => {
+  beforeEach(() => clearCalculationCache())
+  const free = { ...booth, staffFree: true }
+  const forecast = (offerings: object[], resources: object[]) =>
+    calc({ ...base, mode: 'forecast', offerings, resources } as any, { enableCache: false })
+  const current = (offerings: object[], resources: object[]) =>
+    calc({ ...base, mode: 'current', offerings, resources } as any, { enableCache: false })
+
+  it('sanitizer keeps staffFree only when true', () => {
+    expect(sanitizeResources([{ id: 'a', staffFree: true }])[0].staffFree).toBe(true)
+    expect(sanitizeResources([{ id: 'b', staffFree: 'yes' }])[0]).not.toHaveProperty('staffFree')
+    expect(sanitizeResources([{ id: 'c', staffFree: false }])[0]).not.toHaveProperty('staffFree')
+  })
+
+  it('forecast: only the resource caps clients and staff does no work', () => {
+    const r = forecast([offering({ resource: 'booth' })], [free])
+    expect(r.clients).toBe(43) // floor(520 / 12), staff cap (277) no longer in play
+    expect(r.serviceHours).toBe(0)
+    expect(r.poolUtilization.find((p) => p.id === 'staff')!.pct).toBe(0)
+    expect(r.bottleneck.id).toBe('booth')
+  })
+
+  it('forecast: a roomy staff-free resource is not capped by staff either', () => {
+    const big = { ...free, hoursPerWeek: 168 } // 8736 h, more than staff's 3328
+    expect(forecast([offering({ resource: 'big' })], [{ ...big, id: 'big' }]).clients).toBe(728)
+  })
+
+  it('forecast: mixed offerings, only the untagged share loads staff', () => {
+    const r = forecast([offering({ resource: 'booth', mixPct: 50 }), offering({ name: 'Remote', mixPct: 50 })], [free])
+    expect(r.clients).toBe(86)
+    expect(r.serviceHours).toBe(86 * 6) // 6 h per client on staff, not 12
+  })
+
+  it('current: tagged clients add resource hours but no staff hours', () => {
+    const r = current([offering({ resource: 'booth', currentClients: 20 })], [free])
+    expect(r.serviceHours).toBe(0)
+    expect(r.poolUtilization.find((p) => p.id === 'booth')!.pct).toBeCloseTo((240 / 520) * 100, 6)
+    expect(r.bottleneck.id).toBe('booth')
+  })
+
+  it('an inactive (0 hours) staff-free resource is ignored, so staff still carries the hours', () => {
+    const r = current([offering({ resource: 'booth', currentClients: 20 })], [{ ...free, hoursPerWeek: 0 }])
+    expect(r.serviceHours).toBe(240)
+  })
+
+  it('toggling staffFree is not served from the calc cache', () => {
+    const run = (r: object) => calc({ ...base, mode: 'current', offerings: [offering({ resource: 'booth', currentClients: 20 })], resources: [r] } as any)
+    expect(run(booth).serviceHours).toBe(240)
+    expect(run(free).serviceHours).toBe(0)
+  })
+
+  it('does not change a plain resource', () => {
+    const r = current([offering({ resource: 'booth', currentClients: 20 })], [booth])
+    expect(r.serviceHours).toBe(240)
+  })
+})

@@ -76,4 +76,28 @@ test.describe('Capacity resources', () => {
     const tagged = await page.evaluate(() => (window as any).state.offerings.filter((o) => o.resource).length);
     expect(tagged).toBe(0);
   });
+  test('staff-free checkbox drops staff hours for tagged offerings and survives reload', async ({ page }) => {
+    await open(page, 'intermediate');
+    // Same setup as the hand-computed test: booth caps at 3 clients x 12 h = 36 h, which is 2.2% of staff time until the box is ticked
+    await page.evaluate(() => {
+      const w = window as any;
+      Object.assign(w.state, {
+        mode: 'forecast', fullTimeEmployees: 1, partTimeEmployees: 0, productiveUtilizationPct: 80, targetUtilizationPct: 75,
+        resources: [{ id: 'booth', name: 'Booth', hoursPerWeek: 1, weeksPerYear: 52 }]
+      });
+      w.state.offerings = [{ id: 'a', name: 'Coaching', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, laborPctOfPrice: 0, type: 'subscription', mixPct: 100, currentClients: 0, resource: 'booth' }];
+      w.render();
+    });
+    await expect(page.locator('#bottleneckLine')).toHaveText('Bottleneck: Booth at 69.2% (Staff 2.2%)');
+
+    await rows(page).first().locator('input[data-k="staffFree"]').check();
+    await expect(page.locator('#bottleneckLine')).toHaveText('Bottleneck: Booth at 69.2% (Staff 0.0%)');
+    const clients = await page.evaluate(() => (window as any).calc((window as any).state).clients);
+    expect(clients).toBe(3);
+
+    await page.reload();
+    await waitForPageReady(page);
+    await expect(rows(page).first().locator('input[data-k="staffFree"]')).toBeChecked();
+    await expect(page.locator('#bottleneckLine')).toContainText('Staff 0.0%');
+  });
 });

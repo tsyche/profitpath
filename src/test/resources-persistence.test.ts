@@ -78,3 +78,20 @@ describe('resources: CSV round trip', () => {
     expect(empty.data.resources).toEqual([]);
   });
 });
+
+describe('resources: staffFree persistence', () => {
+  const freeState: any = { ...state, resources: [{ ...state.resources[0], staffFree: true }] };
+
+  it('survives the CSV round-trip and a legacy 3-column section reads as false', () => {
+    const csv = buildCSV(freeState, results);
+    expect(csv).toContain('Name,Hours/week,Weeks/year,Staff-free');
+    expect((importFromCSV(csv) as any).data.resources[0].staffFree).toBe(true);
+    const legacy: any = importFromCSV('Resources\nName,Hours/week,Weeks/year\nBooth,40,50\nOfferings\nName,P,S,H,V,M,C\nA,100,12,1,0,100,0\n');
+    expect(legacy.data.resources[0]).not.toHaveProperty('staffFree');
+  });
+
+  it('survives the share URL and scenario sanitizer', () => {
+    expect(sanitizeScenarioState(freeState)!.resources[0].staffFree).toBe(true);
+    expect(sanitizeScenarioState(state)!.resources[0]).not.toHaveProperty('staffFree');
+  });
+});

@@ -64,6 +64,8 @@ export interface Resource {
   name: string;
   hoursPerWeek: number;
   weeksPerYear: number;
+  /** Tagged offerings draw no staff hours, only this pool's (self-serve booth, vending). Absent means false. */
+  staffFree?: boolean;
 }
 
 /** One pool's load: staff plus each active resource. */

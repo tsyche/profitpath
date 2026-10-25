@@ -24,6 +24,8 @@ export function sanitizeResources(raw: unknown, makeId: () => string = () => '')
       name: (typeof rec.name === 'string' ? rec.name : '').trim().slice(0, MAX_NAME_LENGTH) || 'Resource',
       hoursPerWeek: Number.isFinite(hours) ? Math.min(MAX_HOURS_PER_WEEK, Math.max(0, hours)) : 0,
       weeksPerYear: Number.isFinite(weeks) ? Math.min(MAX_WEEKS_PER_YEAR, Math.max(0, weeks)) : MAX_WEEKS_PER_YEAR,
+      // Only ever stored as true, so unflagged rows stay byte-identical in scenarios and share URLs
+      ...(rec.staffFree === true || rec.staffFree === 'true' ? { staffFree: true } : {}),
     });
   }
   return out;
