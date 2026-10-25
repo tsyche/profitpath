@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-10-25 — 24a. Membership and prepaid-credit pricing calculator
 - [x] 2026-10-25 — 20. Multi-resource capacity pools
 - [x] 2026-10-25 — 12j. Offerings table view (closed, already satisfied)
 - [x] 2026-10-25 — 12k. Duplicate offering button
@@ -49,6 +50,16 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-10-25 — 24a. Membership and prepaid-credit pricing calculator
+
+Shipped as phases 1-3 (f11fd67 math, 8391cee persistence, 7ae525c panel). Plan: [membership-calculator](../plans/archive/membership-calculator.md). Follow-ups: ROADMAP 24e, 32.
+
+24a. **Membership and prepaid-credit pricing calculator**
+    - Let a business vary plan fees, included and purchased credits, credit value and expiry, service prices, member discounts, eligibility, and a customer's monthly purchase mix. Show regular spend, member spend including the plan fee, credits used or left over, effective savings percentage, and business revenue or margin side by side.
+    - Make it a general what-if tool rather than a Sound Stage-specific template. The first example should expose when a headline plan saving (value of included benefits versus fee) differs from what a customer actually saves on their chosen services. Avoid counting prepaid credits as both new revenue and a discount at redemption.
+    - Acceptance: a user can change the purchase mix and compare two plans with the same services; unused or expired credits and ineligible services affect the result; every displayed percentage identifies its denominator.
+    - 2026-10-23 trial: modeling membership tiers vs a punch card needed exactly this; also model breakage (expired credits = revenue with no delivery cost) and credit redemptions consuming the redeemed service's capacity and labor cost.
 
 ### 2026-10-25 — 12j. Offerings table view (closed, already satisfied)
 

@@ -84,11 +84,16 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - A simple optimistic/base/conservative 3-scenario toggle — applying a confidence band to guessed inputs (informed by item 22's confidence tags, if built) and showing a resulting range rather than one number — would better communicate uncertainty for exactly this "sketching before real data exists" use case
     - Effort: ~4-5 hours
 
-24a. **Membership and prepaid-credit pricing calculator**
-    - Let a business vary plan fees, included and purchased credits, credit value and expiry, service prices, member discounts, eligibility, and a customer's monthly purchase mix. Show regular spend, member spend including the plan fee, credits used or left over, effective savings percentage, and business revenue or margin side by side.
-    - Make it a general what-if tool rather than a Sound Stage-specific template. The first example should expose when a headline plan saving (value of included benefits versus fee) differs from what a customer actually saves on their chosen services. Avoid counting prepaid credits as both new revenue and a discount at redemption.
-    - Acceptance: a user can change the purchase mix and compare two plans with the same services; unused or expired credits and ineligible services affect the result; every displayed percentage identifies its denominator.
-    - 2026-10-23 trial: modeling membership tiers vs a punch card needed exactly this; also model breakage (expired credits = revenue with no delivery cost) and credit redemptions consuming the redeemed service's capacity and labor cost.
+24e. **Membership What-If follow-ups** *(new, from 24a)*
+    - Credits-vs-visits ranges: low / base / high on a profile's monthly visits, so breakage and savings show a band (pairs with 24c).
+    - Members supportable per capacity pool: how many members of a profile fit before staff or a pool (item 20) saturates.
+    - Recommended-plan optimizer: suggest fee / credits / discount that hit a target margin while keeping actual member savings positive.
+    - Feed members into `calc()`: only if the panel proves useful; today it is display only so credits can't double count as revenue.
+    - Excel export carries no plans or profiles (nor expenses or resources); add with the others if that path is revisited.
+
+32. **Repo-wide accessibility e2e (axe-core)** *(new, from 24a; the plan's "axe clean" gate was not run because the repo has no axe tooling)*
+    - Add `@axe-core/playwright` and a spec that scans each main panel and the modals at each experience level; fail on Critical/Serious.
+    - Feeds Phase 0 of [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md) (items 25/26).
 
 24b. **Group / cohort offerings (seats, sessions run, fill rate)** *(PARTIAL, 2026-10-23: `type` field (`subscription | group`) with Seats and Fill % columns shipped; remaining: break-even fill, fixed per-run costs, fitness template's group row, waterfall hours still per-client)*
     - Today staff hours scale with clients (`hoursPerSession` per client), so a group class must be faked as a fractional hour per student (2 hr ÷ 8 seats = 0.25). An under-filled class then looks cheaper to deliver than it is: the instructor still works the full 2 hours.
