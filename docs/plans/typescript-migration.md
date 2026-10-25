@@ -1,6 +1,6 @@
 # TypeScript migration
 
-**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-3b and Phase 4 steps 1-2 are done: `noImplicitAny` and `strictNullChecks` are on, and the CI ratchet is 105 errors, all in `assets/app.jsx` (Phase 5 split in progress). Vite and Vitest already handle `.ts`, so there is no build change.
+**TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-3b and Phase 4 steps 1-2 are done: `noImplicitAny` and `strictNullChecks` are on, and the CI ratchet is 94 errors, all in `assets/app.jsx` (Phase 5 split in progress). Vite and Vitest already handle `.ts`, so there is no build change.
 
 **Status:** Building (Phases 0-3b done 2026-10-15; Phase 4 steps 1-2 done 2026-10-16)
 **Fold into:** [AGENTS.md](../../AGENTS.md) "TypeScript Support" section, then delete this plan.
@@ -91,7 +91,7 @@ Turn flags on one at a time, fixing each before the next, in this order:
 
 ### Phase 5: `assets/app.jsx`
 
-- Split in progress (2026-10-25): about 2,800 lines left, 105 errors. Step 1 done: onboarding/tour/help/tooltips (`Onboarding.ts`), debug/perf panels (`DebugPanel.ts`) and scenario comparison/CSV import (`ScenarioComparison.ts`) moved to `assets/components/` (deps-injected like the other panels). Next: independent panels, then state, handler clusters, `render()`. No real JSX (it uses a custom `h` factory through a Vite `oxc.jsx` pragma override).
+- Split in progress (2026-10-25): about 2,240 lines left, 94 errors. Step 1 done: onboarding/tour/help/tooltips (`Onboarding.ts`), debug/perf panels (`DebugPanel.ts`) and scenario comparison/CSV import (`ScenarioComparison.ts`) moved to `assets/components/` (deps-injected like the other panels). Step 2 done: sensitivity/sliders (`SensitivityPanel.ts`) and customer analytics, mix optimizer, insights, reverse, what-if wizard, advanced charts (`AnalysisPanels.ts`); `reverseHasRun`/timer now live in the module, so the top-level `let` ordering risk is gone for them. Next: then state, handler clusters, `render()`. No real JSX (it uses a custom `h` factory through a Vite `oxc.jsx` pragma override).
 - **Split first:** pull cohesive blocks into modules (dashboard, scenarios, export, etc.), then convert each as a normal Phase 3 file. Converting the monolith in place would be one unreviewable change.
 - Finish by renaming the entry to `app.ts`, updating `index.html` (`src="assets/app.jsx"`) and `package.json` `main`, and dropping the `oxc.jsx` pragma override in `vite.config.js`.
 
