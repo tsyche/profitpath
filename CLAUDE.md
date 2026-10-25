@@ -49,7 +49,7 @@ src/
 ├── calculations/       # Modular calculation engine
 │   ├── index.ts          # Core calculation engine with caching
 │   ├── offeringRanking.ts # Profit-per-staff-hour ranking and discount-floor status
-│   ├── offeringPrice.ts  # Per-session pricing lens: price per visit vs the canonical priceMonthly; display and entry only
+│   ├── offeringPrice.ts  # Per-session / one-time pricing lens: price per visit or per sale vs the canonical priceMonthly; display and entry only
 │   ├── marketPosition.ts # Optional market low/avg/high per offering and the green/yellow/red price badge; display only
 │   ├── currency.ts       # Scenario currency allowlist + shared fmtMoney0 (display only)
 │   ├── offeringMeta.ts   # Per-offering confidence tag (verified/estimated/guess) and note sanitizers; display only
@@ -201,7 +201,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (583 unit tests across 57 files — 582 passing, 1 skipped — plus 362 Playwright e2e tests across 28 files, chromium + firefox)
+#### Test Coverage (587 unit tests across 58 files — 586 passing, 1 skipped — plus 366 Playwright e2e tests across 29 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

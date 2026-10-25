@@ -6,8 +6,8 @@ import type { CurrencyCode } from './calculations/currency';
 
 export type Mode = 'forecast' | 'current';
 
-/** Only types with behavior live here; one-time arrives with roadmap item 19. */
-export type OfferingType = 'subscription' | 'group' | 'per-session';
+/** One-time: a single sale per client (1 delivery, no staff hours); price is per sale. */
+export type OfferingType = 'subscription' | 'group' | 'per-session' | 'one-time';
 
 export type ExpenseFrequency = 'weekly' | 'monthly' | 'annual';
 

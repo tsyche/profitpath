@@ -8,6 +8,7 @@
 - [x] 2026-10-24 — 12c. E2E coverage for Mix Optimizer & Advanced Charts panels (found and fixed an XSS)
 - [x] 2026-10-24 — 12f. App version shown in Settings
 - [x] 2026-10-24 — 18. First-class per-session pricing type
+- [x] 2026-10-24 — 19. One-time / bundled purchase line items
 - [x] 2026-10-24 — 23. Inline per-session to monthly-equivalent conversion helper (superseded by 18)
 - [x] 2026-10-24 — Animated KPI Counters, AI Insights Engine & Reverse Calculator
 - [x] 2026-10-24 — 4-6. AI Insights Engine, Reverse Calculator, Client Mix Optimizer
@@ -48,6 +49,15 @@ Dates are the documented ship date; where the roadmap gave only a month, that mo
     - Effort: ~4-6 hours (touches the core calc model, not just UI)
 
 **Shipped 2026-10-24 as an entry lens:** a `per-session` offering type whose Price cell is per visit (`/session`), with Sessions / yr as the separate visits assumption. `priceMonthly` stays the one canonical price, so calc, what-ifs, exports and CSV are unchanged; changing visits keeps the per-visit price fixed. Helpers in `src/calculations/offeringPrice.ts`; tests `offeringPrice.test.ts`, `tests/e2e/per-session.spec.ts`. Reports and CSV show the monthly equivalent.
+
+### 2026-10-24 — 19. One-time / bundled purchase line items
+
+19. **One-time / bundled purchase line items**
+    - Common small-business pattern with nowhere to go today: a one-time bundle/package purchase (e.g. a punch card, gift card, or registration fee) that's neither a monthly subscription nor a recurring per-session booking
+    - A simple "one-time revenue" line-item type (name, price, estimated annual quantity sold, no session/capacity implications) would capture this without forcing it into the recurring-offering shape
+    - Effort: ~2-3 hours
+
+**Shipped 2026-10-24 as another type value:** `one-time` rows price per sale (`/sale`); the sanitizer pins Sessions / yr to 1 and Hours / session to 0, so a sale adds revenue and unit cost (Var $ / session) but no staff hours or capacity. Units sold per year is Clients (Current) or the Mix % share (Forecast). `priceMonthly` stays canonical (sale price / 12). Tests `oneTime.test.ts`, `tests/e2e/one-time.spec.ts`. Not done: a separate "one-time revenue" output line (units count as clients, so they dilute per-client metrics).
 
 ### 2026-10-24 — 23. Inline per-session to monthly-equivalent conversion helper (superseded by 18)
 

@@ -139,7 +139,7 @@ function annualVariableCostPerClient(o: SanitizedOffering): number {
   return o.sessionsPerYear * o.variableCostPerSession + (o.laborPctOfPrice / 100) * o.priceMonthly * 12;
 }
 
-const OFFERING_TYPES: readonly OfferingType[] = ['subscription', 'group', 'per-session'];
+const OFFERING_TYPES: readonly OfferingType[] = ['subscription', 'group', 'per-session', 'one-time'];
 
 /** Single fallback point: anything unrecognized is a subscription. */
 export function normalizeOfferingType(v: unknown): OfferingType {
@@ -197,8 +197,9 @@ function sanitizeOfferings(offerings: Offering[]): SanitizedOffering[] {
       ...o,
       name: (typeof o.name === 'string' ? o.name : '').trim() || 'Offering',
       priceMonthly: clamp(toFinite(o.priceMonthly), 0, MAX_MONEY),
-      sessionsPerYear: clamp(toFinite(o.sessionsPerYear), 0, MAX_COUNT),
-      hoursPerSession: clamp(toFinite(o.hoursPerSession), 0, MAX_COUNT),
+      // A one-time sale is one delivery that takes no recurring staff time
+      sessionsPerYear: o.type === 'one-time' ? 1 : clamp(toFinite(o.sessionsPerYear), 0, MAX_COUNT),
+      hoursPerSession: o.type === 'one-time' ? 0 : clamp(toFinite(o.hoursPerSession), 0, MAX_COUNT),
       variableCostPerSession: clamp(toFinite(o.variableCostPerSession), 0, MAX_MONEY),
       laborPctOfPrice: clamp(toFinite(o.laborPctOfPrice), 0, 100),
       discountPct: clamp(toFinite(o.discountPct), 0, 100),

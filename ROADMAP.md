@@ -8,11 +8,11 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **One-time / bundled purchase line items** (item 19, ~2-3 hrs) — the per-offering `type` field now carries `subscription | group | per-session`, so a `one-time` value is the natural next step.
-2. **Reverse calculator follow-ups** (12r) and the **"What If?" wizard follow-ups** (12v): auto-refresh, a combined pricing and volume lever, and wizard scenarios that combine levers.
-3. **Fix `labor-pct.spec.ts` flake** (12s, ~1 hr).
+1. **Reverse calculator follow-ups** (12r) and the **"What If?" wizard follow-ups** (12v): auto-refresh, a combined pricing and volume lever, and wizard scenarios that combine levers.
+2. **Fix `labor-pct.spec.ts` flake** (12s, ~1 hr).
+3. **Tax report shows US-tax figures in non-USD scenarios** (12t).
 
-Shipped 2026-10-24: What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
+Shipped 2026-10-24: one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
 
 ---
 
@@ -103,11 +103,6 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
     - Effort: ~2 hours
 
 **Business Model Fidelity** *(new category — found trialing a real hybrid subscription+hourly business, The Sound Stage, a voice/acting/recording studio)*
-
-19. **One-time / bundled purchase line items**
-    - Common small-business pattern with nowhere to go today: a one-time bundle/package purchase (e.g. a punch card, gift card, or registration fee) that's neither a monthly subscription nor a recurring per-session booking
-    - A simple "one-time revenue" line-item type (name, price, estimated annual quantity sold, no session/capacity implications) would capture this without forcing it into the recurring-offering shape
-    - Effort: ~2-3 hours
 
 20. **Multi-resource capacity pools**
     - The single "Service Hours" capacity pool assumes every offering competes for the same bottleneck resource — true for a solo consultant, false for any facility-based business with genuinely separate constraints (e.g. a recording booth, a rehearsal room, and staff time, which can all run in parallel)

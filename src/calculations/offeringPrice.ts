@@ -9,6 +9,11 @@ export function isPerSession(o: { type?: unknown }): boolean {
   return o.type === 'per-session';
 }
 
+/** One-time rows sell once (sessions fixed at 1, no staff hours); price is per sale. */
+export function isOneTime(o: { type?: unknown }): boolean {
+  return o.type === 'one-time';
+}
+
 /** Price per visit implied by the canonical monthly price and the visit count; 0 when there are no visits. */
 export function pricePerSession(o: Pick<PriceFields, 'priceMonthly' | 'sessionsPerYear'>): number {
   return o.sessionsPerYear > 0 ? (o.priceMonthly * 12) / o.sessionsPerYear : 0;
@@ -19,8 +24,9 @@ export function monthlyFromPerSession(perSession: number, sessionsPerYear: numbe
   return (perSession * sessionsPerYear) / 12;
 }
 
-/** Price shown in the "Price" cell: per visit for per-session rows, else per month. */
+/** Price shown in the "Price" cell: per visit (per-session) or per sale (one-time), else per month. */
 export function displayPrice(o: PriceFields): number {
+  if (isOneTime(o)) return o.priceMonthly * 12;
   return isPerSession(o) ? pricePerSession(o) : o.priceMonthly;
 }
 
