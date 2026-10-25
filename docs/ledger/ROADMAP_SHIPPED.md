@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-10-25 — 12j. Offerings table view (closed, already satisfied)
 - [x] 2026-10-25 — 12k. Duplicate offering button
 - [x] 2026-10-25 — 12l. New offerings take the unassigned Mix %
 - [x] 2026-10-25 — 30. One-time / capital expenses, amortized over useful life
@@ -47,6 +48,13 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-10-25 — 12j. Offerings table view (closed, already satisfied)
+
+12j. **No table/spreadsheet view for Service Offerings** *(CLOSED 2026-10-25, already satisfied: Service Offerings has been a table since the first asset-file refactor (f1d487e), rows = offerings; the entry described a layout that no longer exists. Responsive card stacking on narrow screens is intended.)*
+   - Past ~5 offerings (very normal for a real multi-service business — hit 12 building a real scenario), the vertical card-per-offering layout means a lot of scrolling to review or compare anything at a glance
+   - A compact table view (rows = offerings, columns = name/price/sessions/hours/var-cost/mix) as an alternate/toggleable layout would make both bulk entry and review much faster once past a handful of offerings
+   - Effort: ~3-4 hours
 
 ### 2026-10-25 — 12k. Duplicate offering button
 

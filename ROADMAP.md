@@ -9,7 +9,7 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 ## Recommended Next 3
 
 1. **Item 20, multi-resource capacity pools** (~6-8 hrs): the biggest remaining accuracy gap for facility-based businesses.
-2. **12j, spreadsheet-style table view for offerings** (the last of the real-business trial UX friction items). 12k, 12l and the cost rework (28-31) are done.
+2. **12o remainder / 24c remainder / 24b remainder**: small follow-ups on partly shipped items (see their entries). The real-business trial UX items (12j-12l) and the cost rework (28-31) are done.
 3. **`labor-pct.spec.ts` flake** (12s): parked, not reproducible (see its entry).
 
 Shipped 2026-10-24/25: Duplicate offering button (12k), new rows take the unassigned mix (12l), one-time expenses amortized over useful life (30), processing fee % (29), Marketing expenses driving CAC (28), loans via Loan Payments (31), reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
@@ -45,11 +45,6 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
 12d. **"Advisor" unified panel for scattered analytics features** *(new)*
    - Insights Engine, Reverse Calculator, Mix Optimizer, and Advanced Charts are four separate collapsed panels a user has to know to expand individually — low discoverability
    - Consider a single "Advisor" tab/section that surfaces the top insight/suggestion from each, with links to expand the full panel
-   - Effort: ~3-4 hours
-
-12j. **No table/spreadsheet view for Service Offerings** *(new — found trialing a real business)*
-   - Past ~5 offerings (very normal for a real multi-service business — hit 12 building a real scenario), the vertical card-per-offering layout means a lot of scrolling to review or compare anything at a glance
-   - A compact table view (rows = offerings, columns = name/price/sessions/hours/var-cost/mix) as an alternate/toggleable layout would make both bulk entry and review much faster once past a handful of offerings
    - Effort: ~3-4 hours
 
 12o. **Share URLs are absurdly long** *(PARTLY SHIPPED 2026-10-24: v2 links are deflated + base64url via `fflate`, about 4-5x shorter, legacy links still decode; staleness of old links and a server-side short ID remain open)* *(new — found trialing a real business; Tim's reaction on seeing one: "lol")*
