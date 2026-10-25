@@ -4,7 +4,7 @@ import { displayPrice, isOneTime, isPerSession, monthlyFromPerSession, priceMont
 import { calcRange, calcRangeDrivers, suggestRanges, sanitizeOfferingRange } from '../src/calculations/ranges';
 import { marketBadge, sanitizeOfferingMarket } from '../src/calculations/marketPosition';
 import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../src/calculations/offeringMeta';
-import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
+import { EXPENSE_CATEGORIES, EXPENSE_FREQUENCIES, monthlyCategorySpend, scaleOverhead, sanitizeExpenses, costBreakdown } from '../src/calculations/expenses';
 import { captureTableFocus, restoreTableFocus } from './hooks/useTableFocus';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
@@ -240,6 +240,7 @@ const state = {
   fullTimeEmployeePay: 60000,
   partTimeEmployeePay: 30000,
   monthlyCosts: 250,
+  processingFeePct: 0, // card/payment fee as % of revenue
   expenses: [],
   productiveUtilizationPct: 80, // percent of hours available for service delivery
   targetUtilizationPct: 75, // forecasting target
@@ -325,6 +326,7 @@ function setStateFromInputs() {
   state.partTimeEmployeePay = Math.max(0, safeParseNumber($('#partTimeEmployeePay').value, 0));
 
   state.monthlyCosts = Math.max(0, safeParseNumber($('#monthlyCosts').value, 0));
+  state.processingFeePct = clamp(safeParseNumber($('#processingFeePct').value, 0), 0, 20);
   state.productiveUtilizationPct = clamp(safeParseNumber($('#productiveUtilizationPct').value, 80), 0, 100);
   state.targetUtilizationPct = clamp(safeParseNumber($('#targetUtilizationPct').value, 75), 0, 150);
   state.lockMix = Boolean($('#lockMix')?.checked);
@@ -737,6 +739,7 @@ function resetDefaults() {
   state.fullTimeEmployeePay = 60000;
   state.partTimeEmployeePay = 30000;
   state.monthlyCosts = 250;
+  state.processingFeePct = 0;
   state.expenses = [];
   state.productiveUtilizationPct = 80;
   state.targetUtilizationPct = 75;
@@ -843,6 +846,9 @@ function render() {
   }
   {
     const el = $('#monthlyCosts'); if (el) el.value = state.monthlyCosts;
+  }
+  {
+    const el = $('#processingFeePct'); if (el) el.value = state.processingFeePct;
   }
   {
     const el = $('#productiveUtilizationPct'); if (el) el.value = state.productiveUtilizationPct;
@@ -1830,6 +1836,7 @@ function handleCSVImport(file) {
     if (settings.employeePay !== undefined) state.fullTimeEmployeePay = settings.employeePay;
     if (settings.partTimeEmployeePay !== undefined) state.partTimeEmployeePay = settings.partTimeEmployeePay;
     if (settings.monthlyCosts !== undefined) state.monthlyCosts = settings.monthlyCosts;
+    if (settings.processingFeePct !== undefined) state.processingFeePct = settings.processingFeePct;
     if (settings.productiveUtilizationPct !== undefined) state.productiveUtilizationPct = settings.productiveUtilizationPct;
     if (settings.targetUtilizationPct !== undefined) state.targetUtilizationPct = settings.targetUtilizationPct;
 
@@ -2556,7 +2563,9 @@ function initCustomerAnalyticsPanel() {
     try {
       const m = calc(state);
       const metrics = { ...m, totalClients: m.clients };
-      panel.innerHTML = renderCustomerAnalyticsDashboard(metrics, {}).html;
+      // Marketing expense rows drive CAC; with none, the dashboard keeps its default budget
+      const marketing = monthlyCategorySpend(state, 'Marketing');
+      panel.innerHTML = renderCustomerAnalyticsDashboard(metrics, marketing > 0 ? { monthlyMarketingBudget: marketing } : {}).html;
     } catch (e) {
       console.warn('Customer analytics render failed:', e);
       panel.innerHTML = '<p style="color: var(--muted); text-align: center;">Unable to load customer analytics.</p>';
@@ -3526,6 +3535,7 @@ function loadOnboardingIndustryTemplate(industryId) {
     state.fullTimeEmployeePay = config.fullTimeEmployeePay || 60000;
     state.partTimeEmployeePay = config.partTimeEmployeePay || 30000;
     state.monthlyCosts = config.monthlyCosts || 250;
+    state.processingFeePct = config.processingFeePct || 0;
     state.expenses = [];
     state.productiveUtilizationPct = config.productiveUtilizationPct || 80;
     state.targetUtilizationPct = config.targetUtilizationPct || 85;

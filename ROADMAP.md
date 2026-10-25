@@ -9,10 +9,10 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 ## Recommended Next 3
 
 1. **Item 20, multi-resource capacity pools** (~6-8 hrs): the biggest remaining accuracy gap for facility-based businesses.
-2. **Item 28/29/30/31, cost modeling rework** (marketing spend, payment fees, one-time expenses, loans): the app only models recurring fees and payroll.
+2. **Item 30, one-time / capital expenses** (needs a decision: amortize over N years, or count fully in year 1). 28, 29 and 31 shipped 2026-10-24.
 3. **`labor-pct.spec.ts` flake** (12s): parked, not reproducible (see its entry).
 
-Shipped 2026-10-24: reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
+Shipped 2026-10-24: processing fee % (29), Marketing expenses driving CAC (28), loans via Loan Payments (31), reverse calculator auto-refresh and price + volume lever (12r), wizard combined, part-time and market-average scenarios (12v), one-time rows in the optimizer and ranking (12w), share-link snapshot note (12u), US-tax label for non-USD scenarios (12t), one-time offering type (19), What-If wizard (12), e2e for Mix Optimizer and Advanced Charts (12c), in-app version (12f). Industry Benchmarks (item 10) dropped out of the top 3: it is blocked on sourcing trustworthy data, not on code.
 
 ---
 
@@ -128,25 +128,10 @@ TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/
 
 The revenue side of the app is rich: an unlimited, per-offering table with its own price/frequency/mix fields. The cost side, by contrast, is three flat numbers: Overhead (monthly), Full-time payroll, Part-time payroll, plus a per-offering Var $/Session field almost nobody in this session's trial ended up using (all 12 offerings landed on $0). Real small businesses have much richer cost structures than that — rent, insurance, software, equipment, loan payments, contractor pay, marketing spend, payment processing fees, one-time capital purchases. Right now none of those have a home.
 
-28. **Marketing spend as a real P&L cost, not just a Customer Analytics input**
-    - Monthly Marketing Budget already exists today, but only inside the Customer Analytics panel (used solely for the CAC calculation) — it's real cash a business spends, yet it doesn't reduce Net Income anywhere in the core calc
-    - Once item 27 exists, "Marketing" becomes a natural expense category — the same number should drive both CAC *and* the core P&L, rather than living in an isolated analytics silo disconnected from the actual profitability number the rest of the app centers on
-    - Effort: ~2 hours once item 27 exists (mostly wiring, not new UI)
-
-29. **Payment processing fees**
-    - A near-universal real cost for any business taking card payments (Stripe/Square-style ~2.9% + $0.30 per transaction) that isn't modeled anywhere today
-    - As a category on item 27's expense table (percentage-of-revenue type rather than flat amount), or as a simple global "processing fee %" input applied to revenue — either would capture a cost every single template business (consulting, fitness, photography, etc.) actually pays
-    - Effort: ~2-3 hours
-
-30. **One-time / capital expenses, separate from recurring monthly costs**
+30. **One-time / capital expenses, separate from recurring monthly costs** *(OPEN: item 27 shipped weekly/monthly/annual only; a one-time frequency still needs the amortization decision above)*
     - Equipment purchases, buildout costs, and other one-time capital outlays are a different shape than recurring monthly overhead — today there's nowhere to put a "bought a new recording rig for $3,000 this year" line without distorting the monthly Overhead number
     - Covered by item 27's frequency field (one-time vs. monthly vs. annual) rather than needing its own separate feature — listed here mainly to make sure item 27's design explicitly accounts for this case rather than assuming everything recurs monthly
     - Effort: included in item 27's scope
-
-31. **Loan / debt payments**
-    - Principal + interest payments on business loans or equipment financing — common for businesses financing a buildout or gear, not represented today
-    - Simplest version: a "Debt Service" expense category (item 27) with a flat monthly payment amount; a more complete version would track principal/interest split and remaining term for payoff projections, but that's a bigger feature than this app's current scope suggests is warranted yet
-    - Effort: ~1-2 hours for the simple flat-payment version once item 27 exists
 
 **Mobile & Platform Support (Deferred — needs full Xcode)**
 

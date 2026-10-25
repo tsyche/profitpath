@@ -427,6 +427,13 @@
             </div>
 
             <div class="field">
+              <label title="Card/payment processing fee as a percentage of revenue">Processing fee (% of revenue)</label>
+              <input id="processingFeePct" type="number" min="0" max="20" step="0.1" value="0"
+                title="Typically about 2.9% for card payments" />
+              <div class="hint">Counted as a variable cost on every offering; 0 if you don't take cards.</div>
+            </div>
+
+            <div class="field">
               <label title="Percentage of paid hours available for billable work">Productive utilization</label>
               <input id="productiveUtilizationPct" type="number" min="0" max="100" step="1" value="80"
                 title="Percentage of paid hours available for billable work" />

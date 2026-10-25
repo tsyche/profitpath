@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calc, clearCalculationCache } from './index'
-import { annualizeExpense, costBreakdown, sanitizeExpenses, scaleOverhead, totalMonthlyOverhead, EXPENSE_CATEGORIES } from './expenses'
+import { annualizeExpense, costBreakdown, monthlyCategorySpend, sanitizeExpenses, scaleOverhead, totalMonthlyOverhead, EXPENSE_CATEGORIES } from './expenses'
 import { sanitizeScenarioState } from '../../assets/services/miscService'
 
 // Roadmap 27: structured expense line items. monthlyCosts stays as "other overhead".
@@ -155,3 +155,12 @@ describe('costBreakdown', () => {
     expect(rows.map((r) => r.label).sort()).toEqual(['Other', 'Other overhead']);
   });
 });
+
+describe('monthlyCategorySpend', () => {
+  const e = (category: string, amount: number, frequency: string) => ({ id: category + amount, name: 'x', category, amount, frequency })
+  it('sums one category monthly across frequencies and ignores the rest', () => {
+    const state = { expenses: [e('Marketing', 100, 'monthly'), e('Marketing', 1200, 'annual'), e('Rent/Lease', 900, 'monthly')] }
+    expect(monthlyCategorySpend(state as any, 'Marketing')).toBeCloseTo(200)
+    expect(monthlyCategorySpend({} as any, 'Marketing')).toBe(0)
+  })
+})

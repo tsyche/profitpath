@@ -4,6 +4,9 @@
 
 ## Shipped index
 
+- [x] 2026-10-24 — 28. Marketing spend as a real P&L cost, not just a Customer Analytics input
+- [x] 2026-10-24 — 29. Payment processing fees
+- [x] 2026-10-24 — 31. Loan / debt payments
 - [x] 2026-10-24 — 12r. Reverse calculator auto-refreshes and gains a combined price + volume lever
 - [x] 2026-10-24 — 12v. Wizard: part-time hire, price + volume, price + hire, market-average scenarios
 - [x] 2026-10-24 — 12w. One-time rows handled in the Mix Optimizer and offering ranking
@@ -41,6 +44,27 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-10-24 — 28. Marketing spend as a real P&L cost, not just a Customer Analytics input
+
+28. **Marketing spend as a real P&L cost, not just a Customer Analytics input** *(SHIPPED 2026-10-24: the Customer Analytics panel now derives its marketing budget from Marketing expense rows, so one number drives CAC and the P&L; with no Marketing rows it keeps its default. It was previously a hardcoded 1000 with no input.)*
+    - Monthly Marketing Budget already exists today, but only inside the Customer Analytics panel (used solely for the CAC calculation) — it's real cash a business spends, yet it doesn't reduce Net Income anywhere in the core calc
+    - Once item 27 exists, "Marketing" becomes a natural expense category — the same number should drive both CAC *and* the core P&L, rather than living in an isolated analytics silo disconnected from the actual profitability number the rest of the app centers on
+    - Effort: ~2 hours once item 27 exists (mostly wiring, not new UI)
+
+### 2026-10-24 — 29. Payment processing fees
+
+29. **Payment processing fees** *(SHIPPED 2026-10-24: global "Processing fee (% of revenue)" input, 0-20%, counted as a variable cost on every offering via `feePct` in the calc engine; persisted in share links, localStorage and CSV. A flat per-transaction amount was not built.)*
+    - A near-universal real cost for any business taking card payments (Stripe/Square-style ~2.9% + $0.30 per transaction) that isn't modeled anywhere today
+    - As a category on item 27's expense table (percentage-of-revenue type rather than flat amount), or as a simple global "processing fee %" input applied to revenue — either would capture a cost every single template business (consulting, fitness, photography, etc.) actually pays
+    - Effort: ~2-3 hours
+
+### 2026-10-24 — 31. Loan / debt payments
+
+31. **Loan / debt payments** *(SHIPPED 2026-10-24: covered by item 27. Enter a `Loan Payments` expense with a flat payment; no principal/interest tracking.)*
+    - Principal + interest payments on business loans or equipment financing — common for businesses financing a buildout or gear, not represented today
+    - Simplest version: a "Debt Service" expense category (item 27) with a flat monthly payment amount; a more complete version would track principal/interest split and remaining term for payoff projections, but that's a bigger feature than this app's current scope suggests is warranted yet
+    - Effort: ~1-2 hours for the simple flat-payment version once item 27 exists
 
 ### 2026-10-24 — 12r, 12v, 12w. Insights follow-ups
 

@@ -80,6 +80,8 @@ export interface SanitizedOffering extends Offering {
   hoursPerSession: number;
   variableCostPerSession: number;
   laborPctOfPrice: number;
+  /** Global processing fee %, stamped on by calc(); not stored on offerings. */
+  feePct?: number;
   discountPct: number;
   type: OfferingType;
   seats: number;
@@ -103,6 +105,8 @@ export interface CalcState {
   hoursPerWeek?: number;
   employeePay?: number;
   monthlyCosts?: number;
+  /** Card/payment processing fee as a % of list-price revenue; applied as a variable cost. */
+  processingFeePct?: number;
   expenses?: Expense[];
   productiveUtilizationPct?: number;
   targetUtilizationPct?: number;
@@ -247,6 +251,7 @@ export interface Sanitization {
   employees: number;
   employeePay: number;
   monthlyCosts: number;
+  processingFeePct: number;
   annualExpenses: number;
   productiveUtilizationPct: number;
   targetUtilizationPct: number;
@@ -332,6 +337,7 @@ export interface SanitizedScenarioState extends CalcState {
   fullTimeEmployeePay: number;
   partTimeEmployeePay: number;
   monthlyCosts: number;
+  processingFeePct?: number;
   productiveUtilizationPct: number;
   targetUtilizationPct: number;
   lockMix: boolean;

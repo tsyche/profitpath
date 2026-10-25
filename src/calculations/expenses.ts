@@ -54,6 +54,11 @@ export function totalMonthlyOverhead(state: { monthlyCosts?: unknown; expenses?:
   return (Number.isFinite(other) ? Math.max(0, other) : 0) + annualExpenseTotal(sanitizeExpenses(state.expenses)) / 12;
 }
 
+/** Monthly spend in one expense category, summed over all its line items. */
+export function monthlyCategorySpend(state: { expenses?: unknown }, category: ExpenseCategory): number {
+  return annualExpenseTotal(sanitizeExpenses(state.expenses).filter((e) => e.category === category)) / 12;
+}
+
 /** Copy of a state with all overhead (monthlyCosts and expense amounts) scaled; used by what-if sliders. */
 export function scaleOverhead<T extends { monthlyCosts?: number; expenses?: unknown }>(state: T, factor: number): T {
   return {

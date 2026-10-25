@@ -108,6 +108,7 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
     fullTimeEmployeePay: toFiniteNumber(data.fullTimeEmployeePay ?? data.employeePay, 60000, 0, 1e9),
     partTimeEmployeePay: toFiniteNumber(data.partTimeEmployeePay, 30000, 0, 1e9),
     monthlyCosts: toFiniteNumber(data.monthlyCosts, 250, 0, 1e9),
+    processingFeePct: toFiniteNumber(data.processingFeePct, 0, 0, 20),
     productiveUtilizationPct: toFiniteNumber(data.productiveUtilizationPct, 80, 1, 100),
     targetUtilizationPct: toFiniteNumber(data.targetUtilizationPct, 75, 1, 150),
     lockMix: data.lockMix === true,
@@ -228,6 +229,7 @@ export function buildCSV(st: any, results: any) {
     'FT Annual Pay,' + st.fullTimeEmployeePay + ',USD/yr',
     'PT Annual Pay,' + st.partTimeEmployeePay + ',USD/yr',
     'Other Overhead,' + st.monthlyCosts + ',USD/mo',
+    'Processing Fee,' + (st.processingFeePct || 0) + ',%',
     'Productive Utilization,' + st.productiveUtilizationPct + ',%',
     'Target Utilization,' + st.targetUtilizationPct + ',%',
     '',
@@ -1449,6 +1451,7 @@ const SETTINGS_KEYS: Record<string, string> = {
   employeepay: 'employeePay', 'ft annual pay': 'employeePay',
   parttimeemployeepay: 'partTimeEmployeePay', 'pt annual pay': 'partTimeEmployeePay',
   monthlycosts: 'monthlyCosts', 'other overhead': 'monthlyCosts', 'monthly overhead': 'monthlyCosts',
+  processingfeepct: 'processingFeePct', 'processing fee': 'processingFeePct',
   productiveutilizationpct: 'productiveUtilizationPct', 'productive utilization': 'productiveUtilizationPct',
   targetutilizationpct: 'targetUtilizationPct', 'target utilization': 'targetUtilizationPct'
 };
@@ -1496,6 +1499,7 @@ export function importFromCSV(csvText: any) {
           if (key === 'employeePay') settings.employeePay = Math.max(0, numValue);
           if (key === 'partTimeEmployeePay') settings.partTimeEmployeePay = Math.max(0, numValue);
           if (key === 'monthlyCosts') settings.monthlyCosts = Math.max(0, numValue);
+          if (key === 'processingFeePct') settings.processingFeePct = Math.max(0, Math.min(20, numValue));
           if (key === 'productiveUtilizationPct') settings.productiveUtilizationPct = Math.max(0, Math.min(100, numValue));
           if (key === 'targetUtilizationPct') settings.targetUtilizationPct = Math.max(0, numValue);
         }

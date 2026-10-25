@@ -172,7 +172,7 @@ describe('Fuzz: sanitizeScenarioState', () => {
       // Only allowlisted keys survive
       const allowed = new Set([
         'mode', 'offerings', 'fullTimeEmployees', 'partTimeEmployees',
-        'fullTimeEmployeePay', 'partTimeEmployeePay', 'monthlyCosts',
+        'fullTimeEmployeePay', 'partTimeEmployeePay', 'monthlyCosts', 'processingFeePct',
         'productiveUtilizationPct', 'targetUtilizationPct', 'lockMix', 'loadedTemplate',
         'notes', 'currency', 'expenses'
       ]);

@@ -86,6 +86,7 @@ function generateCacheKey(state: CalcState) {
     mode: state.mode,
     ...employeeKey,
     monthlyCosts: state.monthlyCosts,
+    processingFeePct: state.processingFeePct,
     expenses: sanitizeExpenses(state.expenses).map(e => [e.category, e.amount, e.frequency]),
     productiveUtilizationPct: state.productiveUtilizationPct,
     targetUtilizationPct: state.targetUtilizationPct,
@@ -131,12 +132,12 @@ export function normalizeMix(offerings: Offering[]): MixResult {
 }
 
 /**
- * Variable cost per client per year: Var $/session plus contractor pay as a
- * % of list price. Priced off priceMonthly (list price) so a future discount
+ * Variable cost per client per year: Var $/session plus contractor pay and the
+ * global processing fee, both as a % of list price. Priced off priceMonthly (list price) so a future discount
  * model (roadmap 24a) must not change the base; the business absorbs discounts.
  */
 function annualVariableCostPerClient(o: SanitizedOffering): number {
-  return o.sessionsPerYear * o.variableCostPerSession + (o.laborPctOfPrice / 100) * o.priceMonthly * 12;
+  return o.sessionsPerYear * o.variableCostPerSession + ((o.laborPctOfPrice + (o.feePct || 0)) / 100) * o.priceMonthly * 12;
 }
 
 const OFFERING_TYPES: readonly OfferingType[] = ['subscription', 'group', 'per-session', 'one-time'];
@@ -191,7 +192,7 @@ function currentStaffHours(o: SanitizedOffering): number {
 /**
  * Sanitizes and validates offering data
  */
-function sanitizeOfferings(offerings: Offering[]): SanitizedOffering[] {
+function sanitizeOfferings(offerings: Offering[], feePct = 0): SanitizedOffering[] {
   return offerings
     .filter((o) => o && typeof o === 'object')
     .map((o) => ({
@@ -203,6 +204,7 @@ function sanitizeOfferings(offerings: Offering[]): SanitizedOffering[] {
       hoursPerSession: o.type === 'one-time' ? 0 : clamp(toFinite(o.hoursPerSession), 0, MAX_COUNT),
       variableCostPerSession: clamp(toFinite(o.variableCostPerSession), 0, MAX_MONEY),
       laborPctOfPrice: clamp(toFinite(o.laborPctOfPrice), 0, 100),
+      feePct,
       discountPct: clamp(toFinite(o.discountPct), 0, 100),
       type: normalizeOfferingType(o.type),
       seats: Math.floor(clamp(finiteOr(o.seats, 1), 1, MAX_COUNT)),
@@ -532,6 +534,7 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
   const employeePay = employees > 0 ? totalPayroll / employees : 0; // Average pay per employee
 
   const monthlyCosts = clamp(toFinite(input.monthlyCosts), 0, MAX_MONEY);
+  const processingFeePct = clamp(toFinite(input.processingFeePct), 0, 20);
   const annualExpenses = annualExpenseTotal(sanitizeExpenses(input.expenses));
   const productiveUtilizationPct = clamp(toFinite(input.productiveUtilizationPct), 0, 100);
   const targetUtilizationPct = clamp(toFinite(input.targetUtilizationPct), 0, 150);
@@ -546,13 +549,14 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
     employees,
     employeePay,
     monthlyCosts,
+    processingFeePct,
     annualExpenses,
     productiveUtilizationPct,
     targetUtilizationPct
   };
 
   // Sanitize offerings
-  const offerings = sanitizeOfferings(Array.isArray(input.offerings) ? input.offerings : []);
+  const offerings = sanitizeOfferings(Array.isArray(input.offerings) ? input.offerings : [], processingFeePct);
   intermediate.sanitization.offerings = offerings;
 
   const mode = input.mode;
