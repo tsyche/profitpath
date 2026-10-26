@@ -19,6 +19,8 @@ for (const width of [1728, 1280, 375]) {
       const out: string[] = [];
       document.querySelectorAll('#offeringsBody tr').forEach((tr, i) => {
         const card = tr.getBoundingClientRect();
+        const tops = new Set([...tr.querySelectorAll('td.group-actions button')].map((b) => Math.round(b.getBoundingClientRect().top)));
+        if (tops.size > 1) out.push(`row ${i} buttons not on one line`);
         tr.querySelectorAll('button').forEach((b) => {
           const r = b.getBoundingClientRect();
           if (r.right > card.right + 0.5 || r.left < card.left - 0.5) out.push(`row ${i} ${b.textContent}`);

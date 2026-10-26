@@ -52,12 +52,12 @@ export function renderSensitivityHeatmap(state: CalcState): string {
   const maxAbs = Math.max(...allIncomes.map((v) => Math.abs(v)), 1);
 
   const colorFor = (income: number) => {
-    // Diverging scale: red at -maxAbs, amber near 0, green at +maxAbs
+    // Diverging scale: red at -maxAbs, amber near 0, green at +maxAbs. Alpha tops out at 0.45 so light cell text keeps AA contrast.
     const ratio = Math.max(-1, Math.min(1, income / maxAbs));
     if (ratio >= 0) {
-      return `rgba(52, 211, 153, ${(0.15 + ratio * 0.55).toFixed(2)})`;
+      return `rgba(52, 211, 153, ${(0.15 + ratio * 0.3).toFixed(2)})`;
     }
-    return `rgba(251, 113, 133, ${(0.15 + Math.abs(ratio) * 0.55).toFixed(2)})`;
+    return `rgba(251, 113, 133, ${(0.15 + Math.abs(ratio) * 0.3).toFixed(2)})`;
   };
 
   let html = '<table class="heatmap-table"><thead><tr><th title="Price change (rows) vs. utilization change (columns)">Price \\ Util</th>';

@@ -53,17 +53,17 @@ function updateLevelDescription(level: string) {
   let html = '<div style="font-size: 12px;">';
 
   if (desc.enabled.length > 0) {
-    html += '<div style="margin-bottom: 6px;"><div style="font-weight: 500; color: #16a34a; margin-bottom: 2px;">✓ Enabled:</div>';
+    html += '<div style="margin-bottom: 6px;"><div style="font-weight: 500; color: var(--good); margin-bottom: 2px;">✓ Enabled:</div>';
     desc.enabled.forEach(feature => {
-      html += `<div style="color: #374151; margin-left: 18px; line-height: 1.4;">${feature}</div>`;
+      html += `<div style="color: var(--text); margin-left: 18px; line-height: 1.4;">${feature}</div>`;
     });
     html += '</div>';
   }
 
   if (desc.locked.length > 0) {
-    html += '<div><div style="font-weight: 500; color: #888; margin-bottom: 2px;">🔒 Locked:</div>';
+    html += '<div><div style="font-weight: 500; color: var(--muted); margin-bottom: 2px;">🔒 Locked:</div>';
     desc.locked.forEach(feature => {
-      html += `<div style="color: #888; margin-left: 18px; line-height: 1.4; font-size: 11px;">${feature}</div>`;
+      html += `<div style="color: var(--muted); margin-left: 18px; line-height: 1.4; font-size: 11px;">${feature}</div>`;
     });
     html += '</div>';
   }

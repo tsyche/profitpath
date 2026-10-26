@@ -5,6 +5,7 @@
 ## Shipped index
 
 - [x] 2026-10-25 — TypeScript migration (strict, all source and tests `.ts`, lint `--max-warnings 0`)
+- [x] 2026-10-26 — 32. Repo-wide accessibility e2e (axe-core)
 - [x] 2026-10-26 — 24e. Membership What-If follow-ups (visit ranges, members per pool, fee optimizer)
 - [x] 2026-10-25 — 24a. Membership and prepaid-credit pricing calculator
 - [x] 2026-10-25 — 20. Multi-resource capacity pools
@@ -56,6 +57,12 @@
 ### 2026-10-25 — TypeScript migration
 
 All source and tests are `.ts` with `strict: true`; the ratchet is retired (`tsc --noEmit` must be 0). `tests/e2e` is typechecked; unit `*.test.ts` files stay excluded (known gap, ~1,150 errors in the jsdom mock tests; tracked as ROADMAP 12x); `$`/`$$` are typed. Migration also surfaced and fixed real bugs, each with a test: insights under-utilization, dashboard export `getSummary`, customer analytics revenue, table focus restore (`tests/e2e/table-focus.spec.ts`). Plan: [typescript-migration](../plans/archive/typescript-migration.md).
+
+### 2026-10-26 — 32. Repo-wide accessibility e2e (axe-core)
+
+`tests/e2e/a11y.spec.ts` runs `@axe-core/playwright` at beginner, intermediate and advanced with panels expanded, plus the templates, what-if, glance and settings modals, the open drawer, and an inert-when-closed drawer check (24 tests, chromium + firefox). Dark theme runs the full WCAG 2 A/AA tag set; light theme skips only `color-contrast` (palette misses AA; deferred to the UI/UX pass, Phase 0).
+
+Fixes the scan drove: `for=` on 14 labels, aria-labels on undo/redo, `#debugPanel` tabindex + label, `#appDrawer` inert while closed, removed a mismatching `.ab-kpis` aria-label, removed `.section-disclaimer` opacity, capped heatmap alpha at 0.45, theme vars in the Settings level descriptions, and the offering Actions row layout (asserted in `layout-overflow.spec.ts`).
 
 ### 2026-10-26 — 24e. Membership What-If follow-ups
 

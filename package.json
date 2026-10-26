@@ -20,6 +20,7 @@
     "postinstall": "find node_modules/@capacitor -name build.gradle -type f -exec sed -i.bak \"s/proguard-android\\.txt/proguard-android-optimize.txt/g\" {} \\; && find node_modules/@capacitor -name '*.bak' -delete 2>/dev/null || true"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/core": "^5.7.8",
     "@playwright/test": "^1.59.1",

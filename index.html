@@ -112,7 +112,7 @@
     <span class="ab-spacer"></span>
 
     <!-- At a glance: tap to expand to the full set (ids populated by updateKeyMetrics) -->
-    <button class="ab-kpis" type="button" aria-label="Show full at-a-glance metrics" title="Tap for full at-a-glance" onclick="ppOpenModal('glanceModal')">
+    <button class="ab-kpis" type="button" title="Tap for full at-a-glance" onclick="ppOpenModal('glanceModal')">
       <span class="ab-kpi k-rev"><i>Revenue</i><b id="abkRevenue">—</b></span>
       <span class="ab-kpi k-net"><i>Net income</i><b id="abkIncome">—</b></span>
       <span class="ab-kpi k-util"><i>Utilization</i><b id="abkUtil">—</b></span>
@@ -124,11 +124,11 @@
     <!-- Fixed control cluster: undo/redo + theme stay together at every width -->
     <div class="ab-right">
       <div class="undo-redo-compact ab-undo">
-        <button id="undoBtn" class="undo-redo-icon-btn" type="button" title="Undo (Ctrl+Z)" disabled>
+        <button id="undoBtn" class="undo-redo-icon-btn" type="button" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-15.5-6L3 13" /></svg>
         </button>
         <div class="undo-redo-divider"></div>
-        <button id="redoBtn" class="undo-redo-icon-btn" type="button" title="Redo (Ctrl+Y)" disabled>
+        <button id="redoBtn" class="undo-redo-icon-btn" type="button" title="Redo (Ctrl+Y)" aria-label="Redo" disabled>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 15.5-6L21 13" /></svg>
         </button>
       </div>
@@ -168,7 +168,7 @@
 
   <!-- ===== unified drawer (desktop dropdown-from-left + mobile slide-in; one source of truth) ===== -->
   <div class="drawer-scrim" id="drawerScrim" onclick="closeDrawer()"></div>
-  <aside class="app-drawer" id="appDrawer" aria-hidden="true" aria-label="Menu">
+  <aside class="app-drawer" id="appDrawer" aria-hidden="true" aria-label="Menu" inert>
     <div class="drawer-head">
       <span class="ab-logo"><img class="ab-sun" src="/assets/pp-logo2-final.svg" alt="" /><span class="ab-word">ProfitPath</span></span>
       <button class="ab-icon" type="button" aria-label="Close menu" onclick="closeDrawer()"><svg viewBox="0 0 24 24"><use href="#ic-close"/></svg></button>
@@ -372,7 +372,7 @@
         <div class="section-box inputs-fields">
           <div class="row">
             <div class="field" style="min-width: 210px;">
-              <label title="Choose how to analyze your business">Mode</label>
+              <label title="Choose how to analyze your business" for="modeSelect">Mode</label>
               <select id="modeSelect" title="Choose how to analyze your business">
                 <option value="forecast">Forecasting (capacity → customers)</option>
                 <option value="current">Current active service (customers → capacity)</option>
@@ -392,28 +392,28 @@
 
             <div class="team-config-group">
               <div class="field">
-                <label title="Number of full-time team members (40 hrs/week)">Full-time employees</label>
+                <label title="Number of full-time team members (40 hrs/week)" for="fullTimeEmployees">Full-time employees</label>
                 <input id="fullTimeEmployees" type="number" min="0" step="1" value="1"
                   title="Number of full-time team members" />
                 <div class="hint">Full-time staff (40 hours per week).</div>
               </div>
 
               <div class="field">
-                <label title="Total salary cost per full-time employee">Full-time annual pay</label>
+                <label title="Total salary cost per full-time employee" for="fullTimeEmployeePay">Full-time annual pay</label>
                 <input id="fullTimeEmployeePay" type="number" min="0" step="1000" value="60000"
                   title="Total salary cost per full-time employee" />
                 <div class="hint">Payroll for full-time staff ("you" excluded).</div>
               </div>
 
               <div class="field">
-                <label title="Number of part-time team members (20 hrs/week)">Part-time employees</label>
+                <label title="Number of part-time team members (20 hrs/week)" for="partTimeEmployees">Part-time employees</label>
                 <input id="partTimeEmployees" type="number" min="0" step="1" value="0"
                   title="Number of part-time team members" />
                 <div class="hint">Part-time staff (20 hours per week).</div>
               </div>
 
               <div class="field">
-                <label title="Total salary cost per part-time employee">Part-time annual pay</label>
+                <label title="Total salary cost per part-time employee" for="partTimeEmployeePay">Part-time annual pay</label>
                 <input id="partTimeEmployeePay" type="number" min="0" step="1000" value="30000"
                   title="Total salary cost per part-time employee" />
                 <div class="hint">Payroll for part-time staff ("you" excluded).</div>
@@ -421,28 +421,28 @@
             </div>
 
             <div class="field">
-              <label title="Other fixed monthly costs not listed under Fixed Expenses">Other overhead (monthly)</label>
+              <label title="Other fixed monthly costs not listed under Fixed Expenses" for="monthlyCosts">Other overhead (monthly)</label>
               <input id="monthlyCosts" type="number" min="0" step="10" value="250"
                 title="Fixed monthly costs like rent, insurance, utilities" />
               <div class="hint">Catch-all, on top of the Fixed Expenses table; converted to annual fixed costs.</div>
             </div>
 
             <div class="field">
-              <label title="Card/payment processing fee as a percentage of revenue">Processing fee (% of revenue)</label>
+              <label title="Card/payment processing fee as a percentage of revenue" for="processingFeePct">Processing fee (% of revenue)</label>
               <input id="processingFeePct" type="number" min="0" max="20" step="0.1" value="0"
                 title="Typically about 2.9% for card payments" />
               <div class="hint">Counted as a variable cost on every offering; 0 if you don't take cards.</div>
             </div>
 
             <div class="field">
-              <label title="Percentage of paid hours available for billable work">Productive utilization</label>
+              <label title="Percentage of paid hours available for billable work" for="productiveUtilizationPct">Productive utilization</label>
               <input id="productiveUtilizationPct" type="number" min="0" max="100" step="1" value="80"
                 title="Percentage of paid hours available for billable work" />
               <div class="hint">% of paid hours actually available for delivering sessions.</div>
             </div>
 
             <div class="field">
-              <label title="Target capacity goal you're planning towards">Target utilization (forecasting)</label>
+              <label title="Target capacity goal you're planning towards" for="targetUtilizationPct">Target utilization (forecasting)</label>
               <input id="targetUtilizationPct" type="number" min="0" max="150" step="1" value="75"
                 title="Target capacity goal you're planning towards" />
               <div class="hint">Used only in Forecasting mode.</div>
@@ -840,22 +840,22 @@
             <div id="sensitivityPanel">
               <div class="sensitivity-sliders">
                 <div class="slider-row">
-                  <label class="slider-label">Price <span id="priceSliderVal">+0%</span></label>
+                  <label class="slider-label" for="priceSlider">Price <span id="priceSliderVal">+0%</span></label>
                   <input type="range" id="priceSlider" min="-50" max="100" value="0" step="5"
                     title="Adjust service pricing by percentage (e.g., +20% = 20% price increase)">
                 </div>
                 <div class="slider-row">
-                  <label class="slider-label">Overhead <span id="overheadSliderVal">+0%</span></label>
+                  <label class="slider-label" for="overheadSlider">Overhead <span id="overheadSliderVal">+0%</span></label>
                   <input type="range" id="overheadSlider" min="-50" max="100" value="0" step="5"
                     title="Adjust monthly overhead costs by percentage">
                 </div>
                 <div class="slider-row">
-                  <label class="slider-label">Utilization <span id="utilizationSliderVal">—%</span></label>
+                  <label class="slider-label" for="utilizationSlider">Utilization <span id="utilizationSliderVal">—%</span></label>
                   <input type="range" id="utilizationSlider" min="20" max="150" value="75" step="1"
                     title="Percentage of paid hours that are billable (productive time)">
                 </div>
                 <div class="slider-row">
-                  <label class="slider-label">Employees <span id="employeesSliderVal">—</span></label>
+                  <label class="slider-label" for="employeesSlider">Employees <span id="employeesSliderVal">—</span></label>
                   <input type="range" id="employeesSlider" min="1" max="20" value="1" step="1"
                     title="Number of full-time equivalent employees on your team">
                 </div>
@@ -875,7 +875,7 @@
           <div id="mixOptimizerBody" class="debug-body collapsed" aria-hidden="true">
             <div id="mixOptimizerPanel">
               <div class="slider-row">
-                <label class="slider-label">Optimize for</label>
+                <label class="slider-label" for="mixOptimizerObjective">Optimize for</label>
                 <select id="mixOptimizerObjective" title="Choose whether to maximize projected profit or capacity utilization">
                   <option value="profit">Profit</option>
                   <option value="utilization">Utilization</option>
@@ -970,7 +970,7 @@
           <button id="debugToggle" class="debug-toggle" aria-expanded="false" aria-controls="debugBody"
             title="View raw calculation data and internal state for troubleshooting">▶ Debug</button>
           <div id="debugBody" class="debug-body collapsed" aria-hidden="true">
-            <pre id="debugPanel" class="debug-pre">Debug: no data yet</pre>
+            <pre id="debugPanel" class="debug-pre" tabindex="0" aria-label="Debug output">Debug: no data yet</pre>
           </div>
         </div>
       </div>
@@ -1149,6 +1149,7 @@
       document.getElementById('appDrawer').classList.add('open');
       document.getElementById('drawerScrim').classList.add('show');
       document.getElementById('appDrawer').setAttribute('aria-hidden', 'false');
+      document.getElementById('appDrawer').inert = false;
       window.acquireScrollLock();
     }
     function closeDrawer() {
@@ -1160,6 +1161,7 @@
       drawer.classList.remove('open');
       document.getElementById('drawerScrim').classList.remove('show');
       drawer.setAttribute('aria-hidden', 'true');
+      drawer.inert = true;
       window.releaseScrollLock();
     }
     // Tapping the hamburger again should close an open drawer.

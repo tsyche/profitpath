@@ -23,6 +23,7 @@
 
 - `/audit-ux-e2e` against the dev server (port 3120): default template, a 12-offering scenario, 375px mobile, beginner and advanced levels.
 - `/audit-usability`: Nielsen heuristics sweep plus a cognitive walkthrough of "first scenario from a template".
+- 2026-10-26: light-theme `color-contrast` is skipped in `tests/e2e/a11y.spec.ts` (palette misses AA); include a light palette fix in the findings and drop the skip when it lands.
 - Skip `/audit-tests`; unrelated to UI/UX, run separately.
 - **Gate:** ranked findings list (severity, affects beginner path y/n, suspected code location) saved under `docs/ledger/`.
 
