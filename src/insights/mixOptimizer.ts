@@ -4,6 +4,7 @@
  * (mixPct per offering) that maximizes profit or utilization within capacity.
  */
 
+import type { CalcState, CalcResult } from '../types';
 import { calc, normalizeOfferingType } from '../calculations/index';
 
 const GRID_STEPS = 11; // 0%, 10%, ..., 100% per offering
@@ -19,10 +20,10 @@ function generateGridCandidates(count: number): Array<number[]> {
   if (count <= 0) return [];
   if (count === 1) return [[100]];
 
-  const candidates: any[] = [];
+  const candidates: number[][] = [];
   const step = 100 / (GRID_STEPS - 1);
 
-  const build = (remaining: any, slotsLeft: any, current: any) => {
+  const build = (remaining: number, slotsLeft: number, current: number[]) => {
     if (slotsLeft === 1) {
       candidates.push([...current, remaining]);
       return;
@@ -42,7 +43,7 @@ function generateGridCandidates(count: number): Array<number[]> {
  * @param score - (mix) => number, higher is better
  * @returns Refined mix
  */
-function refineMix(startMix: number[], score: (...args: any[]) => any): number[] {
+function refineMix(startMix: number[], score: (mix: number[]) => number): number[] {
   let best = [...startMix];
   let bestScore = score(best);
   const deltas = [5, 1];
@@ -73,10 +74,10 @@ function refineMix(startMix: number[], score: (...args: any[]) => any): number[]
 }
 
 export class MixOptimizer {
-  state: any;
-  metrics: any;
+  state: CalcState;
+  metrics: CalcResult;
 
-  constructor(state: any, metrics: any) {
+  constructor(state: CalcState, metrics: CalcResult) {
     this.state = state;
     this.metrics = metrics;
   }
@@ -86,7 +87,7 @@ export class MixOptimizer {
    * @param {'profit'|'utilization'} objective
    * @returns {Object|null} Optimization result
    */
-  optimize(objective = 'profit') {
+  optimize(objective: 'profit' | 'utilization' = 'profit') {
     const offerings = this.state?.offerings;
     if (!Array.isArray(offerings)) {
       return null;
@@ -107,13 +108,13 @@ export class MixOptimizer {
       return k === -1 ? (Number(o.mixPct) || 0) : vec[k] * budget / 100;
     });
 
-    const scoreOf = (result: any) => objective === 'utilization' ? result.capacityPct : result.income;
+    const scoreOf = (result: CalcResult) => objective === 'utilization' ? result.capacityPct : result.income;
 
-    const runMix = (vec: any) => {
+    const runMix = (vec: number[]) => {
       const mixVector = expand(vec);
       const testState = {
         ...this.state,
-        mode: 'forecast',
+        mode: 'forecast' as const,
         offerings: offerings.map((o, idx) => ({ ...o, mixPct: mixVector[idx] }))
       };
       return calc(testState, { enableCache: false });
@@ -173,7 +174,7 @@ export class MixOptimizer {
  * @param metrics - Current calc() result
  * @returns Optimization result
  */
-export function optimizeMix(state: Record<string, any>, metrics: Record<string, any>, objective: 'profit'|'utilization' = 'profit'): Record<string, any>|null {
+export function optimizeMix(state: CalcState, metrics: CalcResult, objective: 'profit'|'utilization' = 'profit'): ReturnType<MixOptimizer['optimize']> {
   const optimizer = new MixOptimizer(state, metrics);
   return optimizer.optimize(objective);
 }

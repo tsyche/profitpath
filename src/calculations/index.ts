@@ -66,7 +66,7 @@ function cacheSet(key: string, value: CalcResult) {
   calculationCache.set(key, value);
   if (calculationCache.size > CACHE_MAX_SIZE) {
     // Evict least recently used (Map insertion order = oldest first after LRU promotion)
-    calculationCache.delete(calculationCache.keys().next().value);
+    calculationCache.delete(calculationCache.keys().next().value as string);
   }
 }
 

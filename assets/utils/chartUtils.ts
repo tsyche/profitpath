@@ -1,5 +1,8 @@
 // Chart utilities
-export function lazyLoadChart(chartId: any, data: any, _options = {}) {
+export interface ChartPoint { x: number; y: number; target: HTMLElement }
+export interface ChartDatum { value?: number; color?: string; label?: string }
+
+export function lazyLoadChart(chartId: string, data: ChartDatum[], _options = {}) {
   const canvas = document.getElementById(chartId);
   if (!(canvas instanceof HTMLCanvasElement)) return null;
 
@@ -18,10 +21,10 @@ export function lazyLoadChart(chartId: any, data: any, _options = {}) {
     const chartWidth = width - margin * 2;
     const chartHeight = height - margin * 2;
     const barWidth = chartWidth / data.length;
-    const maxValue = Math.max(...data.map((d: any) => d.value || 0));
+    const maxValue = Math.max(...data.map((d) => d.value || 0));
 
-    data.forEach((item: any, index: any) => {
-      const barHeight = (item.value / maxValue) * chartHeight;
+    data.forEach((item, index) => {
+      const barHeight = ((item.value || 0) / maxValue) * chartHeight;
       const x = margin + index * barWidth;
       const y = height - margin - barHeight;
 
@@ -39,7 +42,7 @@ export function lazyLoadChart(chartId: any, data: any, _options = {}) {
   return canvas;
 }
 
-export function setupChartEventListeners(chartId: any, callbacks: { onClick?: (e: any) => void; onHover?: (e: any) => void } = {}) {
+export function setupChartEventListeners(chartId: string, callbacks: { onClick?: (e: ChartPoint) => void; onHover?: (e: ChartPoint) => void } = {}) {
   const canvas = document.getElementById(chartId);
   if (!canvas) return;
 

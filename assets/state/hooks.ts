@@ -1,3 +1,4 @@
+import type { CalcResult } from '../../src/types';
 /**
  * Render-side callbacks that the input handlers call after editing state.
  * app.ts registers them once; handler modules read them at call time, so
@@ -6,7 +7,7 @@
 
 interface Hooks {
   render: () => void;
-  updateOutputs: (metrics: any) => void;
+  updateOutputs: (metrics: CalcResult) => void;
   updateValidationDisplay: () => void;
 }
 
@@ -17,5 +18,5 @@ export function setHooks(h: Hooks): void {
 }
 
 export const render = (): void => hooks!.render();
-export const updateOutputs = (metrics: any): void => hooks!.updateOutputs(metrics);
+export const updateOutputs = (metrics: CalcResult): void => hooks!.updateOutputs(metrics);
 export const updateValidationDisplay = (): void => hooks!.updateValidationDisplay();

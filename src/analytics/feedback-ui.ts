@@ -6,10 +6,16 @@
 // Import FeedbackCollector
 import { FeedbackCollector } from './feedback';
 
+/** Where in the app a feedback prompt was raised from. */
+export interface FeedbackContext {
+  action?: string;
+  [extra: string]: unknown;
+}
+
 class FeedbackUI {
-  currentContext: any;
-  feedbackCollector: any;
-  isModalOpen: any;
+  currentContext: FeedbackContext | null;
+  feedbackCollector: FeedbackCollector;
+  isModalOpen: boolean;
   constructor() {
     this.feedbackCollector = new FeedbackCollector();
     this.isModalOpen = false;
@@ -181,15 +187,16 @@ class FeedbackUI {
    * Create context section if context is provided
    */
   createContextSection() {
+    const ctx: FeedbackContext = this.currentContext ?? {};
     return `
       <div class="feedback-section">
         <label>Context</label>
         <div class="context-info">
-          ${this.currentContext.action ? `<p><strong>Action:</strong> ${this.currentContext.action}</p>` : ''}
-          ${this.currentContext.feature ? `<p><strong>Feature:</strong> ${this.currentContext.feature}</p>` : ''}
-          ${this.currentContext.scenario ? `<p><strong>Scenario:</strong> ${this.currentContext.scenario}</p>` : ''}
+          ${ctx.action ? `<p><strong>Action:</strong> ${ctx.action}</p>` : ''}
+          ${ctx.feature ? `<p><strong>Feature:</strong> ${ctx.feature}</p>` : ''}
+          ${ctx.scenario ? `<p><strong>Scenario:</strong> ${ctx.scenario}</p>` : ''}
         </div>
-        <input type="hidden" name="context" value='${JSON.stringify(this.currentContext)}'>
+        <input type="hidden" name="context" value='${JSON.stringify(ctx)}'>
       </div>
     `;
   }
@@ -197,7 +204,7 @@ class FeedbackUI {
   /**
    * Attach event listeners to modal elements
    */
-  attachModalEventListeners(modal: any) {
+  attachModalEventListeners(modal: HTMLElement) {
     // Overlay click to close
     const overlay = modal.querySelector('.feedback-overlay');
     if (overlay) {
@@ -217,9 +224,9 @@ class FeedbackUI {
     }
 
     // Rating stars
-    const stars = modal.querySelectorAll('.rating-star');
-    stars.forEach((star: any) => {
-      const rating = parseInt(star.dataset.rating);
+    const stars = modal.querySelectorAll<HTMLElement>('.rating-star');
+    stars.forEach((star) => {
+      const rating = parseInt(star.dataset.rating || '0');
 
       star.addEventListener('click', () => this.setRating(rating));
       star.addEventListener('mouseover', () => this.previewRating(rating));
@@ -227,23 +234,23 @@ class FeedbackUI {
     });
 
     // Character counter for comment
-    const commentTextarea = modal.querySelector('#feedbackComment');
+    const commentTextarea = modal.querySelector<HTMLTextAreaElement>('#feedbackComment');
     const charCount = modal.querySelector('#commentCharCount');
 
     if (commentTextarea && charCount) {
       commentTextarea.addEventListener('input', () => {
-        charCount.textContent = commentTextarea.value.length;
+        charCount.textContent = String(commentTextarea.value.length);
       });
     }
 
     // Form submission
     const form = modal.querySelector('#feedbackForm');
     if (form) {
-      form.addEventListener('submit', (e: any) => this.handleFeedbackSubmit(e));
+      form.addEventListener('submit', (e: Event) => this.handleFeedbackSubmit(e));
     }
 
     // Escape key to close
-    modal.addEventListener('keydown', (e: any) => {
+    modal.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         this.closeFeedbackModal();
       }
@@ -253,12 +260,12 @@ class FeedbackUI {
   /**
    * Set rating value
    */
-  setRating(rating: any) {
+  setRating(rating: number) {
     const ratingInput = document.getElementById('feedbackRating') as HTMLInputElement | null;
     if (!ratingInput) return;
     const stars = document.querySelectorAll('.rating-star');
 
-    ratingInput.value = rating;
+    ratingInput.value = String(rating);
 
     stars.forEach((star, index) => {
       if (index < rating) {
@@ -272,7 +279,7 @@ class FeedbackUI {
   /**
    * Preview rating on hover
    */
-  previewRating(rating: any) {
+  previewRating(rating: number) {
     const stars = document.querySelectorAll('.rating-star');
     stars.forEach((star, index) => {
       if (index < rating) {
@@ -294,10 +301,10 @@ class FeedbackUI {
   /**
    * Handle feedback form submission
    */
-  async handleFeedbackSubmit(event: any) {
+  async handleFeedbackSubmit(event: Event) {
     event.preventDefault();
 
-    const form = event.target;
+    const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
 
     // Read rating from hidden input; fall back to counting active stars in case
@@ -309,11 +316,11 @@ class FeedbackUI {
       rating = activeStars.length || 0;
     }
 
-    const category = formData.get('category') || '';
+    const category = String(formData.get('category') || '');
 
     // Show inline validation rather than silently failing
-    const ratingContainer = form.querySelector('.rating-container');
-    const categorySelect = form.querySelector('#feedbackCategory');
+    const ratingContainer = form.querySelector<HTMLElement>('.rating-container');
+    const categorySelect = form.querySelector<HTMLElement>('#feedbackCategory');
     let valid = true;
 
     if (!rating || rating < 1) {
@@ -338,7 +345,7 @@ class FeedbackUI {
     const feedbackData = {
       rating,
       category,
-      comment: formData.get('comment') || null,
+      comment: String(formData.get('comment') || '') || null,
       contactEmail: (formData.get('contactEmail') || '').toString().trim() || null,
       context: typeof formData.get('context') === 'string' && formData.get('context')
         ? JSON.parse(formData.get('context') as string)
@@ -373,7 +380,7 @@ class FeedbackUI {
   /**
    * Show notification message
    */
-  showNotification(message: any, type = 'info') {
+  showNotification(message: string, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `feedback-notification ${type}`;
     notification.textContent = message;
@@ -389,7 +396,7 @@ class FeedbackUI {
   /**
    * Show contextual feedback prompt
    */
-  showContextualPrompt(context: any, delay = 2000) {
+  showContextualPrompt(context: FeedbackContext, delay = 2000) {
     setTimeout(() => {
       if (!this.isModalOpen) {
         const prompt = this.createContextualPrompt(context);
@@ -408,7 +415,7 @@ class FeedbackUI {
   /**
    * Create contextual prompt
    */
-  createContextualPrompt(context: any) {
+  createContextualPrompt(context: FeedbackContext) {
     const prompt = document.createElement('div');
     prompt.className = 'feedback-prompt';
     prompt.innerHTML = `

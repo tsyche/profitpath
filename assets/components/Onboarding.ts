@@ -1,3 +1,4 @@
+import type { AppOffering, AppState, Offering } from '../../src/types';
 import { INDUSTRY_TEMPLATES } from '../services/industryTemplates';
 import { initializeProgressiveDisclosure } from '../utils/progressiveDisclosure';
 import { showToast } from '../services/modalService';
@@ -9,7 +10,7 @@ import { createModal } from './Modal';
 /** Welcome dialog, industry picker, guided tour, help menu and contextual tooltips. */
 
 interface OnboardingDeps {
-  getState: () => any;
+  getState: () => AppState;
   render: () => void;
   persistState: () => void;
 }
@@ -238,20 +239,33 @@ function selectIndustry(industryId: string, dialog: HTMLElement) {
   document.body.appendChild(successDialog);
 }
 
+/** Shape shared by every INDUSTRY_TEMPLATES entry; fields beyond offerings are optional per template. */
+interface TemplateConfig {
+  offerings: Offering[];
+  fullTimeEmployees?: number;
+  partTimeEmployees?: number;
+  fullTimeEmployeePay?: number;
+  partTimeEmployeePay?: number;
+  monthlyCosts?: number;
+  processingFeePct?: number;
+  productiveUtilizationPct?: number;
+  targetUtilizationPct?: number;
+}
+
 function loadOnboardingIndustryTemplate(industryId: string) {
   const state = deps!.getState();
   // Use the same INDUSTRY_TEMPLATES as single source of truth
-  const template = (INDUSTRY_TEMPLATES as Record<string, any>)[industryId];
+  const template = (INDUSTRY_TEMPLATES as unknown as Record<string, { config: TemplateConfig }>)[industryId];
   if (template) {
     const config = template.config;
 
     // Apply template to current scenario - load all offerings like the main menu
-    state.offerings = config.offerings.map((o: any) => ({
+    state.offerings = config.offerings.map((o: Offering) => ({
       ...o,
       id: uuid(),
       mixPct: o.mixPct || (100 / config.offerings.length),
       currentClients: o.currentClients || 0
-    }));
+    })) as AppOffering[];
 
     // Apply employee and cost configuration
     state.fullTimeEmployees = config.fullTimeEmployees || 1;
@@ -286,7 +300,15 @@ function startGuidedTour() {
 }
 
 // Global tour state
-let tourSteps: any[] = [];
+interface TourStep {
+  target: string;
+  title: string;
+  content: string;
+  position?: string;
+  [k: string]: unknown;
+}
+
+let tourSteps: TourStep[] = [];
 let tourActive = false;
 
 function createGuidedTour() {
@@ -413,9 +435,9 @@ async function showTourStep(stepIndex: number) {
 // Helper to wait until scrolling stops and the target is approximately centered
 function waitForTargetSettled(target: Element, { timeoutMs = 3000, idleMs = 250, stableMs = 250 } = {}) {
   return new Promise<void>((resolve) => {
-    let idleTimer: any = null;
-    let timeoutTimer: any = null;
-    let rafId: any = null;
+    let idleTimer: ReturnType<typeof setTimeout> | null = null;
+    let timeoutTimer: ReturnType<typeof setTimeout> | null = null;
+    let rafId: number | null = null;
 
     function cleanup() {
       if (idleTimer) clearTimeout(idleTimer);
@@ -531,7 +553,7 @@ function completeTour() {
   document.body.appendChild(completionDialog);
 }
 
-function createTooltip(step: any, target: any, onNext: any, stepIndex: number, steps: any[]) {
+function createTooltip(step: TourStep, target: Element, onNext: (() => void) | null, stepIndex: number, steps: TourStep[]) {
   const isMobile = window.innerWidth < 768;
 
   // Get fresh bounding rect after scrolling completes
@@ -581,7 +603,7 @@ function createTooltip(step: any, target: any, onNext: any, stepIndex: number, s
   const progressDots = steps.map((_, index) => '<span class="tour-dot ' + (index === stepIndex ? 'active' : '') + ' ' + (index < stepIndex ? 'completed' : '') + '" data-step="' + index + '" style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px;cursor:pointer;background:' + (index === stepIndex ? '#007bff' : index < stepIndex ? '#28a745' : '#ddd') + ';transition:all 0.2s;"></span>').join('');
 
   // Create tooltip (initially hidden to measure actual height)
-  const tooltip: HTMLDivElement & { _overlay?: any; _cleanupKeyboard?: () => void } = document.createElement('div');
+  const tooltip: HTMLDivElement & { _overlay?: HTMLElement; _cleanupKeyboard?: () => void } = document.createElement('div');
   tooltip.className = 'onboarding-tooltip';
   tooltip.style.cssText = 'position: fixed;z-index: 10000;background: var(--surface);color: var(--text);border: 2px solid var(--accent, #007bff);border-radius: 8px;padding: 16px;box-shadow: var(--elev-4, 0 4px 12px rgba(0, 0, 0, 0.15));max-width: ' + (isMobile ? '280px' : '300px') + ';pointer-events: auto;font-size: ' + (isMobile ? '14px' : '16px') + ';visibility: hidden;opacity: 0;transition: opacity 0.3s ease-out;left: 0;top: 0;transform: translate(0, 0);';
 
@@ -747,7 +769,7 @@ function createTooltip(step: any, target: any, onNext: any, stepIndex: number, s
   return tooltip;
 }
 
-function createOnboardingDialog({ title, content, buttons }: { title: string; content: string; buttons: any[] }) {
+function createOnboardingDialog({ title, content, buttons }: { title: string; content: string; buttons: { text: string; primary?: boolean; action?: () => void }[] }) {
   const dialog = document.createElement('div');
   dialog.className = 'onboarding-dialog-overlay';
   dialog.style.cssText = 'position: fixed;top: 0;left: 0;right: 0;bottom: 0;background: rgba(0, 0, 0, 0.6);display: flex;align-items: center;justify-content: center;z-index: 10001;';
@@ -876,7 +898,7 @@ function initializeContextualTooltips() {
 
 // Silent tooltip UI update (no toast) - for syncing with settings
 export function updateTooltipsUIOnly(enabled: boolean) {
-  const tooltipElements = document.querySelectorAll<HTMLElement & { _tooltip?: any }>('[title]');
+  const tooltipElements = document.querySelectorAll<HTMLElement & { _tooltip?: HTMLElement }>('[title]');
 
   if (enabled) {
     // Enable tooltips without showing toast
@@ -939,7 +961,10 @@ function showContextualHelp() {
   showToast('Contextual tooltips enabled! Hover over elements to see help.', 'info', 1800);
 }
 
-function showEnhancedTooltip(e: any) {
+type TooltipHost = HTMLElement & { _tooltip?: HTMLElement };
+
+function showEnhancedTooltip(e: Event) {
+  const target = e.target as TooltipHost;
   // Check if tooltips are actually enabled (check localStorage for current setting)
   try {
     const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
@@ -951,7 +976,7 @@ function showEnhancedTooltip(e: any) {
     // Continue with default behavior if settings can't be read
   }
 
-  const content = e.target.dataset.originalTitle;
+  const content = target.dataset.originalTitle;
   if (!content) return;
 
   const tooltip = document.createElement('div');
@@ -961,7 +986,7 @@ function showEnhancedTooltip(e: any) {
 
   document.body.appendChild(tooltip);
 
-  const rect = e.target.getBoundingClientRect();
+  const rect = target.getBoundingClientRect();
   const tRect = tooltip.getBoundingClientRect();
   const centerX = rect.left + rect.width / 2;
 
@@ -972,19 +997,20 @@ function showEnhancedTooltip(e: any) {
   tooltip.style.transform = 'translateX(-50%)';
 
   // Force below if element has data-tooltip-below, or if too close to the top
-  if ('tooltipBelow' in e.target.dataset || rect.top - tRect.height - 12 < 0) {
+  if ('tooltipBelow' in target.dataset || rect.top - tRect.height - 12 < 0) {
     tooltip.style.top = (rect.bottom + 8) + 'px';
   } else {
     tooltip.style.top = (rect.top - 8) + 'px';
     tooltip.style.transform += ' translateY(-100%)';
   }
 
-  e.target._tooltip = tooltip;
+  target._tooltip = tooltip;
 }
 
-function hideEnhancedTooltip(e: any) {
-  if (e.target && e.target._tooltip) {
-    e.target._tooltip.remove();
-    delete e.target._tooltip;
+function hideEnhancedTooltip(e: Event) {
+  const target = e.target as TooltipHost | null;
+  if (target && target._tooltip) {
+    target._tooltip.remove();
+    delete target._tooltip;
   }
 }

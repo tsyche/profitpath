@@ -3,12 +3,18 @@
  * Provides charts, visualizations, and comprehensive insights
  */
 
+import type { AnalyticsCollector } from './analytics';
+import type { FeedbackCollector as FeedbackCollectorType } from './feedback';
+import type { AnalyticsEvent, AnalyticsSummary, CountMap } from './types';
+
+type FeedbackAnalytics = ReturnType<FeedbackCollectorType['getFeedbackAnalytics']>;
+
 class AdvancedAnalyticsDashboard {
-  analyticsCollector: any;
-  chartInstances: any;
-  currentView: any;
-  dateRange: any;
-  feedbackCollector: any;
+  analyticsCollector: AnalyticsCollector | null;
+  chartInstances: Map<string, unknown>;
+  currentView: string;
+  dateRange: string;
+  feedbackCollector: FeedbackCollectorType | null;
   constructor() {
     this.analyticsCollector = null;
     this.feedbackCollector = null;
@@ -300,27 +306,27 @@ class AdvancedAnalyticsDashboard {
     `;
   }
 
-  attachDashboardEventListeners(dashboard: any) {
+  attachDashboardEventListeners(dashboard: HTMLElement) {
     // Navigation
-    dashboard.querySelectorAll('.nav-btn').forEach((btn: any) => {
-      btn.addEventListener('click', (e: any) => {
-        this.switchView(e.target.dataset.view);
+    dashboard.querySelectorAll('.nav-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        this.switchView((e.target as HTMLElement).dataset.view || 'overview');
       });
     });
 
     // Date range change
-    dashboard.querySelector('#dateRangeSelect').addEventListener('change', (e: any) => {
-      this.dateRange = e.target.value;
+    dashboard.querySelector('#dateRangeSelect')?.addEventListener('change', (e) => {
+      this.dateRange = (e.target as HTMLSelectElement).value;
       this.refreshDashboard();
     });
 
     // Export button
-    dashboard.querySelector('#exportDashboardBtn').addEventListener('click', () => {
+    dashboard.querySelector('#exportDashboardBtn')?.addEventListener('click', () => {
       this.exportDashboardReport();
     });
   }
 
-  switchView(viewName: any) {
+  switchView(viewName: string) {
     // Update navigation
     document.querySelectorAll<HTMLElement>('.nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === viewName);
@@ -387,7 +393,7 @@ class AdvancedAnalyticsDashboard {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const events = this.analyticsCollector.getAllEvents();
+    const events = this.analyticsCollector?.getAllEvents() ?? [];
     
     // Group events by date
     const dailyActivity = this.groupEventsByDate(events);
@@ -396,7 +402,7 @@ class AdvancedAnalyticsDashboard {
     this.drawLineChart(ctx, dailyActivity);
   }
 
-  createExportDistributionChart(summary: any) {
+  createExportDistributionChart(summary: AnalyticsSummary) {
     const canvas = document.getElementById('exportDistributionChart');
     if (!(canvas instanceof HTMLCanvasElement)) return;
 
@@ -408,7 +414,7 @@ class AdvancedAnalyticsDashboard {
     this.drawPieChart(ctx, exportData);
   }
 
-  drawLineChart(ctx: any, data: any) {
+  drawLineChart(ctx: CanvasRenderingContext2D, data: CountMap) {
     // Simple line chart drawing
     const width = ctx.canvas.width;
     const height = ctx.canvas.height;
@@ -451,7 +457,7 @@ class AdvancedAnalyticsDashboard {
     ctx.stroke();
   }
 
-  drawPieChart(ctx: any, data: any) {
+  drawPieChart(ctx: CanvasRenderingContext2D, data: CountMap) {
     const width = ctx.canvas.width;
     const height = ctx.canvas.height;
     const centerX = width / 2;
@@ -491,21 +497,21 @@ class AdvancedAnalyticsDashboard {
     });
   }
 
-  groupEventsByDate(events: any) {
-    const grouped = {};
+  groupEventsByDate(events: AnalyticsEvent[]) {
+    const grouped: CountMap = {};
     const dateRange = this.getDateRange();
     
     // Initialize all dates in range with 0
     for (let d = new Date(dateRange.start); d <= dateRange.end; d.setDate(d.getDate() + 1)) {
       const dateKey = d.toISOString().split('T')[0];
-      (grouped as any)[dateKey] = 0;
+      grouped[dateKey] = 0;
     }
     
     // Count events per date (timestamps are epoch ms numbers)
-    events.forEach((event: any) => {
+    events.forEach((event) => {
       const dateKey = new Date(event.timestamp).toISOString().split('T')[0];
-      if (grouped.hasOwnProperty(dateKey)) {
-        (grouped as any)[dateKey]++;
+      if (Object.prototype.hasOwnProperty.call(grouped, dateKey)) {
+        grouped[dateKey]++;
       }
     });
     
@@ -514,7 +520,7 @@ class AdvancedAnalyticsDashboard {
 
   getDateRange() {
     const now = new Date();
-    const ranges = {
+    const ranges: Record<string, number> = {
       '7d': 7,
       '30d': 30,
       '90d': 90,
@@ -522,14 +528,14 @@ class AdvancedAnalyticsDashboard {
       'all': 365 * 10 // 10 years as "all time"
     };
     
-    const days = (ranges as any)[this.dateRange] || 30;
+    const days = ranges[this.dateRange] || 30;
     const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
     
     return { start, end: now };
   }
 
-  generateKeyInsights(summary: any, feedbackAnalytics: any) {
-    const insights = [];
+  generateKeyInsights(summary: AnalyticsSummary, feedbackAnalytics: FeedbackAnalytics | null) {
+    const insights: { type: string; title: string; description: string }[] = [];
     
     // Usage insights
     if (summary.totalSessions > 0) {
@@ -543,7 +549,7 @@ class AdvancedAnalyticsDashboard {
     // Export insights
     if (summary.exportStats?.total > 0) {
       const mostPopularFormat = Object.entries(summary.exportStats.byFormat || {})
-        .sort(([,a], [,b]) => (b as number) - (a as number))[0];
+        .sort(([, a], [, b]) => b - a)[0];
       
       if (mostPopularFormat) {
         insights.push({
@@ -555,7 +561,7 @@ class AdvancedAnalyticsDashboard {
     }
     
     // Feedback insights
-    if (feedbackAnalytics?.total > 0) {
+    if (feedbackAnalytics && feedbackAnalytics.total > 0) {
       insights.push({
         type: feedbackAnalytics.averageRating >= 4 ? 'success' : 'warning',
         title: 'User Satisfaction',
@@ -577,7 +583,7 @@ class AdvancedAnalyticsDashboard {
     const reportData = {
       generatedAt: new Date().toISOString(),
       dateRange: this.dateRange,
-      analytics: this.analyticsCollector?.getSummary(),
+      analytics: this.analyticsCollector?.getAnalyticsSummary(),
       feedback: this.feedbackCollector?.getFeedbackAnalytics(),
       insights: this.generateInsightsReport()
     };
@@ -596,7 +602,7 @@ class AdvancedAnalyticsDashboard {
 
   generateInsightsReport() {
     // Generate comprehensive insights based on all data
-    const insights = [];
+    const insights: { category: string; finding: string; recommendation: string }[] = [];
     
     if (this.analyticsCollector) {
       const summary = this.analyticsCollector.getAnalyticsSummary();
@@ -642,9 +648,11 @@ class AdvancedAnalyticsDashboard {
   refreshInsights() {}
 }
 
+export { AdvancedAnalyticsDashboard };
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = AdvancedAnalyticsDashboard;
 } else {
-  (window as any).AdvancedAnalyticsDashboard = AdvancedAnalyticsDashboard;
+  window.AdvancedAnalyticsDashboard = AdvancedAnalyticsDashboard;
 }

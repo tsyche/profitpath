@@ -10,7 +10,7 @@ import { $ } from '../utils/dom';
 function refreshDesktopSettings() {
   if (typeof document === 'undefined') return; // guard when running in non-DOM environments
   try {
-    const settings: any = loadSettings();
+    const settings = loadSettings();
 
     // Update experience level radios
     const experienceRadios = document.querySelectorAll<HTMLInputElement>('input[name="experienceLevel"]');
@@ -83,9 +83,9 @@ function initializeSettings() {
     // Set experience level radio buttons
     const experienceRadios = document.querySelectorAll<HTMLInputElement>('input[name="experienceLevel"]');
     experienceRadios.forEach(radio => {
-      radio.addEventListener('change', (e: any) => {
-        const prevSettings: any = loadSettings();
-        const level = e.target.value;
+      radio.addEventListener('change', (e: Event) => {
+        const prevSettings = loadSettings();
+        const level = (e.target as HTMLInputElement).value;
 
         // Only show toast if level actually changed
         if (prevSettings.experienceLevel !== level) {
@@ -94,7 +94,7 @@ function initializeSettings() {
           setExperienceLevel(level);
 
           // Get new settings to check if tooltips changed
-          const newSettings: any = loadSettings();
+          const newSettings = loadSettings();
           const newTooltipsState = newSettings.showTooltips;
 
           // Show toast notification for level change
@@ -127,7 +127,7 @@ function initializeSettings() {
     });
 
     // Set feature toggles
-    const checkboxes: any[] = [
+    const checkboxes: string[] = [
       'showAdvancedCalculations',
       'showDetailedBreakdown',
       'showComparisonTools',
@@ -139,9 +139,9 @@ function initializeSettings() {
     checkboxes.forEach(key => {
       const checkbox = $('#' + key);
       if (checkbox) {
-        checkbox.addEventListener('change', (e: any) => {
-          const prevSettings: any = loadSettings();
-          const newValue = e.target.checked;
+        checkbox.addEventListener('change', (e: Event) => {
+          const prevSettings = loadSettings();
+          const newValue = (e.target as HTMLInputElement).checked;
 
           // Only update if value actually changed
           if (prevSettings[key] !== newValue) {
@@ -154,14 +154,14 @@ function initializeSettings() {
   }
 
   // Update checkbox states and level description (runs every time)
-  const settings2: any = loadSettings();
+  const settings2 = loadSettings();
 
   const experienceRadios = document.querySelectorAll<HTMLInputElement>('input[name="experienceLevel"]');
   experienceRadios.forEach(radio => {
     radio.checked = radio.value === settings2.experienceLevel;
   });
 
-  const checkboxes: any[] = [
+  const checkboxes: string[] = [
     'showAdvancedCalculations',
     'showDetailedBreakdown',
     'showComparisonTools',
@@ -186,7 +186,7 @@ function initializeSettings() {
 }
 
 function updateUIForSettings() {
-  const settings: any = loadSettings();
+  const settings = loadSettings();
 
   // Show/hide elements based on feature gates
   const elementsToToggle = [
@@ -243,7 +243,7 @@ export function initSettings(): void {
 
   const settingsCogBtn = $('#settingsCogBtn');
   if (settingsCogBtn) {
-    settingsCogBtn.addEventListener('click', (e: any) => {
+    settingsCogBtn.addEventListener('click', (e: Event) => {
       e.preventDefault();
       refreshDesktopSettings();
       if (typeof window.ppOpenModal === 'function') window.ppOpenModal('settingsModal');

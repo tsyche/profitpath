@@ -3,9 +3,11 @@
  * Handles analytics settings panel and user interactions
  */
 
+import type { AnalyticsCollector } from './analytics';
+import type { AnalyticsEvent, AnalyticsSettings, AnalyticsSummary, CountMap } from './types';
+
 class AnalyticsUI {
-  analytics: any;
-  closeModal: any;
+  analytics: AnalyticsCollector;
   constructor() {
     this.analytics = window.profitPathAnalytics;
     this.initializeSettings();
@@ -49,7 +51,7 @@ class AnalyticsUI {
     }
 
     // Individual tracking options
-    const trackingOptionIds = ['trackUsage', 'trackFeatures', 'trackExports', 'trackTemplates'];
+    const trackingOptionIds: (keyof AnalyticsSettings)[] = ['trackUsage', 'trackFeatures', 'trackExports', 'trackTemplates'];
     trackingOptionIds.forEach(id => {
       const checkbox = document.getElementById(id) as HTMLInputElement | null;
       if (checkbox) {
@@ -85,14 +87,9 @@ class AnalyticsUI {
     if (enableBtn) {
       enableBtn.addEventListener('click', () => this.enableAnalytics());
     }
-
-    const closeBtn = document.getElementById('closeAnalyticsBtn');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.closeModal());
-    }
   }
 
-  handleAnalyticsToggle(enabled: any) {
+  handleAnalyticsToggle(enabled: boolean) {
     this.analytics.saveSettings({ enabled });
 
     // If enabling, start session tracking
@@ -111,12 +108,12 @@ class AnalyticsUI {
     );
   }
 
-  handleTrackingOptionChange(option: any, enabled: any) {
+  handleTrackingOptionChange(option: keyof AnalyticsSettings, enabled: boolean) {
     this.analytics.saveSettings({ [option]: enabled });
     this.analytics.trackSettingsChange(option, !enabled, enabled);
   }
 
-  toggleAnalyticsOptions(show: any) {
+  toggleAnalyticsOptions(show: boolean) {
     const options = document.getElementById('analyticsOptions');
     const actions = document.getElementById('analyticsActions');
 
@@ -199,7 +196,7 @@ class AnalyticsUI {
     });
 
     // ESC key handler
-    const escHandler = (e: any) => {
+    const escHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !modalOverlay.classList.contains('hidden')) {
         closeOverlay();
         document.removeEventListener('keydown', escHandler);
@@ -233,7 +230,7 @@ class AnalyticsUI {
     }
   }
 
-  renderDashboard(summary: any, _events: any) {
+  renderDashboard(summary: AnalyticsSummary, _events: AnalyticsEvent[]) {
     const isEnabled = this.analytics.settings.enabled;
 
     if (!isEnabled) {
@@ -277,7 +274,7 @@ class AnalyticsUI {
           <div class="stat-card">
             <h4>Data Range</h4>
             <div class="stat-value small">
-              ${summary.dateRange.start ?
+              ${summary.dateRange.start && summary.dateRange.end ?
         `${new Date(summary.dateRange.start).toLocaleDateString()} - ${new Date(summary.dateRange.end).toLocaleDateString()}` :
         'No data'
       }
@@ -339,9 +336,9 @@ class AnalyticsUI {
     `;
   }
 
-  formatFeatureName(feature: any) {
+  formatFeatureName(feature: string) {
     // Convert camelCase to readable format
-    return feature.replace(/([A-Z])/g, ' $1').replace(/^./, (str: any) => str.toUpperCase());
+    return feature.replace(/([A-Z])/g, ' $1').replace(/^./, (str: string) => str.toUpperCase());
   }
 
   exportAnalyticsData() {
@@ -360,7 +357,7 @@ class AnalyticsUI {
     }
   }
 
-  showNotification(message: any, type = 'success') {
+  showNotification(message: string, type = 'success') {
     // Simple notification implementation
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -453,26 +450,26 @@ class AnalyticsUI {
     }
   }
 
-  sendReportEmail(summary: any, events: any) {
+  sendReportEmail(summary: AnalyticsSummary, events: AnalyticsEvent[]) {
     const dateStr = new Date().toLocaleDateString();
     const rangeStart = summary.dateRange?.start ? new Date(summary.dateRange.start).toLocaleDateString() : 'N/A';
     const rangeEnd = summary.dateRange?.end ? new Date(summary.dateRange.end).toLocaleDateString() : 'N/A';
 
-    const featureCounts = {};
-    events.forEach((event: any) => {
+    const featureCounts: CountMap = {};
+    events.forEach((event) => {
       if (event.event === 'feature_usage' && event.data?.feature) {
-        const f = event.data.feature;
-        (featureCounts as any)[f] = ((featureCounts as any)[f] || 0) + 1;
+        const f = String(event.data.feature);
+        featureCounts[f] = (featureCounts[f] || 0) + 1;
       }
     });
     const topFeatures = Object.entries(featureCounts)
-      .sort((a, b) => (b[1] as number) - (a[1] as number))
+      .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([f, n]) => `  - ${this.formatEventName(f)}: ${n}`)
       .join('\n');
 
     const recentEvents = events.slice(-10).reverse()
-      .map((e: any) => `  - ${this.formatEventName(e.event)} (${new Date(e.timestamp).toLocaleString()})`)
+      .map((e) => `  - ${this.formatEventName(e.event)} (${new Date(e.timestamp).toLocaleString()})`)
       .join('\n');
 
     const subject = encodeURIComponent(`ProfitPath Analytics Report — ${dateStr}`);
@@ -539,7 +536,7 @@ class AnalyticsUI {
 
     // Attach event listeners immediately (synchronously)
     if (closeBtn) {
-      closeBtn.onclick = (e: any) => {
+      closeBtn.onclick = (e: MouseEvent) => {
         e.preventDefault();
         e.stopImmediatePropagation();
         closeModal();
@@ -548,7 +545,7 @@ class AnalyticsUI {
     }
 
     if (cancelBtn) {
-      cancelBtn.onclick = (e: any) => {
+      cancelBtn.onclick = (e: MouseEvent) => {
         e.preventDefault();
         e.stopImmediatePropagation();
         closeModal();
@@ -594,8 +591,8 @@ class AnalyticsUI {
     modal.className = 'modal-overlay';
     modal.id = 'advancedDashboardModal';
 
-    const summary = this.analytics.getAnalyticsSummary ? this.analytics.getAnalyticsSummary() : {};
-    const events = this.analytics.getAllEvents ? this.analytics.getAllEvents() : [];
+    const summary = this.analytics.getAnalyticsSummary();
+    const events = this.analytics.getAllEvents();
 
     modal.innerHTML = `
       <div class="modal-content" style="max-width: 900px;">
@@ -678,20 +675,20 @@ class AnalyticsUI {
     this.analytics.trackFeatureUsage('advanced_dashboard_opened');
   }
 
-  formatEventName(name: any) {
-    return (name || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, (c: any) => c.toUpperCase());
+  formatEventName(name?: string) {
+    return (name || 'unknown').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
-  renderFeatureUsage(events: any) {
-    const featureCounts = {};
-    events.forEach((event: any) => {
+  renderFeatureUsage(events: AnalyticsEvent[]) {
+    const featureCounts: CountMap = {};
+    events.forEach((event) => {
       if (event.event === 'feature_usage' && event.data?.feature) {
-        const f = event.data.feature;
-        (featureCounts as any)[f] = ((featureCounts as any)[f] || 0) + 1;
+        const f = String(event.data.feature);
+        featureCounts[f] = (featureCounts[f] || 0) + 1;
       }
     });
 
-    const sorted = Object.entries(featureCounts).sort((a, b) => (b[1] as number) - (a[1] as number));
+    const sorted = Object.entries(featureCounts).sort((a, b) => b[1] - a[1]);
 
     if (sorted.length === 0) {
       return '<p style="color: var(--muted); text-align: center;">No feature usage data yet</p>';
@@ -705,14 +702,14 @@ class AnalyticsUI {
     `).join('');
   }
 
-  renderRecentActivity(events: any) {
+  renderRecentActivity(events: AnalyticsEvent[]) {
     const recent = events.slice(-20).reverse();
 
     if (recent.length === 0) {
       return '<p style="color: var(--muted); text-align: center;">No recent activity</p>';
     }
 
-    return recent.map((event: any) => `
+    return recent.map((event) => `
       <div style="padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;">
         <div style="color: var(--text);">${this.formatEventName(event.event)}</div>
         <div style="color: var(--muted); font-size: 11px;">${new Date(event.timestamp).toLocaleString()}</div>
@@ -732,6 +729,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 100);
 });
+
+export { AnalyticsUI };
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

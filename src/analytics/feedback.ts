@@ -12,11 +12,43 @@
 const WEB3FORMS_ACCESS_KEY = 'faddffa2-870d-4e8c-84a9-33224347365a';
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
 
+export interface FeedbackInput {
+  rating?: number | string;
+  category?: string;
+  comment?: string | null;
+  contactEmail?: string | null;
+  context?: unknown;
+  userAgent?: string;
+  url?: string;
+  [extra: string]: unknown;
+}
+
+export interface FeedbackItem {
+  id: string;
+  timestamp: string;
+  sessionId: string;
+  synced: boolean;
+  rating: number;
+  category: string;
+  comment?: string | null;
+  context?: unknown;
+  userAgent?: string;
+  url?: string;
+  [extra: string]: unknown;
+}
+
+export interface FeedbackFilters {
+  category?: string;
+  rating?: number;
+  startDate?: string | number | Date;
+  endDate?: string | number | Date;
+}
+
 class FeedbackCollector {
-  maxFeedbackItems: any;
-  remoteAccessKey: any;
-  remoteEndpoint: any;
-  storageKey: any;
+  maxFeedbackItems: number;
+  remoteAccessKey: string;
+  remoteEndpoint: string;
+  storageKey: string;
   constructor() {
     this.storageKey = 'profitpath_feedback';
     this.maxFeedbackItems = 1000;
@@ -38,7 +70,7 @@ class FeedbackCollector {
   /**
    * Submit feedback with validation and sanitization
    */
-  submitFeedback(feedbackData: any) {
+  submitFeedback(feedbackData: FeedbackInput): FeedbackItem {
     // Validate required fields before sanitization
     if (!feedbackData.rating || !feedbackData.category) {
       throw new Error('Rating and category are required');
@@ -48,7 +80,7 @@ class FeedbackCollector {
     // store it locally to avoid keeping PII in localStorage.
     const contactEmail = feedbackData.contactEmail || null;
 
-    const feedback = {
+    const feedback: FeedbackItem = {
       id: this.generateId(),
       timestamp: new Date().toISOString(),
       sessionId: this.getSessionId(),
@@ -95,7 +127,7 @@ class FeedbackCollector {
   /**
    * Send email notification for feedback
    */
-  async sendEmailNotification(feedback: any) {
+  async sendEmailNotification(feedback: FeedbackItem) {
     try {
       // Create email content
       const emailContent = `
@@ -131,7 +163,7 @@ This feedback was submitted via the ProfitPath feedback form.
    * Deliver one feedback item to the remote endpoint (Web3Forms). On success the
    * stored copy is marked synced; on failure it stays queued for a later retry.
    */
-  async sendToRemote(feedback: any, contactEmail: any = null) {
+  async sendToRemote(feedback: FeedbackItem, contactEmail: string | null = null) {
     if (!this.remoteEnabled()) return false;
     try {
       const payload = {
@@ -165,9 +197,9 @@ This feedback was submitted via the ProfitPath feedback form.
   }
 
   /** Mark a stored feedback item as delivered. */
-  markSynced(id: any) {
+  markSynced(id: string) {
     const all = this.getAllFeedback();
-    const item = all.find((f: any) => f.id === id);
+    const item = all.find((f) => f.id === id);
     if (item) {
       item.synced = true;
       localStorage.setItem(this.storageKey, JSON.stringify(all));
@@ -177,18 +209,18 @@ This feedback was submitted via the ProfitPath feedback form.
   /** Retry delivery for any feedback saved while offline or before a key existed. */
   flushUnsyncedFeedback() {
     if (!this.remoteEnabled()) return;
-    const unsent = this.getAllFeedback().filter((f: any) => f.synced === false);
-    unsent.forEach((f: any) => this.sendToRemote(f));
+    const unsent = this.getAllFeedback().filter((f) => f.synced === false);
+    unsent.forEach((f) => this.sendToRemote(f));
   }
 
   /**
    * Get all feedback with optional filtering
    */
-  getAllFeedback(filters: Record<string, any> = {}) {
+  getAllFeedback(filters: FeedbackFilters = {}): FeedbackItem[] {
     try {
-      const feedback = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+      const feedback: FeedbackItem[] = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
 
-      return feedback.filter((item: any) => {
+      return feedback.filter((item) => {
         if (filters.category && item.category !== filters.category) return false;
         if (filters.rating !== undefined && item.rating !== filters.rating) return false;
         if (filters.startDate && new Date(item.timestamp) < new Date(filters.startDate)) return false;
@@ -211,10 +243,10 @@ This feedback was submitted via the ProfitPath feedback form.
       return {
         total: 0,
         averageRating: 0,
-        ratingDistribution: {},
+        ratingDistribution: {} as Record<number, number>,
         categoryBreakdown: {} as Record<string, number>,
-        recentTrend: [] as any[],
-        topIssues: [] as any[]
+        recentTrend: [] as { date: string; count: number; averageRating: number }[],
+        topIssues: [] as string[]
       };
     }
 
@@ -241,7 +273,7 @@ This feedback was submitted via the ProfitPath feedback form.
       exportDate: new Date().toISOString(),
       totalItems: feedback.length,
       analytics,
-      feedback: feedback.map((item: any) => ({
+      feedback: feedback.map((item) => ({
         ...item,
         // Sanitize for export
         comment: item.comment ? item.comment.substring(0, 500) : null
@@ -262,7 +294,7 @@ This feedback was submitted via the ProfitPath feedback form.
    */
   getFeedbackSuggestions() {
     const analytics = this.getFeedbackAnalytics();
-    const suggestions = [];
+    const suggestions: { type: string; message: string; priority: string }[] = [];
 
     // Low overall rating
     if (analytics.averageRating < 3) {
@@ -295,8 +327,8 @@ This feedback was submitted via the ProfitPath feedback form.
   }
 
   // Private helper methods
-  sanitizeFeedback(feedback: any) {
-    const sanitized = { ...feedback };
+  sanitizeFeedback(feedback: FeedbackInput): FeedbackInput & { rating: number; category: string } {
+    const sanitized: FeedbackInput = { ...feedback };
 
     // Remove PII — email is handled separately and never stored locally
     const sensitiveFields = ['email', 'contactEmail', 'name', 'phone', 'address', 'creditCard'];
@@ -304,22 +336,22 @@ This feedback was submitted via the ProfitPath feedback form.
 
     // Sanitize comment
     if (sanitized.comment) {
-      sanitized.comment = sanitized.comment
+      sanitized.comment = String(sanitized.comment)
         .substring(0, 1000) // Limit length
         .replace(/<script[^>]*>.*?<\/script>/gi, '') // Remove scripts
         .trim();
     }
 
     // Validate rating
-    sanitized.rating = Math.max(1, Math.min(5, parseInt(sanitized.rating) || 0));
+    sanitized.rating = Math.max(1, Math.min(5, parseInt(String(sanitized.rating)) || 0));
 
     // Validate category
     const validCategories = ['feature', 'bug', 'usability', 'performance', 'suggestion', 'other'];
-    if (!validCategories.includes(sanitized.category)) {
+    if (!validCategories.includes(String(sanitized.category))) {
       sanitized.category = 'other';
     }
 
-    return sanitized;
+    return sanitized as FeedbackInput & { rating: number; category: string };
   }
 
   generateId() {
@@ -330,29 +362,29 @@ This feedback was submitted via the ProfitPath feedback form.
     return window.profitPathAnalytics?.sessionId || 'unknown';
   }
 
-  calculateAverageRating(feedback: any) {
-    const sum = feedback.reduce((acc: any, item: any) => acc + item.rating, 0);
+  calculateAverageRating(feedback: FeedbackItem[]) {
+    const sum = feedback.reduce((acc, item) => acc + item.rating, 0);
     return Math.round((sum / feedback.length) * 10) / 10;
   }
 
-  getRatingDistribution(feedback: any) {
-    const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    feedback.forEach((item: any) => {
-      (distribution as any)[item.rating] = ((distribution as any)[item.rating] || 0) + 1;
+  getRatingDistribution(feedback: FeedbackItem[]) {
+    const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    feedback.forEach((item) => {
+      distribution[item.rating] = (distribution[item.rating] || 0) + 1;
     });
     return distribution;
   }
 
-  getCategoryBreakdown(feedback: any) {
+  getCategoryBreakdown(feedback: FeedbackItem[]) {
     const breakdown: Record<string, number> = {};
-    feedback.forEach((item: any) => {
+    feedback.forEach((item) => {
       breakdown[item.category] = (breakdown[item.category] || 0) + 1;
     });
     return breakdown;
   }
 
-  getRecentTrend(feedback: any) {
-    const last7Days = [];
+  getRecentTrend(feedback: FeedbackItem[]) {
+    const last7Days: { date: string; count: number; averageRating: number }[] = [];
     const now = new Date();
 
     for (let i = 6; i >= 0; i--) {
@@ -363,7 +395,7 @@ This feedback was submitted via the ProfitPath feedback form.
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
 
-      const dayFeedback = feedback.filter((item: any) => {
+      const dayFeedback = feedback.filter((item) => {
         const itemDate = new Date(item.timestamp);
         return itemDate >= date && itemDate < nextDate;
       });
@@ -378,11 +410,11 @@ This feedback was submitted via the ProfitPath feedback form.
     return last7Days;
   }
 
-  getTopIssues(feedback: any) {
+  getTopIssues(feedback: FeedbackItem[]): string[] {
     const issues = feedback
-      .filter((item: any) => item.rating <= 2 && item.comment)
-      .map((item: any) => item.comment.substring(0, 100))
-      .filter((comment: any, index: any, arr: any) => arr.indexOf(comment) === index) // Remove duplicates
+      .filter((item) => item.rating <= 2 && item.comment)
+      .map((item) => (item.comment as string).substring(0, 100))
+      .filter((comment, index, arr) => arr.indexOf(comment) === index) // Remove duplicates
       .slice(0, 5);
 
     return issues;

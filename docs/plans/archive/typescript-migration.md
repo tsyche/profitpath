@@ -1,9 +1,11 @@
 # TypeScript migration
 
+> Archived 2026-10-25: shipped (all source and tests are `.ts`, `strict: true`, ratchet retired); folded into AGENTS.md/CLAUDE.md "TypeScript Support".
+
 **TL;DR:** Move ProfitPath from JavaScript to TypeScript in small, always-green steps. Phases 0-5 and Phase 4 steps 1-2 are done: `noImplicitAny` and `strictNullChecks` are on, `assets/app.jsx` is split and renamed to `app.ts` (300 lines of boot wiring), and the CI ratchet is 0 errors. Remaining: the other strict flags (Phase 4 steps 3+) and Phase 6. Vite and Vitest already handle `.ts`, so there is no build change.
 
-**Status:** Building (Phases 0-3b done 2026-10-15; Phase 4 steps 1-2 done 2026-10-16; Phase 5 done 2026-10-25)
-**Fold into:** [AGENTS.md](../../AGENTS.md) "TypeScript Support" section, then delete this plan.
+**Status:** Done (Phases 0-3b done 2026-10-15; Phase 4 steps 1-2 done 2026-10-16; Phase 5 done 2026-10-25)
+**Fold into:** [AGENTS.md](../../../AGENTS.md) "TypeScript Support" section (done).
 
 ## Why
 

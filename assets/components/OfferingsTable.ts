@@ -9,7 +9,7 @@ import { $ } from '../utils/dom';
 
 /** Main offerings table: input and click handlers, add offering. */
 
-export function onTableInput(e: any) {
+export function onTableInput(e: Event) {
   const el = e.target;
   if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement)) return;
 
@@ -114,7 +114,7 @@ export function onTableInput(e: any) {
     o.priceMonthly = priceMonthlyForNewVisits(o, Number(value));
     o.sessionsPerYear = Number(value);
   } else {
-    (o as any)[k] = value;
+    (o as unknown as Record<string, unknown>)[k] = value;
   }
 
   // Update state and outputs in-place without re-rendering the entire table to preserve focus.
@@ -131,14 +131,19 @@ export function onTableInput(e: any) {
   } catch (e) {
     console.warn('Failed to refresh outputs on input:', e);
   }
-  // If changing mix in locked forecast mode, re-render to update other mix inputs
-  if ((k === 'mixPct' && state.mode === 'forecast' && state.lockMix) || k === 'type') {
+  if (k === 'mixPct' && state.mode === 'forecast' && state.lockMix) {
+    // A re-render would rebuild the input being typed in; sync the other rows' mix inputs in place
+    document.querySelectorAll<HTMLInputElement>('#offeringsBody input[data-k="mixPct"]').forEach((input) => {
+      const idx = Number(input.dataset.i);
+      if (idx !== i) input.value = (state.offerings[idx]?.mixPct ?? 0).toFixed(1);
+    });
+  } else if (k === 'type') {
     render();
   }
 }
 
-export function onTableClick(e: any) {
-  const btn = e.target.closest('button');
+export function onTableClick(e: Event) {
+  const btn = (e.target as HTMLElement).closest('button');
   if (!btn) return;
 
   const action = btn.dataset.action;

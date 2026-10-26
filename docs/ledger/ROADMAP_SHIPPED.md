@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-10-25 — TypeScript migration (strict, all source and tests `.ts`, lint `--max-warnings 0`)
 - [x] 2026-10-25 — 24a. Membership and prepaid-credit pricing calculator
 - [x] 2026-10-25 — 20. Multi-resource capacity pools
 - [x] 2026-10-25 — 12j. Offerings table view (closed, already satisfied)
@@ -50,6 +51,10 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-10-25 — TypeScript migration
+
+All source and tests are `.ts` with `strict: true`; the ratchet is retired (`tsc --noEmit` must be 0). Migration also surfaced and fixed real bugs, each with a test: insights under-utilization, dashboard export `getSummary`, customer analytics revenue, table focus restore (`tests/e2e/table-focus.spec.ts`). Plan: [typescript-migration](../plans/archive/typescript-migration.md).
 
 ### 2026-10-25 — 24a. Membership and prepaid-credit pricing calculator
 

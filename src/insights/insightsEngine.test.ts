@@ -16,6 +16,12 @@ const insightsFor = (state: any) => generateInsights(calc(state), state);
 describe('Insights Engine', () => {
   beforeEach(() => clearCalculationCache());
 
+  it('flags under-utilization against the state target (metrics carry no target)', () => {
+    const idle = [{ ...healthy[0], currentClients: 1 }];
+    const hit = insightsFor(makeState('current', idle)).find((i: any) => i.category === 'utilization');
+    expect(hit).toMatchObject({ severity: 'high', target: 60 });
+  });
+
   describe.each(['current', 'forecast'])('%s mode', (mode) => {
     it('does not call profitable offerings loss-making', () => {
       const titles = insightsFor(makeState(mode)).map((i: any) => i.title);

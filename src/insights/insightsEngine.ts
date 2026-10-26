@@ -3,6 +3,7 @@
  * Provides optimization suggestions, automated alerts, and what-if scenarios
  */
 
+import type { CalcState, CalcResult, Offering, OfferingMetric } from '../types';
 import { calc } from '../calculations/index';
 import { formatMoney0 } from '../calculations/currency';
 
@@ -10,7 +11,7 @@ import { formatMoney0 } from '../calculations/currency';
  * State patch that adds full-time hires. calc() reads fullTimeEmployees when the app's
  * new headcount fields are present and only falls back to the legacy `employees`.
  */
-export function hirePatch(state: any, count: number): Record<string, number> {
+export function hirePatch(state: CalcState, count: number): Record<string, number> {
   if ('fullTimeEmployees' in state && 'partTimeEmployees' in state) {
     return { fullTimeEmployees: (Number(state.fullTimeEmployees) || 0) + count };
   }
@@ -21,19 +22,30 @@ export function hirePatch(state: any, count: number): Record<string, number> {
  * State patch that adds part-time hires, or null for a legacy state with only `employees`
  * (no part-time field to put them in).
  */
-export function partTimeHirePatch(state: any, count: number): Record<string, number> | null {
+export function partTimeHirePatch(state: CalcState, count: number): Record<string, number> | null {
   if ('fullTimeEmployees' in state && 'partTimeEmployees' in state) {
     return { partTimeEmployees: (Number(state.partTimeEmployees) || 0) + count };
   }
   return null;
 }
 
-export class InsightsEngine {
-  metrics: any;
-  state: any;
-  insights: any[];
+export type Severity = 'critical' | 'high' | 'medium' | 'low';
 
-  constructor(metrics: any, state: any) {
+export interface Insight {
+  type: string;
+  severity: Severity;
+  category: string;
+  title: string;
+  message: string;
+  [extra: string]: unknown;
+}
+
+export class InsightsEngine {
+  metrics: CalcResult;
+  state: CalcState;
+  insights: Insight[];
+
+  constructor(metrics: CalcResult, state: CalcState) {
     this.metrics = metrics;
     this.state = state;
     this.insights = [];
@@ -49,10 +61,10 @@ export class InsightsEngine {
    */
   offeringMargins(): { name: string; marginPct: number; priceMonthly: number }[] {
     const offerings = Array.isArray(this.state.offerings) ? this.state.offerings : [];
-    return (this.metrics.offeringMetrics || []).map((m: any, i: number) => ({
+    return (this.metrics.offeringMetrics || []).map((m: OfferingMetric, i: number) => ({
       name: m.name,
       marginPct: m.maxDiscountPct,
-      priceMonthly: Number(offerings.find((o: any) => o && o.name === m.name)?.priceMonthly ?? offerings[i]?.priceMonthly) || 0
+      priceMonthly: Number(offerings.find((o: Offering) => o && o.name === m.name)?.priceMonthly ?? offerings[i]?.priceMonthly) || 0
     }));
   }
 
@@ -73,7 +85,8 @@ export class InsightsEngine {
    * Detect underutilization (below target or optimal range)
    */
   detectUnderutilization() {
-    const { capacityPct, targetUtilizationPct } = this.metrics;
+    const { capacityPct } = this.metrics;
+    const targetUtilizationPct = Number(this.state.targetUtilizationPct) || 0;
 
     if (capacityPct < targetUtilizationPct * 0.8) {
       // Significantly underutilized
@@ -270,22 +283,22 @@ export class InsightsEngine {
    * Generate auto what-if scenarios based on current state
    */
   generateWhatIfScenarios() {
-    const { offerings, employees, targetUtilizationPct } = this.state;
+    const { offerings, targetUtilizationPct } = this.state;
     const baseIncome = this.metrics.income;
     const list = Array.isArray(offerings) ? offerings : [];
 
     // Impact comes from re-running the calc engine on the changed state, not from rules of thumb
-    const impact = (changes: Record<string, any>) => {
+    const impact = (changes: Partial<CalcState>) => {
       const delta = calc({ ...this.state, ...changes }).income - baseIncome;
       return `${delta >= 0 ? '+' : '-'}${this.money(Math.abs(Math.round(delta)))}/yr net profit`;
     };
 
-    const priceChanges = { offerings: list.map((o: any) => ({ ...o, priceMonthly: Math.round(o.priceMonthly * 1.1) })) };
-    const costChanges = { offerings: list.map((o: any) => ({ ...o, variableCostPerSession: Math.round(o.variableCostPerSession * 0.9) })) };
+    const priceChanges = { offerings: list.map((o: Offering) => ({ ...o, priceMonthly: Math.round((o.priceMonthly || 0) * 1.1) })) };
+    const costChanges = { offerings: list.map((o: Offering) => ({ ...o, variableCostPerSession: Math.round((o.variableCostPerSession || 0) * 0.9) })) };
     const hireChanges = hirePatch(this.state, 1);
     const utilChanges = this.state.mode === 'forecast'
       ? { productiveUtilizationPct: Math.min(100, (Number(this.state.productiveUtilizationPct) || 0) + 10) }
-      : { offerings: list.map((o: any) => ({ ...o, currentClients: Math.ceil((o.currentClients || 0) * 1.1) })) };
+      : { offerings: list.map((o: Offering) => ({ ...o, currentClients: Math.ceil((o.currentClients || 0) * 1.1) })) };
 
     return [
       { name: 'Price increase 10%', description: 'Increase all service prices by 10%', changes: priceChanges, estimatedImpact: impact(priceChanges) },
@@ -300,7 +313,7 @@ export class InsightsEngine {
   /**
    * Get insights sorted by severity
    */
-  getInsightsBySeverity(severity: any) {
+  getInsightsBySeverity(severity: Severity) {
     return this.insights.filter(i => i.severity === severity);
   }
 
@@ -319,8 +332,8 @@ export class InsightsEngine {
       totalInsights: this.insights.length,
       bySeverity,
       insights: this.insights.sort((a, b) => {
-        const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-        return (severityOrder as any)[a.severity] - (severityOrder as any)[b.severity];
+        const severityOrder: Record<Severity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+        return severityOrder[a.severity] - severityOrder[b.severity];
       })
     };
   }
@@ -329,7 +342,7 @@ export class InsightsEngine {
 /**
  * Generate insights for the current state
  */
-export function generateInsights(metrics: any, state: any) {
+export function generateInsights(metrics: CalcResult, state: CalcState) {
   const engine = new InsightsEngine(metrics, state);
   return engine.generateInsights();
 }
@@ -337,7 +350,7 @@ export function generateInsights(metrics: any, state: any) {
 /**
  * Generate what-if scenarios
  */
-export function generateWhatIfScenarios(metrics: any, state: any) {
+export function generateWhatIfScenarios(metrics: CalcResult, state: CalcState) {
   const engine = new InsightsEngine(metrics, state);
   return engine.generateWhatIfScenarios();
 }

@@ -1,3 +1,4 @@
+import type { Scenario } from '../../src/types';
 import { getAllScenarios, sanitizeScenarioState } from "./miscService";
 import { uuid } from "../utils/helpers";
 import { renderScenariosList } from "../components/UIHelpers";
@@ -8,7 +9,7 @@ import { showToast } from "./modalService";
 // Global flag to prevent re-entrant deletion calls
 let isDeletingScenario = false;
 
-export function saveScenario(name: any) {
+export function saveScenario(name: string) {
   if (!name || !name.trim()) {
     showToast('Please enter a scenario name', 'error');
     return;
@@ -24,7 +25,7 @@ export function saveScenario(name: any) {
   performSave(name.trim());
 }
 
-function performSave(name: any) {
+function performSave(name: string) {
   try {
     const scenarios = getAllScenarios();
     const timestamp = new Date().toLocaleString();
@@ -44,7 +45,7 @@ function performSave(name: any) {
     };
 
     // Same name (ignoring case) updates that scenario in place instead of adding a twin
-    const existingIdx = scenarios.findIndex((s: any) => String(s.name).trim().toLowerCase() === name.toLowerCase());
+    const existingIdx = scenarios.findIndex((s) => String(s.name).trim().toLowerCase() === name.toLowerCase());
     if (existingIdx >= 0) {
       const existing = scenarios[existingIdx];
       scenarios[existingIdx] = { ...existing, ...scenario, id: existing.id, createdAt: existing.createdAt ?? createdAt };
@@ -97,15 +98,15 @@ export function uniqueCopyName(name: string, existing: string[]) {
   return candidate;
 }
 
-export function duplicateScenario(scenarioId: any) {
+export function duplicateScenario(scenarioId: string) {
   try {
     const scenarios = getAllScenarios();
-    const source = scenarios.find((s: any) => s.id === scenarioId);
+    const source = scenarios.find((s) => s.id === scenarioId);
     if (!source) return;
     const copy = {
       ...JSON.parse(JSON.stringify(source)),
       id: uuid(),
-      name: uniqueCopyName(String(source.name || 'Unnamed scenario'), scenarios.map((s: any) => s.name)),
+      name: uniqueCopyName(String(source.name || 'Unnamed scenario'), scenarios.map((s) => s.name)),
       timestamp: new Date().toLocaleString(),
       createdAt: new Date().toISOString(),
     };
@@ -120,10 +121,10 @@ export function duplicateScenario(scenarioId: any) {
   }
 }
 
-export function loadScenario(scenarioId: any) {
+export function loadScenario(scenarioId: string) {
   try {
     const scenarios = getAllScenarios();
-    const scenario = scenarios.find((s: any) => s.id === scenarioId);
+    const scenario = scenarios.find((s) => s.id === scenarioId);
     if (!scenario) return;
 
     // Bypass confirmation in test mode
@@ -147,7 +148,7 @@ export function loadScenario(scenarioId: any) {
   }
 }
 
-export function performLoad(scenario: any) {
+export function performLoad(scenario: Scenario) {
   try {
     // Handle both old format (scenario.state) and new format (scenario.data)
     const scenarioData = scenario.state || scenario.data;
@@ -159,7 +160,7 @@ export function performLoad(scenario: any) {
     // Sanitize and restore state from scenario. Handles both the current
     // fullTime/partTime employee fields and the legacy employees/employeePay
     // format saved by older versions.
-    const sanitized = sanitizeScenarioState(scenarioData);
+    const sanitized = sanitizeScenarioState(scenarioData as unknown as Record<string, unknown>);
     if (!sanitized) {
       console.error('Scenario data failed validation');
       showToast('Scenario data is invalid', 'error');
@@ -189,7 +190,7 @@ export function performLoad(scenario: any) {
   }
 }
 
-export function deleteScenario(scenarioId: any) {
+export function deleteScenario(scenarioId: string) {
   // Prevent re-entrant calls
   if (isDeletingScenario) return;
   isDeletingScenario = true;
@@ -198,7 +199,7 @@ export function deleteScenario(scenarioId: any) {
     // Get scenarios once and filter
     let scenarios = getAllScenarios();
     const initialLength = scenarios.length;
-    scenarios = scenarios.filter((s: any) => s.id !== scenarioId);
+    scenarios = scenarios.filter((s) => s.id !== scenarioId);
 
     // Only update if we actually removed something
     if (scenarios.length < initialLength) {

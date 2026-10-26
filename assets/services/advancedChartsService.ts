@@ -1,3 +1,4 @@
+import type { CalcResult, CalcState } from '../../src/types';
 // Advanced Chart Types: multi-variable sensitivity heat map, balanced-scorecard
 // radar chart, and client-capacity funnel. Follows the same hand-rolled
 // SVG/HTML-string pattern as visualizationService.js (no chart library dep).
@@ -5,7 +6,7 @@ import { escapeHtml } from './miscService';
 import { calc } from '../../src/calculations/index';
 import { fmtMoney0 } from '../../src/calculations/currency';
 
-const fmtInt = (n: any) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
+const fmtInt = (n: number) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 
 // ============================================================================
 // Heat Map — income across a grid of price % and utilization % adjustments
@@ -18,7 +19,7 @@ const HEATMAP_UTIL_STEPS = [-20, -10, 0, 10, 20];
  * Computes a 2D grid of projected income across price and utilization deltas.
  * @param state - Application state
  */
-export function computeHeatmapData(state: Record<string, any>): {priceSteps: number[], utilSteps: number[], cells: Array<Array<{income: number}>>} {
+export function computeHeatmapData(state: CalcState): {priceSteps: number[], utilSteps: number[], cells: Array<Array<{income: number}>>} {
   const baseUtilization = Number(state.productiveUtilizationPct) || 75;
 
   const cells = HEATMAP_PRICE_STEPS.map((priceAdjust) =>
@@ -26,9 +27,9 @@ export function computeHeatmapData(state: Record<string, any>): {priceSteps: num
       const adjusted = {
         ...state,
         productiveUtilizationPct: Math.min(100, Math.max(0, baseUtilization + utilAdjust)),
-        offerings: (state.offerings || []).map((o: any) => ({
+        offerings: (state.offerings || []).map((o) => ({
           ...o,
-          priceMonthly: o.priceMonthly * (1 + priceAdjust / 100)
+          priceMonthly: (o.priceMonthly || 0) * (1 + priceAdjust / 100)
         }))
       };
       const result = calc(adjusted, { enableCache: false });
@@ -44,13 +45,13 @@ export function computeHeatmapData(state: Record<string, any>): {priceSteps: num
  * @param state - Application state
  * @returns HTML
  */
-export function renderSensitivityHeatmap(state: Record<string, any>): string {
+export function renderSensitivityHeatmap(state: CalcState): string {
   const { priceSteps, utilSteps, cells } = computeHeatmapData(state);
 
   const allIncomes = cells.flat().map((c) => c.income);
   const maxAbs = Math.max(...allIncomes.map((v) => Math.abs(v)), 1);
 
-  const colorFor = (income: any) => {
+  const colorFor = (income: number) => {
     // Diverging scale: red at -maxAbs, amber near 0, green at +maxAbs
     const ratio = Math.max(-1, Math.min(1, income / maxAbs));
     if (ratio >= 0) {
@@ -88,7 +89,7 @@ export function renderSensitivityHeatmap(state: Record<string, any>): string {
  * @param metrics - calc() result
  * @returns Scores keyed by dimension
  */
-export function computeScorecardData(metrics: Record<string, any>): Record<string, any> {
+export function computeScorecardData(metrics: CalcResult): Record<RadarAxis, number> {
   const revenue = Number(metrics.revenue) || 0;
   const income = Number(metrics.income) || 0;
   const capacityPct = Number(metrics.capacityPct) || 0;
@@ -123,6 +124,7 @@ export function computeScorecardData(metrics: Record<string, any>): Record<strin
   };
 }
 
+type RadarAxis = keyof typeof RADAR_LABELS;
 const RADAR_LABELS = {
   profitability: 'Profitability',
   utilization: 'Utilization',
@@ -136,13 +138,13 @@ const RADAR_LABELS = {
  * @param metrics - calc() result
  * @returns HTML
  */
-export function renderScorecardRadar(metrics: Record<string, any>): string {
+export function renderScorecardRadar(metrics: CalcResult): string {
   const scores = computeScorecardData(metrics);
-  const axes = Object.keys(RADAR_LABELS);
+  const axes = Object.keys(RADAR_LABELS) as RadarAxis[];
   const n = axes.length;
   const cx = 60, cy = 55, maxR = 42;
 
-  const pointFor = (idx: any, value: any) => {
+  const pointFor = (idx: number, value: number) => {
     const angle = -Math.PI / 2 + (idx / n) * Math.PI * 2;
     const r = (Math.max(0, Math.min(100, value)) / 100) * maxR;
     return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
@@ -170,7 +172,7 @@ export function renderScorecardRadar(metrics: Record<string, any>): string {
 
     const labelX = cx + Math.cos(angle) * (maxR + 10);
     const labelY = cy + Math.sin(angle) * (maxR + 10);
-    svg += `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" dy=".3em" font-size="6" fill="var(--muted)">${escapeHtml((RADAR_LABELS as any)[axis])}</text>`;
+    svg += `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" dy=".3em" font-size="6" fill="var(--muted)">${escapeHtml(RADAR_LABELS[axis])}</text>`;
   });
 
   // Data polygon
@@ -183,13 +185,13 @@ export function renderScorecardRadar(metrics: Record<string, any>): string {
   // Data points
   axes.forEach((axis, idx) => {
     const p = pointFor(idx, scores[axis]);
-    svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2" fill="var(--accent, #5eead4)"><title>${escapeHtml((RADAR_LABELS as any)[axis])}: ${scores[axis]}</title></circle>`;
+    svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2" fill="var(--accent, #5eead4)"><title>${escapeHtml(RADAR_LABELS[axis])}: ${scores[axis]}</title></circle>`;
   });
 
   svg += '</svg>';
 
   const legend = axes.map((axis) =>
-    `<div class="radar-legend-item"><span class="radar-legend-label">${escapeHtml((RADAR_LABELS as any)[axis])}</span><span class="radar-legend-value">${scores[axis]}</span></div>`
+    `<div class="radar-legend-item"><span class="radar-legend-label">${escapeHtml(RADAR_LABELS[axis])}</span><span class="radar-legend-value">${scores[axis]}</span></div>`
   ).join('');
 
   return `<div class="scorecard-radar">${svg}<div class="radar-legend">${legend}</div></div>`;
@@ -203,7 +205,7 @@ export function renderScorecardRadar(metrics: Record<string, any>): string {
  * Computes funnel stage values (all expressed as client counts).
  * @param metrics - calc() result
  */
-export function computeFunnelData(metrics: Record<string, any>): Array<{label: string, value: number}> {
+export function computeFunnelData(metrics: CalcResult): Array<{label: string, value: number}> {
   const serviceHoursPerClient = Number(metrics.serviceHoursPerClient) || 0;
   const annualServiceHours = Number(metrics.annualServiceHours) || 0;
   const capacityClients = serviceHoursPerClient > 0 ? Math.floor(annualServiceHours / serviceHoursPerClient) : 0;
@@ -222,7 +224,7 @@ export function computeFunnelData(metrics: Record<string, any>): Array<{label: s
  * @param metrics - calc() result
  * @returns HTML
  */
-export function renderClientFunnel(metrics: Record<string, any>): string {
+export function renderClientFunnel(metrics: CalcResult): string {
   const stages = computeFunnelData(metrics);
   const maxValue = Math.max(...stages.map((s) => s.value), 1);
 

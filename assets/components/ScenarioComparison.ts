@@ -1,3 +1,4 @@
+import type { AppOffering, AppState } from '../../src/types';
 import * as misc from '../services/miscService';
 import { escapeHtml, getAllScenarios, getShareBase } from '../services/miscService';
 import { calc } from '../../src/calculations/index';
@@ -10,7 +11,7 @@ import { pruneMembership } from '../../src/calculations/membership';
 /** Scenario comparison (dropdowns, side-by-side diff view) and CSV import. */
 
 interface ComparisonDeps {
-  getState: () => any;
+  getState: () => AppState;
   render: () => void;
   persistState: () => void;
 }
@@ -21,12 +22,12 @@ export function initScenarioComparison(d: ComparisonDeps): void {
   deps = d;
 }
 
-const $ = (sel: string) => document.querySelector<any>(sel);
+const $ = <T extends HTMLElement = HTMLInputElement>(sel: string) => document.querySelector<T>(sel);
 
 // Helper to get selected scenario IDs from dropdowns
 function getSelectedComparisonScenarios() {
-  const scenario1Id = $('#compareScenario1').value;
-  const scenario2Id = $('#compareScenario2').value;
+  const scenario1Id = $('#compareScenario1')!.value;
+  const scenario2Id = $('#compareScenario2')!.value;
   return { scenario1Id, scenario2Id };
 }
 
@@ -40,7 +41,7 @@ export function populateComparisonDropdowns() {
   select1.innerHTML = '<option value="">Select first scenario...</option>';
   select2.innerHTML = '<option value="">Select second scenario...</option>';
 
-  scenarios.forEach((s: any) => {
+  scenarios.forEach((s) => {
     const option1 = document.createElement('option');
     option1.value = s.id;
     option1.textContent = s.name;
@@ -86,7 +87,7 @@ export function handleCSVImport(file: File) {
       return;
     }
 
-    const { settings, offerings, expenses, resources, membershipPlans, memberProfiles } = (result.data as any);
+    const { settings, offerings, expenses, resources, membershipPlans, memberProfiles } = result.data!;
 
     const state = deps!.getState();
     // Apply imported settings to state
@@ -100,13 +101,13 @@ export function handleCSVImport(file: File) {
     if (settings.targetUtilizationPct !== undefined) state.targetUtilizationPct = settings.targetUtilizationPct;
 
     // Apply imported offerings; expenses and resources only when the CSV had that section
-    if (offerings.length > 0) state.offerings = offerings;
+    if (offerings.length > 0) state.offerings = offerings as AppOffering[];
     if (expenses !== undefined) state.expenses = expenses;
     if (resources !== undefined) state.resources = resources;
     // Plans and profiles name offerings by id; the import replaced those ids, so references the CSV did not re-link are dropped
     if (membershipPlans !== undefined) state.membershipPlans = membershipPlans;
     if (memberProfiles !== undefined) state.memberProfiles = memberProfiles;
-    const pruned = pruneMembership(state.membershipPlans || [], state.memberProfiles || [], new Set(state.offerings.map((o: any) => o.id)));
+    const pruned = pruneMembership(state.membershipPlans || [], state.memberProfiles || [], new Set(state.offerings.map((o) => o.id)));
     state.membershipPlans = pruned.plans;
     state.memberProfiles = pruned.profiles;
 
@@ -154,8 +155,8 @@ export function showScenarioComparisonDiff(id1: string, id2: string) {
   }
 
   const allScenarios = [...tempScenarios, ...getAllScenarios()];
-  const scenario1 = allScenarios.find((s: any) => s.id === id1);
-  const scenario2 = allScenarios.find((s: any) => s.id === id2);
+  const scenario1 = allScenarios.find((s) => s.id === id1);
+  const scenario2 = allScenarios.find((s) => s.id === id2);
 
   if (!scenario1 || !scenario2) {
     alert('Unable to load scenarios for comparison');
@@ -192,8 +193,8 @@ export function showScenarioComparisonDiff(id1: string, id2: string) {
   contentHtml += '<div class="scenario-diff-table">';
 
   metricsToCompare.forEach(m => {
-    const val1 = (metrics1 as any)[m.key];
-    const val2 = (metrics2 as any)[m.key];
+    const val1 = (metrics1 as unknown as Record<string, number>)[m.key];
+    const val2 = (metrics2 as unknown as Record<string, number>)[m.key];
     const delta = val2 - val1;
     const deltaStr = m.format(delta);
 
@@ -291,8 +292,8 @@ export function showScenarioComparisonDiff(id1: string, id2: string) {
 // Export comparison as CSV
 window.exportComparisonAsCSV = function (id1: string, id2: string) {
   const scenarios = getAllScenarios();
-  const scenario1 = scenarios.find((s: any) => s.id === id1);
-  const scenario2 = scenarios.find((s: any) => s.id === id2);
+  const scenario1 = scenarios.find((s) => s.id === id1);
+  const scenario2 = scenarios.find((s) => s.id === id2);
 
   if (!scenario1 || !scenario2) {
     alert('Unable to load scenarios for export');
@@ -319,8 +320,8 @@ window.exportComparisonAsCSV = function (id1: string, id2: string) {
   ];
 
   metricsToCompare.forEach(m => {
-    const val1 = (metrics1 as any)[m.key];
-    const val2 = (metrics2 as any)[m.key];
+    const val1 = (metrics1 as unknown as Record<string, number>)[m.key];
+    const val2 = (metrics2 as unknown as Record<string, number>)[m.key];
     const delta = val2 - val1;
     const sign = delta > 0 ? '+' : '';
 
@@ -333,7 +334,7 @@ window.exportComparisonAsCSV = function (id1: string, id2: string) {
   const a = document.createElement('a');
   a.href = url;
   // Strip characters that don't belong in a filename (names can be untrusted).
-  const safeFileName = (n: any) => String(n || 'scenario').replace(/[^a-z0-9 _-]+/gi, '').trim().slice(0, 60) || 'scenario';
+  const safeFileName = (n: unknown) => String(n || 'scenario').replace(/[^a-z0-9 _-]+/gi, '').trim().slice(0, 60) || 'scenario';
   a.download = `scenario-comparison-${safeFileName(scenario1.name)}-vs-${safeFileName(scenario2.name)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
@@ -342,8 +343,8 @@ window.exportComparisonAsCSV = function (id1: string, id2: string) {
 // Share comparison link with full scenario state encoded in URL
 window.shareComparison = function (id1: string, id2: string) {
   const scenarios = getAllScenarios();
-  const scenario1 = scenarios.find((s: any) => s.id === id1);
-  const scenario2 = scenarios.find((s: any) => s.id === id2);
+  const scenario1 = scenarios.find((s) => s.id === id1);
+  const scenario2 = scenarios.find((s) => s.id === id2);
 
   if (!scenario1 || !scenario2) {
     showToast('Unable to load scenarios for sharing', 'error');
@@ -385,8 +386,8 @@ window.shareComparison = function (id1: string, id2: string) {
 // Export comparison as PDF
 window.exportComparisonAsPDF = function (id1: string, id2: string) {
   const scenarios = getAllScenarios();
-  const scenario1 = scenarios.find((s: any) => s.id === id1);
-  const scenario2 = scenarios.find((s: any) => s.id === id2);
+  const scenario1 = scenarios.find((s) => s.id === id1);
+  const scenario2 = scenarios.find((s) => s.id === id2);
 
   if (!scenario1 || !scenario2) {
     alert('Unable to load scenarios for export');
@@ -430,8 +431,8 @@ window.exportComparisonAsPDF = function (id1: string, id2: string) {
   ];
 
   metricsToCompare.forEach(m => {
-    const val1 = (metrics1 as any)[m.key];
-    const val2 = (metrics2 as any)[m.key];
+    const val1 = (metrics1 as unknown as Record<string, number>)[m.key];
+    const val2 = (metrics2 as unknown as Record<string, number>)[m.key];
     const delta = val2 - val1;
     const sign = delta > 0 ? '+' : '';
     const changeClass = delta > 0 ? 'positive' : delta < 0 ? 'negative' : '';
@@ -455,8 +456,8 @@ window.exportComparisonAsPDF = function (id1: string, id2: string) {
 // Get embed code for comparison
 window.getComparisonEmbedCode = function (id1: string, id2: string) {
   const scenarios = getAllScenarios();
-  const scenario1 = scenarios.find((s: any) => s.id === id1);
-  const scenario2 = scenarios.find((s: any) => s.id === id2);
+  const scenario1 = scenarios.find((s) => s.id === id1);
+  const scenario2 = scenarios.find((s) => s.id === id2);
 
   if (!scenario1 || !scenario2) {
     alert('Unable to load scenarios for embed code');
@@ -481,8 +482,8 @@ window.getComparisonEmbedCode = function (id1: string, id2: string) {
 
 /** Wires the Import CSV button and its drop zone; safe to call more than once. */
 export function bindCsvImport(): void {
-  const importBtn: any = document.querySelector('#importCSVBtn');
-  const csvFileInput: any = document.querySelector('#csvFileInput');
+  const importBtn = document.querySelector<HTMLElement & { _importWired?: boolean }>('#importCSVBtn');
+  const csvFileInput = document.querySelector<HTMLInputElement & { _pickerOpen?: boolean }>('#csvFileInput');
   if (!importBtn || !csvFileInput || importBtn._importWired) return;
   importBtn._importWired = true;
 
@@ -507,7 +508,7 @@ export function bindCsvImport(): void {
       zone.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const input: any = document.getElementById('csvFileInput');
+        const input = document.getElementById('csvFileInput') as (HTMLInputElement & { _pickerOpen?: boolean }) | null;
         if (input && !input._pickerOpen) {
           input._pickerOpen = true;
           input.click();
@@ -535,10 +536,11 @@ export function bindCsvImport(): void {
     }, 50);
   });
 
-  csvFileInput.addEventListener('change', (e: any) => {
+  csvFileInput.addEventListener('change', (e: Event) => {
     csvFileInput._pickerOpen = false;
-    if (e.target.files[0]) {
-      handleCSVImport(e.target.files[0]);
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) {
+      handleCSVImport(file);
     } else {
       window.closeModal();
     }

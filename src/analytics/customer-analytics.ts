@@ -3,6 +3,92 @@
  * Calculates CAC, LTV, churn rate, and growth projections
  */
 
+import type { CalcResult } from '../types';
+
+/** The slice of a calc() result these helpers read. */
+export type CustomerMetrics = Pick<CalcResult, 'offeringMetrics' | 'clients' | 'revenue'>;
+
+export interface LTVByOffering {
+  offeringIndex: number;
+  monthlyValue: number;
+  estimatedLTV: number;
+  retentionAdjusted?: boolean;
+}
+
+export interface LTVResult {
+  averageLTV: number;
+  byOffering: LTVByOffering[];
+  totalLTV?: number;
+  validOfferingCount?: number;
+  assumptions: { avgLifespanMonths: number; retentionRate: number };
+}
+
+export interface LTVToCACResult {
+  ratio: number;
+  ratioText: string;
+  health: string;
+  recommendation: string;
+}
+
+export interface PaybackResult {
+  months: number | null;
+  wholeMonths?: number;
+  monthsText: string;
+  days: number | null;
+  healthAssessment: string;
+}
+
+export interface ChurnResult {
+  monthlyChurnRate: number;
+  churnedCustomers: number;
+  monthlyRetentionRate?: number;
+  retentionRate?: number;
+  annualizedRetention: number;
+  impact: string;
+  recommendation?: string;
+}
+
+export interface GrowthParams {
+  currentCustomers?: number;
+  monthlyAcquisition?: number;
+  monthlyChurnRate?: number;
+  projectionMonths?: number;
+}
+
+export interface GrowthProjection {
+  month: number;
+  customers: number;
+  newCustomers: number;
+  churned: number;
+}
+
+export interface GrowthResult {
+  projections: GrowthProjection[];
+  currentCustomers: number;
+  projectedCustomers: number;
+  totalGrowth: number;
+  growthRate: number;
+  breakEvenMonth: number | null;
+}
+
+export interface RevenueImpact {
+  revenuePerCustomerPerMonth: number;
+  newCustomerAnnualValue: number;
+  annualAcquisitionCost: number;
+  annualChurnImpact: number;
+  netAnnualRevenue: number;
+  netAnnualProfit: number;
+  roi: number;
+}
+
+export interface AcquisitionOptions {
+  monthlyNewCustomers?: number;
+  monthlyChurnRate?: number;
+  marketingSpendPerMonth?: number;
+  avgCustomerLifespanMonths?: number;
+  clientRetentionRate?: number;
+}
+
 /**
  * Calculate Customer Acquisition Cost (CAC)
  * CAC = Total marketing spend / Number of new customers acquired
@@ -25,7 +111,7 @@ export function calculateCAC(marketingSpend: number, newCustomers: number): numb
  * @param clientRetentionRate - % of clients retained year-to-year (0-100)
  * @returns LTV metrics
  */
-export function calculateLTV(metrics: Record<string, any>, averageCustomerLifespanMonths: number = 24, clientRetentionRate: number = 80): Record<string, any> {
+export function calculateLTV(metrics: Pick<CustomerMetrics, 'offeringMetrics'> | null | undefined, averageCustomerLifespanMonths: number = 24, clientRetentionRate: number = 80): LTVResult {
   const retentionRate = Math.max(0, Math.min(100, clientRetentionRate)) / 100;
 
   if (!metrics || !metrics.offeringMetrics) {
@@ -40,7 +126,7 @@ export function calculateLTV(metrics: Record<string, any>, averageCustomerLifesp
   }
 
   // Calculate LTV per offering
-  const byOffering = metrics.offeringMetrics.map((offering: any, idx: any) => {
+  const byOffering = metrics.offeringMetrics.map((offering, idx): LTVByOffering => {
     if (!offering) {
       return {
         offeringIndex: idx,
@@ -70,8 +156,8 @@ export function calculateLTV(metrics: Record<string, any>, averageCustomerLifesp
   });
 
   // Average LTV across all offerings
-  const totalLTV = byOffering.reduce((sum: any, o: any) => sum + o.estimatedLTV, 0);
-  const validOfferings = byOffering.filter((o: any) => o.estimatedLTV > 0).length;
+  const totalLTV = byOffering.reduce((sum, o) => sum + o.estimatedLTV, 0);
+  const validOfferings = byOffering.filter((o) => o.estimatedLTV > 0).length;
   const averageLTV = validOfferings > 0 ? Math.round(totalLTV / validOfferings) : 0;
 
   return {
@@ -94,7 +180,7 @@ export function calculateLTV(metrics: Record<string, any>, averageCustomerLifesp
  * @param cac - Customer acquisition cost
  * @returns LTV:CAC ratio and health assessment
  */
-export function calculateLTVtoCACRatio(ltv: number, cac: number): Record<string, any> {
+export function calculateLTVtoCACRatio(ltv: number, cac: number): LTVToCACResult {
   if (cac <= 0) {
     return {
       ratio: 0,
@@ -105,7 +191,7 @@ export function calculateLTVtoCACRatio(ltv: number, cac: number): Record<string,
   }
 
   const ratio = ltv / cac;
-  let health, recommendation;
+  let health: string, recommendation: string;
 
   if (ratio >= 3) {
     health = 'healthy';
@@ -137,7 +223,7 @@ export function calculateLTVtoCACRatio(ltv: number, cac: number): Record<string,
  * @param monthlyProfitPerCustomer - Monthly contribution margin per customer
  * @returns Payback period metrics
  */
-export function calculatePaybackPeriod(cac: number, monthlyProfitPerCustomer: number): Record<string, any> {
+export function calculatePaybackPeriod(cac: number, monthlyProfitPerCustomer: number): PaybackResult {
   if (monthlyProfitPerCustomer <= 0) {
     return {
       months: null,
@@ -151,7 +237,7 @@ export function calculatePaybackPeriod(cac: number, monthlyProfitPerCustomer: nu
   const days = Math.round((months % 1) * 30);
   const wholeMonths = Math.floor(months);
 
-  let assessment;
+  let assessment: string;
   if (months <= 3) {
     assessment = 'Excellent - Fast payback period';
   } else if (months <= 6) {
@@ -180,7 +266,7 @@ export function calculatePaybackPeriod(cac: number, monthlyProfitPerCustomer: nu
  * @param newCustomersAdded - New customers added during period
  * @returns Churn metrics
  */
-export function calculateChurnRate(startingCustomers: number, endingCustomers: number, newCustomersAdded: number = 0): Record<string, any> {
+export function calculateChurnRate(startingCustomers: number, endingCustomers: number, newCustomersAdded: number = 0): ChurnResult {
   if (startingCustomers <= 0) {
     return {
       monthlyChurnRate: 0,
@@ -198,7 +284,7 @@ export function calculateChurnRate(startingCustomers: number, endingCustomers: n
   // Annualize: (retention_rate)^12
   const annualizedRetention = Math.pow(monthlyRetentionRate / 100, 12) * 100;
 
-  let impact, recommendation;
+  let impact: string, recommendation: string;
   if (monthlyChurnRate < 5) {
     impact = 'Excellent - Very low churn';
     recommendation = 'Customer base is stable and growing.';
@@ -230,7 +316,7 @@ export function calculateChurnRate(startingCustomers: number, endingCustomers: n
  * @param params - Projection parameters
  * @returns Growth projections
  */
-export function projectCustomerGrowth(params: Record<string, any>): Record<string, any> {
+export function projectCustomerGrowth(params: GrowthParams): GrowthResult {
   const {
     currentCustomers = 0,
     monthlyAcquisition = 0,
@@ -239,7 +325,7 @@ export function projectCustomerGrowth(params: Record<string, any>): Record<strin
   } = params;
 
   const monthlyRetentionRate = 1 - (monthlyChurnRate / 100);
-  const projections = [];
+  const projections: GrowthProjection[] = [];
 
   let customers = currentCustomers;
 
@@ -273,7 +359,7 @@ export function projectCustomerGrowth(params: Record<string, any>): Record<strin
 /**
  * Find the month when customer base stops declining (if applicable)
  */
-function calculateBreakEvenMonth(projections: any) {
+function calculateBreakEvenMonth(projections: GrowthProjection[]) {
   for (let i = 1; i < projections.length; i++) {
     if (projections[i].customers >= projections[i - 1].customers) {
       return i;
@@ -292,12 +378,13 @@ function calculateBreakEvenMonth(projections: any) {
  * @param marketingSpendPerMonth - Monthly marketing budget
  * @returns Revenue impact metrics
  */
-export function calculateRevenueImpact(metrics: Record<string, any>, monthlyNewCustomers: number = 0, monthlyChurnRate: number = 0, marketingSpendPerMonth: number = 0): Record<string, any> | null {
+export function calculateRevenueImpact(metrics: Pick<CustomerMetrics, 'clients' | 'revenue'> | null | undefined, monthlyNewCustomers: number = 0, monthlyChurnRate: number = 0, marketingSpendPerMonth: number = 0): RevenueImpact | null {
   if (!metrics) return null;
 
   // Calculate average revenue per customer per month
-  const totalMonthlyRevenue = metrics.monthlyRevenue || 0;
-  const totalClients = metrics.totalClients || 1;
+  // calc() reports annual revenue and the client count as `clients`
+  const totalMonthlyRevenue = (metrics.revenue || 0) / 12;
+  const totalClients = metrics.clients || 1;
   const revenuePerCustomer = totalMonthlyRevenue / Math.max(1, totalClients);
 
   // Annual impact of new customer cohort
@@ -336,7 +423,7 @@ export function calculateRevenueImpact(metrics: Record<string, any>, monthlyNewC
  * Comprehensive customer acquisition summary
  * Combines all metrics into one view
  */
-export function summarizeCustomerAcquisition(metrics: any, options: Record<string, any> = {}) {
+export function summarizeCustomerAcquisition(metrics: CustomerMetrics | null | undefined, options: AcquisitionOptions = {}) {
   const {
     monthlyNewCustomers = 5,
     monthlyChurnRate = 5,
@@ -349,12 +436,12 @@ export function summarizeCustomerAcquisition(metrics: any, options: Record<strin
   const ltv = calculateLTV(metrics, avgCustomerLifespanMonths, clientRetentionRate);
   const ltvToCAC = calculateLTVtoCACRatio(ltv.averageLTV, cac);
   const churn = calculateChurnRate(
-    metrics?.totalClients || 0,
-    (metrics?.totalClients || 0) * (1 - (monthlyChurnRate / 100)),
+    metrics?.clients || 0,
+    (metrics?.clients || 0) * (1 - (monthlyChurnRate / 100)),
     monthlyNewCustomers
   );
   const growth = projectCustomerGrowth({
-    currentCustomers: metrics?.totalClients || 0,
+    currentCustomers: metrics?.clients || 0,
     monthlyAcquisition: monthlyNewCustomers,
     monthlyChurnRate,
     projectionMonths: 12
@@ -375,7 +462,7 @@ export function summarizeCustomerAcquisition(metrics: any, options: Record<strin
 /**
  * Calculate overall business health score (0-100)
  */
-function calculateHealthScore(ltvToCACRatio: any, churnRate: any, cac: any, ltv: any) {
+function calculateHealthScore(ltvToCACRatio: number, churnRate: number, cac: number, ltv: number) {
   let score = 100;
 
   // LTV:CAC ratio scoring (target 3:1)

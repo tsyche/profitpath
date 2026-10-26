@@ -1,9 +1,10 @@
 // Business Logic
-import { uuid, clamp } from '../utils/helpers';
+import { uuid, clamp, errMsg } from '../utils/helpers';
 import { fmtMoney0 } from '../../src/calculations/currency';
+import type { Offering } from '../../src/types';
 
 // Formatting utilities
-const fmtPct1 = (n: any) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
+const fmtPct1 = (n: number) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
 export function validateBusinessLogic() {
   const issues = [];
@@ -255,7 +256,7 @@ export function validateBusinessLogic() {
       suggestion = 'Add at least one full-time or part-time employee';
     } else if (state.mode === 'current') {
       // In current mode, check if offerings have required fields
-      const offeringIssues: any[] = [];
+      const offeringIssues: string[] = [];
       if (state.offerings) {
         state.offerings.forEach((o, idx) => {
           if (!o.name) offeringIssues.push('Offering ' + (idx + 1) + ' has no name');
@@ -284,11 +285,11 @@ export function validateBusinessLogic() {
       suggestion: suggestion
     });
 
-    console.error('Calculation error in validateBusinessLogic():', e.message, {
+    console.error('Calculation error in validateBusinessLogic():', errMsg(e), {
       mode: state.mode,
       employees: (state.fullTimeEmployees || 0) + (state.partTimeEmployees || 0),
       offerings: state.offerings ? state.offerings.length : 0,
-      errorDetails: e.toString()
+      errorDetails: String(e)
     });
   }
 
@@ -296,17 +297,17 @@ export function validateBusinessLogic() {
 }
 
 /** Mix % still unassigned, so a new row fills the gap instead of leaving a mid-build total short of 100. */
-export function remainingMix(offerings: any[]): number {
-  const used = offerings.reduce((sum: number, o: any) => sum + (Number(o?.mixPct) || 0), 0);
+export function remainingMix(offerings: Offering[]): number {
+  const used = offerings.reduce((sum: number, o) => sum + (Number(o?.mixPct) || 0), 0);
   return Math.max(0, Math.round((100 - used) * 100) / 100);
 }
 
 /** Copy of an offering to tweak: new id and name, no existing clients, and only the unassigned mix. */
-export function duplicateOffering(source: any, offerings: any[], makeId: () => string) {
+export function duplicateOffering<T extends Offering>(source: T, offerings: Offering[], makeId: () => string) {
   return { ...source, id: makeId(), name: String(source.name || 'Offering').slice(0, 90) + ' (copy)', mixPct: remainingMix(offerings), currentClients: 0 };
 }
 
-export function rebalanceMix(changedIdx: any, nextMixPct: any) {
+export function rebalanceMix(changedIdx: number, nextMixPct: unknown) {
   const n = state.offerings.length;
   if (n <= 1) {
     if (state.offerings[0]) state.offerings[0].mixPct = 100;
@@ -376,11 +377,17 @@ export function defaultOfferings() {
 // that clears and later recurs will surface again.
 const dismissedValidationKeys = new Set<string>();
 
-function validationKey(item: any) {
+interface ValidationItem {
+  severity?: string;
+  message?: string;
+  suggestion?: string;
+}
+
+function validationKey(item: ValidationItem) {
   return (item.severity || '') + '::' + (item.message || '');
 }
 
-function buildValidationItem(item: any, icon: any) {
+function buildValidationItem(item: ValidationItem, icon: string) {
   const key = validationKey(item);
   const el = document.createElement('div');
   el.className = 'validation-item validation-' + (item.severity);
@@ -400,13 +407,13 @@ function buildValidationItem(item: any, icon: any) {
 }
 
 // Lightweight horizontal swipe-to-dismiss for touch devices.
-function attachSwipeToDismiss(el: any, key: any) {
+function attachSwipeToDismiss(el: HTMLElement, key: string) {
   let startX = 0, dx = 0, dragging = false;
-  el.addEventListener('touchstart', (e: any) => {
+  el.addEventListener('touchstart', (e: TouchEvent) => {
     startX = e.touches[0].clientX; dx = 0; dragging = true;
     el.style.transition = 'none';
   }, { passive: true });
-  el.addEventListener('touchmove', (e: any) => {
+  el.addEventListener('touchmove', (e: TouchEvent) => {
     if (!dragging) return;
     dx = e.touches[0].clientX - startX;
     el.style.transform = 'translateX(' + dx + 'px)';

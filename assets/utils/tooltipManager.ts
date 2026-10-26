@@ -2,7 +2,7 @@
  * Smart tooltip system that positions tooltips intelligently to stay within viewport
  */
 
-let currentTooltip: any = null;
+let currentTooltip: HTMLElement | null = null;
 let tooltipsEnabled = true;
 
 export function initTooltips() {
@@ -14,7 +14,7 @@ export function initTooltips() {
   }
 }
 
-export function setTooltipsEnabled(enabled: any) {
+export function setTooltipsEnabled(enabled: boolean) {
   tooltipsEnabled = enabled;
   if (!enabled) {
     hideTooltip();
@@ -78,7 +78,7 @@ function listenForSettingChanges() {
   // (for same-tab changes that don't trigger storage event)
 }
 
-function showTooltip(element: any) {
+function showTooltip(element: HTMLElement) {
   // Don't show if tooltips are disabled
   if (!tooltipsEnabled) {
     hideTooltip();

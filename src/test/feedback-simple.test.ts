@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { setTestMode, clearGlobalState, resetLocalStorage, clearVitestState, ensureElementRemove } from './test-utils.js';
+import { setTestMode, clearGlobalState, resetLocalStorage, clearVitestState, ensureElementRemove } from './test-utils';
 
 // Mock localStorage
 const localStorageMock = (() => {

@@ -73,7 +73,8 @@ const globals = {
 
 export default [
   {
-    files: ['**/*.js', '**/*.jsx'],
+    // Only config-adjacent plain JS remains (public/sw.js); everything else is TypeScript
+    files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -126,8 +127,14 @@ export default [
     rules: {
       'no-console': 'off',
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': 'off'
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-explicit-any': 'off'
     }
+  },
+  {
+    // Ambient declarations: `any` is how untyped CDN libs and legacy globals are declared
+    files: ['**/*.d.ts'],
+    rules: { '@typescript-eslint/no-explicit-any': 'off' }
   },
   {
     ignores: [

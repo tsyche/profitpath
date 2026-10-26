@@ -19,7 +19,7 @@ export default defineConfig({
     // Unit tests only; tests/e2e belongs to Playwright
     include: ['src/**/*.{test,spec}.{js,ts}'],
     globals: true,
-    setupFiles: ['./src/test/setup.js'],
+    setupFiles: ['./src/test/setup.ts'],
     reporters: ['verbose'],
     outputColor: false,
     silent: false,

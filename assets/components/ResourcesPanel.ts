@@ -53,25 +53,25 @@ export function refreshAfterResourceEdit() {
   }
 }
 
-function onResourceInput(e: any) {
+function onResourceInput(e: Event) {
   const el = e.target;
   if (!(el instanceof HTMLInputElement)) return;
   const k = el.dataset.k;
-  const row = ((state.resources || [])[Number(el.dataset.i)] as any);
+  const row = (state.resources || [])[Number(el.dataset.i)] as unknown as Record<string, unknown>;
   if (!k || !row) return;
   const fieldKey = `res-${el.dataset.i}-${k}`;
   pushHistoryOnce(fieldKey);
   // Per-row sanitizer is the single source of truth for clamping and fallbacks
-  const clean = (sanitizeResources([{ ...row, [k]: el.type === 'checkbox' ? el.checked : el.value }], () => row.id)[0] as any);
+  const clean = sanitizeResources([{ ...row, [k]: el.type === 'checkbox' ? el.checked : el.value }], () => String(row.id))[0] as unknown as Record<string, unknown>;
   if (clean[k] === undefined) delete row[k];
   else row[k] = clean[k];
   refreshAfterResourceEdit();
 }
 
-function onResourceTagChange(e: any) {
+function onResourceTagChange(e: Event) {
   const el = e.target;
   if (!(el instanceof HTMLSelectElement)) return;
-  const o = (state.offerings[Number(el.dataset.i)] as any);
+  const o = state.offerings[Number(el.dataset.i)];
   if (!o) return;
   pushHistory();
   // Only ids that exist are accepted; anything else clears the tag
@@ -80,8 +80,8 @@ function onResourceTagChange(e: any) {
   refreshAfterResourceEdit();
 }
 
-function onResourceClick(e: any) {
-  const btn = e.target.closest('button[data-action="removeResource"]');
+function onResourceClick(e: Event) {
+  const btn = (e.target as HTMLElement).closest<HTMLElement>('button[data-action="removeResource"]');
   if (!btn) return;
   const i = Number(btn.dataset.i);
   const list = state.resources || [];

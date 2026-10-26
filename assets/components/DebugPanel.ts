@@ -1,6 +1,8 @@
+import type { AppState } from '../../src/types';
 import { calc, getCacheStats } from '../../src/calculations/index';
 import { fmtMoney0 } from '../../src/calculations/currency';
 import { escapeHtml } from '../services/miscService';
+import { errMsg, errStack } from '../utils/helpers';
 
 /** Debug (raw calc output) and performance (cache stats) panels, plus the global error surfacer. */
 
@@ -15,7 +17,7 @@ window.addEventListener('error', (ev) => {
 });
 
 // Debug panel toggle wiring: collapsible panel above the simple chart
-export function initDebugPanel(getState: () => any): void {
+export function initDebugPanel(getState: () => AppState): void {
   const toggleEl = $('#debugToggle');
   const bodyEl = $('#debugBody');
   const preEl = $('#debugPanel');
@@ -37,7 +39,7 @@ export function initDebugPanel(getState: () => any): void {
       const arrow = isExpanded ? '▼' : '▶';
       toggle.textContent = `${arrow} Debug — clients: ${res.clients || 0}, revenue: ${fmtMoney0(res.revenue || 0)}`;
     } catch (e) {
-      pre.textContent = 'Error generating debug: ' + (e && e.stack ? e.stack : String(e));
+      pre.textContent = 'Error generating debug: ' + errStack(e);
       pre.dataset.tooltip = 'Error generating debug output';
       const isExpanded = !body.classList.contains('collapsed');
       const arrow = isExpanded ? '▼' : '▶';
@@ -105,7 +107,7 @@ export function initPerfPanel(): void {
       const arrow = isExpanded ? '▼' : '▶';
       toggle.textContent = `${arrow} Performance — ${stats.hitRate}% hit rate`;
     } catch (e) {
-      panel.innerHTML = '<div>Error: ' + escapeHtml(e.message) + '</div>';
+      panel.innerHTML = '<div>Error: ' + escapeHtml(errMsg(e)) + '</div>';
       const isExpanded = !body.classList.contains('collapsed');
       const arrow = isExpanded ? '▼' : '▶';
       toggle.textContent = `${arrow} Performance — error`;
@@ -146,7 +148,7 @@ export function initPerfPanel(): void {
 
   // Also update perf display on render
   const originalRender = window.render;
-  window.render = function (...args: any[]) {
+  window.render = function (...args: unknown[]) {
     originalRender.apply(this, args);
     if (!body.classList.contains('collapsed')) {
       refreshPerf();

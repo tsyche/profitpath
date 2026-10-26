@@ -270,6 +270,19 @@ describe('AdvancedAnalyticsDashboard', () => {
       expect(global.Blob).toHaveBeenCalled();
       expect(global.URL.createObjectURL).toHaveBeenCalled();
     });
+
+    it('puts the collector summary in the report when analytics is active', () => {
+      global.document.createElement = vi.fn(() => ({ href: '', download: '', click: vi.fn() }));
+      dashboard.analyticsCollector = {
+        getAnalyticsSummary: vi.fn(() => ({ totalSessions: 3, exportStats: { total: 0 } }))
+      };
+      vi.mocked(global.Blob).mockClear();
+
+      dashboard.exportDashboardReport();
+
+      const json = vi.mocked(global.Blob).mock.calls[0][0][0];
+      expect(JSON.parse(json).analytics).toMatchObject({ totalSessions: 3 });
+    });
   });
 
   describe('View Management', () => {

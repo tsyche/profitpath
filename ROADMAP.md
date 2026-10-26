@@ -18,10 +18,6 @@ Shipped 2026-10-24/25: multi-resource capacity pools (20) incl. staff-free resou
 
 ## Fully Prioritized Backlog (high → low)
 
-**Code Quality**
-
-TypeScript migration: `checkJs` is on (Phase 0 done); remaining phases in [docs/plans/typescript-migration.md](docs/plans/typescript-migration.md).
-
 **Advanced Analytics (4-6 Hour Tasks)**
 
 10. **Industry Benchmarks & Competitive Pricing**

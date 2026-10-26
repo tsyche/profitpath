@@ -10,23 +10,20 @@ expect.extend(matchers)
 afterEach(() => setRangeCase('base'))
 
 // Mock browser APIs that might not be available in test environment
-/** @param {string} selector */
-global.$ = (selector) => document.querySelector(selector)
-/** @param {string} selector */
-global.$$ = (selector) => Array.from(document.querySelectorAll(selector))
+global.$ = (selector: string) => document.querySelector(selector)
+global.$$ = (selector: string) => Array.from(document.querySelectorAll(selector))
 
 // Mock localStorage
-/** @type {any} */
-const localStorageMock = {
-  getItem: vi.fn((key) => {
+const localStorageMock: { _store: Record<string, string>; [k: string]: any } = {
+  getItem: vi.fn((key: string) => {
     const store = localStorageMock._store || {};
     return store[key] !== undefined ? store[key] : null;
   }),
-  setItem: vi.fn((key, value) => {
+  setItem: vi.fn((key: string, value: string) => {
     if (!localStorageMock._store) localStorageMock._store = {};
     localStorageMock._store[key] = value;
   }),
-  removeItem: vi.fn((key) => {
+  removeItem: vi.fn((key: string) => {
     if (localStorageMock._store) {
       delete localStorageMock._store[key];
     }
@@ -43,17 +40,19 @@ Object.defineProperty(global, 'localStorage', {
 })
 
 // Mock URL APIs
-global.URL = /** @type {any} */ (class URL {
-  /** @param {string} url */
-  constructor(url) {
+class MockURL {
+  href: string
+  pathname: string
+  search: string
+  constructor(url: string) {
     this.href = url
     this.pathname = url.split('?')[0]
     this.search = url.includes('?') ? '?' + url.split('?')[1] : ''
   }
-})
-
-global.URL.createObjectURL = vi.fn(() => 'mock-object-url')
-global.URL.revokeObjectURL = vi.fn()
+  static createObjectURL = vi.fn(() => 'mock-object-url')
+  static revokeObjectURL = vi.fn()
+}
+global.URL = MockURL as unknown as typeof URL
 
 // Mock navigator.clipboard
 Object.defineProperty(navigator, 'clipboard', {
@@ -68,7 +67,7 @@ Object.defineProperty(navigator, 'clipboard', {
 Object.defineProperty(global, 'crypto', {
   value: {
     randomUUID: vi.fn(() => 'mock-uuid'),
-    getRandomValues: vi.fn((array) => array.fill(0)),
+    getRandomValues: vi.fn((array: Uint8Array) => array.fill(0)),
   },
   writable: true,
 })

@@ -1,18 +1,19 @@
+import type { AppOffering, AppState } from '../../src/types';
 import { calc } from '../../src/calculations/index';
+import { $opt, $req } from '../utils/dom';
 import { scaleOverhead } from '../../src/calculations/expenses';
 import { fmtMoney0 } from '../../src/calculations/currency';
 
 /** Sensitivity analysis panel: sliders, comparison table and tornado chart. */
 
-let state: any;
+let state: AppState;
 
-const $ = (sel: string) => document.querySelector<any>(sel);
 
 // Sensitivity Analysis Panel
-export function initSensitivityPanel(getState: () => any): void {
+export function initSensitivityPanel(getState: () => AppState): void {
   state = getState();
-  const toggle = $('#sensitivityToggle');
-  const body = $('#sensitivityBody');
+  const toggle = $opt('#sensitivityToggle');
+  const body = $opt('#sensitivityBody');
   if (!toggle || !body) return;
 
   // Restore expanded state from localStorage
@@ -38,7 +39,7 @@ export function initSensitivityPanel(getState: () => any): void {
     if (expandedNow) initSliders();
   });
 
-  $('#sensitivityReset')?.addEventListener('click', () => {
+  $opt('#sensitivityReset')?.addEventListener('click', () => {
     resetSliders();
     updateSensitivity();
   });
@@ -46,10 +47,10 @@ export function initSensitivityPanel(getState: () => any): void {
 
 function initSliders() {
   const sliders = {
-    price: $('#priceSlider'),
-    overhead: $('#overheadSlider'),
-    utilization: $('#utilizationSlider'),
-    employees: $('#employeesSlider')
+    price: $req('#priceSlider'),
+    overhead: $req('#overheadSlider'),
+    utilization: $req('#utilizationSlider'),
+    employees: $req('#employeesSlider')
   };
 
   const labels = {
@@ -63,33 +64,33 @@ function initSliders() {
   const baseUtilization = state.productiveUtilizationPct || 75;
   const baseEmployees = state.employees || 1;
 
-  sliders.utilization.value = baseUtilization;
-  sliders.employees.value = baseEmployees;
-  $(labels.utilization).textContent = baseUtilization + '%';
-  $(labels.employees).textContent = baseEmployees;
+  sliders.utilization.value = String(baseUtilization);
+  sliders.employees.value = String(baseEmployees);
+  $req(labels.utilization).textContent = baseUtilization + '%';
+  $req(labels.employees).textContent = String(baseEmployees);
 
   // Wire up slider input events
-  sliders.price.addEventListener('input', (e: any) => {
-    const val = parseInt(e.target.value);
-    $(labels.price).textContent = (val >= 0 ? '+' : '') + val + '%';
+  sliders.price.addEventListener('input', (e: Event) => {
+    const val = parseInt((e.target as HTMLInputElement).value);
+    $req(labels.price).textContent = (val >= 0 ? '+' : '') + val + '%';
     updateSensitivity();
   });
 
-  sliders.overhead.addEventListener('input', (e: any) => {
-    const val = parseInt(e.target.value);
-    $(labels.overhead).textContent = (val >= 0 ? '+' : '') + val + '%';
+  sliders.overhead.addEventListener('input', (e: Event) => {
+    const val = parseInt((e.target as HTMLInputElement).value);
+    $req(labels.overhead).textContent = (val >= 0 ? '+' : '') + val + '%';
     updateSensitivity();
   });
 
-  sliders.utilization.addEventListener('input', (e: any) => {
-    const val = parseInt(e.target.value);
-    $(labels.utilization).textContent = val + '%';
+  sliders.utilization.addEventListener('input', (e: Event) => {
+    const val = parseInt((e.target as HTMLInputElement).value);
+    $req(labels.utilization).textContent = val + '%';
     updateSensitivity();
   });
 
-  sliders.employees.addEventListener('input', (e: any) => {
-    const val = parseInt(e.target.value);
-    $(labels.employees).textContent = val;
+  sliders.employees.addEventListener('input', (e: Event) => {
+    const val = parseInt((e.target as HTMLInputElement).value);
+    $req(labels.employees).textContent = String(val);
     updateSensitivity();
   });
 
@@ -97,23 +98,23 @@ function initSliders() {
 }
 
 export function resetSliders() {
-  $('#priceSlider').value = 0;
-  $('#overheadSlider').value = 0;
-  $('#utilizationSlider').value = state.productiveUtilizationPct || 75;
-  $('#employeesSlider').value = state.employees || 1;
+  $req('#priceSlider').value = '0';
+  $req('#overheadSlider').value = '0';
+  $req('#utilizationSlider').value = String(state.productiveUtilizationPct || 75);
+  $req('#employeesSlider').value = String(state.employees || 1);
 
-  $('#priceSliderVal').textContent = '+0%';
-  $('#overheadSliderVal').textContent = '+0%';
-  $('#utilizationSliderVal').textContent = (state.productiveUtilizationPct || 75) + '%';
-  $('#employeesSliderVal').textContent = state.employees || 1;
+  $req('#priceSliderVal').textContent = '+0%';
+  $req('#overheadSliderVal').textContent = '+0%';
+  $req('#utilizationSliderVal').textContent = (state.productiveUtilizationPct || 75) + '%';
+  $req('#employeesSliderVal').textContent = String(state.employees || 1);
 }
 
 export function updateSensitivity() {
   // Get slider values
-  const priceAdjust = (parseInt($('#priceSlider').value) || 0) / 100;
-  const overheadAdjust = (parseInt($('#overheadSlider').value) || 0) / 100;
-  const utilizationVal = parseInt($('#utilizationSlider').value) || 75;
-  const employeesVal = parseInt($('#employeesSlider').value) || 1;
+  const priceAdjust = (parseInt($req('#priceSlider').value) || 0) / 100;
+  const overheadAdjust = (parseInt($req('#overheadSlider').value) || 0) / 100;
+  const utilizationVal = parseInt($req('#utilizationSlider').value) || 75;
+  const employeesVal = parseInt($req('#employeesSlider').value) || 1;
 
   // Build adjusted state copy
   const adjusted = JSON.parse(JSON.stringify(state));
@@ -122,7 +123,7 @@ export function updateSensitivity() {
 
   // Apply price multiplier to all offerings
   if (priceAdjust !== 0) {
-    adjusted.offerings = adjusted.offerings.map((o: any) => ({
+    adjusted.offerings = adjusted.offerings.map((o: AppOffering) => ({
       ...o,
       priceMonthly: o.priceMonthly * (1 + priceAdjust)
     }));
@@ -165,13 +166,13 @@ export function updateSensitivity() {
   // Price impact (current slider adjustment or default ±20%)
   if (priceAdjust !== 0) {
     const priceOnly = JSON.parse(JSON.stringify(state));
-    priceOnly.offerings = priceOnly.offerings.map((o: any) => ({ ...o, priceMonthly: o.priceMonthly * (1 + priceAdjust) }));
+    priceOnly.offerings = priceOnly.offerings.map((o: AppOffering) => ({ ...o, priceMonthly: o.priceMonthly * (1 + priceAdjust) }));
     const priceOnlyMetrics = calc(priceOnly);
     impacts.push({ label: 'Price', impact: Math.abs(priceOnlyMetrics.income - baseline.income) });
   } else {
     // Show default +20% impact if not adjusted
     const priceUp = JSON.parse(JSON.stringify(state));
-    priceUp.offerings = priceUp.offerings.map((o: any) => ({ ...o, priceMonthly: o.priceMonthly * 1.2 }));
+    priceUp.offerings = priceUp.offerings.map((o: AppOffering) => ({ ...o, priceMonthly: o.priceMonthly * 1.2 }));
     const priceDownMetrics = calc(priceUp);
     impacts.push({ label: 'Price', impact: Math.abs(priceDownMetrics.income - baseline.income) });
   }
@@ -249,7 +250,7 @@ export function updateSensitivity() {
   tornadoSvg += '</svg>';
 
   // Render into results div
-  const resultsDiv = $('#sensitivityResults');
+  const resultsDiv = $req('#sensitivityResults');
   if (resultsDiv) {
     resultsDiv.innerHTML = tableHtml + tornadoSvg;
   }

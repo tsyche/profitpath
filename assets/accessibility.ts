@@ -36,8 +36,8 @@ function initKeyboardNavigation() {
 /**
  * Find the parent dropdown/menu of an element
  */
-function findParentDropdown(element: any) {
-  return element.closest(
+function findParentDropdown(element: Element | null) {
+  return element?.closest<HTMLElement>(
     '.templates-dropdown, .export-dropdown, .mobile-templates-options, [role="menu"]'
   );
 }
@@ -45,14 +45,14 @@ function findParentDropdown(element: any) {
 /**
  * Navigate through dropdown items with arrow keys
  */
-function navigateDropdown(dropdown: any, direction: any) {
-  const buttons = dropdown.querySelectorAll(
+function navigateDropdown(dropdown: HTMLElement, direction: string) {
+  const buttons = dropdown.querySelectorAll<HTMLElement>(
     'button:not([disabled]), [role="menuitem"]:not([disabled])'
   );
 
   if (buttons.length === 0) return;
 
-  const currentIndex = Array.from(buttons).indexOf(document.activeElement);
+  const currentIndex = Array.from(buttons).indexOf(document.activeElement as HTMLElement);
   let nextIndex;
 
   if (direction === 'next') {
@@ -86,8 +86,8 @@ function closeAllDropdowns() {
 /**
  * Set up focus trap for modals
  */
-function setupModalFocusTrap(modal: any) {
-  const focusableElements = modal.querySelectorAll(
+function setupModalFocusTrap(modal: HTMLElement) {
+  const focusableElements = modal.querySelectorAll<HTMLElement>(
     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   );
 
@@ -96,7 +96,7 @@ function setupModalFocusTrap(modal: any) {
   const firstElement = focusableElements[0];
   const lastElement = focusableElements[focusableElements.length - 1];
 
-  modal.addEventListener('keydown', (e: any) => {
+  modal.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key !== 'Tab') return;
 
     if (e.shiftKey) {
@@ -119,7 +119,7 @@ function setupModalFocusTrap(modal: any) {
 /**
  * Announce messages to screen readers
  */
-function _announceToScreenReader(message: any, priority = 'polite') {
+function _announceToScreenReader(message: string, priority = 'polite') {
   const announcement = document.createElement('div');
   announcement.setAttribute('role', 'status');
   announcement.setAttribute('aria-live', priority);
@@ -175,7 +175,7 @@ export function initializeAccessibility() {
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
         if (node instanceof Element && node.classList.contains('modal')) {
-          setupModalFocusTrap(node);
+          setupModalFocusTrap(node as HTMLElement);
         }
       });
     });

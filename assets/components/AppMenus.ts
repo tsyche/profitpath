@@ -116,15 +116,16 @@ function setupDesktopMenuButtons() {
 export function bindMenus(): void {
   // Template selection handlers
   document.querySelectorAll('.template-option').forEach(option => {
-    option.addEventListener('click', (e: any) => {
+    option.addEventListener('click', (e: Event) => {
       e.preventDefault();
-      const template = e.target.dataset.template;
+      const template = (e.target as HTMLElement).dataset.template;
+      if (!template) return;
       const menu = $('#templatesMenu');
       if (menu) menu.style.display = 'none';
 
       // Track template usage
       if (window.profitPathAnalytics) {
-        window.profitPathAnalytics.trackTemplateUsage(template, e.target.textContent.trim());
+        window.profitPathAnalytics.trackTemplateUsage(template, (e.target as HTMLElement).textContent!.trim());
       }
 
       loadIndustryTemplate(template);
@@ -134,7 +135,7 @@ export function bindMenus(): void {
   // Export dropdown functionality
   const exportBtn = $('#exportBtn');
   if (exportBtn) {
-    exportBtn.addEventListener('click', (e: any) => {
+    exportBtn.addEventListener('click', (e: Event) => {
       e.preventDefault();
       const dropdown = exportBtn.closest('.export-dropdown');
       const menu = $('#exportMenu');
@@ -152,9 +153,9 @@ export function bindMenus(): void {
   }
 
   // Close menus when clicking outside
-  document.addEventListener('click', (e: any) => {
+  document.addEventListener('click', (e: MouseEvent) => {
     // Close templates dropdown and menu
-    if (!e.target.closest('.templates-dropdown')) {
+    if (!(e.target as HTMLElement).closest('.templates-dropdown')) {
       document.querySelectorAll('.templates-dropdown').forEach(d => d.classList.remove('active'));
       const templatesMenu = $('#templatesMenu');
       if (templatesMenu) {
@@ -163,7 +164,7 @@ export function bindMenus(): void {
     }
 
     // Close export dropdown and menu
-    if (!e.target.closest('.export-dropdown')) {
+    if (!(e.target as HTMLElement).closest('.export-dropdown')) {
       document.querySelectorAll('.export-dropdown').forEach(d => d.classList.remove('active'));
       const exportMenu = $('#exportMenu');
       if (exportMenu) {
@@ -172,7 +173,7 @@ export function bindMenus(): void {
     }
 
     // Close settings dropdown
-    if (!e.target.closest('.settings-dropdown') && !e.target.closest('#settingsCogBtn')) {
+    if (!(e.target as HTMLElement).closest('.settings-dropdown') && !(e.target as HTMLElement).closest('#settingsCogBtn')) {
       document.querySelectorAll('.settings-dropdown').forEach(d => d.classList.remove('active'));
     }
   });
@@ -180,9 +181,9 @@ export function bindMenus(): void {
   // Export format handlers are now implemented in miscService.js
 
   document.querySelectorAll('.export-option').forEach(option => {
-    option.addEventListener('click', (e: any) => {
+    option.addEventListener('click', (e: Event) => {
       e.preventDefault();
-      const format = e.target.dataset.format;
+      const format = (e.target as HTMLElement).dataset.format;
       const menu = $('#exportMenu');
       if (menu) menu.style.display = 'none';
 
@@ -238,7 +239,7 @@ export function bindScenariosAndGlobals(): void {
   }
 
   // Close modal on Escape key
-  document.addEventListener('keydown', (e: any) => {
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key !== 'Escape') return;
     const modal = $('#scenariosModal');
     if (modal && !modal.classList.contains('hidden')) {
@@ -250,13 +251,13 @@ export function bindScenariosAndGlobals(): void {
   const scenariosModal = $('#scenariosModal');
   if (scenariosModal) {
     // Original scenario modal close and button handlers (delegated)
-    scenariosModal.addEventListener('click', (e: any) => {
+    scenariosModal.addEventListener('click', (e: Event) => {
       // Only close modal if clicking on close button, overlay, or outside modal content
-      if (e.target.closest('.modal-header .btn-close') ||
-        e.target.closest('#scenariosOverlay')) {
+      if ((e.target as HTMLElement).closest('.modal-header .btn-close') ||
+        (e.target as HTMLElement).closest('#scenariosOverlay')) {
         closeScenarioModal();
-      } else if (e.target.closest('.load-btn, .delete-btn')) {
-        const btn = e.target.closest('.load-btn, .delete-btn');
+      } else if ((e.target as HTMLElement).closest('.load-btn, .delete-btn')) {
+        const btn = (e.target as HTMLElement).closest<HTMLElement>('.load-btn, .delete-btn')!;
         const scenarioId = btn.dataset.scenarioId;
         if (!scenarioId) return;
 
@@ -269,7 +270,7 @@ export function bindScenariosAndGlobals(): void {
         }
       }
       // Handle comparison dropdowns to prevent default behavior from closing modal
-      else if (e.target.closest('.scenario-select')) {
+      else if ((e.target as HTMLElement).closest('.scenario-select')) {
         e.stopPropagation();
       }
     });
@@ -310,19 +311,20 @@ export function bindScenariosAndGlobals(): void {
   }
 
   // Delegated handler: KPI help "?" buttons
-  document.addEventListener('click', (e: any) => {
-    const btn = e.target.closest('.kpi-help-btn');
+  document.addEventListener('click', (e: MouseEvent) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('.kpi-help-btn');
     if (!btn) return;
     e.stopPropagation();
     const topic = btn.dataset.topic;
+    if (!topic) return;
     const help = KPI_HELP[topic];
     if (!help) return;
     createModal({ title: help.title, content: `<div style="line-height:1.7;color:var(--text)">${help.content}</div>`, size: 'sm' });
   });
 
   // Delegated handler: any .copy-on-click input or textarea selects-all and copies on click
-  document.addEventListener('click', (e: any) => {
-    const el = e.target.closest('.copy-on-click');
+  document.addEventListener('click', (e: MouseEvent) => {
+    const el = (e.target as HTMLElement).closest<HTMLInputElement>('.copy-on-click');
     if (!el) return;
     el.select();
     el.classList.add('copy-on-click--copied');

@@ -4,12 +4,8 @@
     "module": "ESNext",
     "lib": ["ES2017", "DOM"],
     "moduleResolution": "node",
-    "allowJs": true,
-    "checkJs": true,
     "noEmit": true,
-    "strict": false,
-    "strictNullChecks": true,
-    "noImplicitAny": true,
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true

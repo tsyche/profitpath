@@ -1,5 +1,5 @@
 // State management
-export function persistState(key: any, data: any) {
+export function persistState(key: string, data: unknown) {
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (e) {
@@ -7,7 +7,7 @@ export function persistState(key: any, data: any) {
   }
 }
 
-export function loadState(key: any) {
+export function loadState(key: string) {
   try {
     const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : null;
@@ -17,25 +17,25 @@ export function loadState(key: any) {
   }
 }
 
-export function validateAndSanitizeLoadedState(state: any, schema: any) {
+export function validateAndSanitizeLoadedState(state: Record<string, unknown>, schema: Record<string, string>) {
   if (!state || typeof state !== 'object') return null;
   
-  const sanitized = {};
+  const sanitized: Record<string, unknown> = {};
   for (const key in schema) {
     if (state.hasOwnProperty(key)) {
       const type = schema[key];
       const value = state[key];
       
       if (type === 'number') {
-        (sanitized as any)[key] = typeof value === 'number' ? value : parseFloat(value) || 0;
+        sanitized[key] = typeof value === 'number' ? value : parseFloat(String(value)) || 0;
       } else if (type === 'string') {
-        (sanitized as any)[key] = typeof value === 'string' ? value : String(value);
+        sanitized[key] = typeof value === 'string' ? value : String(value);
       } else if (type === 'boolean') {
-        (sanitized as any)[key] = Boolean(value);
+        sanitized[key] = Boolean(value);
       } else if (type === 'array') {
-        (sanitized as any)[key] = Array.isArray(value) ? value : [];
+        sanitized[key] = Array.isArray(value) ? value : [];
       } else {
-        (sanitized as any)[key] = value;
+        sanitized[key] = value;
       }
     }
   }

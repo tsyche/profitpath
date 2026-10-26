@@ -4,6 +4,7 @@
  * change that reaches it by re-running the calc engine, so results match the main outputs.
  */
 
+import type { CalcState, CalcResult, Offering } from '../types';
 import { calc, calculateTax } from '../calculations/index';
 import { formatMoney0 } from '../calculations/currency';
 
@@ -25,11 +26,13 @@ function solveUp(f: (x: number) => number, lo: number, hi: number, target: numbe
   return b;
 }
 
-export class ReverseCalculator {
-  state: any;
-  currentMetrics: any;
+type MethodName = 'calculateRequiredPricing' | 'calculateRequiredClients' | 'calculateRequiredUtilization' | 'calculateRequiredCombined' | 'calculateRequiredCostReduction';
 
-  constructor(state: any, currentMetrics: any) {
+export class ReverseCalculator {
+  state: CalcState;
+  currentMetrics: CalcResult;
+
+  constructor(state: CalcState, currentMetrics: CalcResult) {
     this.state = state;
     this.currentMetrics = currentMetrics;
   }
@@ -38,11 +41,11 @@ export class ReverseCalculator {
     return formatMoney0(n, this.state.currency);
   }
 
-  private offerings(): any[] {
-    return (Array.isArray(this.state.offerings) ? this.state.offerings : []).filter((o: any) => o && typeof o === 'object');
+  private offerings(): Offering[] {
+    return (Array.isArray(this.state.offerings) ? this.state.offerings : []).filter((o: Offering) => o && typeof o === 'object');
   }
 
-  private takeHomeWith(changes: Record<string, any>): number {
+  private takeHomeWith(changes: Partial<CalcState>): number {
     return calc({ ...this.state, ...changes }).takeHome;
   }
 
@@ -65,11 +68,11 @@ export class ReverseCalculator {
    * @param {number} desiredTakeHome - Target annual take-home
    * @returns {Object} - Suggested price changes per offering
    */
-  calculateRequiredPricing(desiredTakeHome: any) {
+  calculateRequiredPricing(desiredTakeHome: number) {
     if (!desiredTakeHome || desiredTakeHome <= 0) return null;
     if (this.currentMetrics.takeHome >= desiredTakeHome) return this.alreadyThere(desiredTakeHome);
 
-    const scaled = (k: number) => this.offerings().map((o: any) => ({ ...o, priceMonthly: Math.ceil(o.priceMonthly * k) }));
+    const scaled = (k: number) => this.offerings().map((o: Offering) => ({ ...o, priceMonthly: Math.ceil((o.priceMonthly || 0) * k) }));
     const k = solveUp((x) => this.takeHomeWith({ offerings: scaled(x) }), 1, MAX_PRICE_MULTIPLE, desiredTakeHome);
     const base = this.base(desiredTakeHome, 'pricing');
 
@@ -90,11 +93,11 @@ export class ReverseCalculator {
       feasible: priceIncreasePct <= 1,
       priceIncreasePct,
       message: `Increase all service prices by ~${(priceIncreasePct * 100).toFixed(1)}% to reach ${this.money(desiredTakeHome)} take-home.`,
-      offerings: this.offerings().map((o: any, i: number) => ({
+      offerings: this.offerings().map((o: Offering, i: number) => ({
         name: o.name,
         currentPrice: o.priceMonthly,
         suggestedPrice: suggested[i].priceMonthly,
-        increase: suggested[i].priceMonthly - o.priceMonthly
+        increase: suggested[i].priceMonthly - (o.priceMonthly || 0)
       }))
     };
   }
@@ -112,7 +115,7 @@ export class ReverseCalculator {
       const r = calc({ ...this.state, targetUtilizationPct: u });
       return { targetClients: r.clients, capacityPct: r.capacityPct };
     }
-    const scaled = (k: number) => this.offerings().map((o: any) => ({ ...o, currentClients: Math.ceil((o.currentClients || 0) * k) }));
+    const scaled = (k: number) => this.offerings().map((o: Offering) => ({ ...o, currentClients: Math.ceil((o.currentClients || 0) * k) }));
     const k = solveUp((x) => this.takeHomeWith({ offerings: scaled(x) }), 1, MAX_CLIENT_MULTIPLE, desiredTakeHome);
     if (k === null) return null;
     const r = calc({ ...this.state, offerings: scaled(k) });
@@ -124,7 +127,7 @@ export class ReverseCalculator {
    * @param {number} desiredTakeHome - Target annual take-home
    * @returns {Object} - Required client counts
    */
-  calculateRequiredClients(desiredTakeHome: any) {
+  calculateRequiredClients(desiredTakeHome: number) {
     if (!desiredTakeHome || desiredTakeHome <= 0) return null;
     if (this.currentMetrics.takeHome >= desiredTakeHome) return this.alreadyThere(desiredTakeHome);
 
@@ -162,7 +165,7 @@ export class ReverseCalculator {
    * @param {number} desiredTakeHome - Target annual take-home
    * @returns {Object} - Required utilization
    */
-  calculateRequiredUtilization(desiredTakeHome: any) {
+  calculateRequiredUtilization(desiredTakeHome: number) {
     if (!desiredTakeHome || desiredTakeHome <= 0) return null;
     if (this.currentMetrics.takeHome >= desiredTakeHome) return this.alreadyThere(desiredTakeHome);
 
@@ -197,7 +200,7 @@ export class ReverseCalculator {
    * @param {number} desiredTakeHome - Target annual take-home
    * @returns {Object} - Price and volume change that together reach the target
    */
-  calculateRequiredCombined(desiredTakeHome: any) {
+  calculateRequiredCombined(desiredTakeHome: number) {
     if (!desiredTakeHome || desiredTakeHome <= 0) return null;
     if (this.currentMetrics.takeHome >= desiredTakeHome) return this.alreadyThere(desiredTakeHome);
 
@@ -205,9 +208,9 @@ export class ReverseCalculator {
     const utilization = Math.max(Number(this.state.targetUtilizationPct) || 0, 1);
     const changes = (x: number) => ({
       ...(forecast ? { targetUtilizationPct: Math.min(utilization * x, MAX_FORECAST_UTILIZATION_PCT) } : {}),
-      offerings: this.offerings().map((o: any) => ({
+      offerings: this.offerings().map((o: Offering) => ({
         ...o,
-        priceMonthly: Math.ceil(o.priceMonthly * x),
+        priceMonthly: Math.ceil((o.priceMonthly || 0) * x),
         ...(forecast ? {} : { currentClients: Math.ceil((o.currentClients || 0) * x) })
       }))
     });
@@ -245,7 +248,7 @@ export class ReverseCalculator {
    * @param {number} desiredTakeHome - Target annual take-home
    * @returns {Object} - Required cost reductions
    */
-  calculateRequiredCostReduction(desiredTakeHome: any) {
+  calculateRequiredCostReduction(desiredTakeHome: number) {
     if (!desiredTakeHome || desiredTakeHome <= 0) return null;
     if (this.currentMetrics.takeHome >= desiredTakeHome) return this.alreadyThere(desiredTakeHome);
 
@@ -280,7 +283,7 @@ export class ReverseCalculator {
   /**
    * Get all reverse calculation results
    */
-  getAllResults(desiredTakeHome: any) {
+  getAllResults(desiredTakeHome: number) {
     return {
       pricing: this.calculateRequiredPricing(desiredTakeHome),
       clients: this.calculateRequiredClients(desiredTakeHome),
@@ -293,7 +296,7 @@ export class ReverseCalculator {
   /**
    * Get feasible strategies
    */
-  getFeasibleStrategies(desiredTakeHome: any) {
+  getFeasibleStrategies(desiredTakeHome: number) {
     const results = this.getAllResults(desiredTakeHome);
     return Object.entries(results)
       .filter(([, result]) => result && result.feasible)
@@ -306,7 +309,7 @@ export class ReverseCalculator {
   /**
    * Get the easiest/most practical strategy
    */
-  getRecommendedStrategy(desiredTakeHome: any) {
+  getRecommendedStrategy(desiredTakeHome: number) {
     const strategies = this.getFeasibleStrategies(desiredTakeHome);
 
     if (strategies.length === 0) {
@@ -320,7 +323,7 @@ export class ReverseCalculator {
     // 4. Client growth (high effort)
     // 5. Utilization (high effort, requires infrastructure)
 
-    const strategyRank = {
+    const strategyRank: Record<string, number> = {
       pricing: 1,
       costs: 2,
       combined: 3,
@@ -328,19 +331,19 @@ export class ReverseCalculator {
       utilization: 5
     };
 
-    return strategies.sort((a, b) => (strategyRank as any)[a.name] - (strategyRank as any)[b.name])[0];
+    return strategies.sort((a, b) => strategyRank[a.name] - strategyRank[b.name])[0];
   }
 }
 
 /**
  * Public API for reverse calculations
  */
-export function getReverseCalculation(state: any, metrics: any, desiredTakeHome: any, strategyType: any = null) {
+export function getReverseCalculation(state: CalcState, metrics: CalcResult, desiredTakeHome: number, strategyType: string | null = null) {
   const calculator = new ReverseCalculator(state, metrics);
 
   if (strategyType) {
     const cleanType = strategyType.toLowerCase();
-    const methodMap = {
+    const methodMap: Record<string, MethodName> = {
       'pricing': 'calculateRequiredPricing',
       'clients': 'calculateRequiredClients',
       'growth': 'calculateRequiredClients',
@@ -350,10 +353,8 @@ export function getReverseCalculation(state: any, metrics: any, desiredTakeHome:
       'costreduction': 'calculateRequiredCostReduction'
     };
 
-    const methodName = (methodMap as any)[cleanType];
-    if (methodName && typeof (calculator as any)[methodName] === 'function') {
-      return (calculator as any)[methodName](desiredTakeHome);
-    }
+    const methodName = methodMap[cleanType];
+    if (methodName) return calculator[methodName](desiredTakeHome);
   }
 
   return calculator.getAllResults(desiredTakeHome);
@@ -362,7 +363,7 @@ export function getReverseCalculation(state: any, metrics: any, desiredTakeHome:
 /**
  * Get recommended strategy
  */
-export function getRecommendedStrategy(state: any, metrics: any, desiredTakeHome: any) {
+export function getRecommendedStrategy(state: CalcState, metrics: CalcResult, desiredTakeHome: number) {
   const calculator = new ReverseCalculator(state, metrics);
   return calculator.getRecommendedStrategy(desiredTakeHome);
 }

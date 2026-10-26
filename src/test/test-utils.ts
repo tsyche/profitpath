@@ -14,14 +14,13 @@ export function setTestMode() {
 export function clearGlobalState() {
   // Clear analytics global instance
   if (typeof window !== 'undefined') {
-    delete window.profitPathAnalytics;
-    delete window.feedbackUI;
+    Reflect.deleteProperty(window, 'profitPathAnalytics');
+    Reflect.deleteProperty(window, 'feedbackUI');
   }
 }
 
 // Reset localStorage mock completely
-/** @param {any} mock */
-export function resetLocalStorage(mock) {
+export function resetLocalStorage(mock: { clear: () => void }) {
   mock.clear();
 }
 

@@ -4,11 +4,23 @@
  */
 
 import * as CA from './customer-analytics';
+import type { ChurnResult, CustomerMetrics, GrowthResult, LTVResult } from './customer-analytics';
+
+type AcquisitionSummary = ReturnType<typeof CA.summarizeCustomerAcquisition>;
+
+/** Dashboard assumptions the user can adjust; each falls back to a default. */
+export interface CustomerSettings {
+  monthlyNewCustomers?: number;
+  monthlyChurnRate?: number;
+  monthlyMarketingBudget?: number;
+  avgCustomerLifespan?: number;
+  clientRetention?: number;
+}
 
 /**
  * Render customer analytics dashboard
  */
-export function renderCustomerAnalyticsDashboard(metrics: any, settings: Record<string, any> = {}) {
+export function renderCustomerAnalyticsDashboard(metrics: CustomerMetrics | null | undefined, settings: CustomerSettings = {}) {
   const {
     monthlyNewCustomers = 5,
     monthlyChurnRate = 5,
@@ -27,9 +39,9 @@ export function renderCustomerAnalyticsDashboard(metrics: any, settings: Record<
 
   const cac = CA.calculateCAC(monthlyMarketingBudget, monthlyNewCustomers);
   const ltv = CA.calculateLTV(metrics, avgCustomerLifespan, clientRetention);
-  const churn = CA.calculateChurnRate(metrics?.totalClients || 0, (metrics?.totalClients || 0) * (1 - (monthlyChurnRate / 100)), monthlyNewCustomers);
+  const churn = CA.calculateChurnRate(metrics?.clients || 0, (metrics?.clients || 0) * (1 - (monthlyChurnRate / 100)), monthlyNewCustomers);
   const growth = CA.projectCustomerGrowth({
-    currentCustomers: metrics?.totalClients || 0,
+    currentCustomers: metrics?.clients || 0,
     monthlyAcquisition: monthlyNewCustomers,
     monthlyChurnRate,
     projectionMonths: 12
@@ -48,7 +60,7 @@ export function renderCustomerAnalyticsDashboard(metrics: any, settings: Record<
 /**
  * Generate HTML for customer analytics dashboard
  */
-function generateDashboardHTML(summary: any, cac: any, ltv: any, churn: any, _growth: any) {
+function generateDashboardHTML(summary: AcquisitionSummary, _cac: number, _ltv: LTVResult, churn: ChurnResult, _growth: GrowthResult) {
   const healthColor = getHealthColor(summary.healthScore);
   const cacHealthColor = summary.ltvToCAC.health === 'healthy' ? '#34d399' : summary.ltvToCAC.health === 'fair' ? '#fbbf24' : '#fb7185';
 
@@ -137,7 +149,7 @@ function generateDashboardHTML(summary: any, cac: any, ltv: any, churn: any, _gr
 /**
  * Get color based on health score
  */
-function getHealthColor(score: any) {
+function getHealthColor(score: number) {
   if (score >= 80) return '#34d399'; // good
   if (score >= 60) return '#fbbf24'; // warn
   if (score >= 40) return '#f97316'; // bad
@@ -147,7 +159,7 @@ function getHealthColor(score: any) {
 /**
  * Format metric for display
  */
-export function formatMetric(value: any, type = 'number') {
+export function formatMetric(value: number, type = 'number') {
   if (type === 'currency') {
     return '$' + Math.round(value).toLocaleString();
   }
@@ -160,7 +172,7 @@ export function formatMetric(value: any, type = 'number') {
 /**
  * Create mini cards for embedding in existing UI
  */
-export function createMetricCards(summary: any) {
+export function createMetricCards(summary: AcquisitionSummary) {
   return [
     {
       label: 'Customer Acquisition Cost',

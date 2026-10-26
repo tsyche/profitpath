@@ -1,3 +1,4 @@
+import type { AppOffering, CalcResult, OfferingMetric } from '../../src/types';
 import { calc } from '../../src/calculations/index';
 import { floorStatus, rankOfferings } from '../../src/calculations/offeringRanking';
 import { displayPrice, isOneTime, isPerSession } from '../../src/calculations/offeringPrice';
@@ -19,7 +20,10 @@ import { $ } from '../utils/dom';
 const FLOOR_LABELS = { ok: 'OK', thin: 'Thin', loss: 'Below cost' };
 const FLOOR_COLORS = { ok: 'var(--good)', thin: 'var(--warn)', loss: 'var(--bad)' };
 
-export function renderOfferingRanking(metrics: any) {
+/** Loose string-keyed view for dynamic field writes from data-k inputs. */
+type Bag = Record<string, unknown>;
+
+export function renderOfferingRanking(metrics: CalcResult) {
   const wrap = $('#offeringRanking');
   const body = $('#offeringRankingBody');
   if (!wrap || !body) return;
@@ -65,9 +69,9 @@ export function renderRangesTable() {
   const tbody = $('#rangesBody');
   if (!tbody) return;
   const isForecast = state.mode === 'forecast';
-  const cell = (o: any, idx: number, k: string, label: string, on: boolean) => on
+  const cell = (o: AppOffering, idx: number, k: string, label: string, on: boolean) => on
     ? '<td class="cell-edit" data-label="' + label + '"><input aria-label="' + label + ' for ' + escapeHtml(o.name) + '" type="number" min="' + (k.startsWith('fill') ? 1 : 0) +
-      '"' + (k.startsWith('fill') ? ' max="100"' : '') + ' step="1" placeholder="none" value="' + (o[k] ?? '') + '" data-k="' + k + '" data-i="' + idx + '"/></td>'
+      '"' + (k.startsWith('fill') ? ' max="100"' : '') + ' step="1" placeholder="none" value="' + ((o as unknown as Bag)[k] ?? '') + '" data-k="' + k + '" data-i="' + idx + '"/></td>'
     : '<td data-label="' + label + '"><span class="muted">—</span></td>';
   tbody.innerHTML = state.offerings.map((o, idx) => {
     const fill = o.type === 'group' && isForecast;
@@ -83,7 +87,7 @@ export function renderRangesTable() {
 const BADGE_LABELS = { green: 'In range', yellow: 'Near edge', red: 'Off market' };
 const BADGE_COLORS = { green: 'var(--good)', yellow: 'var(--warn)', red: 'var(--bad)' };
 
-function marketBadgeHtml(o: any, metric: any) {
+function marketBadgeHtml(o: AppOffering, metric?: OfferingMetric) {
   const status = metric ? floorStatus(metric.maxDiscountPct, o.discountPct || 0) : 'ok';
   const b = marketBadge(Number(displayPrice(o)) || 0, o, status);
   if (!b) return '<span class="muted">—</span>';
@@ -91,11 +95,11 @@ function marketBadgeHtml(o: any, metric: any) {
   return '<span data-level="' + b.level + '" style="color:' + BADGE_COLORS[b.level] + '">' + BADGE_LABELS[b.level] + arrow + '</span>';
 }
 
-export function renderMarketTable(metrics: any) {
+export function renderMarketTable(metrics: CalcResult) {
   const tbody = $('#marketBody');
   if (!tbody) return;
-  const num = (o: any, idx: number, k: string, label: string) => '<td class="cell-edit" data-label="' + label + '"><input aria-label="Market ' + label.toLowerCase() + ' for ' + escapeHtml(o.name) +
-    '" type="number" min="0" step="1" placeholder="none" value="' + (o[k] ?? '') + '" data-k="' + k + '" data-i="' + idx + '"/></td>';
+  const num = (o: AppOffering, idx: number, k: string, label: string) => '<td class="cell-edit" data-label="' + label + '"><input aria-label="Market ' + label.toLowerCase() + ' for ' + escapeHtml(o.name) +
+    '" type="number" min="0" step="1" placeholder="none" value="' + ((o as unknown as Bag)[k] ?? '') + '" data-k="' + k + '" data-i="' + idx + '"/></td>';
   tbody.innerHTML = state.offerings.map((o, idx) => '<tr><td data-label="Offering">' + escapeHtml(o.name) + '</td>' +
     '<td class="mono" data-label="Your price">' + fmtMoney0(displayPrice(o)) + (isOneTime(o) ? '/sale' : isPerSession(o) ? '/session' : '/mo') + '</td>' +
     num(o, idx, 'marketLow', 'Low') + num(o, idx, 'marketAvg', 'Avg') + num(o, idx, 'marketHigh', 'High') +
@@ -104,42 +108,42 @@ export function renderMarketTable(metrics: any) {
     '<td data-label="Badge" class="market-badge">' + marketBadgeHtml(o, metrics?.offeringMetrics?.[idx]) + '</td></tr>').join('');
 }
 
-function onMarketInput(e: any) {
+function onMarketInput(e: Event) {
   const el = e.target;
   if (!(el instanceof HTMLInputElement)) return;
   const k = el.dataset.k;
   const idx = Number(el.dataset.i);
-  const o = (state.offerings[idx] as any);
+  const o = state.offerings[idx] as unknown as Bag;
   if (!k || !o) return;
   const fieldKey = `mkt-${idx}-${k}`;
   pushHistoryOnce(fieldKey);
-  const clean = (sanitizeOfferingMarket({ [k]: el.value }) as any);
+  const clean = sanitizeOfferingMarket({ [k]: el.value }) as unknown as Bag;
   if (clean[k] === undefined) delete o[k];
   else o[k] = clean[k];
   persistState();
   try {
     const cell = el.closest('tr')?.querySelector('.market-badge');
-    if (cell) cell.innerHTML = marketBadgeHtml(o, calc(state).offeringMetrics[idx]);
+    if (cell) cell.innerHTML = marketBadgeHtml(state.offerings[idx], calc(state).offeringMetrics[idx]);
   } catch (err) {
     console.warn('Failed to refresh market badge:', err);
   }
 }
 
-function onRangeInput(e: any) {
+function onRangeInput(e: Event) {
   const el = e.target;
   if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement)) return;
   const k = el.dataset.k;
-  const o = (state.offerings[Number(el.dataset.i)] as any);
+  const o = state.offerings[Number(el.dataset.i)] as unknown as Bag;
   if (!k || !o) return;
   const fieldKey = `rng-${el.dataset.i}-${k}`;
   pushHistoryOnce(fieldKey);
   // The shared sanitizer is the single source of truth; blank or junk clears the bound
   const isMeta = k === 'confidence' || k === 'note';
-  const clean = (isMeta ? sanitizeOfferingMeta({ [k]: el.value }) : sanitizeOfferingRange({ [k]: el.value }) as any);
+  const clean = (isMeta ? sanitizeOfferingMeta({ [k]: el.value }) : sanitizeOfferingRange({ [k]: el.value })) as unknown as Bag;
   if (clean[k] === undefined) delete o[k];
   else o[k] = clean[k];
   if (k === 'confidence') {
-    el.dataset.confidence = clean[k] || '';
+    el.dataset.confidence = String(clean[k] || '');
     syncConfidenceBadge(Number(el.dataset.i), clean[k]);
   }
   persistState();

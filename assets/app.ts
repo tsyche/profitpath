@@ -1,6 +1,7 @@
 import { calc } from '../src/calculations/index';
 import { initGroupRunsPanel, renderGroupRunsTable } from './components/GroupRunsPanel';
 import { initMembershipPanel, renderMembershipPanel } from './components/MembershipPanel';
+import { errStack } from './utils/helpers';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { bindCsvImport, initScenarioComparison, showScenarioComparisonDiff } from './components/ScenarioComparison';
 import { initAppState, persistState, pushHistory, redo, state, undo } from './state/appState';
@@ -123,7 +124,7 @@ try {
 } catch (e) {
   console.error('Render failed:', e);
   const dbg = $('#debugPanel');
-  if (dbg) dbg.textContent = 'Render error: ' + (e && e.stack ? e.stack : String(e));
+  if (dbg) dbg.textContent = 'Render error: ' + errStack(e);
 }
 
 // Auto-open comparison if shared link was used

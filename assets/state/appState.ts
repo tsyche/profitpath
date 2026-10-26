@@ -25,7 +25,7 @@ export const state: AppState = {
 };
 
 // Make state accessible to calculations module
-(globalThis as any).state = state;
+(globalThis as unknown as { state: typeof state }).state = state;
 
 const undoStack: string[] = [];
 const redoStack: string[] = [];

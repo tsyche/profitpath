@@ -1,4 +1,11 @@
 // Consistent Modal Component for ProfitPath
+export interface ModalButton {
+  text: string;
+  primary?: boolean;
+  danger?: boolean;
+  action?: () => void | Promise<void>;
+}
+
 export function createModal({
   title,
   content,
@@ -9,7 +16,7 @@ export function createModal({
 }: {
   title: string;
   content: string | HTMLElement;
-  buttons?: any[];
+  buttons?: ModalButton[];
   size?: string;
   id?: string;
   onClose?: (() => void) | null;
@@ -52,14 +59,14 @@ export function createModal({
   modal.style.color = 'var(--text)';
 
   // Set maxWidth based on size
-  const sizeWidths = {
+  const sizeWidths: Record<string, string> = {
     small: '400px',
     medium: '500px',
     large: '700px',
     full: '90%'
   };
-  if ((sizeWidths as any)[size]) {
-    modal.style.maxWidth = (sizeWidths as any)[size];
+  if (sizeWidths[size]) {
+    modal.style.maxWidth = sizeWidths[size];
   }
 
   // Modal HTML structure (colors come from theme tokens so it matches dark/light)
@@ -120,7 +127,7 @@ export function createModal({
   });
 
   // ESC key to close — only respond when this is the topmost overlay
-  const handleEsc = (e: any) => {
+  const handleEsc = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       const overlays = document.querySelectorAll('.modal-overlay');
       if (overlays[overlays.length - 1] === overlay) {

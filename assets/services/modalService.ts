@@ -3,7 +3,7 @@
  * Provides consistent modal behavior across the application
  */
 
-import { createModal } from '../components/Modal';
+import { createModal, type ModalButton } from '../components/Modal';
 
 // Modal configuration constants
 const MODAL_SIZES = {
@@ -20,10 +20,19 @@ const MODAL_TYPES = {
     LIST: 'list'
 };
 
+interface ModalConfig {
+    title: string;
+    content: string | HTMLElement;
+    buttons: ModalButton[];
+    size: string;
+    type: string;
+    onClose: () => void;
+}
+
 // Modal state management
 const modalState = {
-    currentModal: null as any,
-    modalStack: [] as any[],
+    currentModal: null as HTMLElement | null,
+    modalStack: [] as HTMLElement[],
     isModalOpen: false
 };
 
@@ -32,13 +41,12 @@ const modalState = {
  * @param config - Modal configuration
  * @returns The created modal element
  */
-export function showModal(config: Record<string, any>): HTMLElement {
+export function showModal(config: Partial<ModalConfig>): HTMLElement {
     const {
-        title,
-        content,
+        title = '',
+        content = '',
         buttons = [],
         size = MODAL_SIZES.MEDIUM,
-        type = MODAL_TYPES.INFORMATION,
         onClose
     } = config;
 
@@ -61,7 +69,7 @@ export function showModal(config: Record<string, any>): HTMLElement {
     });
 
     // Handle escape key
-    const handleEscape = (e: any) => {
+    const handleEscape = (e: KeyboardEvent) => {
         if (e.key === 'Escape' && modalState.currentModal === modal) {
             closeModal(modal);
         }
@@ -97,7 +105,7 @@ export function showModal(config: Record<string, any>): HTMLElement {
  * Close a specific modal
  * @param modal - The modal element to close
  */
-export function closeModal(modal: HTMLElement) {
+export function closeModal(modal: HTMLElement | null) {
     if (!modal || !modalState.modalStack.includes(modal)) {
         return;
     }
@@ -147,7 +155,7 @@ export function closeAllModals() {
  * @param cancelText - Text for cancel button
  * @returns The created modal element
  */
-export function showConfirmationModal(title: string, message: string, onConfirm: (...args: any[]) => any, onCancel: (...args: any[]) => any, confirmText: string = 'Confirm', cancelText: string = 'Cancel'): HTMLElement {
+export function showConfirmationModal(title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmText: string = 'Confirm', cancelText: string = 'Cancel'): HTMLElement {
     return showModal({
         title,
         content: `<p>${message}</p>`,
@@ -182,7 +190,7 @@ export function showConfirmationModal(title: string, message: string, onConfirm:
  * @param buttonText - Text for the close button
  * @returns The created modal element
  */
-export function showInformationModal(title: string, content: string, onClose: (...args: any[]) => any, buttonText: string = 'OK'): HTMLElement {
+export function showInformationModal(title: string, content: string, onClose?: () => void, buttonText: string = 'OK'): HTMLElement {
     return showModal({
         title,
         content,
@@ -211,7 +219,7 @@ export function showInformationModal(title: string, content: string, onClose: (.
  * @param cancelText - Text for cancel button
  * @returns The created modal element
  */
-export function showFormModal(title: string, formContent: string, onSubmit: (...args: any[]) => any, onCancel: (...args: any[]) => any, submitText: string = 'Submit', cancelText: string = 'Cancel'): HTMLElement {
+export function showFormModal(title: string, formContent: string, onSubmit?: () => void, onCancel?: () => void, submitText: string = 'Submit', cancelText: string = 'Cancel'): HTMLElement {
     return showModal({
         title,
         content: formContent,
@@ -248,7 +256,7 @@ export function showFormModal(title: string, formContent: string, onSubmit: (...
  * @param cancelText - Text for cancel button
  * @returns The created modal element
  */
-export function showListModal(title: string, items: any[], onSelect: (...args: any[]) => any, onCancel: (...args: any[]) => any, selectText: string = 'Select', cancelText: string = 'Cancel'): HTMLElement {
+export function showListModal(title: string, items: { value: string; label: string; description?: string }[], onSelect?: (value: string | undefined) => void, onCancel?: () => void, selectText: string = 'Select', cancelText: string = 'Cancel'): HTMLElement {
     const listContent = `
     <div class="modal-list">
       ${items.map(item => `
@@ -318,9 +326,9 @@ export function getModalCount(): number {
  * Add toast notification functionality
  */
 // Toast queue system
-const toastQueue: any[] = [];
-let currentToast: any = null;
-let toastTimeout: any = null;
+const toastQueue: { message: string; type: string; duration: number }[] = [];
+let currentToast: HTMLElement | null = null;
+let toastTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function showNextToast() {
     // If a toast is currently displayed, don't show another
@@ -366,7 +374,7 @@ function showNextToast() {
     }, nextToastData.duration);
 }
 
-function removeToast(toast: any) {
+function removeToast(toast: HTMLElement) {
     // Clear any pending timeout
     if (toastTimeout) {
         clearTimeout(toastTimeout);
@@ -388,7 +396,7 @@ function removeToast(toast: any) {
 // flood the queue; keep only the most recent ones and drop the oldest.
 const MAX_TOAST_QUEUE = 5;
 
-export function showToast(message: any, type = 'info', duration = 3000) {
+export function showToast(message: string, type = 'info', duration = 3000) {
     // Add toast to queue
     toastQueue.push({ message, type, duration });
 

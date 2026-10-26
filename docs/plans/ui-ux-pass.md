@@ -15,7 +15,7 @@
 ## Scope
 
 - **In:** Setup and Outputs layout, level gating review, mobile (≤768px, bottom-nav fit), analysis panels.
-- **Out:** onboarding / first-run flow (separate plan), new features, visual rebrand, `app.jsx` split (see [typescript-migration.md](typescript-migration.md)).
+- **Out:** onboarding / first-run flow (separate plan), new features, visual rebrand, `app.jsx` split (done; see [typescript-migration.md](archive/typescript-migration.md)).
 
 ## Phases
 
@@ -59,8 +59,8 @@
 
 ## Every-phase gate
 
-- `npm run test:run`, `npm run lint`, `npm run typecheck` (≤ `.typecheck-baseline`), Playwright on chromium + firefox.
-- New `app.jsx` code carries JSDoc types; top-level `let` read by `render()` is declared before `render()`.
+- `npm run test:run`, `npm run lint`, `npm run typecheck` (0 errors), Playwright on chromium + firefox.
+- New code is `.ts`; top-level `let` read by `render()` is declared before `render()`.
 - Update ROADMAP right after each phase ships.
 
 ## Risks

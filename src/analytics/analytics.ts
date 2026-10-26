@@ -3,11 +3,13 @@
  * Privacy-first local analytics for ProfitPath
  */
 
+import type { AnalyticsEvent, AnalyticsSettings, AnalyticsSummary, CountMap, EventData } from './types';
+
 class AnalyticsCollector {
-  events: any;
-  sessionId: any;
-  sessionStart: any;
-  settings: any;
+  events: AnalyticsEvent[];
+  sessionId: string;
+  sessionStart: number;
+  settings: AnalyticsSettings;
   constructor() {
     this.settings = this.loadSettings();
     this.sessionStart = Date.now();
@@ -24,8 +26,8 @@ class AnalyticsCollector {
     return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
-  loadSettings() {
-    const defaultSettings = {
+  loadSettings(): AnalyticsSettings {
+    const defaultSettings: AnalyticsSettings = {
       enabled: false,
       trackUsage: false,
       trackFeatures: false,
@@ -38,7 +40,7 @@ class AnalyticsCollector {
     return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
   }
 
-  saveSettings(settings: any) {
+  saveSettings(settings: Partial<AnalyticsSettings>) {
     this.settings = { ...this.settings, ...settings };
     localStorage.setItem('profitpath_analytics_settings', JSON.stringify(this.settings));
   }
@@ -54,10 +56,10 @@ class AnalyticsCollector {
     });
   }
 
-  trackEvent(eventName: any, data = {}) {
+  trackEvent(eventName: string, data: EventData = {}) {
     if (!this.settings.enabled) return;
 
-    const event = {
+    const event: AnalyticsEvent = {
       id: this.generateEventId(),
       timestamp: Date.now(),
       sessionId: this.sessionId,
@@ -73,9 +75,9 @@ class AnalyticsCollector {
     return 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
-  sanitizeData(data: any) {
+  sanitizeData(data: EventData): EventData {
     // Remove any sensitive information
-    const sanitized = { ...data };
+    const sanitized: EventData = { ...data };
 
     // Remove any fields that might contain personal data
     const sensitiveFields = ['email', 'name', 'phone', 'address', 'ssn', 'credit'];
@@ -86,14 +88,14 @@ class AnalyticsCollector {
     return sanitized;
   }
 
-  saveEvent(event: any) {
+  saveEvent(event: AnalyticsEvent) {
     try {
       const existingEvents = JSON.parse(localStorage.getItem('profitpath_analytics_events') || '[]');
       existingEvents.push(event);
 
       // Clean old events based on retention policy
       const cutoffDate = Date.now() - (this.settings.retentionDays * 24 * 60 * 60 * 1000);
-      const filteredEvents = existingEvents.filter((e: any) => e.timestamp > cutoffDate);
+      const filteredEvents = existingEvents.filter((e: AnalyticsEvent) => e.timestamp > cutoffDate);
 
       localStorage.setItem('profitpath_analytics_events', JSON.stringify(filteredEvents));
     } catch (error) {
@@ -102,7 +104,7 @@ class AnalyticsCollector {
   }
 
   // Specific tracking methods
-  trackFeatureUsage(feature: any, details = {}) {
+  trackFeatureUsage(feature: string, details: EventData = {}) {
     if (!this.settings.trackFeatures) return;
 
     this.trackEvent('feature_usage', {
@@ -111,7 +113,7 @@ class AnalyticsCollector {
     });
   }
 
-  trackScenarioAction(action: any, scenarioData = {}) {
+  trackScenarioAction(action: string, scenarioData: EventData = {}) {
     if (!this.settings.trackUsage) return;
 
     this.trackEvent('scenario_action', {
@@ -121,7 +123,7 @@ class AnalyticsCollector {
     });
   }
 
-  trackExport(format: any, scenarioCount = 1, additionalData = {}) {
+  trackExport(format: string, scenarioCount = 1, additionalData: EventData = {}) {
     if (!this.settings.trackExports) return;
 
     this.trackEvent('export', {
@@ -131,7 +133,7 @@ class AnalyticsCollector {
     });
   }
 
-  trackTemplateUsage(templateId: any, templateName: any) {
+  trackTemplateUsage(templateId: string, templateName: string) {
     if (!this.settings.trackTemplates) return;
 
     this.trackEvent('template_usage', {
@@ -140,7 +142,7 @@ class AnalyticsCollector {
     });
   }
 
-  trackSettingsChange(setting: any, oldValue: any, newValue: any) {
+  trackSettingsChange(setting: string, oldValue: unknown, newValue: unknown) {
     this.trackEvent('settings_change', {
       setting,
       oldValue,
@@ -149,7 +151,7 @@ class AnalyticsCollector {
   }
 
   // Data retrieval methods
-  getAllEvents() {
+  getAllEvents(): AnalyticsEvent[] {
     try {
       return JSON.parse(localStorage.getItem('profitpath_analytics_events') || '[]');
     } catch {
@@ -157,20 +159,20 @@ class AnalyticsCollector {
     }
   }
 
-  getEventsByType(eventType: any) {
-    return this.getAllEvents().filter((event: any) => event.event === eventType);
+  getEventsByType(eventType: string) {
+    return this.getAllEvents().filter((event) => event.event === eventType);
   }
 
-  getAnalyticsSummary() {
+  getAnalyticsSummary(): AnalyticsSummary {
     const events = this.getAllEvents();
-    const sessions = new Set(events.map((e: any) => e.sessionId)).size;
+    const sessions = new Set(events.map((e) => e.sessionId)).size;
 
     return {
       totalEvents: events.length,
       totalSessions: sessions,
       dateRange: {
-        start: events.length > 0 ? new Date(Math.min(...events.map((e: any) => e.timestamp))) : null,
-        end: events.length > 0 ? new Date(Math.max(...events.map((e: any) => e.timestamp))) : null
+        start: events.length > 0 ? new Date(Math.min(...events.map((e) => e.timestamp))) : null,
+        end: events.length > 0 ? new Date(Math.max(...events.map((e) => e.timestamp))) : null
       },
       featureUsage: this.getFeatureUsageStats(events),
       exportStats: this.getExportStats(events),
@@ -179,51 +181,51 @@ class AnalyticsCollector {
     };
   }
 
-  getFeatureUsageStats(events: any) {
-    const featureEvents = events.filter((e: any) => e.event === 'feature_usage');
-    const stats = {};
+  getFeatureUsageStats(events: AnalyticsEvent[]): CountMap {
+    const featureEvents = events.filter((e) => e.event === 'feature_usage');
+    const stats: CountMap = {};
 
-    featureEvents.forEach((event: any) => {
-      const feature = event.data.feature;
-      (stats as any)[feature] = ((stats as any)[feature] || 0) + 1;
+    featureEvents.forEach((event) => {
+      const feature = String(event.data.feature);
+      stats[feature] = (stats[feature] || 0) + 1;
     });
 
     return stats;
   }
 
-  getExportStats(events: any) {
-    const exportEvents = events.filter((e: any) => e.event === 'export');
-    const stats = { total: 0, byFormat: {} };
+  getExportStats(events: AnalyticsEvent[]) {
+    const exportEvents = events.filter((e) => e.event === 'export');
+    const stats: { total: number; byFormat: CountMap } = { total: 0, byFormat: {} };
 
-    exportEvents.forEach((event: any) => {
+    exportEvents.forEach((event) => {
       stats.total++;
-      const format = event.data.format;
-      (stats.byFormat as any)[format] = ((stats.byFormat as any)[format] || 0) + 1;
+      const format = String(event.data.format);
+      stats.byFormat[format] = (stats.byFormat[format] || 0) + 1;
     });
 
     return stats;
   }
 
-  getScenarioStats(events: any) {
-    const scenarioEvents = events.filter((e: any) => e.event === 'scenario_action');
-    const stats = { total: 0, byAction: {} };
+  getScenarioStats(events: AnalyticsEvent[]) {
+    const scenarioEvents = events.filter((e) => e.event === 'scenario_action');
+    const stats: { total: number; byAction: CountMap } = { total: 0, byAction: {} };
 
-    scenarioEvents.forEach((event: any) => {
+    scenarioEvents.forEach((event) => {
       stats.total++;
-      const action = event.data.action;
-      (stats.byAction as any)[action] = ((stats.byAction as any)[action] || 0) + 1;
+      const action = String(event.data.action);
+      stats.byAction[action] = (stats.byAction[action] || 0) + 1;
     });
 
     return stats;
   }
 
-  getTemplateStats(events: any) {
-    const templateEvents = events.filter((e: any) => e.event === 'template_usage');
-    const stats = {};
+  getTemplateStats(events: AnalyticsEvent[]): CountMap {
+    const templateEvents = events.filter((e) => e.event === 'template_usage');
+    const stats: CountMap = {};
 
-    templateEvents.forEach((event: any) => {
-      const templateName = event.data.templateName || 'Unknown';
-      (stats as any)[templateName] = ((stats as any)[templateName] || 0) + 1;
+    templateEvents.forEach((event) => {
+      const templateName = String(event.data.templateName || 'Unknown');
+      stats[templateName] = (stats[templateName] || 0) + 1;
     });
 
     return stats;
@@ -238,16 +240,16 @@ class AnalyticsCollector {
     }
   }
 
-  sanitizeString(str: any) {
+  sanitizeString(str: unknown) {
     if (typeof str !== 'string') return '';
     return str.replace(/[<>]/g, '').trim();
   }
 
-  trackFeedback(rating: any, category: any, comment: any = null) {
+  trackFeedback(rating: string | number, category: string, comment: string | null = null) {
     if (!this.settings.enabled || !this.settings.trackFeatures) return;
 
     this.trackEvent('feedback', {
-      rating: parseInt(rating),
+      rating: parseInt(String(rating)),
       category: this.sanitizeString(category),
       comment: comment ? this.sanitizeString(comment.substring(0, 500)) : null,
       timestamp: new Date().toISOString()
@@ -300,6 +302,8 @@ if (typeof window !== 'undefined' && !window.__TEST_MODE__) {
     window.profitPathAnalytics.endSession();
   });
 }
+
+export { AnalyticsCollector };
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

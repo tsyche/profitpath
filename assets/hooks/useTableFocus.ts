@@ -2,10 +2,10 @@
 let focusState = {
   row: -1,
   col: -1,
-  editing: null as any
+  editing: null as Element | null
 };
 
-export function captureTableFocus(tableId: any) {
+export function captureTableFocus(tableId: string) {
   const table = document.getElementById(tableId);
   if (!table) return null;
 
@@ -26,7 +26,7 @@ export function captureTableFocus(tableId: any) {
   return null;
 }
 
-export function restoreTableFocus(tableId: any) {
+export function restoreTableFocus(tableId: string) {
   const table = document.getElementById(tableId);
   if (!table || focusState.row < 0) return;
 

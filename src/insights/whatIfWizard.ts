@@ -3,10 +3,11 @@
  * impact is measured by re-running calc(), so previews match the main outputs.
  */
 
+import type { CalcState, CalcResult, Offering } from '../types';
 import { calc } from '../calculations/index';
 import { hirePatch, partTimeHirePatch } from './insightsEngine';
 import { isOneTime, isPerSession, monthlyFromPerSession, displayPrice } from '../calculations/offeringPrice';
-import { getReverseCalculation } from './reverseCalculator';
+import { ReverseCalculator } from './reverseCalculator';
 
 export interface WizardScenario {
   id: string;
@@ -25,22 +26,22 @@ export interface WizardMetrics {
 
 export interface WizardPreview {
   /** State patch to apply, or null when the scenario cannot be built */
-  changes: Record<string, any> | null;
+  changes: Partial<CalcState> | null;
   note: string;
   before: WizardMetrics;
   after: WizardMetrics | null;
 }
 
-const pick = (m: any): WizardMetrics => ({
+const pick = (m: CalcResult): WizardMetrics => ({
   takeHome: m.takeHome,
   income: m.income,
   capacityPct: m.capacityPct,
   clients: m.clients
 });
 
-const offeringList = (state: any): any[] => (Array.isArray(state.offerings) ? state.offerings : []).filter((o: any) => o && typeof o === 'object');
+const offeringList = (state: CalcState): Offering[] => (Array.isArray(state.offerings) ? state.offerings : []).filter((o: Offering) => o && typeof o === 'object');
 
-export function wizardScenarios(state: any): WizardScenario[] {
+export function wizardScenarios(state: CalcState): WizardScenario[] {
   const takeHome = Math.max(0, Math.round(calc(state).takeHome));
   const goal = Math.max(10000, Math.ceil((takeHome * 1.25) / 1000) * 1000);
   return [
@@ -56,12 +57,12 @@ export function wizardScenarios(state: any): WizardScenario[] {
   ];
 }
 
-function buildChanges(state: any, id: string, value: number): { changes: Record<string, any> | null; note: string } {
+function buildChanges(state: CalcState, id: string, value: number): { changes: Partial<CalcState> | null; note: string } {
   const list = offeringList(state);
   const scaleEach = (key: string, factor: number, round: (n: number) => number) =>
-    ({ offerings: list.map((o: any) => ({ ...o, [key]: round((Number(o[key]) || 0) * factor) })) });
+    ({ offerings: list.map((o: Offering) => ({ ...o, [key]: round((Number((o as Record<string, unknown>)[key]) || 0) * factor) })) });
 
-  const scaleClients = (pct: number): { changes: Record<string, any>; note: string } => {
+  const scaleClients = (pct: number): { changes: Partial<CalcState>; note: string } => {
     if (state.mode === 'forecast') {
       const util = Math.max(1, (Number(state.targetUtilizationPct) || 0) * (1 + pct / 100));
       return { changes: { targetUtilizationPct: Math.round(util * 10) / 10 }, note: 'Forecast mode: scales target utilization, which sets client volume.' };
@@ -81,8 +82,9 @@ function buildChanges(state: any, id: string, value: number): { changes: Record<
       const volume = scaleClients(value);
       const prices = scaleEach('priceMonthly', 1 + value / 100, Math.round);
       // Both patches touch offerings in Current mode: layer prices over the scaled client counts
-      const offerings = volume.changes.offerings
-        ? prices.offerings.map((o: any, i: number) => ({ ...o, currentClients: volume.changes.offerings[i].currentClients }))
+      const scaled = volume.changes.offerings;
+      const offerings = scaled
+        ? prices.offerings.map((o: Offering, i: number) => ({ ...o, currentClients: scaled[i].currentClients }))
         : prices.offerings;
       return { changes: { ...volume.changes, offerings }, note: volume.note };
     }
@@ -91,11 +93,11 @@ function buildChanges(state: any, id: string, value: number): { changes: Record<
     case 'market': {
       const t = Math.min(100, Math.max(0, value)) / 100;
       let moved = 0;
-      const offerings = list.map((o: any) => {
+      const offerings = list.map((o: Offering) => {
         const avg = Number(o.marketAvg);
         if (!(avg > 0)) return o;
         moved++;
-        const cur = displayPrice(o);
+        const cur = displayPrice({ ...o, priceMonthly: o.priceMonthly || 0, sessionsPerYear: o.sessionsPerYear || 0 });
         const target = cur + (avg - cur) * t;
         const priceMonthly = isOneTime(o) ? target / 12 : isPerSession(o) ? monthlyFromPerSession(target, Number(o.sessionsPerYear) || 0) : target;
         return { ...o, priceMonthly: Math.round(priceMonthly * 100) / 100 };
@@ -110,10 +112,9 @@ function buildChanges(state: any, id: string, value: number): { changes: Record<
     case 'costs':
       return { changes: scaleEach('variableCostPerSession', 1 - value / 100, (n) => Math.round(n * 100) / 100), note: '' };
     case 'goal': {
-      const r: any = getReverseCalculation(state, calc(state), value, 'pricing');
+      const r = new ReverseCalculator(state, calc(state)).calculateRequiredPricing(value);
       if (!r) return { changes: null, note: 'Enter a goal above zero.' };
-      if (r.requiresChange === false) return { changes: null, note: r.message };
-      if (r.priceIncreasePct === null) return { changes: null, note: r.message };
+      if (!('priceIncreasePct' in r) || r.priceIncreasePct === null) return { changes: null, note: r.message };
       return { changes: scaleEach('priceMonthly', 1 + r.priceIncreasePct, Math.ceil), note: r.feasible ? '' : 'That needs more than doubling prices. Consider volume or costs too.' };
     }
     default:
@@ -121,7 +122,7 @@ function buildChanges(state: any, id: string, value: number): { changes: Record<
   }
 }
 
-export function previewScenario(state: any, id: string, value: number): WizardPreview {
+export function previewScenario(state: CalcState, id: string, value: number): WizardPreview {
   const before = pick(calc(state));
   if (!Number.isFinite(value)) return { changes: null, note: 'Enter a number.', before, after: null };
   const { changes, note } = buildChanges(state, id, value);

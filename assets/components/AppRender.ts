@@ -1,3 +1,4 @@
+import type { CalcResult } from '../../src/types';
 import { calc } from '../../src/calculations/index';
 import { displayPrice, isOneTime, isPerSession } from '../../src/calculations/offeringPrice';
 import { getRangeCase } from '../../src/calculations/rangeCase';
@@ -12,7 +13,7 @@ import { renderResources } from './ResourcesPanel';
 import { captureTableFocus, restoreTableFocus } from '../hooks/useTableFocus';
 import { escapeHtml, lazyLoadChart, updateRichVisualizations } from '../services/miscService';
 import * as businessLogic from '../services/businessLogic';
-import { clamp, safeParseNumber } from '../utils/helpers';
+import { clamp, errMsg, errStack, safeParseNumber } from '../utils/helpers';
 import { fmtInt, fmtPct1 } from '../utils/format';
 import { $, $$ } from '../utils/dom';
 import { persistState, pushHistory, redo, state, undo } from '../state/appState';
@@ -83,14 +84,14 @@ function updateTemplateBadge() {
 
 export function render() {
   syncCurrencySelect();
-  const focus = captureTableFocus('offeringsTable');
+  captureTableFocus('offeringsTable');
 
-  let metrics: any;
+  let metrics: CalcResult;
   try {
     metrics = calc(state);
     window.lastMetrics = metrics;
   } catch (e) {
-    console.error('calc() failed:', e.message);
+    console.error('calc() failed:', errMsg(e));
     // Fallback: use hardcoded results if calc fails
     metrics = {
       clients: 24,
@@ -105,11 +106,11 @@ export function render() {
       breakEvenClients: 5,
       breakEvenRevenue: 6000,
       contributionMarginPerClient: 400
-    };
+    } as unknown as CalcResult;
     // Display error in debug panel
     const dbg = $('#debugPanel');
     if (dbg) {
-      dbg.textContent = 'Calculation error: ' + (e && e.stack ? e.stack : String(e));
+      dbg.textContent = 'Calculation error: ' + errStack(e);
       dbg.style.display = 'block';
     }
   }
@@ -183,7 +184,7 @@ export function render() {
   const tbody = $('#offeringsBody');
   tbody.innerHTML = '';
 
-  metrics.offerings.forEach((o: any, idx: number) => {
+  metrics.offerings.forEach((o, idx: number) => {
     const tr = document.createElement('tr');
     // Inputs always show what the user typed; metrics.offerings carries the active range case's fill and clients
     const raw = getRangeCase() === 'base' ? o : (state.offerings[idx] || o);
@@ -247,7 +248,7 @@ export function render() {
     tbody.appendChild(tr);
   });
 
-  restoreTableFocus(focus);
+  restoreTableFocus('offeringsTable');
   renderExpenses();
   renderResources();
   renderRangesTable();
@@ -261,7 +262,7 @@ export function render() {
   }
 
   if (isForecast) {
-    const sum = metrics.offerings.reduce((a: number, o: any) => a + (Number(o.mixPct) || 0), 0);
+    const sum = metrics.offerings.reduce((a: number, o) => a + (Number(o.mixPct) || 0), 0);
     const delta = Math.abs(sum - 100);
 
     mixNote.classList.add('note-forecast');
@@ -274,7 +275,7 @@ export function render() {
         ? 'Forecast mode: editing Mix % (current total ' + (sum.toFixed(1)) + '%)'
         : 'Forecast mode: editing Mix % (current total ' + (sum.toFixed(1)) + '% — auto-normalized for calculations)');
   } else {
-    const total = metrics.offerings.reduce((a: number, o: any) => a + (Number(o.currentClients) || 0), 0);
+    const total = metrics.offerings.reduce((a: number, o) => a + (Number(o.currentClients) || 0), 0);
     mixNote.classList.add('note-current');
     mixNote.textContent = total > 0
       ? 'Current mode: editing Clients (utilization computed from workload)'
@@ -287,7 +288,7 @@ export function render() {
 
   // populate KPI elements directly in case core.js isn't loaded (tests use
   // app.ts standalone)
-  function setKpi(id: string, value: any) {
+  function setKpi(id: string, value: string | number) {
     const el = document.getElementById(id);
     if (!el) return;
     const str = String(value);
@@ -338,7 +339,7 @@ function buildUtilizationRing(pct: number) {
 }
 
 // Apply a status class (good/warn/danger) to the nearest .kpi ancestor of a value element
-function applyKpiStatus(valueEl: any, status: string) {
+function applyKpiStatus(valueEl: Element | null, status: string) {
   const card = valueEl?.closest('.kpi');
   if (!card) return;
   card.classList.remove('kpi--good', 'kpi--warn', 'kpi--danger');
@@ -346,9 +347,9 @@ function applyKpiStatus(valueEl: any, status: string) {
 }
 
 // Inject or update the break-even progress bar inside a KPI card
-function updateBreakEvenBar(cardEl: any, clients: number, beClients: number) {
+function updateBreakEvenBar(cardEl: Element | null, clients: number, beClients: number) {
   if (!cardEl || !Number.isFinite(beClients) || beClients <= 0) return;
-  let bar = cardEl.querySelector('.kpi-be-bar');
+  let bar = cardEl.querySelector<HTMLElement>('.kpi-be-bar');
   if (!bar) {
     bar = document.createElement('div');
     bar.className = 'kpi-be-bar';
@@ -357,12 +358,12 @@ function updateBreakEvenBar(cardEl: any, clients: number, beClients: number) {
   }
   const ratio = Math.min(1, clients / beClients);
   const color = clients >= beClients ? 'var(--good)' : ratio > 0.7 ? 'var(--warn)' : 'var(--bad)';
-  const fill = bar.querySelector('.kpi-be-bar-fill');
+  const fill = bar.querySelector<HTMLElement>('.kpi-be-bar-fill');
   if (fill) fill.style.cssText = `width:${(ratio * 100).toFixed(1)}%;background:${color}`;
   bar.dataset.tooltip = `${fmtInt(clients)} of ${fmtInt(beClients)} clients needed to break even`;
 }
 
-export function updateOutputs(metrics: any) {
+export function updateOutputs(metrics: CalcResult) {
   // Header chips and the glance modal share these numbers; in-place edits (typing in the table) skip render()
   updateKeyMetrics();
   try {
@@ -479,7 +480,7 @@ export function updateOutputs(metrics: any) {
       const pools = metrics.poolUtilization || [];
       bottleneckLine.hidden = pools.length < 2;
       if (pools.length >= 2) {
-        const others = pools.filter((p: any) => p.id !== metrics.bottleneck.id).map((p: any) => p.name + ' ' + fmtPct1(p.pct));
+        const others = pools.filter((p) => p.id !== metrics.bottleneck.id).map((p) => p.name + ' ' + fmtPct1(p.pct));
         bottleneckLine.textContent = 'Bottleneck: ' + metrics.bottleneck.name + ' at ' + fmtPct1(metrics.bottleneck.pct) + ' (' + others.join(', ') + ')';
       }
     }

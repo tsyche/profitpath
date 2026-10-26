@@ -43,12 +43,12 @@ export function renderExpenses() {
   });
 }
 
-function onExpenseInput(e: any) {
+function onExpenseInput(e: Event) {
   const el = e.target;
   if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement)) return;
   const k = el.dataset.k;
   const i = Number(el.dataset.i);
-  const row = (state.expenses[i] as any);
+  const row = state.expenses[i];
   if (!k || !row) return;
   // Debounce history like offerings: one undo step per field, not per keystroke
   const fieldKey = `exp-${i}-${k}`;
@@ -58,7 +58,7 @@ function onExpenseInput(e: any) {
   } else {
     // Per-row sanitizer is the single source of truth for clamping and fallbacks
     const [clean] = sanitizeExpenses([{ ...row, [k]: el.value }], () => row.id);
-    (row as any)[k] = (clean as any)[k];
+    (row as unknown as Record<string, unknown>)[k] = (clean as unknown as Record<string, unknown>)[k];
     if (k === 'frequency') {
       const life = el.closest('tr')?.querySelector('[data-k="lifeYears"]');
       if (life instanceof HTMLInputElement) life.disabled = row.frequency !== 'one-time';
@@ -75,8 +75,8 @@ function onExpenseInput(e: any) {
   }
 }
 
-function onExpenseClick(e: any) {
-  const btn = e.target.closest('button[data-action="removeExpense"]');
+function onExpenseClick(e: Event) {
+  const btn = (e.target as HTMLElement).closest<HTMLElement>('button[data-action="removeExpense"]');
   if (!btn) return;
   const i = Number(btn.dataset.i);
   if (!Number.isFinite(i) || !state.expenses[i]) return;

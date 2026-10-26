@@ -1,19 +1,20 @@
+import type { CalcResult } from '../../src/types';
 import { escapeHtml } from "./miscService";
 import { fmtMoney0, fmtMoneyK } from '../../src/calculations/currency';
 
 // Import formatting utilities
-const fmtPct1 = (n: any) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
-const fmtInt = (n: any) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
+const fmtPct1 = (n: number) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
+const fmtInt = (n: number) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 
 // DOM utility (make sure $ is available)
-const $ = (selector: any) => {
+const $ = (selector: string) => {
   if (typeof document === 'undefined') return null;
-  return document.querySelector(selector);
+  return document.querySelector<HTMLElement>(selector);
 };
 
 // Visualization Services
 
-export function updateBreakEvenAnalysis(metrics: any) {
+export function updateBreakEvenAnalysis(metrics: CalcResult) {
     const analysisEl = $('#breakEvenAnalysis');
     if (!analysisEl) return;
 
@@ -54,7 +55,7 @@ export function updateBreakEvenAnalysis(metrics: any) {
 
   }
 
-export function updateRichVisualizations(metrics: any) {
+export function updateRichVisualizations(metrics: CalcResult) {
     const vizEl = $('#richVisualizations');
     if (!vizEl || !metrics) return;
 
@@ -69,7 +70,7 @@ export function updateRichVisualizations(metrics: any) {
     vizEl.style.display = 'block';
   }
 
-export function createUtilizationGauge(metrics: any) {
+export function createUtilizationGauge(metrics: CalcResult) {
     const utilization = Math.min(150, Math.max(0, metrics.capacityPct || 0));
 
     // Create a proper speedometer-style gauge
@@ -137,7 +138,7 @@ export function createUtilizationGauge(metrics: any) {
     return '<div class="utilization-gauge">' + svg + '<div class="gauge-labels"><div class="gauge-value">' + fmtPct1(utilization) + '</div><div class="gauge-text">Utilization</div></div></div>';
   }
 
-export function createProfitWaterfall(metrics: any) {
+export function createProfitWaterfall(metrics: CalcResult) {
     const items = [
       { label: 'Revenue', value: metrics.revenue, color: 'var(--good)' },
       { label: 'Variable Costs', value: -metrics.variableCosts, color: 'var(--bad)' },
@@ -148,7 +149,7 @@ export function createProfitWaterfall(metrics: any) {
     // Normalize values for SVG scaling: find max absolute value to scale bars proportionally
     const maxAbsValue = Math.max(Math.abs(metrics.revenue), Math.abs(metrics.income), 1);
     const chartHeight = 32; // SVG units available for bars above/below zero line
-    const scale = (val: any) => (Math.abs(val) / maxAbsValue) * chartHeight;
+    const scale = (val: number) => (Math.abs(val) / maxAbsValue) * chartHeight;
     const centerY = 50; // SVG y-coordinate of center band
     const bandHeight = 8; // Height of the center band to contain labels
     const bandTop = centerY - bandHeight / 2;
@@ -232,13 +233,13 @@ function isTooltipsEnabled() {
 }
 
 function setupWaterfallLabelTooltips() {
-  const labels = document.querySelectorAll('.waterfall-label');
+  const labels = document.querySelectorAll<SVGGraphicsElement>('.waterfall-label');
   if (!labels.length) return;
 
-  let activeTooltip: any = null;
-  let hideTimeout: any = null;
+  let activeTooltip: HTMLElement | null = null;
+  let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  const showTooltip = (label: any) => {
+  const showTooltip = (label: SVGGraphicsElement) => {
     if (!isTooltipsEnabled()) return;
 
     if (hideTimeout) clearTimeout(hideTimeout);
@@ -272,7 +273,7 @@ function setupWaterfallLabelTooltips() {
     document.body.appendChild(tooltip);
     activeTooltip = tooltip;
 
-    const svgRect = label.closest('svg').getBoundingClientRect();
+    const svgRect = label.closest('svg')!.getBoundingClientRect();
     const bbox = label.getBBox();
     const labelScreenX = svgRect.left + (bbox.x + bbox.width / 2) * (svgRect.width / 120);
     const labelScreenY = svgRect.top + bbox.y * (svgRect.height / 100);
@@ -318,12 +319,12 @@ function setupWaterfallLabelTooltips() {
   });
 }
 
-export function renderSimpleChart(metrics: any) {
+export function renderSimpleChart(metrics: CalcResult) {
   const el = $('#simpleChart');
   if (!el) return;
 
   // Hide any existing tooltips before rendering new chart
-  const existingTooltip = el.querySelector('.chart-tooltip');
+  const existingTooltip = el.querySelector<HTMLElement>('.chart-tooltip');
   if (existingTooltip) {
     existingTooltip.classList.remove('visible', 'pinned');
     existingTooltip.style.display = 'none';
@@ -345,8 +346,8 @@ export function renderSimpleChart(metrics: any) {
   }
 
   // Prefer top-level metrics, but fall back to summing per-offering metrics if needed
-  const totalRevenue = Number(metrics.revenue) || (Array.isArray(metrics.offeringMetrics) ? metrics.offeringMetrics.reduce((a: any, m: any) => a + (Number(m.revenue) || 0), 0) : 0);
-  const totalVariable = Number(metrics.variableCosts) || (Array.isArray(metrics.offeringMetrics) ? metrics.offeringMetrics.reduce((a: any, m: any) => a + (Number(m.variableCosts) || 0), 0) : 0);
+  const totalRevenue = Number(metrics.revenue) || (Array.isArray(metrics.offeringMetrics) ? metrics.offeringMetrics.reduce((a, m) => a + (Number(m.revenue) || 0), 0) : 0);
+  const totalVariable = Number(metrics.variableCosts) || (Array.isArray(metrics.offeringMetrics) ? metrics.offeringMetrics.reduce((a, m) => a + (Number(m.variableCosts) || 0), 0) : 0);
   const totalContribution = Math.max(0, totalRevenue - totalVariable);
 
   if (totalRevenue <= 0) {
@@ -355,7 +356,7 @@ export function renderSimpleChart(metrics: any) {
   }
 
   // Build per-offering breakdown
-  const data = (metrics.offerings || []).map((o: any, idx: any) => {
+  const data = (metrics.offerings || []).map((o, idx) => {
     const m = (metrics.offeringMetrics && metrics.offeringMetrics[idx]) || {};
     const rev = Number(m.revenue) || 0;
     const variable = Number(m.variableCosts) || 0;
@@ -366,8 +367,8 @@ export function renderSimpleChart(metrics: any) {
 
   // SVG: draw each offering as variable (red) then contribution (green) adjacent; x coord in percentage of totalRevenue
   let x = 0;
-  const rects: any[] = [];
-  data.forEach((d: any) => {
+  const rects: { x: number; w: number; color: string; offering: string; type: string; varVal: number; contribVal: number; pct: number }[] = [];
+  data.forEach((d) => {
     const revPct = (d.rev / totalRevenue) || 0;
     const varPct = (d.variable / totalRevenue) || 0;
     const contribPct = (d.contrib / totalRevenue) || 0;
@@ -406,7 +407,7 @@ export function renderSimpleChart(metrics: any) {
   const legend = '<div class="chart-labels"><div class="left"><div class="pill-legend"><span class="legend-swatch legend-variable"></span><span>Variable: ' + (fmtMoney0(totalVariable)) + '</span></div><div class="pill-legend"><span class="legend-swatch legend-margin"></span><span>Contribution: ' + (fmtMoney0(totalContribution)) + '</span></div></div><div style="display:flex;align-items:center;gap:12px"><div class="center" style="font-family:var(--mono);color:var(--muted);">' + (Math.round((totalVariable / totalRevenue) * 100)) + '% / ' + (Math.round((totalContribution / totalRevenue) * 100)) + '%</div><div class="right">Revenue: <strong>' + (fmtMoney0(totalRevenue)) + '</strong></div></div></div>';
 
   // Build a compact offering list under the legend (name / pct / annual rev).
-  const offeringItems = data.map((d: any) => {
+  const offeringItems = data.map((d) => {
     const pct = totalRevenue > 0 ? Math.round((d.rev / totalRevenue) * 100) : 0;
     return '<div class="offering-item"><div class="off-left"><span class="o-name">' + (escapeHtml(d.name)) + '</span><span class="o-pct">' + (pct) + '%</span></div><div class="o-val">' + (fmtMoney0(d.rev)) + '</div></div>';
   }).join('');
@@ -421,14 +422,14 @@ export function renderSimpleChart(metrics: any) {
 }
 
 // Helper function to set up basic chart interactivity with simple tooltip on hover
-function setupChartEventListeners(chartEl: any) {
+function setupChartEventListeners(chartEl: HTMLElement | null) {
   if (!chartEl) return;
 
-  const tooltip = chartEl.querySelector('.chart-tooltip');
+  const tooltip = chartEl.querySelector<HTMLElement>('.chart-tooltip');
   if (!tooltip) return;
 
-  let hideTimeout: any = null;
-  let currentRect: any = null;
+  let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+  let currentRect: Element | null = null;
 
   // Get the SVG container and all chart rects
   const svg = chartEl.querySelector('svg');
@@ -437,10 +438,10 @@ function setupChartEventListeners(chartEl: any) {
   if (!rects || rects.length === 0) return;
 
   // Position tooltip just above the chart with arrow pointing to the hovered section
-  const positionTooltip = (rect: any) => {
+  const positionTooltip = (rect: Element | null) => {
     if (!rect) return;
 
-    const svgRect = svg.getBoundingClientRect();
+    const svgRect = svg!.getBoundingClientRect();
     const hoveredRect = rect.getBoundingClientRect();
 
     tooltip.style.position = 'fixed';
@@ -451,7 +452,7 @@ function setupChartEventListeners(chartEl: any) {
     tooltip.style.left = (rectCenterX - tooltipWidth / 2) + 'px';
   };
 
-  const showTooltip = (rect: any) => {
+  const showTooltip = (rect: Element | null) => {
     if (!rect) return;
 
     currentRect = rect;
@@ -491,7 +492,7 @@ function setupChartEventListeners(chartEl: any) {
   };
 
   // Show on hover or click
-  rects.forEach((rect: any) => {
+  rects.forEach((rect) => {
     rect.addEventListener('mouseover', () => {
       showTooltip(rect);
     });
@@ -500,7 +501,7 @@ function setupChartEventListeners(chartEl: any) {
       hideTooltip();
     });
 
-    rect.addEventListener('click', (e: any) => {
+    rect.addEventListener('click', (e: Event) => {
       e.stopPropagation();
       showTooltip(rect);
     });

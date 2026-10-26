@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { calc } from '../calculations/index';
-import { calculateLTV } from './customer-analytics';
+import { calculateLTV, summarizeCustomerAcquisition } from './customer-analytics';
 
 const base = {
   mode: 'forecast' as const,
@@ -33,5 +33,15 @@ describe('calculateLTV on real calc output (roadmap 12h)', () => {
   it('never goes negative for an offering that loses money per client', () => {
     const losing = calc({ ...base, offerings: [{ ...base.offerings[0], variableCostPerSession: 500 }] } as any);
     expect(calculateLTV(losing as any).byOffering[0].estimatedLTV).toBe(0);
+  });
+});
+
+describe('summarizeCustomerAcquisition on real calc output', () => {
+  it('derives revenue impact and churn from calc() fields (annual revenue, clients)', () => {
+    const m = calc({ ...base, mode: 'current' } as any);
+    const s = summarizeCustomerAcquisition(m, { monthlyNewCustomers: 5, monthlyChurnRate: 5 });
+    // 10 clients bring in m.revenue/12 a month; 5 new/month at that rate beat 5% churn, so impact is positive
+    expect(s.annualRevenueImpact).toBeGreaterThan(0);
+    expect(s.projectedAnnualCustomers).toBeGreaterThan(0);
   });
 });

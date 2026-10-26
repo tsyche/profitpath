@@ -1,10 +1,13 @@
+import type { AppState } from '../../src/types';
 import { calc } from '../../src/calculations/index';
 import { monthlyCategorySpend } from '../../src/calculations/expenses';
 import { fmtMoney0 } from '../../src/calculations/currency';
 import { renderCustomerAnalyticsDashboard } from '../../src/analytics/customer-ui';
 import { optimizeMix } from '../../src/insights/mixOptimizer';
-import { generateInsights, generateWhatIfScenarios } from '../../src/insights/insightsEngine';
+import { generateInsights, generateWhatIfScenarios, type Insight } from '../../src/insights/insightsEngine';
 import { getReverseCalculation, getRecommendedStrategy } from '../../src/insights/reverseCalculator';
+type ReverseResult = { requiresChange?: boolean; feasible?: boolean; message: string; warning?: string };
+import { $opt, $req } from '../utils/dom';
 import { wizardScenarios, previewScenario } from '../../src/insights/whatIfWizard';
 import { renderSensitivityHeatmap, renderScorecardRadar, renderClientFunnel } from '../services/advancedChartsService';
 import { escapeHtml } from '../services/miscService';
@@ -15,13 +18,13 @@ import { resetSliders } from './SensitivityPanel';
 /** Collapsible analysis panels: customer analytics, mix optimizer, insights, reverse calculator, what-if wizard, advanced charts. */
 
 interface AnalysisDeps {
-  getState: () => any;
+  getState: () => AppState;
   pushHistory: () => void;
   persistState: () => void;
   render: () => void;
 }
 
-let state: any;
+let state: AppState;
 let deps: AnalysisDeps | null = null;
 
 /** Capture the (never reassigned) app state object and the callbacks the wizard needs. */
@@ -34,7 +37,7 @@ export function initAnalysisPanels(d: AnalysisDeps): void {
 let reverseHasRun = false;
 let reverseRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 
-const $ = (sel: string) => document.querySelector<any>(sel);
+const $ = $opt;
 
 // Customer Analytics twisty (advanced feature). The markup existed but was never
 // wired, so the toggle did nothing — connect it and render on expand.
@@ -47,10 +50,9 @@ export function initCustomerAnalyticsPanel() {
   const renderPanel = () => {
     try {
       const m = calc(state);
-      const metrics = { ...m, totalClients: m.clients };
       // Marketing expense rows drive CAC; with none, the dashboard keeps its default budget
       const marketing = monthlyCategorySpend(state, 'Marketing');
-      panel.innerHTML = renderCustomerAnalyticsDashboard(metrics, marketing > 0 ? { monthlyMarketingBudget: marketing } : {}).html;
+      panel.innerHTML = renderCustomerAnalyticsDashboard(m, marketing > 0 ? { monthlyMarketingBudget: marketing } : {}).html;
     } catch (e) {
       console.warn('Customer analytics render failed:', e);
       panel.innerHTML = '<p style="color: var(--muted); text-align: center;">Unable to load customer analytics.</p>';
@@ -95,7 +97,7 @@ function updateMixOptimizer() {
   let result;
   try {
     const metrics = calc(state);
-    result = optimizeMix(state, metrics, objective);
+    result = optimizeMix(state, metrics, objective as 'profit' | 'utilization');
   } catch (e) {
     console.warn('Mix optimization failed:', e);
     result = null;
@@ -107,7 +109,7 @@ function updateMixOptimizer() {
   }
 
   let tableHtml = '<table class="sensitivity-comparison"><thead><tr><th title="Service offering">Offering</th><th title="Current mix percentage">Current Mix</th><th title="Suggested mix percentage">Suggested Mix</th></tr></thead><tbody>';
-  result.suggestedMix.forEach((o: any, idx: number) => {
+  result.suggestedMix.forEach((o, idx: number) => {
     const current = result.currentMix[idx]?.mixPct ?? 0;
     tableHtml += `<tr><td>${escapeHtml(o.name)}</td><td>${Math.round(current)}%</td><td>${Math.round(o.mixPct)}%</td></tr>`;
   });
@@ -144,13 +146,11 @@ const SEVERITY_COLORS: Record<string, string> = { critical: 'var(--bad)', high: 
 export function renderInsightsPanel() {
   const el = $('#insightsResults');
   if (!el) return;
-  /** @type {any[]} */
-  let insights: any[] = [];
-  /** @type {any[]} */
-  let whatIfs: any[] = [];
+  let insights: Insight[] = [];
+  let whatIfs: ReturnType<typeof generateWhatIfScenarios> = [];
   try {
     const metrics = calc(state);
-    insights = generateInsights(metrics, state).sort((a: any, b: any) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+    insights = generateInsights(metrics, state).sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
     whatIfs = generateWhatIfScenarios(metrics, state);
   } catch (e) {
     console.warn('Insights failed:', e);
@@ -196,7 +196,7 @@ function renderReverseResults() {
     const metrics = calc(state);
     const all = getReverseCalculation(state, metrics, desired);
     const best = getRecommendedStrategy(state, metrics, desired);
-    el.innerHTML = '<ul class="reverse-list" style="padding-left: 18px;">' + Object.entries(all as Record<string, any>).map(([key, r]) => {
+    el.innerHTML = '<ul class="reverse-list" style="padding-left: 18px;">' + Object.entries(all as unknown as Record<string, ReverseResult | null>).map(([key, r]) => {
       if (!r) return '';
       const tag = !r.requiresChange ? 'Already there' : r.feasible ? (best && best.name === key ? 'Recommended' : 'Feasible') : 'Not realistic';
       const color = r.feasible ? 'var(--good)' : 'var(--bad)';
@@ -223,7 +223,7 @@ function renderWizardList() {
   const body = $('#whatIfBody');
   if (!body) return;
   wizardPick = null;
-  $('#whatIfTitle').textContent = 'What if?';
+  $req('#whatIfTitle').textContent = 'What if?';
   body.innerHTML = '<p class="pp-sheet-note">Pick a scenario to preview its effect on your numbers. Nothing changes until you apply it.</p><div class="wi-list">' +
     wizardScenarios(state).map(s => '<button class="tmpl-card" type="button" data-wi="' + escapeHtml(s.id) + '"><span class="tmpl-name">' + escapeHtml(s.title) + '</span><span class="tmpl-sub">' + escapeHtml(s.blurb) + '</span></button>').join('') + '</div>';
 }
@@ -261,7 +261,7 @@ function renderWizardStep(id: string) {
   const p = scenario.param;
   wizardPick = { id, value: p.value };
   const results = wizardResults(id, p.value);
-  $('#whatIfTitle').textContent = scenario.title;
+  $req('#whatIfTitle').textContent = scenario.title;
   const bounds = 'min="' + p.min + '" max="' + p.max + '" step="' + p.step + '" value="' + p.value + '"';
   body.innerHTML = '<p class="pp-sheet-note">' + escapeHtml(scenario.blurb) + '</p>' +
     '<div class="wi-param"><label for="wiValue">' + escapeHtml(p.label) + '</label>' +
@@ -308,8 +308,8 @@ export function initWhatIfWizard() {
     const other = /** @type {HTMLInputElement | null} */ ($(t.id === 'wiRange' ? '#wiValue' : '#wiRange'));
     if (other) other.value = t.value;
     const results = wizardResults(wizardPick.id, n);
-    $('#wiResults').innerHTML = results.html;
-    $('#wiApply').disabled = !results.canApply;
+    $req('#wiResults').innerHTML = results.html;
+    $req('#wiApply').disabled = !results.canApply;
   });
 }
 

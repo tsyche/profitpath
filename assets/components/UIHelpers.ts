@@ -18,7 +18,7 @@ export function showDeleteConfirmation(scenarioId: string, onConfirm: () => void
 
 export function openScenarioModal() {
   const scenarios = getAllScenarios();
-  const scenariosList = scenarios.map((s: any) => {
+  const scenariosList = scenarios.map((s) => {
     const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
     const ts = escapeHtml(s.timestamp || s.createdAt || '');
     const id = escapeHtml(s.id);
@@ -93,7 +93,7 @@ export function openScenarioModal() {
       dropdown1.innerHTML = '<option value="">Select first scenario...</option>';
       dropdown2.innerHTML = '<option value="">Select second scenario...</option>';
 
-      scenarios.forEach((scenario: any) => {
+      scenarios.forEach((scenario) => {
         const option1 = document.createElement('option');
         option1.value = scenario.id;
         option1.textContent = scenario.name;
@@ -123,7 +123,7 @@ export function openScenarioModal() {
     if (!scenarioId) return;
 
     if (btn.classList.contains('load-btn')) {
-      const scenario = scenarios.find((s: any) => s.id === scenarioId);
+      const scenario = scenarios.find((s) => s.id === scenarioId);
       const scenarioName = escapeHtml(scenario?.name || scenario?.description || 'Unknown scenario');
 
       createModal({
@@ -232,8 +232,8 @@ export function performComparison(scenarioId1: string, scenarioId2: string, moda
   const scenarios = getAllScenarios();
 
   // Find scenarios by ID
-  const scenario1 = scenarios.find((s: any) => s.id === scenarioId1);
-  const scenario2 = scenarios.find((s: any) => s.id === scenarioId2);
+  const scenario1 = scenarios.find((s) => s.id === scenarioId1);
+  const scenario2 = scenarios.find((s) => s.id === scenarioId2);
 
   if (!scenario1 || !scenario2) {
     import('../services/modalService').then((modalService) => {
@@ -263,17 +263,18 @@ export function performComparison(scenarioId1: string, scenarioId2: string, moda
   }
 
   // Total headcount and FT pay, with fallback for legacy employees/employeePay scenarios
-  const totalEmployees = (s: any) => 'fullTimeEmployees' in s ? (s.fullTimeEmployees || 0) + (s.partTimeEmployees || 0) : (s.employees || 0);
-  const ftPay = (s: any) => s.fullTimeEmployeePay ?? s.employeePay ?? 0;
+  type LegacyPay = { employees?: number; employeePay?: number; fullTimeEmployees?: number; partTimeEmployees?: number; fullTimeEmployeePay?: number };
+  const totalEmployees = (s: LegacyPay) => 'fullTimeEmployees' in s ? (s.fullTimeEmployees || 0) + (s.partTimeEmployees || 0) : (s.employees || 0);
+  const ftPay = (s: LegacyPay) => s.fullTimeEmployeePay ?? s.employeePay ?? 0;
 
   // Generate comparison data
-  const metrics = [
+  const metrics: { label: string; value1: number; value2: number; format: string }[] = [
     { label: 'Employees', value1: totalEmployees(scenario1.state), value2: totalEmployees(scenario2.state), format: 'number' },
     { label: 'Employee Pay', value1: ftPay(scenario1.state), value2: ftPay(scenario2.state), format: 'currency' },
-    { label: 'Monthly Costs', value1: scenario1.state.monthlyCosts, value2: scenario2.state.monthlyCosts, format: 'currency' },
-    { label: 'Productive Utilization', value1: scenario1.state.productiveUtilizationPct, value2: scenario2.state.productiveUtilizationPct, format: 'percentage' },
-    { label: 'Target Utilization', value1: scenario1.state.targetUtilizationPct, value2: scenario2.state.targetUtilizationPct, format: 'percentage' },
-    { label: 'Total Offerings', value1: scenario1.state.offerings.length, value2: scenario2.state.offerings.length, format: 'number' }
+    { label: 'Monthly Costs', value1: (scenario1.state.monthlyCosts ?? 0), value2: (scenario2.state.monthlyCosts ?? 0), format: 'currency' },
+    { label: 'Productive Utilization', value1: (scenario1.state.productiveUtilizationPct ?? 0), value2: (scenario2.state.productiveUtilizationPct ?? 0), format: 'percentage' },
+    { label: 'Target Utilization', value1: (scenario1.state.targetUtilizationPct ?? 0), value2: (scenario2.state.targetUtilizationPct ?? 0), format: 'percentage' },
+    { label: 'Total Offerings', value1: (scenario1.state.offerings || []).length, value2: (scenario2.state.offerings || []).length, format: 'number' }
   ];
 
   // Build table rows
@@ -282,8 +283,8 @@ export function performComparison(scenarioId1: string, scenarioId2: string, moda
     const diffClass = diff > 0 ? 'positive' : diff < 0 ? 'negative' : '';
     const diffSymbol = diff > 0 ? '+' : '';
 
-    let formattedValue1 = metric.value1;
-    let formattedValue2 = metric.value2;
+    let formattedValue1: string | number = metric.value1;
+    let formattedValue2: string | number = metric.value2;
     let formattedDiff = `${diffSymbol}${diff}`;
 
     if (metric.format === 'currency') {
@@ -313,7 +314,7 @@ export function performComparison(scenarioId1: string, scenarioId2: string, moda
 export function renderScenariosList() {
   // Update all scenario lists on the page or within open modals
   const listElements = Array.from(document.querySelectorAll('.scenarios-list'));
-  const scenarios = getAllScenarios().sort((a: any, b: any) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
+  const scenarios = getAllScenarios().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
 
   if (listElements.length === 0) return;
 
@@ -323,7 +324,7 @@ export function renderScenariosList() {
       return;
     }
 
-    listElement.innerHTML = scenarios.map((s: any) => {
+    listElement.innerHTML = scenarios.map((s) => {
       const name = escapeHtml(s.name || s.description || 'Unnamed scenario');
       const ts = escapeHtml(s.timestamp || s.createdAt || '');
       const id = escapeHtml(s.id);

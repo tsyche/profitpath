@@ -8,8 +8,9 @@ export function getShareBase() {
   if (o === 'http://localhost' || o === 'capacitor://localhost') return PRODUCTION_URL + '/';
   return o + window.location.pathname;
 }
+import type { AppState, CalcResult, ExperienceLevel, Offering, Scenario } from '../../src/types';
 import { deflateSync, inflateSync, strToU8, strFromU8 } from 'fflate';
-import { clamp } from '../utils/helpers';
+import { clamp, errMsg } from '../utils/helpers';
 import { normalizeOfferingType } from '../../src/calculations/index';
 import { rangeCaseTag } from '../../src/calculations/rangeCase';
 import { rangeCsvCells, sanitizeOfferingRange } from '../../src/calculations/ranges';
@@ -27,13 +28,13 @@ import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizati
 // Utility functions for export functionality
 
 // Capacitor WebView blocks <a download> — use Web Share API for files when available
-async function downloadOrShare(blob: any, filename: any) {
+async function downloadOrShare(blob: Blob, filename: string) {
   if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: blob.type })] })) {
     try {
       await navigator.share({ files: [new File([blob], filename, { type: blob.type })], title: filename });
       return;
     } catch (e) {
-      if (e.name === 'AbortError') return; // user cancelled share sheet
+      if (e instanceof Error && e.name === 'AbortError') return; // user cancelled share sheet
     }
   }
   const url = URL.createObjectURL(blob);
@@ -47,7 +48,7 @@ async function downloadOrShare(blob: any, filename: any) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
-function loadScript(src: any) {
+function loadScript(src: string) {
   return new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
     script.src = src;
@@ -57,11 +58,11 @@ function loadScript(src: any) {
   });
 }
 
-const fmtPct1 = (n: any) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
+const fmtPct1 = (n: number) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
 // Utility function to clamp values between min and max
 // Coerce a value to a finite number within [min, max], or return fallback
-function toFiniteNumber(value: any, fallback: any, min: any, max: any) {
+function toFiniteNumber(value: unknown, fallback: number, min: number, max: number) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return clamp(n, min, max);
@@ -77,7 +78,7 @@ const MAX_NAME_LENGTH = 120;
 /**
  * @param data - Untrusted input (URL, storage, import)
  */
-export function sanitizeScenarioState(data: Record<string, any>): import('../../src/types').SanitizedScenarioState | null {
+export function sanitizeScenarioState(data: Record<string, unknown>): import('../../src/types').SanitizedScenarioState | null {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
 
   const resources = sanitizeResources(data.resources, uuid);
@@ -134,7 +135,7 @@ export function sanitizeScenarioState(data: Record<string, any>): import('../../
   };
 }
 
-export function escapeHtml(str: any) {
+export function escapeHtml(str: unknown) {
   return String(str == null ? '' : str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -144,7 +145,7 @@ export function escapeHtml(str: any) {
 }
 
 // Clipboard fallback for non-secure contexts
-function copyToClipboardFallback(text: any) {
+function copyToClipboardFallback(text: string) {
   const textArea = document.createElement("textarea");
   textArea.value = text;
   textArea.style.position = "fixed";
@@ -175,7 +176,7 @@ export function shareScenario() {
   }
   updateSocialMetaTags(window.state);
 
-  const copyLink = (url: any, label: any) => {
+  const copyLink = (url: string, label: string) => {
     const success = () => showToast(label + ' link copied!', 'success');
     const fallback = () => showToast('Link: ' + url, 'info');
     if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -186,7 +187,7 @@ export function shareScenario() {
   };
 
   const esc = escapeHtml;
-  const linkRow = (label: any, desc: any, url: any, btnId: any) => `
+  const linkRow = (label: string, desc: string, url: string, btnId: string) => `
     <div class="share-option-row">
       <div class="share-option-info">
         <strong>${esc(label)}</strong>
@@ -230,19 +231,19 @@ function caseSuffix() {
   return t ? ' (' + t + ')' : '';
 }
 
-export function csvCell(value: any) {
+export function csvCell(value: unknown) {
   let s = String(value == null ? '' : value);
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
   return '"' + s.replace(/"/g, '""') + '"';
 }
 
 // Name of the resource an offering is tagged with, or '' (CSV carries names; import resolves them back to ids)
-function resourceName(o: any, resources: unknown): string {
+function resourceName(o: { resource?: string }, resources: unknown): string {
   return sanitizeResources(resources).find((r) => r.id === o.resource)?.name || '';
 }
 
 // Builds the CSV report; importFromCSV reads the parameters, offerings and expenses sections back
-export function buildCSV(st: any, results: any) {
+export function buildCSV(st: AppState, results: CalcResult) {
   const lines = [
     'ProfitPath Business Analysis Report',
     'Generated: ' + csvCell(new Date().toLocaleString()),
@@ -272,7 +273,7 @@ export function buildCSV(st: any, results: any) {
     'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High,Best Discount %,Confidence,Note,Market Low,Market High,Market Avg,Market Note,Resource,Cost per run',
   ];
 
-  st.offerings.forEach((o: any) => {
+  st.offerings.forEach((o) => {
     lines.push(
       csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100) + ',' + rangeCsvCells(o) + ',' + (o.discountPct || 0) + ',' + (normalizeConfidence(o.confidence) || '') + ',' + csvCell(sanitizeNote(o.note) || '') + ',' + marketCsvCells(o).join(',') + ',' + csvCell(sanitizeNote(o.marketNote) || '') + ',' + csvCell(resourceName(o, st.resources)) + ',' + sanitizeCostPerRun(o.costPerRun)
     );
@@ -289,7 +290,7 @@ export function buildCSV(st: any, results: any) {
   });
 
   // Plans and profiles carry offering names (as JSON cells, so any character survives); import resolves them back to ids
-  const nameOf = new Map<string, string>((st.offerings || []).map((o: any) => [o.id, o.name]));
+  const nameOf = new Map<string, string>((st.offerings || []).map((o) => [o.id, o.name] as [string, string]));
   const namesOf = (ids: string[]) => ids.map((id) => nameOf.get(id)).filter((n) => n !== undefined);
   lines.push('', 'MEMBERSHIP PLANS', 'Name,Monthly Fee,Credits/month,Member Discount %,Credits At Member Price,Eligible Offerings');
   sanitizePlans(st.membershipPlans).forEach((p) => {
@@ -305,12 +306,12 @@ export function buildCSV(st: any, results: any) {
 }
 
 export function exportAsCSV() {
-  let results;
+  let results: CalcResult;
   try {
     if (typeof calc === 'function') {
       results = calc(state);
     } else {
-      results = { state: state, metrics: {} };
+      results = { state: state, metrics: {} } as unknown as CalcResult;
     }
   } catch (e) {
     console.error('Calculation failed in exportAsCSV:', e);
@@ -324,7 +325,7 @@ export function exportAsCSV() {
   trackEvent('export', { format: 'csv' });
 }
 
-function copyToClipboard(text: any) {
+function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text).then(() => {
     showNotification('Link copied to clipboard!', 'success');
   }).catch((err) => {
@@ -337,8 +338,8 @@ function copyToClipboard(text: any) {
 window.copyToClipboard = copyToClipboard;
 window.showNotification = showNotification;
 
-function updateSocialMetaTags(state: any) {
-  const title = 'ProfitPath Scenario: ' + state.offerings.map((o: any) => o.name).join(', ');
+function updateSocialMetaTags(state: { offerings: { name: string }[] }) {
+  const title = 'ProfitPath Scenario: ' + state.offerings.map((o) => o.name).join(', ');
   const description = 'Check out my business profitability analysis with ' + state.offerings.length + ' service offerings';
   const image = 'https://example.com/profitpath-logo.png'; // Placeholder URL
 
@@ -423,7 +424,7 @@ export function decodeScenarioFromURL() {
 }
 
 // Export functions for modal service
-export function showModal(content: any, options: { title?: string; buttons?: string } = {}) {
+export function showModal(content: string, options: { title?: string; buttons?: string } = {}) {
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.innerHTML = `
@@ -456,12 +457,12 @@ export function showLoadingModal() {
   return showModal('<div class="spinner"></div><p>Loading...</p>', { title: 'Loading' });
 }
 
-export function showSuccessModal(message: any) {
+export function showSuccessModal(message: string) {
   return showModal('<p>' + message + '</p>', { title: 'Success', buttons: '<button onclick="this.closest(\'.modal\').remove()">OK</button>' });
 }
 
-export function showErrorModal(error: any) {
-  return showModal('<p>' + (error.message || error) + '</p>', { title: 'Error', buttons: '<button onclick="this.closest(\'.modal\').remove()">OK</button>' });
+export function showErrorModal(error: Error | string) {
+  return showModal('<p>' + (errMsg(error)) + '</p>', { title: 'Error', buttons: '<button onclick="this.closest(\'.modal\').remove()">OK</button>' });
 }
 
 export function loadState() {
@@ -480,7 +481,7 @@ export function loadState() {
 // Removed redundant functions
 
 // Export functions for chart and visualization
-export function renderChart(containerId: any, data: any, options = {}) {
+export function renderChart(containerId: string, data: unknown, options = {}) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -494,8 +495,8 @@ export function renderChart(containerId: any, data: any, options = {}) {
   }
 }
 
-function createChart(container: any, data: any, options: any) {
-  const ctx = container.getContext('2d');
+function createChart(container: HTMLElement, data: unknown, options: Record<string, unknown>) {
+  const ctx = (container as HTMLCanvasElement).getContext('2d');
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -524,7 +525,7 @@ function createChart(container: any, data: any, options: any) {
 }
 
 // Export functions for scenario management
-export function saveScenario(name: any, description = '') {
+export function saveScenario(name: string, description = '') {
   const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
   const scenario = {
     id: uuid(),
@@ -539,20 +540,20 @@ export function saveScenario(name: any, description = '') {
   return scenario;
 }
 
-export function loadScenario(scenarioId: any) {
-  const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
-  const scenario = scenarios.find((s: any) => s.id === scenarioId);
+export function loadScenario(scenarioId: string) {
+  const scenarios: Scenario[] = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+  const scenario = scenarios.find((s) => s.id === scenarioId);
   if (scenario) {
-    state = scenario.state;
+    state = scenario.state as AppState;
     if (typeof render === 'function') render();
     return true;
   }
   return false;
 }
 
-export function deleteScenario(scenarioId: any) {
-  const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
-  const filtered = scenarios.filter((s: any) => s.id !== scenarioId);
+export function deleteScenario(scenarioId: string) {
+  const scenarios: Scenario[] = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+  const filtered = scenarios.filter((s) => s.id !== scenarioId);
   localStorage.setItem('profitpath-scenarios', JSON.stringify(filtered));
 }
 
@@ -563,7 +564,7 @@ export function listScenarios() {
 
 // Additional functions needed by scenarioService.js
 /** @returns {import('../../src/types').Scenario[]} */
-export function getAllScenarios() {
+export function getAllScenarios(): Scenario[] {
   return JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
 }
 
@@ -571,7 +572,7 @@ export function clearTestScenarios() {
   localStorage.removeItem('profitpath-scenarios');
 }
 
-export function showNotification(message: any, _type = 'info') {
+export function showNotification(message: string, _type = 'info') {
   // Create a simple notification element
   const notification = document.createElement('div');
   notification.className = 'notification';
@@ -585,33 +586,33 @@ export function showNotification(message: any, _type = 'info') {
   }, 3000);
 }
 
-export function populateComparisonDropdowns(modalContext: any = null) {
+export function populateComparisonDropdowns(modalContext: ParentNode | null = null) {
   // Sort scenarios with natural sort (so "2" comes before "10")
-  const scenarios = getAllScenarios().sort((a: any, b: any) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
+  const scenarios = getAllScenarios().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
 
   // Find dropdowns - if modalContext provided, search within it first
-  let dropdown1: any = null;
-  let dropdown2: any = null;
+  let dropdown1: HTMLSelectElement | null = null;
+  let dropdown2: HTMLSelectElement | null = null;
 
   if (modalContext) {
-    dropdown1 = modalContext.querySelector('#compareScenario1');
-    dropdown2 = modalContext.querySelector('#compareScenario2');
+    dropdown1 = modalContext.querySelector<HTMLSelectElement>('#compareScenario1');
+    dropdown2 = modalContext.querySelector<HTMLSelectElement>('#compareScenario2');
   }
 
   // Fall back to document search if not found in modal
   if (!dropdown1) {
-    dropdown1 = document.getElementById('compareScenario1');
+    dropdown1 = document.getElementById('compareScenario1') as HTMLSelectElement | null;
   }
   if (!dropdown2) {
-    dropdown2 = document.getElementById('compareScenario2');
+    dropdown2 = document.getElementById('compareScenario2') as HTMLSelectElement | null;
   }
 
   // Try alternative selectors if not found
   if (!dropdown1) {
-    dropdown1 = document.querySelector('#compareScenario1');
+    dropdown1 = document.querySelector<HTMLSelectElement>('#compareScenario1');
   }
   if (!dropdown2) {
-    dropdown2 = document.querySelector('#compareScenario2');
+    dropdown2 = document.querySelector<HTMLSelectElement>('#compareScenario2');
   }
 
   // Try finding within modal overlays
@@ -621,10 +622,10 @@ export function populateComparisonDropdowns(modalContext: any = null) {
       // Ensure modal is a proper DOM element before calling querySelector
       if (modal && modal.querySelector && typeof modal.querySelector === 'function') {
         if (!dropdown1) {
-          dropdown1 = modal.querySelector('#compareScenario1');
+          dropdown1 = modal.querySelector<HTMLSelectElement>('#compareScenario1');
         }
         if (!dropdown2) {
-          dropdown2 = modal.querySelector('#compareScenario2');
+          dropdown2 = modal.querySelector<HTMLSelectElement>('#compareScenario2');
         }
       }
     });
@@ -633,41 +634,43 @@ export function populateComparisonDropdowns(modalContext: any = null) {
   if (!dropdown1 || !dropdown2) {
     return;
   }
+  const sel1 = dropdown1;
+  const sel2 = dropdown2;
 
   // Clear and populate
-  dropdown1.innerHTML = '<option value="">Select first scenario...</option>';
-  dropdown2.innerHTML = '<option value="">Select second scenario...</option>';
+  sel1.innerHTML = '<option value="">Select first scenario...</option>';
+  sel2.innerHTML = '<option value="">Select second scenario...</option>';
 
   // Add scenarios
-  scenarios.forEach((scenario: any) => {
+  scenarios.forEach((scenario) => {
     const option1 = document.createElement('option');
     option1.value = scenario.id;
     option1.textContent = scenario.name;
-    dropdown1.appendChild(option1);
+    sel1.appendChild(option1);
 
     const option2 = document.createElement('option');
     option2.value = scenario.id;
     option2.textContent = scenario.name;
-    dropdown2.appendChild(option2);
+    sel2.appendChild(option2);
   });
 
   // Restore previously selected values from localStorage
   const savedCompare = JSON.parse(localStorage.getItem('profitpath-compare-selection') || 'null');
   if (savedCompare) {
-    if (savedCompare.id1) dropdown1.value = savedCompare.id1;
-    if (savedCompare.id2) dropdown2.value = savedCompare.id2;
+    if (savedCompare.id1) sel1.value = savedCompare.id1;
+    if (savedCompare.id2) sel2.value = savedCompare.id2;
   }
 
   // Add change listeners that only save the selection (not trigger comparison)
   const saveSelection = () => {
     localStorage.setItem('profitpath-compare-selection', JSON.stringify({
-      id1: dropdown1.value || '',
-      id2: dropdown2.value || ''
+      id1: sel1.value || '',
+      id2: sel2.value || ''
     }));
   };
 
-  dropdown1.addEventListener('change', saveSelection);
-  dropdown2.addEventListener('change', saveSelection);
+  sel1.addEventListener('change', saveSelection);
+  sel2.addEventListener('change', saveSelection);
 }
 
 // Additional functions needed by app.ts
@@ -740,7 +743,7 @@ export function loadSettings() {
   return { ...DEFAULT_SETTINGS };
 }
 
-export function setExperienceLevel(level: any) {
+export function setExperienceLevel(level: string) {
   const FEATURE_GATES = {
     beginner: { showAdvancedCalculations: false, showDetailedBreakdown: false, showComparisonTools: false, showExportOptions: false, showDebugPanel: false, showPerformanceMetrics: false, showSensitivityAnalysis: false, showTooltips: true },
     intermediate: { showAdvancedCalculations: true, showDetailedBreakdown: true, showComparisonTools: true, showExportOptions: false, showDebugPanel: false, showPerformanceMetrics: false, showSensitivityAnalysis: true, showTooltips: true },
@@ -750,27 +753,27 @@ export function setExperienceLevel(level: any) {
   const currentSettings = loadSettings();
   const newSettings = { ...currentSettings, experienceLevel: level };
 
-  if ((FEATURE_GATES as any)[level]) {
-    Object.assign(newSettings, (FEATURE_GATES as any)[level]);
+  if (level in FEATURE_GATES) {
+    Object.assign(newSettings, FEATURE_GATES[level as ExperienceLevel]);
   }
 
   localStorage.setItem('profitpath-settings', JSON.stringify(newSettings));
 }
 
-export function updateSetting(key: any, value: any) {
+export function updateSetting(key: string, value: unknown) {
   const settings = loadSettings();
   settings[key] = value;
   localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 }
 
-export function loadIndustryTemplate(templateId: any) {
+export function loadIndustryTemplate(templateId: string) {
   // Use global INDUSTRY_TEMPLATES as single source of truth
   const template = window.INDUSTRY_TEMPLATES && window.INDUSTRY_TEMPLATES[templateId];
   if (template) {
     const config = template.config;
 
     // Apply template to current state
-    window.state.offerings = config.offerings.map((o: any) => ({
+    window.state.offerings = config.offerings.map((o: Offering) => ({
       ...o,
       id: uuid(),
       mixPct: o.mixPct || 0,
@@ -808,7 +811,7 @@ export function loadIndustryTemplate(templateId: any) {
 
 export function exportAsExcel() {
   const state = window.state;
-  const fmtPct = (n: any) => n.toFixed(1) + '%';
+  const fmtPct = (n: number) => n.toFixed(1) + '%';
 
   const lines = [
     'ProfitPath Analysis Report' + caseSuffix(),
@@ -844,7 +847,7 @@ export function exportAsExcel() {
 export function exportAsPDF() {
   // Create a printable HTML version and open print dialog
   const state = window.state;
-  const fmtPct = (n: any) => n.toFixed(1) + '%';
+  const fmtPct = (n: number) => n.toFixed(1) + '%';
 
   // Capacitor WebView blocks window.open — fall through to HTML export instead
   const isCapacitor = window.location.origin === 'http://localhost' || window.location.origin === 'capacitor://localhost';
@@ -936,7 +939,7 @@ export function exportAsPDF() {
 
 export function exportAsHTML() {
   const state = window.state;
-  const fmtPct = (n: any) => n.toFixed(1) + '%';
+  const fmtPct = (n: number) => n.toFixed(1) + '%';
 
   const offeringsHtml = state.offerings.map(o => `
     <tr>
@@ -1029,9 +1032,9 @@ export function exportAsFinancialReport() {
   }
 
   const fmt = fmtMoney0;
-  const basis = taxBasisNote((globalThis as any).state?.currency);
+  const basis = taxBasisNote(window.state?.currency);
   const taxNote = basis ? `<p class="tax-note"><strong>${basis}.</strong></p>` : '';
-  const fmtPct = (n: any) => (typeof n === 'number' ? n.toFixed(1) : '0.0') + '%';
+  const fmtPct = (n: number) => (typeof n === 'number' ? n.toFixed(1) : '0.0') + '%';
   const today = new Date();
   const dateStr = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   const year = today.getFullYear();
@@ -1191,7 +1194,7 @@ export function exportAsFinancialReport() {
 
 export function shareViaEmail() {
   const state = window.state;
-  const fmtPct = (n: any) => n.toFixed(1) + '%';
+  const fmtPct = (n: number) => n.toFixed(1) + '%';
 
   const offeringsText = state.offerings.map(o =>
     `- ${o.name}: ${fmtMoney0(o.priceMonthly)}/month, ${o.sessionsPerYear} sessions/year, ${fmtPct(o.mixPct)} mix`
@@ -1245,7 +1248,7 @@ export function showScheduleDialog() {
 export function updateValidationDisplay() {
 }
 
-export function lazyLoadChart(metrics: any) {
+export function lazyLoadChart(metrics: CalcResult) {
   try {
     if (renderSimpleChart) {
       renderSimpleChart(metrics);
@@ -1255,7 +1258,7 @@ export function lazyLoadChart(metrics: any) {
   }
 }
 
-export function updateRichVisualizations(metrics: any) {
+export function updateRichVisualizations(metrics: CalcResult) {
   try {
     if (typeof vizUpdateRichVisualizations === 'function') {
       vizUpdateRichVisualizations(metrics);
@@ -1277,7 +1280,7 @@ export function toggleMobileMenu() {
 
 // Export functions for settings and preferences
 
-export function getSetting(key: any, defaultValue: any = null) {
+export function getSetting(key: string, defaultValue: unknown = null) {
   const settings = JSON.parse(localStorage.getItem('profitpath-settings') || '{}');
   return settings[key] !== undefined ? settings[key] : defaultValue;
 }
@@ -1287,15 +1290,15 @@ export function resetSettings() {
 }
 
 // Export functions for analytics and feedback
-export function trackEvent(_eventName: any, _properties = {}) {
+export function trackEvent(_eventName: string, _properties = {}) {
 }
 
-export function sendFeedback(_rating: any, _comment = '') {
+export function sendFeedback(_rating: number, _comment = '') {
   return true;
 }
 
 // Export functions for performance monitoring
-export function measurePerformance(fn: any, label: any) {
+export function measurePerformance<T>(fn: () => T, label: string) {
   const start = performance.now();
   const result = fn();
   const end = performance.now();
@@ -1347,7 +1350,7 @@ export function enhanceAccessibility() {
 }
 
 // Export functions for internationalization
-export function setLanguage(language: any) {
+export function setLanguage(language: string) {
   updateSetting('language', language);
   // Reload page to apply language changes
   window.location.reload();
@@ -1357,9 +1360,9 @@ export function getLanguage() {
   return getSetting('language', 'en');
 }
 
-export function translate(key: any, language: any = null) {
+export function translate(key: string, language: string | null = null) {
   const lang = language || getLanguage();
-  const translations = {
+  const translations: Record<string, Record<string, string>> = {
     en: {
       'save_scenario': 'Save Scenario',
       'load_scenario': 'Load Scenario',
@@ -1380,7 +1383,7 @@ export function translate(key: any, language: any = null) {
     },
   };
 
-  return (translations as any)[lang] && ((translations as any)[lang] as any)[key] ? ((translations as any)[lang] as any)[key] : key;
+  return translations[lang]?.[key] || key;
 }
 
 // Export functions for debugging
@@ -1414,9 +1417,9 @@ export function uuid() {
   });
 }
 
-export function debounce(func: any, wait: any) {
-  let timeout: any;
-  return function executedFunction(...args: any[]) {
+export function debounce<A extends unknown[]>(func: (...args: A) => void, wait: number) {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  return function executedFunction(...args: A) {
     const later = () => {
       clearTimeout(timeout);
       func(...args);
@@ -1426,9 +1429,9 @@ export function debounce(func: any, wait: any) {
   };
 }
 
-export function throttle(func: any, limit: any) {
-  let inThrottle: any;
-  return function (...args: any[]) {
+export function throttle<A extends unknown[]>(func: (this: unknown, ...args: A) => void, limit: number) {
+  let inThrottle = false;
+  return function (this: unknown, ...args: A) {
     if (!inThrottle) {
       func.apply(this, args);
       inThrottle = true;
@@ -1529,10 +1532,10 @@ function parseJsonCell(cell: string | undefined, isShape: (v: unknown) => boolea
   }
 }
 
-export function importFromCSV(csvText: any) {
+export function importFromCSV(csvText: string) {
   const errors = [];
-  const settings: Record<string, any> = {};
-  const offerings = [];
+  const settings: Record<string, number> = {};
+  const offerings: Offering[] = [];
   const rawExpenses: Array<Record<string, unknown>> = [];
   const rawResources: Array<Record<string, unknown>> = [];
   const resourceNames: string[] = []; // per imported offering, aligned with `offerings`
@@ -1540,7 +1543,7 @@ export function importFromCSV(csvText: any) {
   const rawProfiles: Array<{ name: string; visits: Record<string, number> }> = [];
 
   try {
-    const lines = csvText.split('\n').map((line: any) => line.trim()).filter((line: any) => line);
+    const lines = csvText.split('\n').map((line) => line.trim()).filter((line) => line);
 
     let section: CsvSection = 'none';
     let headerSeen = false;
@@ -1674,7 +1677,7 @@ export function importFromCSV(csvText: any) {
     // undefined means the CSV had no resources section: callers keep existing resources and tags
     const resources = sawResources ? sanitizeResources(rawResources, uuid) : undefined;
     if (resources) {
-      offerings.forEach((o: any, i) => {
+      offerings.forEach((o, i) => {
         const match = resources.find((r) => r.name === resourceNames[i]);
         if (match) o.resource = match.id;
       });
@@ -1682,9 +1685,9 @@ export function importFromCSV(csvText: any) {
 
     // Plans and profiles name their offerings; resolve to the imported ids. undefined means no such section
     const idByName = new Map<string, string>();
-    offerings.forEach((o: any) => { if (!idByName.has(o.name)) idByName.set(o.name, o.id); });
+    offerings.forEach((o) => { if (o.name && o.id && !idByName.has(o.name)) idByName.set(o.name, o.id); });
     const membershipPlans = sawPlans
-      ? sanitizePlans(rawPlans.map((p) => ({ ...p.row, eligible: p.names.map((n) => idByName.get(n)).filter(Boolean) })), uuid)
+      ? sanitizePlans(rawPlans.map((p) => ({ ...p.row, eligible: p.names.map((n) => idByName.get(n)).filter((id): id is string => !!id) })), uuid)
       : undefined;
     const memberProfiles = sawProfiles
       ? sanitizeProfiles(rawProfiles.map((p) => ({
@@ -1702,7 +1705,7 @@ export function importFromCSV(csvText: any) {
     // Success
     return { success: true, data: { settings, offerings, expenses, resources, membershipPlans, memberProfiles }, errors };
   } catch (e) {
-    return { success: false, errors: [`Parse error: ${e.message}`] };
+    return { success: false, errors: [`Parse error: ${errMsg(e)}`] };
   }
 }
 

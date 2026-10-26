@@ -60,10 +60,11 @@ declare global {
   var exportComparisonAsPDF: any;
 
   // Analytics and feedback
-  var profitPathAnalytics: any;
-  var profitPathAnalyticsUI: any;
-  var FeedbackCollector: any;
-  var feedbackUI: any;
+  var profitPathAnalytics: import('./analytics/analytics').AnalyticsCollector;
+  var profitPathAnalyticsUI: import('./analytics/analytics-ui').AnalyticsUI;
+  var FeedbackCollector: typeof import('./analytics/feedback').FeedbackCollector;
+  var AdvancedAnalyticsDashboard: typeof import('./analytics/advanced-dashboard').AdvancedAnalyticsDashboard;
+  var feedbackUI: import('./analytics/feedback-ui').FeedbackUI;
 
   // Set by tests / Capacitor shell
   var __TEST_MODE__: any;

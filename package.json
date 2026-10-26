@@ -14,9 +14,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "lint": "eslint assets src tests public",
+    "lint": "eslint assets src tests public --max-warnings 0",
     "lint:fix": "eslint assets src tests public --fix",
-    "typecheck": "node scripts/typecheck-ratchet.mjs",
+    "typecheck": "tsc --noEmit",
     "postinstall": "find node_modules/@capacitor -name build.gradle -type f -exec sed -i.bak \"s/proguard-android\\.txt/proguard-android-optimize.txt/g\" {} \\; && find node_modules/@capacitor -name '*.bak' -delete 2>/dev/null || true"
   },
   "devDependencies": {
