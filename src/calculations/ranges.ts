@@ -1,5 +1,6 @@
 import { calc } from './index';
-import { clampClients, clampFill, hasRanges, sanitizeRangeBound, withBounds } from './rangeCase';
+import { BOUND_SANITIZERS, RANGE_BOUND_KEYS, clampClients, clampFill, hasRanges, sanitizeRangeBound, withBounds } from './rangeCase';
+import type { OfferingRange } from './rangeCase';
 import type { CalcResult, CalcState, Confidence, Offering } from '../types';
 
 /**
@@ -26,25 +27,23 @@ export type RangeResult = Record<RangeMetric, RangeBand>;
 const RANGE_METRICS: readonly RangeMetric[] = ['revenue', 'income', 'clients', 'capacityPct', 'breakEvenClients'];
 
 /** Allowlisted, clamped range fields for an untrusted offering; only bounds that are present appear. */
-export function sanitizeOfferingRange(o: Record<string, unknown>): Partial<Pick<Offering, 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh'>> {
-  const out: Partial<Pick<Offering, 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh'>> = {};
-  const fl = clampFill(o.fillPctLow);
-  const fh = clampFill(o.fillPctHigh);
-  const cl = clampClients(o.currentClientsLow);
-  const ch = clampClients(o.currentClientsHigh);
-  if (fl !== undefined) out.fillPctLow = fl;
-  if (fh !== undefined) out.fillPctHigh = fh;
-  if (cl !== undefined) out.currentClientsLow = cl;
-  if (ch !== undefined) out.currentClientsHigh = ch;
+export function sanitizeOfferingRange(o: Record<string, unknown>): OfferingRange {
+  const out: Record<string, number> = {};
+  for (const k of RANGE_BOUND_KEYS) {
+    const v = BOUND_SANITIZERS[k](o[k]);
+    if (v !== undefined) out[k] = v;
+  }
   return out;
 }
 
-/** The four range columns for CSV export; blank cells mean no bound. */
-export function rangeCsvCells(o: Offering): string {
-  return [o.fillPctLow, o.fillPctHigh, o.currentClientsLow, o.currentClientsHigh]
-    .map((v) => (v === undefined || v === null ? '' : String(v)))
-    .join(',');
-}
+const csvCells = (o: Offering, keys: readonly (typeof RANGE_BOUND_KEYS)[number][]) =>
+  keys.map((k) => (o[k] === undefined || o[k] === null ? '' : String(o[k]))).join(',');
+
+/** The fill and client range columns for CSV export; blank cells mean no bound. */
+export const rangeCsvCells = (o: Offering) => csvCells(o, RANGE_BOUND_KEYS.slice(0, 4));
+
+/** The frequency range columns, appended at the end of the CSV row so older files still import. */
+export const frequencyCsvCells = (o: Offering) => csvCells(o, RANGE_BOUND_KEYS.slice(4));
 
 /**
  * Runs calc() with every low bound, the base, and every high bound, and reports
@@ -98,7 +97,7 @@ export function sanitizeSpreads(v: unknown): ConfidenceSpreads {
  * (fill % for group offerings in Forecast, current clients in Current). Only empty bounds are filled,
  * so typed values are never overwritten.
  */
-export function suggestRanges(o: Offering, mode: string, spreads: ConfidenceSpreads = CONFIDENCE_SPREAD_PCT): Partial<Pick<Offering, 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh'>> {
+export function suggestRanges(o: Offering, mode: string, spreads: ConfidenceSpreads = CONFIDENCE_SPREAD_PCT): OfferingRange {
   const spread = o.confidence ? spreads[o.confidence] : undefined;
   if (!spread) return {};
   const lo = 1 - spread / 100;
@@ -121,13 +120,15 @@ export interface RangeDriver {
   name: string;
   confidence?: Confidence;
   swing: number;
+  /** Net profit with only this offering's bounds low / high (others at base); either can sit on the base side. */
+  min: number;
+  max: number;
 }
 
 /** Net-profit swing caused by each offering's bounds alone (others held at base), biggest first. */
 export function calcRangeDrivers(state: CalcState): RangeDriver[] {
   const offerings = Array.isArray(state.offerings) ? state.offerings : [];
   if (!hasRanges(offerings)) return [];
-  const boundKeys = ['fillPctLow', 'fillPctHigh', 'currentClientsLow', 'currentClientsHigh'] as const;
   const base = calc(state, RAW).income;
   const drivers: RangeDriver[] = [];
   offerings.forEach((o, i) => {
@@ -135,12 +136,13 @@ export function calcRangeDrivers(state: CalcState): RangeDriver[] {
     const only = offerings.map((p, j) => {
       if (j === i || !p) return p;
       const copy = { ...p };
-      for (const k of boundKeys) delete copy[k];
+      for (const k of RANGE_BOUND_KEYS) delete copy[k];
       return copy;
     });
     const incomes = [calc({ ...state, offerings: withBounds(only, 'low') }, RAW).income, base, calc({ ...state, offerings: withBounds(only, 'high') }, RAW).income];
-    const swing = Math.max(...incomes) - Math.min(...incomes);
-    if (swing > 0) drivers.push({ name: String(o.name), confidence: o.confidence, swing });
+    const min = Math.min(...incomes);
+    const max = Math.max(...incomes);
+    if (max - min > 0) drivers.push({ name: String(o.name), confidence: o.confidence, swing: max - min, min, max });
   });
   return drivers.sort((a, b) => b.swing - a.swing);
 }

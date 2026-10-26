@@ -100,6 +100,9 @@ export interface Offering {
   fillPctHigh?: number;
   currentClientsLow?: number;
   currentClientsHigh?: number;
+  /** Optional bounds on sessionsPerYear (frequency); ignored for one-time offerings. */
+  sessionsPerYearLow?: number;
+  sessionsPerYearHigh?: number;
   /** Optional reliability tag and short note; display only, never used by calc. */
   confidence?: Confidence;
   note?: string;
@@ -170,7 +173,7 @@ export interface CalcState {
 
 /** An offering in app state: the UI always fills every field. */
 // laborPctOfPrice, type, seats and fillPct stay optional: older saved states and templates omit them (0 / subscription / 1 / 100)
-export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'costPerRun' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'confidence' | 'note' | 'marketLow' | 'marketHigh' | 'marketAvg' | 'marketNote' | 'resource'>> & {
+export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'costPerRun' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'sessionsPerYearLow' | 'sessionsPerYearHigh' | 'confidence' | 'note' | 'marketLow' | 'marketHigh' | 'marketAvg' | 'marketNote' | 'resource'>> & {
   laborPctOfPrice?: number;
   discountPct?: number;
   type?: OfferingType;
@@ -181,6 +184,8 @@ export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountP
   fillPctHigh?: number;
   currentClientsLow?: number;
   currentClientsHigh?: number;
+  sessionsPerYearLow?: number;
+  sessionsPerYearHigh?: number;
   confidence?: Confidence;
   note?: string;
   marketLow?: number;

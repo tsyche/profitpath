@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { clearCalculationCache } from './index'
+import { RANGE_BOUND_KEYS, applyRangeCase, setRangeCase, withBounds } from './rangeCase'
+import { calc } from './index'
 import { bandMoves, sanitizeSpreads, calcRange, calcRangeDrivers, suggestRanges, hasRanges, sanitizeRangeBound, sanitizeOfferingRange, rangeCsvCells } from './ranges'
 import { sanitizeScenarioState, importFromCSV, buildCSV } from '../../assets/services/miscService'
 
@@ -213,5 +215,84 @@ describe('bandMoves', () => {
     expect(bandMoves(null)).toBe(false)
     const flat = { min: 1, base: 1, max: 1 }
     expect(bandMoves({ revenue: flat, income: flat, clients: flat, capacityPct: flat, breakEvenClients: flat })).toBe(false)
+  })
+})
+
+// Slice 1 of 24c: optional low/high on sessionsPerYear (frequency).
+describe('frequency bounds (roadmap 24c)', () => {
+  beforeEach(() => { clearCalculationCache(); setRangeCase('base') })
+  const sub = { ...group, type: 'subscription', sessionsPerYear: 12, variableCostPerSession: 10, currentClients: 8 }
+
+  // One sample value per bound key; every key must survive every layer.
+  const sample: Record<string, number> = {
+    fillPctLow: 40, fillPctHigh: 90, currentClientsLow: 4, currentClientsHigh: 12, sessionsPerYearLow: 6, sessionsPerYearHigh: 24
+  }
+
+  it('the key list covers every sample', () => {
+    expect([...RANGE_BOUND_KEYS].sort()).toEqual(Object.keys(sample).sort())
+  })
+
+  it.each([...RANGE_BOUND_KEYS])('%s survives hasRanges, sanitize, share URL, CSV and withBounds', (key) => {
+    const o = { ...sub, [key]: sample[key] }
+    expect(hasRanges([o] as any)).toBe(true)
+    expect((sanitizeOfferingRange(o) as any)[key]).toBe(sample[key])
+    expect(sanitizeScenarioState({ offerings: [o] })!.offerings[0]).toMatchObject({ [key]: sample[key] })
+    const st = { ...base, mode: 'forecast', offerings: [o], expenses: [] }
+    const r: any = importFromCSV(buildCSV(st, { revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 }))
+    expect(r.data.offerings[0]).toMatchObject({ [key]: sample[key] })
+    for (const side of ['low', 'high'] as const) {
+      expect(Object.keys(withBounds([o] as any, side)[0])).not.toContain(key)
+    }
+  })
+
+  it('hostile frequency bounds clamp or drop', () => {
+    expect(sanitizeOfferingRange({ sessionsPerYearLow: -4, sessionsPerYearHigh: 'x' })).toEqual({ sessionsPerYearLow: 1 })
+    expect(sanitizeOfferingRange({ sessionsPerYearHigh: 7.9 })).toEqual({ sessionsPerYearHigh: 7 })
+    expect(sanitizeOfferingRange({ sessionsPerYearHigh: 1e99 }).sessionsPerYearHigh).toBe(100000)
+  })
+
+  it('legacy 24-column CSV rows import with no frequency bounds', () => {
+    const csv = 'Offerings\nName,P,S,H,V,M,C\nYoga,100,12,1,0,100,3'
+    const o = (importFromCSV(csv) as any).data.offerings[0]
+    expect(Object.keys(o)).not.toContain('sessionsPerYearLow')
+  })
+
+  it('moves the band in both modes: more sessions cost more', () => {
+    for (const mode of ['current', 'forecast']) {
+      const r = calcRange({ ...base, mode, offerings: [{ ...sub, sessionsPerYearLow: 6, sessionsPerYearHigh: 24 }] } as any)!
+      expect(r.income.min).toBeLessThan(r.income.base)
+      expect(r.income.max).toBeGreaterThan(r.income.base)
+    }
+  })
+
+  it('a frequency bound never crosses the base value', () => {
+    const r = calcRange({ ...base, mode: 'current', offerings: [{ ...sub, sessionsPerYearLow: 30, sessionsPerYearHigh: 2 }] } as any)!
+    expect(r.income.min).toBeLessThanOrEqual(r.income.base)
+    expect(r.income.max).toBeGreaterThanOrEqual(r.income.base)
+  })
+
+  it('Conservative uses the busier side, so it differs from Base and costs profit', () => {
+    const s = { ...base, mode: 'current', offerings: [{ ...sub, sessionsPerYearLow: 6, sessionsPerYearHigh: 24 }] } as any
+    const b = calc(s).income
+    setRangeCase('conservative')
+    const cons = calc(s).income
+    setRangeCase('optimistic')
+    const opt = calc(s).income
+    expect(cons).toBeLessThan(b)
+    expect(opt).toBeGreaterThan(b)
+    expect(applyRangeCase(s, 'conservative').offerings[0].sessionsPerYear).toBe(24)
+  })
+
+  it('one-time offerings ignore frequency bounds', () => {
+    const once = { ...sub, type: 'one-time', sessionsPerYearLow: 6, sessionsPerYearHigh: 24 }
+    expect(hasRanges([once] as any)).toBe(false)
+    expect(calcRange({ ...base, mode: 'current', offerings: [once] } as any)).toBeNull()
+  })
+
+  it('drivers report per-offering min and max profit', () => {
+    const d = calcRangeDrivers({ ...base, mode: 'current', offerings: [{ ...sub, sessionsPerYearLow: 6, sessionsPerYearHigh: 24 }] } as any)
+    expect(d).toHaveLength(1)
+    expect(d[0].max - d[0].min).toBeCloseTo(d[0].swing)
+    expect(d[0].min).toBeLessThan(d[0].max)
   })
 })

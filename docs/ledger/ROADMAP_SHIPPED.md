@@ -1,6 +1,6 @@
 # Shipped Roadmap Items
 
-**TL;DR:** Compact index of completed [ROADMAP.md](../../ROADMAP.md) work, followed by the original entries preserved verbatim. Partly shipped items (12o, 22, 24b, 24c) stay in the roadmap until finished.
+**TL;DR:** Compact index of completed [ROADMAP.md](../../ROADMAP.md) work, followed by the original entries preserved verbatim. Partly shipped items (12o, 22, 24b) stay in the roadmap until finished.
 
 ## Shipped index
 
@@ -55,6 +55,10 @@
 ### 2026-10-25 — TypeScript migration
 
 All source and tests are `.ts` with `strict: true`; the ratchet is retired (`tsc --noEmit` must be 0). `tests/e2e` is typechecked; unit `*.test.ts` files stay excluded (known gap, ~1,150 errors in the jsdom mock tests; tracked as ROADMAP 12x); `$`/`$$` are typed. Migration also surfaced and fixed real bugs, each with a test: insights under-utilization, dashboard export `getSummary`, customer analytics revenue, table focus restore (`tests/e2e/table-focus.spec.ts`). Plan: [typescript-migration](../plans/archive/typescript-migration.md).
+
+### 2026-10-25 — 24c. Ranged inputs: frequency bounds
+
+Optional low/high on `sessionsPerYear` for every offering type except one-time (Forecast and Current; staff hours and variable cost both move). The Conservative case takes the high bound because more sessions cost more for the same monthly price. Every bound key now comes from one list (`RANGE_BOUND_KEYS`), with a parametrized test that each key survives `hasRanges`, the sanitizer, share URL, CSV and `withBounds`. CSV gains cols 25-26 (older files still import); the drivers line shows each offering's min/max profit. Chart ranges deferred into the UI/UX pass.
 
 ### 2026-10-25 — 24a. Membership and prepaid-credit pricing calculator
 

@@ -218,3 +218,54 @@ test.describe('Range case lens, spreads and badge', () => {
     await expect(page.locator('#offeringsBody tr').first().locator('.conf-badge')).toHaveText('Estimated');
   });
 });
+
+test.describe('Frequency (sessions/yr) bounds', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem('onboardingCompleted', 'true');
+        localStorage.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'intermediate' }));
+      } catch { /* ignore */ }
+    });
+    await page.goto('/');
+    await waitForPageReady(page);
+    await page.locator('#rangesSection summary').click();
+  });
+
+  const lo = (page: Page) => page.locator('#rangesBody input[data-k="sessionsPerYearLow"]').first();
+  const hi = (page: Page) => page.locator('#rangesBody input[data-k="sessionsPerYearHigh"]').first();
+  const num = async (page: Page, sel: string) => Number((await page.locator(sel).textContent())!.replace(/[^0-9.-]/g, ''));
+
+  test('band appears, Conservative takes the busier side, and undo clears the bound', async ({ page }) => {
+    await expect(page.locator('#rangeBand')).toBeHidden();
+    const baseRevenue = await num(page, '#kpiRevenue');
+    const baseFreq = await page.locator('#offeringsBody tr').first().locator('input[data-k="sessionsPerYear"]').inputValue();
+
+    await lo(page).fill('1');
+    await hi(page).fill(String(Number(baseFreq) * 2));
+    await expect(page.locator('#rangeBand')).toBeVisible();
+    await expect(page.locator('#rangeDrivers')).toContainText(' to ');
+
+    await page.locator('#rangeCaseToggle [data-case="conservative"]').click();
+    // More sessions per client means fewer clients fit the same hours, so revenue falls
+    expect(await num(page, '#kpiRevenue')).toBeLessThan(baseRevenue);
+    await page.locator('#rangeCaseToggle [data-case="optimistic"]').click();
+    expect(await num(page, '#kpiRevenue')).toBeGreaterThan(baseRevenue);
+    await page.locator('#rangeCaseToggle [data-case="base"]').click();
+    expect(await num(page, '#kpiRevenue')).toBe(baseRevenue);
+    // The typed frequency itself is never rewritten by a case
+    await expect(page.locator('#offeringsBody tr').first().locator('input[data-k="sessionsPerYear"]')).toHaveValue(baseFreq);
+
+    await page.locator('#undoBtn').click();
+    await page.locator('#undoBtn').click();
+    await expect(hi(page)).toHaveValue('');
+    await expect(lo(page)).toHaveValue('');
+    await expect(page.locator('#rangeBand')).toBeHidden();
+  });
+
+  test('one-time rows show no frequency inputs', async ({ page }) => {
+    await page.locator('#offeringsBody tr').first().locator('select[data-k="type"]').selectOption('one-time');
+    await expect(page.locator('#rangesBody tr').first().locator('input[data-k="sessionsPerYearLow"]')).toHaveCount(0);
+    await expect(page.locator('#rangesBody tr').nth(1).locator('input[data-k="sessionsPerYearLow"]')).toHaveCount(1);
+  });
+});

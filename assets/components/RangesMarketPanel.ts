@@ -55,7 +55,7 @@ export function renderRangeBand() {
     const top = moves ? calcRangeDrivers(state).slice(0, 3) : [];
     drivers.hidden = top.length === 0;
     drivers.textContent = top.length
-      ? 'Biggest drivers of net profit: ' + top.map(d => d.name + (d.confidence ? ' (' + CONFIDENCE_LABELS[d.confidence] + ')' : '') + ' swings ' + fmtMoney0(d.swing) + '/yr').join('; ')
+      ? 'Biggest drivers of net profit: ' + top.map(d => d.name + (d.confidence ? ' (' + CONFIDENCE_LABELS[d.confidence] + ')' : '') + ' swings ' + fmtMoney0(d.swing) + '/yr (' + fmtMoney0(d.min) + ' to ' + fmtMoney0(d.max) + ')').join('; ')
       : '';
   }
   body.innerHTML = moves
@@ -64,20 +64,22 @@ export function renderRangeBand() {
     : '';
 }
 
-// Fill bounds apply to group rows in Forecast; client bounds apply in Current. Other cells show a dash like the main table.
+// Fill bounds apply to group rows in Forecast; client bounds apply in Current; session bounds apply to everything but one-time sales. Other cells show a dash like the main table.
 export function renderRangesTable() {
   const tbody = $('#rangesBody');
   if (!tbody) return;
   const isForecast = state.mode === 'forecast';
   const cell = (o: AppOffering, idx: number, k: string, label: string, on: boolean) => on
-    ? '<td class="cell-edit" data-label="' + label + '"><input aria-label="' + label + ' for ' + escapeHtml(o.name) + '" type="number" min="' + (k.startsWith('fill') ? 1 : 0) +
+    ? '<td class="cell-edit" data-label="' + label + '"><input aria-label="' + label + ' for ' + escapeHtml(o.name) + '" type="number" min="' + (k.startsWith('current') ? 0 : 1) +
       '"' + (k.startsWith('fill') ? ' max="100"' : '') + ' step="1" placeholder="none" value="' + ((o as unknown as Bag)[k] ?? '') + '" data-k="' + k + '" data-i="' + idx + '"/></td>'
     : '<td data-label="' + label + '"><span class="muted">—</span></td>';
   tbody.innerHTML = state.offerings.map((o, idx) => {
     const fill = o.type === 'group' && isForecast;
+    const freq = o.type !== 'one-time';
     return '<tr><td data-label="Offering">' + escapeHtml(o.name) + '</td>' +
       cell(o, idx, 'fillPctLow', 'Fill % low', fill) + cell(o, idx, 'fillPctHigh', 'Fill % high', fill) +
       cell(o, idx, 'currentClientsLow', 'Clients low', !isForecast) + cell(o, idx, 'currentClientsHigh', 'Clients high', !isForecast) +
+      cell(o, idx, 'sessionsPerYearLow', 'Sessions/yr low', freq) + cell(o, idx, 'sessionsPerYearHigh', 'Sessions/yr high', freq) +
       '<td class="cell-edit" data-label="Confidence"><select class="confidence-select" aria-label="Confidence for ' + escapeHtml(o.name) + '" data-k="confidence" data-i="' + idx + '" data-confidence="' + (o.confidence || '') + '">' +
       '<option value="">Untagged</option>' + CONFIDENCE_LEVELS.map(c => '<option value="' + c + '"' + (o.confidence === c ? ' selected' : '') + '>' + CONFIDENCE_LABELS[c] + '</option>').join('') + '</select></td>' +
       '<td class="cell-edit" data-label="Note"><input aria-label="Note for ' + escapeHtml(o.name) + '" type="text" maxlength="' + MAX_NOTE_LENGTH + '" placeholder="Source or caveat" value="' + escapeHtml(o.note || '') + '" data-k="note" data-i="' + idx + '"/></td></tr>';

@@ -7,6 +7,8 @@
 import { describe, it, expect } from 'vitest';
 import { calc, clearCalculationCache } from '../calculations/index';
 import { sanitizeScenarioState, escapeHtml } from '../../assets/services/miscService';
+import { RANGE_BOUND_KEYS } from '../calculations/rangeCase';
+import { calcRange } from '../calculations/ranges';
 
 // Mulberry32 seeded PRNG — deterministic across runs
 function mulberry32(seed) {
@@ -178,6 +180,27 @@ describe('Fuzz: calculation engine', () => {
       expect(cachedFirst.income).toBe(uncached.income);
       expect(cachedSecond.revenue).toBe(uncached.revenue);
       expect(cachedSecond.clients).toBe(uncached.clients);
+    }
+  });
+});
+
+describe('Fuzz: range bounds', () => {
+  it('hostile low/high bounds never yield NaN or an inverted band', () => {
+    const rand = mulberry32(SEED + 3);
+    for (let i = 0; i < ITERATIONS; i++) {
+      const state = fuzzState(rand);
+      if (Array.isArray(state.offerings)) {
+        for (const o of state.offerings) {
+          if (o && typeof o === 'object') for (const k of RANGE_BOUND_KEYS) if (rand() < 0.5) o[k] = fuzzNumber(rand, 0, 400);
+        }
+      }
+      const band = calcRange(state);
+      if (!band) continue;
+      for (const [m, b] of Object.entries(band)) {
+        expect(Number.isNaN(b.min) || Number.isNaN(b.max), `${m} NaN at iteration=${i}\nstate=${JSON.stringify(state)}`).toBe(false);
+        expect(b.min, `${m} min > base at iteration=${i}`).toBeLessThanOrEqual(b.base);
+        expect(b.max, `${m} max < base at iteration=${i}`).toBeGreaterThanOrEqual(b.base);
+      }
     }
   });
 });
