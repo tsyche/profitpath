@@ -18,7 +18,7 @@ This document provides comprehensive information for AI agents and developers wo
 - **Build System**: Vite v8.3.5 with JSX support
 - **Testing**: Vitest v4.0.18 with jsdom environment
 - **Code Quality**: ESLint with comprehensive rules
-- **Language**: JavaScript migrating to TypeScript (`checkJs` on, `strict` off; see `docs/plans/typescript-migration.md`)
+- **Language**: TypeScript (`strict: true`; see Build Process > TypeScript Support)
 - **State Management**: Single global state object with localStorage persistence
 
 ### Key Files Structure
@@ -207,7 +207,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (705 unit tests across 66 files — 704 passing, 1 skipped — plus 430 Playwright e2e tests across 37 files, chromium + firefox)
+#### Test Coverage (705 unit tests across 65 files — 704 passing, 1 skipped — plus 432 Playwright e2e tests across 38 files, chromium + firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)
@@ -250,13 +250,12 @@ npm run test:ui      # Run tests with UI interface
 - Service worker integration for PWA features
 
 #### TypeScript Support
-- `tsconfig.json` has `allowJs` + `checkJs` + `noEmit`; Vite builds, `tsc` only checks. Run `just typecheck`.
-- `just typecheck` is a ratchet: it fails if `tsc` reports more errors than `.typecheck-baseline` (0 now, with `noImplicitAny` and `strictNullChecks` on). When you fix errors, run `npm run typecheck -- --update` to lock in the lower count. Browser globals are declared in `src/globals.d.ts` (typed where Phase 2 reached; UI/DOM helpers and CDN libs stay `any`).
-- **Touched files become TypeScript.** When a change materially edits a `.js` file, rename it to `.ts` (`git mv`, then fix types) in the same change, with its test (`.test.js` to `.test.ts`).
-- New code is written in `.ts`.
-- JSDoc types are ignored in `.ts` files: convert them to real annotations when renaming. Import `.ts` modules without an extension (`../calculations/index`); `index.html` script tags need the real `.ts` path.
-- ESLint has a `**/*.ts` block (typescript-eslint recommended, `no-explicit-any` as warning). The old `esbuild.include` override silently disabled TS transforms.
-- Full migration plan: `docs/plans/typescript-migration.md`.
+- The codebase is TypeScript with `strict: true`; `tsconfig.json` is `noEmit` (Vite builds, `tsc` only checks). Run `just typecheck`: it must report 0 errors (no ratchet or baseline file). Browser globals are declared in `src/globals.d.ts`. `tests/e2e` is not typechecked (Playwright strips types).
+- Only `eslint.config.js`, `vite.config.js` and `public/sw.js` stay `.js`.
+- New code is written in `.ts`; do not add `.js` files.
+- Import `.ts` modules without an extension (`../calculations/index`); `index.html` script tags need the real `.ts` path.
+- ESLint has a `**/*.ts` block (typescript-eslint recommended, `no-explicit-any` as warning), and `npm run lint` runs with `--max-warnings 0`, so avoid `any` (use `unknown`, `$opt`/`$req` from `assets/utils/dom.ts`). The legacy `$`/`$$` helpers are the one deliberate exception.
+- Migration history: `docs/plans/archive/typescript-migration.md`.
 
 ## Integration Points
 
