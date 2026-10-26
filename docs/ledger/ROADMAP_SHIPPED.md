@@ -1,10 +1,14 @@
 # Shipped Roadmap Items
 
-**TL;DR:** Compact index of completed [ROADMAP.md](../../ROADMAP.md) work, followed by the original entries preserved verbatim. Partly shipped items (12o, 22, 24b) stay in the roadmap until finished.
+**TL;DR:** Compact index of completed [ROADMAP.md](../../ROADMAP.md) work, followed by the original entries preserved verbatim. Partly shipped items (12o) stay in the roadmap until finished.
 
 ## Shipped index
 
 - [x] 2026-10-25 — TypeScript migration (strict, all source and tests `.ts`, lint `--max-warnings 0`)
+- [x] 2026-10-25 — 24. Confidence-band / range output (Conservative / Base / Optimistic)
+- [x] 2026-10-25 — 24b. Group / cohort offerings
+- [x] 2026-10-25 — 22. Per-offering confidence tagging and notes
+- [x] 2026-10-25 — 24c. Ranged inputs for assumptions (low / base / high)
 - [x] 2026-10-26 — 32. Repo-wide accessibility e2e (axe-core)
 - [x] 2026-10-26 — 24e. Membership What-If follow-ups (visit ranges, members per pool, fee optimizer)
 - [x] 2026-10-25 — 24a. Membership and prepaid-credit pricing calculator
@@ -371,3 +375,47 @@ Superseded by item 18: the per-session type does this conversion in the Price ce
     - Today the app could flag "over capacity" even when the actual constraining resource still has headroom, because everything funnels into one utilization number
     - A multi-pool model (or at minimum optional resource tagging per offering, with capacity computed per resource) would meaningfully improve accuracy for any facility/studio/gym-style business, not just this one
     - Effort: ~6-8 hours (meaningful capacity-model rework)
+
+### 2026-10-25 — 24. Confidence-band / range output (Conservative / Base / Optimistic)
+
+24. **Confidence-band / range output for assumption-heavy scenarios** *(SHIPPED 2026-10-25: 24c min / base / max band plus a Conservative / Base / Optimistic toggle in the band. `calc()` applies the case itself, so KPIs, charts, insights, comparisons and exports all follow it and exports are tagged; session-only, snaps back to base when the bounds go away)*
+    - Distinct from the existing Sensitivity Analysis (which varies one lever at a time against a single baseline): when most of a scenario's inputs are guesses rather than known values (9 of 12 offerings in this session's trial), a single point-estimate output number (e.g. "$42,798 revenue") implies false precision
+    - A simple optimistic/base/conservative 3-scenario toggle — applying a confidence band to guessed inputs (informed by item 22's confidence tags, if built) and showing a resulting range rather than one number — would better communicate uncertainty for exactly this "sketching before real data exists" use case
+    - Effort: ~4-5 hours
+
+### 2026-10-25 — 24b. Group / cohort offerings
+
+24b. **Group / cohort offerings (seats, sessions run, fill rate)** *(SHIPPED 2026-10-25; first slice 2026-10-23: `type` field (`subscription | group`) with Seats and Fill % columns shipped; SHIPPED 2026-10-25: `costPerRun` (per cohort in Current, per filled seat in Forecast) and per-offering break-even fill in the "Group runs" table; fitness template's class is now a group row, and the unread per-client waterfall hours attribute was removed. Photography template retuned: it ran at 254% utilization)*
+    - Today staff hours scale with clients (`hoursPerSession` per client), so a group class must be faked as a fractional hour per student (2 hr ÷ 8 seats = 0.25). An under-filled class then looks cheaper to deliver than it is: the instructor still works the full 2 hours.
+    - Add an offering type with seats per session, sessions run per year, and expected fill % (Forecast) or average enrolled (Current). Staff hours and fixed per-run costs count per run; revenue and per-seat costs count per filled seat. Output break-even fill (seats needed to cover the run's cost).
+    - Motivated by the 2026-10-23 trial: seats are known capacity, fill is only known after booking — it felt like needing Current and Forecast mode at once. This item plus 24c removes that tension without a hybrid mode.
+    - Design: implement as one value of a per-offering **type** field shared with items 18 and 19 (`subscription | per-session | group | one-time`), not as a new app mode or a business-type toggle. Each row picks its shape, so mixed businesses (memberships + hourly + classes) work in one scenario; the table shows only the columns a row's type uses; industry templates just preset default types. Keeps the calc one path per type rather than forked per mode.
+    - Effort: ~4-6 hours
+
+### 2026-10-25 — 22. Per-offering confidence tagging and notes
+
+22. **Per-offering confidence tagging (Verified / Estimated / Guess) + per-offering notes** *(PARTIAL, 2026-10-24: optional tag + 200-char note per offering, edited in the "Ranges & confidence" table; persisted via share URL, localStorage and CSV cols 17-18. SHIPPED link to outputs 2026-10-24: a "Fill ranges from confidence" button writes editable bounds (Estimated ±15%, Guess ±30%, Verified/untagged none; typed bounds kept) and the Outputs band lists the top 3 profit-swing drivers with their tags. The tag never silently weights a number. SHIPPED 2026-10-25: Estimated / Guess spreads are editable beside the fill button (0-100, saved per browser), and a confidence badge sits beside each offering name in the main table; both display or entry only, no number is weighted by a tag)*
+    - Building a scenario before real data exists means mixing genuinely-known numbers (real list prices, verified from the business's own site) with invented ones (visit frequency, client counts) — today the *only* place to flag that distinction is one free-text Presentation Notes box for the entire scenario, which doesn't scale past a few offerings and ends up as one long disclaimer paragraph nobody reads closely enough to know which of 12 rows a given caveat applies to
+    - A small per-offering confidence badge (e.g. a 3-state toggle: Verified/Estimated/Guess) plus an optional short per-offering note field would let a scenario visibly show its own reliability row-by-row, and could feed a future "confidence-weighted" output (see item 24)
+    - Directly motivated by this session: wrote one large disclaimer to cover 12 offerings of mixed real/guessed data because there was nowhere more granular to put it
+    - Effort: ~3-4 hours
+
+### 2026-10-25 — 24c. Ranged inputs: original entry
+
+24c. **Ranged inputs for assumptions (low / base / high)** *(SHIPPED 2026-10-25; 2026-10-24: optional low/high on group fill % (Forecast) and current clients (Current); collapsed "Ranges" table under Fixed Expenses; Outputs band shows min / base / max for revenue, profit, clients, utilization and break-even clients; persisted via share URL, CSV (cols 12-15) and sanitizers; item 22 link shipped as the "top drivers" line. 2026-10-25: low/high on sessions per year (all types but one-time; CSV cols 25-26), per-offering min/max profit in the drivers line. Deferred: chart ranges, folded into [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md))*
+    - Let any guessed input (fill %, visit frequency, client count) carry a low/base/high value and show results as a range. Pairs with item 22 (confidence tags) as the input side of item 24's range output.
+    - Covers "known capacity, unknown demand" in Current mode: real counts stay point values, guesses become ranges.
+    - Design note: the band is a scenario envelope (all lows together, all highs together via `calcRange` in `src/calculations/ranges.ts`), not a statistical interval; min/max are taken across the runs, so it stays honest when more clients means more loss.
+    - Frequency is a cost driver, so the Conservative case takes the HIGH sessions bound (more hours and variable cost for the same monthly price) and Optimistic the low one; all bound keys come from one list (`RANGE_BOUND_KEYS` in `rangeCase.ts`). "Fill from confidence" does not suggest frequency bounds: session counts are usually contracted, not guessed.
+    - Effort: ~3-4 hours on top of item 24
+
+### 2026-10-26 — 24e. Membership What-If follow-ups: original entry
+
+24e. **Membership What-If follow-ups** *(SHIPPED 2026-10-26: visit ranges, members per pool, fee optimizer; deferred lines below)*
+    - ~~Credits-vs-visits ranges~~ *(SHIPPED 2026-10-25)*: optional low / high visits per offering on a profile (collapsed "Visit ranges" table); each result cell adds a line with member savings, your margin and staff hours across all-low / base / all-high (min/max over the runs, since fewer visits can raise margin). Persisted in scenarios, share URL and CSV (profile cols 3-4); display only.
+    - ~~Members supportable per capacity pool~~ *(SHIPPED 2026-10-26)*: each result cell shows how many members fit before staff or a tagged pool saturates, naming the binding pool. Standalone headroom at target utilization.
+    - Deferred 2026-10-26: subtract current client load from that headroom (needs a stable meaning of "current" in Forecast mode); group offerings use per-visit hours, not per-seat.
+    - ~~Recommended-plan optimizer~~ *(SHIPPED 2026-10-26, fee only)*: optional session-only target margin % adds the lowest fee that reaches it while the member still saves, or an explicit "no fee works" line. Credits and discount stay as entered.
+    - Deferred 2026-10-26: solve credits or discount for a target margin (the fee-only solve is linear; those are not).
+    - Feed members into `calc()`: only if the panel proves useful; today it is display only so credits can't double count as revenue.
+    - Excel export carries no plans or profiles (nor expenses or resources); add with the others if that path is revisited.
