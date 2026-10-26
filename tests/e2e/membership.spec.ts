@@ -155,4 +155,22 @@ test.describe('Membership what-if', () => {
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
   });
+
+  test('shows how many members fit and which pool binds first', async ({ page }) => {
+    await open(page, 'intermediate');
+    await seedStudio(page);
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.targetUtilizationPct = 100;
+      w.state.resources = [{ id: 'booth', name: 'Booth', hoursPerWeek: 1, weeksPerYear: 52 }];
+      w.state.offerings[0].resource = 'booth';
+      w.state.membershipPlans = [{ id: 'p', name: 'Plan', monthlyFee: 100, creditsPerMonth: 0, memberDiscountPct: 0, eligible: [] }];
+      w.state.memberProfiles = [{ id: 'm', name: 'Regular', visits: { studio: 1 } }];
+      w.persistState();
+      w.render();
+    });
+    await openPanel(page);
+    // 1 visit a month = 12 h a year against 52 booth hours: 4 members, booth binds
+    await expect(page.locator('.membership-fit').first()).toContainText('Fits 4 members before Booth is full');
+  });
 });

@@ -29,6 +29,8 @@ export interface CatalogOffering {
   hoursPerSession?: number;
   variableCostPerSession?: number;
   laborPctOfPrice?: number;
+  /** Id of the capacity pool (resources.ts) this offering also draws on. */
+  resource?: string;
 }
 
 export interface MembershipResult {
@@ -223,4 +225,47 @@ export function calcMembershipRange(plan: MembershipPlan, profile: MemberProfile
     out[m] = { min: Math.min(...values), base: runs[1][m], max: Math.max(...values) };
   }
   return out;
+}
+
+/** One capacity pool for maxMembers: annual hours available at target utilization. Staff uses id 'staff'. */
+export interface CapacityPool {
+  id: string;
+  name: string;
+  hours: number;
+  /** Tagged offerings draw no staff hours (resources.ts staffFree). */
+  staffFree?: boolean;
+}
+
+export interface MemberCapacity {
+  /** Whole members that fit; null when the profile uses no pool hours (unbounded). */
+  members: number | null;
+  /** Pool id that runs out first (staff wins ties); null when unbounded. */
+  binding: string | null;
+}
+
+/**
+ * How many members of a profile fit before a pool saturates: floor(pool hours / member hours per year),
+ * minimum over the pools. Standalone headroom at target utilization; it ignores current clients.
+ * Hours follow membership's own staffHours (hoursPerSession per visit), one-time rows add none.
+ */
+export function maxMembers(profile: MemberProfile, offerings: CatalogOffering[], pools: CapacityPool[]): MemberCapacity {
+  const need = new Map<string, number>();
+  const free = new Set(pools.filter((p) => p.staffFree).map((p) => p.id));
+  const known = new Set(pools.map((p) => p.id));
+  for (const o of offerings) {
+    const visits = o.id ? profile.visits[o.id] || 0 : 0;
+    const hours = isOneTime(o) ? 0 : visits * 12 * (o.hoursPerSession || 0);
+    if (hours <= 0) continue;
+    const pool = o.resource && known.has(o.resource) ? o.resource : undefined;
+    if (pool) need.set(pool, (need.get(pool) || 0) + hours);
+    if (!pool || !free.has(pool)) need.set('staff', (need.get('staff') || 0) + hours);
+  }
+  let best: MemberCapacity = { members: null, binding: null };
+  for (const p of pools) {
+    const h = need.get(p.id) || 0;
+    if (h <= 0) continue;
+    const members = Math.floor(p.hours / h);
+    if (best.members === null || members < best.members) best = { members, binding: p.id };
+  }
+  return best;
 }

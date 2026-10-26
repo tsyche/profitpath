@@ -188,6 +188,7 @@ function initGroupRunsSection() {
 function initMembershipSection() {
   initMembershipPanel({
     getState: () => state,
+    getStaffTargetHours: () => { try { return calc(state).targetServiceHours; } catch { return 0; } },
     persist: persistState,
     pushHistory
   });

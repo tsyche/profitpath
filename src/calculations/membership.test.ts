@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcMembership, calcMembershipRange, hasVisitRange, pruneMembership, sanitizePlans, sanitizeProfiles } from './membership'
+import { calcMembership, calcMembershipRange, hasVisitRange, maxMembers, pruneMembership, sanitizePlans, sanitizeProfiles } from './membership'
 import type { MembershipPlan, MemberProfile } from '../types'
 
 // Roadmap 24a: all figures hand-computed. Studio lists at $60 per session
@@ -191,5 +191,44 @@ describe('visit bounds persistence', () => {
     const { profiles } = pruneMembership([], [{ id: 'p', name: 'P', visits: { a: 1 }, visitsLow: { a: 0, gone: 1 }, visitsHigh: { gone: 4 } }], new Set(['a']))
     expect(profiles[0].visitsLow).toEqual({ a: 0 })
     expect(Object.keys(profiles[0])).not.toContain('visitsHigh')
+  })
+})
+
+// Roadmap 24e slice 3: members a profile fits before staff or a pool saturates (annual target hours).
+describe('maxMembers', () => {
+  const staff = { id: 'staff', name: 'Staff', hours: 1200 }
+  const booth = { id: 'booth', name: 'Booth', hours: 52 }
+  const inBooth = [{ ...studio, resource: 'booth' }, mixing]
+
+  it('staff-bound: 1 studio visit a month is 12 h a year, so 100 members fit in 1200 h', () => {
+    expect(maxMembers(profile({ studio: 1 }), offerings, [staff])).toEqual({ members: 100, binding: 'staff' })
+  })
+
+  it('a tagged pool can bind before staff: 52 h / 12 h = 4 members', () => {
+    expect(maxMembers(profile({ studio: 1 }), inBooth, [staff, booth])).toEqual({ members: 4, binding: 'booth' })
+  })
+
+  it('a staff-free pool puts no hours on staff, so only the pool binds', () => {
+    const r = maxMembers(profile({ studio: 1, mixing: 1 }), inBooth, [staff, { ...booth, staffFree: true, hours: 120 }])
+    // booth: 12 h/yr per member -> 10; staff carries only mixing (24 h/yr) -> 50
+    expect(r).toEqual({ members: 10, binding: 'booth' })
+  })
+
+  it('a tag pointing at a missing pool counts against staff only', () => {
+    expect(maxMembers(profile({ studio: 1 }), inBooth, [staff])).toEqual({ members: 100, binding: 'staff' })
+  })
+
+  it('ties go to staff', () => {
+    expect(maxMembers(profile({ studio: 1 }), inBooth, [staff, { ...booth, hours: 1200 }])).toEqual({ members: 100, binding: 'staff' })
+  })
+
+  it('no delivery hours is unbounded, and one-time rows add none', () => {
+    expect(maxMembers(profile({}), offerings, [staff])).toEqual({ members: null, binding: null })
+    const oneTime = { id: 'kit', type: 'one-time', priceMonthly: 50, sessionsPerYear: 1, hoursPerSession: 5 }
+    expect(maxMembers(profile({ kit: 3 }), [oneTime], [staff])).toEqual({ members: null, binding: null })
+  })
+
+  it('a pool with zero hours caps members at 0', () => {
+    expect(maxMembers(profile({ studio: 1 }), inBooth, [staff, { ...booth, hours: 0 }])).toEqual({ members: 0, binding: 'booth' })
   })
 })

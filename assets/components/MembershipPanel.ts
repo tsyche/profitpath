@@ -1,7 +1,8 @@
-import { calcMembership, calcMembershipRange, hasVisitRange, sanitizePlans, sanitizeProfiles, MAX_PLANS, MAX_PROFILES } from '../../src/calculations/membership';
-import type { CatalogOffering } from '../../src/calculations/membership';
+import { calcMembership, calcMembershipRange, hasVisitRange, maxMembers, sanitizePlans, sanitizeProfiles, MAX_PLANS, MAX_PROFILES } from '../../src/calculations/membership';
+import type { CapacityPool, CatalogOffering } from '../../src/calculations/membership';
+import { STAFF_POOL_ID, activeResources, resourceAnnualHours } from '../../src/calculations/resources';
 import { fmtMoney0 } from '../../src/calculations/currency';
-import type { MemberProfile, MembershipPlan } from '../../src/types';
+import type { MemberProfile, MembershipPlan, Resource } from '../../src/types';
 import { escapeHtml } from '../services/miscService';
 import { uuid } from '../utils/helpers';
 
@@ -17,10 +18,14 @@ interface PanelState {
   offerings: PanelOffering[];
   membershipPlans?: MembershipPlan[];
   memberProfiles?: MemberProfile[];
+  resources?: Resource[];
+  targetUtilizationPct?: number;
 }
 
 interface PanelDeps {
   getState: () => PanelState;
+  /** Staff hours a year at target utilization, from the last calc(). */
+  getStaffTargetHours: () => number;
   persist: () => void;
   pushHistory: () => void;
 }
@@ -111,7 +116,25 @@ function signed(n: number): string {
   return (n < 0 ? '-' : '+') + fmtMoney0(Math.abs(n));
 }
 
-function cellHtml(plan: MembershipPlan, profile: MemberProfile, offerings: PanelOffering[]): string {
+/** Staff plus each active resource, in annual hours at target utilization. */
+function capacityPools(s: PanelState): CapacityPool[] {
+  const target = (s.targetUtilizationPct ?? 100) / 100;
+  return [
+    { id: STAFF_POOL_ID, name: 'Staff', hours: deps?.getStaffTargetHours() ?? 0 },
+    ...activeResources(s.resources).map((r) => ({ id: r.id, name: r.name, hours: resourceAnnualHours(r) * target, ...(r.staffFree ? { staffFree: true } : {}) }))
+  ];
+}
+
+function fitLine(profile: MemberProfile, s: PanelState): string {
+  const pools = capacityPools(s);
+  const cap = maxMembers(profile, s.offerings, pools);
+  if (cap.members === null) return 'Members that fit: no limit (no staff or pool hours)';
+  const name = pools.find((p) => p.id === cap.binding)?.name ?? '';
+  return 'Fits ' + cap.members + ' member' + (cap.members === 1 ? '' : 's') + ' before ' + escapeHtml(name) + ' is full (at target utilization, ignores your current clients)';
+}
+
+function cellHtml(plan: MembershipPlan, profile: MemberProfile, s: PanelState): string {
+  const offerings = s.offerings;
   const r = calcMembership(plan, profile, offerings);
   const saving = r.savings >= 0
     ? 'Member saves ' + fmtMoney0(r.savings)
@@ -125,6 +148,7 @@ function cellHtml(plan: MembershipPlan, profile: MemberProfile, offerings: Panel
   }
   lines.push('You keep ' + fmtMoney0(r.margin) + ' of ' + fmtMoney0(r.revenue) + ' revenue' + (r.marginPct === null ? '' : ' (' + pct1(r.marginPct) + ' margin on revenue)'));
   lines.push(r.staffHours.toFixed(1) + ' staff h/month');
+  lines.push('<span class="membership-fit">' + fitLine(profile, s) + '</span>');
   const band = calcMembershipRange(plan, profile, offerings);
   if (band) {
     const span = (a: number, b: number) => (a === b ? fmtMoney0(a) : fmtMoney0(a) + ' to ' + fmtMoney0(b));
@@ -139,7 +163,7 @@ function resultsHtml(s: PanelState): string {
   if (!plans.length || !profiles.length) return '<p class="smallprint">Add at least one plan and one member profile to compare.</p>';
   const head = plans.map((p) => '<th>' + escapeHtml(p.name) + '<div class="smallprint">Headline: credits minus fee = ' + signed(p.creditsPerMonth - p.monthlyFee) + '</div></th>').join('');
   const rows = profiles.map((pr) =>
-    '<tr><th scope="row">' + escapeHtml(pr.name) + '</th>' + plans.map((pl) => '<td>' + cellHtml(pl, pr, s.offerings) + '</td>').join('') + '</tr>').join('');
+    '<tr><th scope="row">' + escapeHtml(pr.name) + '</th>' + plans.map((pl) => '<td>' + cellHtml(pl, pr, s) + '</td>').join('') + '</tr>').join('');
   return '<div class="table-wrap"><table class="table membership-results" aria-label="Membership comparison"><thead><tr><th></th>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
 
