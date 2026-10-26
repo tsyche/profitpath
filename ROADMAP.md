@@ -72,9 +72,18 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
 
 24f. **Deferred follow-ups from shipped 24c / 24e / 32** *(new, 2026-10-26)*
     - Chart ranges (24c): folded into [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md).
-    - Light-theme `color-contrast` (32): the light palette misses WCAG AA and the axe scan skips it; fix in the UI/UX pass Phase 0, then drop the skip in `tests/e2e/a11y.spec.ts`.
-    - Membership (24e): subtract current client load from members-per-pool headroom (needs a stable meaning of "current" in Forecast mode; group offerings use per-visit hours, not per-seat); solve credits or discount for a target margin (non-linear); feed members into `calc()` only if the panel proves useful; Excel export carries no plans, profiles, expenses or resources.
+    - Membership (24e): subtract current client load from members-per-pool headroom (needs a stable meaning of "current" in Forecast mode; group offerings use per-visit hours, not per-seat); solve credits or discount for a target margin (non-linear); feed members into `calc()` only if the panel proves useful. Excel parity is item 33.
     - Effort: ~1-2 hours each, none urgent
+
+33. **Excel export parity** *(new, 2026-10-26)*
+    - The Excel export carries only offerings and outputs; membership plans and profiles, expenses, capacity resources, ranges, confidence tags and group run costs are missing, so a TSS-style scenario loses most of its model on export. CSV and the share URL already carry them.
+    - Add a sheet per missing block (or fold into existing sheets), reuse the CSV serializers so the two can't drift, and add a round-trip e2e/unit test that fails when a persisted field is absent from the workbook (a parity check against the same field list the share URL uses).
+    - Effort: ~3-4 hours
+
+34. **Light theme meets WCAG AA contrast** *(new, 2026-10-26; found by the axe scan in `tests/e2e/a11y.spec.ts`)*
+    - The light palette fails `color-contrast`, so the scan skips that rule in light theme only. This is a palette change, not a one-line fix: pick AA-safe text/accent/muted tokens, then re-check charts, badges and KPI gradients.
+    - Done when the skip is deleted from `a11y.spec.ts` and light theme passes at all three experience levels. Phase 0 of [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md) feeds the palette decision; do it before or with that pass, not after.
+    - Effort: ~3-5 hours
 
 12x. **Typecheck unit tests (`**/*.test.ts`) and retire the accepted casts** *(new, TS-migration leftover)*
     - `**/*.test.ts` is excluded from `tsconfig.json`; including it gives ~1,158 errors (380 TS7005 implicit `any[]`, 204 TS18047, 186 TS2339) in the `src/test/*` jsdom mock tests. Fix per file (type the mocks), then drop the exclude; do it opportunistically when touching a test file.
