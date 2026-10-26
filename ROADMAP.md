@@ -36,6 +36,7 @@ Shipped 2026-10-24/25: multi-resource capacity pools (20) incl. staff-free resou
 12s. **Fix: `labor-pct.spec.ts` flakes under full-suite load** *(new)*
    - Passes alone, fails intermittently in the full Playwright run; find the race or timeout instead of retrying it away
    - 2026-10-24: not reproducible. 160 runs (10-12 workers, 8 CPU burners) all passed, and the last 3 CI `Tests` runs were green. Parked; reopen with the failure output if it recurs, and don't add retries
+   - 2026-10-25: `membership.spec.ts` 'caps at 3 plans, survives reload' failed once (chromium) in a full run, then passed 12/12 alone. Likely race: it `fill()`s the plan name and reloads at once, so the save may not have landed. Same rule: reopen with the failure output; fix by waiting on persisted state, not retries
    - Effort: ~1 hour
 
 12d. **"Advisor" unified panel for scattered analytics features** *(new)*
@@ -86,6 +87,11 @@ Shipped 2026-10-24/25: multi-resource capacity pools (20) incl. staff-free resou
     - Recommended-plan optimizer: suggest fee / credits / discount that hit a target margin while keeping actual member savings positive.
     - Feed members into `calc()`: only if the panel proves useful; today it is display only so credits can't double count as revenue.
     - Excel export carries no plans or profiles (nor expenses or resources); add with the others if that path is revisited.
+
+12x. **Typecheck unit tests (`**/*.test.ts`) and retire the accepted casts** *(new, TS-migration leftover)*
+    - `**/*.test.ts` is excluded from `tsconfig.json`; including it gives ~1,158 errors (380 TS7005 implicit `any[]`, 204 TS18047, 186 TS2339) in the `src/test/*` jsdom mock tests. Fix per file (type the mocks), then drop the exclude; do it opportunistically when touching a test file.
+    - Accepted casts to revisit only if they cause trouble: `as unknown as CalcResult` (AppRender calc-failure fallback) and the `Bag` (`Record<string, unknown>`) casts in RangesMarketPanel, ResourcesPanel, ExpensesPanel and OfferingsTable.
+    - Low priority; the migration itself is done (see [ledger](docs/ledger/ROADMAP_SHIPPED.md)).
 
 32. **Repo-wide accessibility e2e (axe-core)** *(new, from 24a; the plan's "axe clean" gate was not run because the repo has no axe tooling)*
     - Add `@axe-core/playwright` and a spec that scans each main panel and the modals at each experience level; fail on Critical/Serious.

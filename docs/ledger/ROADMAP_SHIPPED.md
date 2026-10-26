@@ -54,7 +54,7 @@
 
 ### 2026-10-25 — TypeScript migration
 
-All source and tests are `.ts` with `strict: true`; the ratchet is retired (`tsc --noEmit` must be 0). `tests/e2e` is typechecked; unit `*.test.ts` files stay excluded (known gap, ~1,150 errors in the jsdom mock tests); `$`/`$$` are typed. Migration also surfaced and fixed real bugs, each with a test: insights under-utilization, dashboard export `getSummary`, customer analytics revenue, table focus restore (`tests/e2e/table-focus.spec.ts`). Plan: [typescript-migration](../plans/archive/typescript-migration.md).
+All source and tests are `.ts` with `strict: true`; the ratchet is retired (`tsc --noEmit` must be 0). `tests/e2e` is typechecked; unit `*.test.ts` files stay excluded (known gap, ~1,150 errors in the jsdom mock tests; tracked as ROADMAP 12x); `$`/`$$` are typed. Migration also surfaced and fixed real bugs, each with a test: insights under-utilization, dashboard export `getSummary`, customer analytics revenue, table focus restore (`tests/e2e/table-focus.spec.ts`). Plan: [typescript-migration](../plans/archive/typescript-migration.md).
 
 ### 2026-10-25 — 24a. Membership and prepaid-credit pricing calculator
 
