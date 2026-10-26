@@ -56,6 +56,9 @@ export interface MemberProfile {
   id: string;
   name: string;
   visits: Record<string, number>;
+  /** Optional per-offering visit bounds (visits/month); an absent id means no bound. */
+  visitsLow?: Record<string, number>;
+  visitsHigh?: Record<string, number>;
 }
 
 /** A capacity pool other than staff (booth, room, bay) that tagged offerings also consume. */

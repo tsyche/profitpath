@@ -118,3 +118,28 @@ describe('membership: CSV round trip', () => {
     expect(bad.data.memberProfiles[0].visits).toEqual({});
   });
 });
+
+describe('membership: visit bounds round trip', () => {
+  const ranged = [{ id: 'pr1', name: 'Regular', visits: { 'Studio, "A"': 2, Mixing: 1.5 }, visitsLow: { 'Studio, "A"': 0.5 }, visitsHigh: { Mixing: 4 } }];
+
+  it('share-URL sanitizer keeps the bounds', () => {
+    const out = sanitizeScenarioState({ ...state, memberProfiles: ranged })!;
+    expect(out.memberProfiles[0].visitsLow).toEqual({ 'Studio, "A"': 0.5 });
+    expect(out.memberProfiles[0].visitsHigh).toEqual({ Mixing: 4 });
+  });
+
+  it('CSV round-trips the bounds by offering name', () => {
+    const r: any = importFromCSV(buildCSV({ ...state, memberProfiles: ranged }, results));
+    const p = r.data.memberProfiles[0];
+    const idOf = (n: string) => r.data.offerings.find((o: any) => o.name === n).id;
+    expect(p.visitsLow).toEqual({ [idOf('Studio, "A"')]: 0.5 });
+    expect(p.visitsHigh).toEqual({ [idOf('Mixing')]: 4 });
+  });
+
+  it('a legacy two-column profile row imports with no bounds', () => {
+    const csv = buildCSV({ ...state, memberProfiles: profiles }, results).replace(',Visits Low,Visits High', '');
+    const p = (importFromCSV(csv) as any).data.memberProfiles[0];
+    expect(Object.keys(p)).not.toContain('visitsLow');
+    expect(Object.keys(p.visits)).toHaveLength(2);
+  });
+});

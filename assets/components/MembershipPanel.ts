@@ -1,4 +1,4 @@
-import { calcMembership, sanitizePlans, sanitizeProfiles, MAX_PLANS, MAX_PROFILES } from '../../src/calculations/membership';
+import { calcMembership, calcMembershipRange, hasVisitRange, sanitizePlans, sanitizeProfiles, MAX_PLANS, MAX_PROFILES } from '../../src/calculations/membership';
 import type { CatalogOffering } from '../../src/calculations/membership';
 import { fmtMoney0 } from '../../src/calculations/currency';
 import type { MemberProfile, MembershipPlan } from '../../src/types';
@@ -84,9 +84,24 @@ function editorHtml(s: PanelState): string {
       '</tbody></table></div>'
     : '';
 
+  const rangeCell = (p: MemberProfile, pi: number, o: PanelOffering, oi: number, side: 'Low' | 'High') => {
+    const bound = o.id ? (p['visits' + side as 'visitsLow' | 'visitsHigh'] || {})[o.id] : undefined;
+    return '<td class="cell-edit" data-label="' + escapeHtml(p.name) + ' ' + side.toLowerCase() + '"><input type="number" min="0" max="1000" step="0.5" placeholder="none" aria-label="' + side + ' visits per month for ' + escapeHtml(p.name) + ' at ' + escapeHtml(offeringName(o, oi)) +
+      '" value="' + (bound === undefined ? '' : num(bound)) + '" data-kind="visits' + side + '" data-p="' + pi + '" data-o="' + escapeHtml(o.id || '') + '"/></td>';
+  };
+  const rangeTable = profiles.length && offerings.length
+    ? '<details class="smallprint" style="margin-top: 8px;"' + (profiles.some(hasVisitRange) ? ' open' : '') + '><summary>Visit ranges (optional)</summary>' +
+      '<p class="smallprint">Leave blank for a fixed number. Results show the spread when every low, or every high, comes true together.</p>' +
+      '<div class="table-wrap"><table class="table membership-table" aria-label="Optional low and high visits per month for each member profile"><thead><tr><th>Visits / month</th>' +
+      profiles.map((p) => '<th>' + escapeHtml(p.name) + ' low</th><th>' + escapeHtml(p.name) + ' high</th>').join('') + '</tr></thead><tbody id="membershipRangeBody">' +
+      offerings.map((o, oi) => '<tr><td data-label="Offering">' + escapeHtml(offeringName(o, oi)) + '</td>' +
+        profiles.map((p, pi) => rangeCell(p, pi, o, oi, 'Low') + rangeCell(p, pi, o, oi, 'High')).join('') + '</tr>').join('') +
+      '</tbody></table></div></details>'
+    : '';
+
   const profilesEmpty = profiles.length ? '' : '<p class="smallprint">No member profiles yet. A profile is a typical member: how many visits a month, per service.</p>';
 
-  return planTable + eligibleTable + profilesEmpty + visitsTable +
+  return planTable + eligibleTable + profilesEmpty + visitsTable + rangeTable +
     '<div class="section-actions" style="margin-top: 8px;">' +
     '<button class="btn" type="button" id="addMembershipPlanBtn" data-action="addPlan"' + (plans.length >= MAX_PLANS ? ' disabled' : '') + '>Add plan</button> ' +
     '<button class="btn" type="button" id="addMemberProfileBtn" data-action="addProfile"' + (profiles.length >= MAX_PROFILES ? ' disabled' : '') + '>Add member profile</button></div>';
@@ -110,6 +125,12 @@ function cellHtml(plan: MembershipPlan, profile: MemberProfile, offerings: Panel
   }
   lines.push('You keep ' + fmtMoney0(r.margin) + ' of ' + fmtMoney0(r.revenue) + ' revenue' + (r.marginPct === null ? '' : ' (' + pct1(r.marginPct) + ' margin on revenue)'));
   lines.push(r.staffHours.toFixed(1) + ' staff h/month');
+  const band = calcMembershipRange(plan, profile, offerings);
+  if (band) {
+    const span = (a: number, b: number) => (a === b ? fmtMoney0(a) : fmtMoney0(a) + ' to ' + fmtMoney0(b));
+    lines.push('<span class="membership-range">Visit range: member saves ' + (band.savings.min === band.savings.max ? signed(band.savings.min) : signed(band.savings.min) + ' to ' + signed(band.savings.max)) +
+      '; you keep ' + span(band.margin.min, band.margin.max) + '; ' + band.staffHours.min.toFixed(1) + ' to ' + band.staffHours.max.toFixed(1) + ' staff h/month</span>');
+  }
   return lines.map((l) => '<div>' + l + '</div>').join('');
 }
 
@@ -166,6 +187,18 @@ function onInput(e: Event): void {
     if (!row) return;
     recordHistory('profile-' + el.dataset.i + '-name');
     row.name = sanitizeProfiles([{ ...row, name: el.value }], () => row.id)[0].name;
+    changed(false);
+  } else if (kind === 'visitsLow' || kind === 'visitsHigh') {
+    const row = profiles[Number(el.dataset.p)];
+    const oid = el.dataset.o;
+    if (!row || !oid) return;
+    recordHistory(kind + '-' + el.dataset.p + '-' + oid);
+    const clean = sanitizeProfiles([{ id: row.id, name: row.name, visits: {}, [kind]: { [oid]: el.value } }], () => row.id)[0][kind];
+    const map = { ...(row[kind] || {}) };
+    if (clean && clean[oid] !== undefined) map[oid] = clean[oid];
+    else delete map[oid];
+    if (Object.keys(map).length) row[kind] = map;
+    else delete row[kind];
     changed(false);
   } else if (kind === 'visits') {
     const row = profiles[Number(el.dataset.p)];

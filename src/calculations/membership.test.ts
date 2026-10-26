@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcMembership, sanitizePlans, sanitizeProfiles } from './membership'
+import { calcMembership, calcMembershipRange, hasVisitRange, pruneMembership, sanitizePlans, sanitizeProfiles } from './membership'
 import type { MembershipPlan, MemberProfile } from '../types'
 
 // Roadmap 24a: all figures hand-computed. Studio lists at $60 per session
@@ -135,5 +135,61 @@ describe('sanitizePlans / sanitizeProfiles', () => {
   it('profile visits: clamps negatives and non-numbers, keeps fractions', () => {
     const out = sanitizeProfiles([{ name: 'M', visits: { a: -2, b: 'x', c: 1.5, d: 1e9 } }], () => 'gen')
     expect(out[0].visits).toEqual({ a: 0, b: 0, c: 1.5, d: 1000 })
+  })
+})
+
+// Roadmap 24e slice 2: optional low/high visits per offering, evaluated as a scenario envelope.
+describe('calcMembershipRange', () => {
+  const ranged = (over: Partial<MemberProfile> = {}): MemberProfile => ({ ...profile({ studio: 1 }), visitsLow: { studio: 0 }, visitsHigh: { studio: 3 }, ...over })
+
+  it('is null without bounds', () => {
+    expect(hasVisitRange(profile({ studio: 1 }))).toBe(false)
+    expect(calcMembershipRange(plan(), profile({ studio: 1 }), offerings)).toBeNull()
+  })
+
+  it('worked example across 0 / 1 / 3 visits (hand-computed)', () => {
+    const r = calcMembershipRange(plan(), ranged(), offerings)!
+    expect(r.memberSpend).toEqual({ min: 100, base: 100, max: 160 })
+    expect(r.savings).toEqual({ min: -100, base: -40, max: 20 })
+    expect(r.staffHours).toEqual({ min: 0, base: 1, max: 3 })
+    expect(r.creditsUnused).toEqual({ min: 0, base: 60, max: 120 })
+  })
+
+  it('margin takes min/max across runs: fewer visits can mean MORE margin', () => {
+    const r = calcMembershipRange(plan(), ranged(), offerings)!
+    // 0 visits keeps the fee with no delivery cost (100); 1 visit leaves 90; 3 visits earn 160 - 30 = 130
+    expect(r.margin).toEqual({ min: 90, base: 90, max: 130 })
+  })
+
+  it('a bound on the wrong side of base never crosses it', () => {
+    const r = calcMembershipRange(plan(), ranged({ visitsLow: { studio: 5 }, visitsHigh: { studio: 0 } }), offerings)!
+    expect(r.savings).toEqual({ min: -40, base: -40, max: -40 })
+  })
+
+  it('a one-sided bound collapses the other side to base', () => {
+    const r = calcMembershipRange(plan(), ranged({ visitsLow: undefined }), offerings)!
+    expect(r.staffHours).toEqual({ min: 1, base: 1, max: 3 })
+  })
+
+  it('a bound on an offering with no base visits widens from zero', () => {
+    const r = calcMembershipRange(plan(), { ...profile({ studio: 1 }), visitsHigh: { mixing: 2 } }, offerings)!
+    expect(r.staffHours).toEqual({ min: 1, base: 1, max: 5 })
+  })
+})
+
+describe('visit bounds persistence', () => {
+  it('sanitizer clamps, drops junk and omits empty maps', () => {
+    const out = sanitizeProfiles([{ name: 'M', visits: { a: 1 }, visitsLow: { a: -3, b: 'x', c: 0.5 }, visitsHigh: { a: 1e9 } }], () => 'gen')[0]
+    expect(out.visitsLow).toEqual({ a: 0, c: 0.5 })
+    expect(out.visitsHigh).toEqual({ a: 1000 })
+    const plain = sanitizeProfiles([{ name: 'M', visits: { a: 1 }, visitsLow: { b: 'x' }, visitsHigh: 'nope' }], () => 'gen')[0]
+    expect(Object.keys(plain)).not.toContain('visitsLow')
+    expect(Object.keys(plain)).not.toContain('visitsHigh')
+  })
+
+  it('prune drops bounds on offerings that no longer exist', () => {
+    const { profiles } = pruneMembership([], [{ id: 'p', name: 'P', visits: { a: 1 }, visitsLow: { a: 0, gone: 1 }, visitsHigh: { gone: 4 } }], new Set(['a']))
+    expect(profiles[0].visitsLow).toEqual({ a: 0 })
+    expect(Object.keys(profiles[0])).not.toContain('visitsHigh')
   })
 })

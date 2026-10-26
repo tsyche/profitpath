@@ -82,7 +82,7 @@ Shipped 2026-10-24/25: multi-resource capacity pools (20) incl. staff-free resou
     - Effort: ~4-5 hours
 
 24e. **Membership What-If follow-ups** *(new, from 24a)*
-    - Credits-vs-visits ranges: low / base / high on a profile's monthly visits, so breakage and savings show a band (pairs with 24c).
+    - ~~Credits-vs-visits ranges~~ *(SHIPPED 2026-10-25)*: optional low / high visits per offering on a profile (collapsed "Visit ranges" table); each result cell adds a line with member savings, your margin and staff hours across all-low / base / all-high (min/max over the runs, since fewer visits can raise margin). Persisted in scenarios, share URL and CSV (profile cols 3-4); display only.
     - Members supportable per capacity pool: how many members of a profile fit before staff or a pool (item 20) saturates.
     - Recommended-plan optimizer: suggest fee / credits / discount that hit a target margin while keeping actual member savings positive.
     - Feed members into `calc()`: only if the panel proves useful; today it is display only so credits can't double count as revenue.

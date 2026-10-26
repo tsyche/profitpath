@@ -85,20 +85,31 @@ export function sanitizePlans(raw: unknown, makeId: () => string = () => ''): Me
     }));
 }
 
-/** Sanitizes untrusted profile rows: capped, visits clamped to 0-1000 per month (fractions allowed). */
+/** Visits per offering id, clamped to 0-1000 (fractions allowed). Bounds drop unusable entries; base visits default them to 0. */
+function cleanVisits(raw: unknown, isBound: boolean): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const [id, v] of Object.entries(raw).slice(0, MAX_ELIGIBLE)) {
+      const n = sanitizeRangeBound(v, 0, MAX_VISITS);
+      if (n !== undefined || !isBound) out[id.slice(0, MAX_ID_LENGTH)] = n ?? 0;
+    }
+  }
+  return out;
+}
+
+/** Sanitizes untrusted profile rows: capped, visits (and optional low/high bounds) clamped to 0-1000 per month. */
 export function sanitizeProfiles(raw: unknown, makeId: () => string = () => ''): MemberProfile[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((p) => p && typeof p === 'object')
     .slice(0, MAX_PROFILES)
     .map((p: Record<string, unknown>) => {
-      const visits: Record<string, number> = {};
-      if (p.visits && typeof p.visits === 'object' && !Array.isArray(p.visits)) {
-        for (const [id, v] of Object.entries(p.visits).slice(0, MAX_ELIGIBLE)) {
-          visits[id.slice(0, MAX_ID_LENGTH)] = sanitizeRangeBound(v, 0, MAX_VISITS) ?? 0;
-        }
-      }
-      return { id: cleanId(p.id, makeId), name: cleanName(p.name), visits };
+      const out: MemberProfile = { id: cleanId(p.id, makeId), name: cleanName(p.name), visits: cleanVisits(p.visits, false) };
+      const low = cleanVisits(p.visitsLow, true);
+      const high = cleanVisits(p.visitsHigh, true);
+      if (Object.keys(low).length) out.visitsLow = low;
+      if (Object.keys(high).length) out.visitsHigh = high;
+      return out;
     });
 }
 
@@ -110,10 +121,16 @@ export function pruneMembership(
 ): { plans: MembershipPlan[]; profiles: MemberProfile[] } {
   return {
     plans: plans.map((p) => ({ ...p, eligible: p.eligible.filter((id) => offeringIds.has(id)) })),
-    profiles: profiles.map((p) => ({
-      ...p,
-      visits: Object.fromEntries(Object.entries(p.visits).filter(([id]) => offeringIds.has(id)))
-    }))
+    profiles: profiles.map((p) => {
+      const keep = (v: Record<string, number>) => Object.fromEntries(Object.entries(v).filter(([id]) => offeringIds.has(id)));
+      const out: MemberProfile = { ...p, visits: keep(p.visits) };
+      for (const k of ['visitsLow', 'visitsHigh'] as const) {
+        const kept = p[k] ? keep(p[k]) : {};
+        if (Object.keys(kept).length) out[k] = kept;
+        else delete out[k];
+      }
+      return out;
+    })
   };
 }
 
@@ -170,4 +187,40 @@ export function calcMembership(plan: MembershipPlan, profile: MemberProfile, off
     marginPct: pct(margin, revenue),
     staffHours,
   };
+}
+
+export type MembershipMetric = 'memberSpend' | 'savings' | 'margin' | 'staffHours' | 'creditsUnused';
+
+export const MEMBERSHIP_RANGE_METRICS: readonly MembershipMetric[] = ['memberSpend', 'savings', 'margin', 'staffHours', 'creditsUnused'];
+
+export type MembershipRange = Record<MembershipMetric, { min: number; base: number; max: number }>;
+
+/** True when the profile carries at least one visit bound. */
+export const hasVisitRange = (p: MemberProfile) => Object.keys(p.visitsLow || {}).length + Object.keys(p.visitsHigh || {}).length > 0;
+
+/** The profile with each bounded offering moved to its low or high visits, never crossing the base. */
+function profileAt(p: MemberProfile, side: 'low' | 'high'): MemberProfile {
+  const bounds = (side === 'low' ? p.visitsLow : p.visitsHigh) || {};
+  const visits = { ...p.visits };
+  for (const [id, bound] of Object.entries(bounds)) {
+    const base = visits[id] || 0;
+    visits[id] = side === 'low' ? Math.min(base, bound) : Math.max(base, bound);
+  }
+  return { id: p.id, name: p.name, visits };
+}
+
+/**
+ * Runs the plan at the profile's low visits, base and high visits (all bounds together, like the main
+ * range band) and reports min/base/max per metric. Taken across the runs, not assumed from the side:
+ * more visits can lower margin when credits redeem on costly services. Null when the profile has no bounds.
+ */
+export function calcMembershipRange(plan: MembershipPlan, profile: MemberProfile, offerings: CatalogOffering[]): MembershipRange | null {
+  if (!hasVisitRange(profile)) return null;
+  const runs = [profileAt(profile, 'low'), profile, profileAt(profile, 'high')].map((p) => calcMembership(plan, p, offerings));
+  const out = {} as MembershipRange;
+  for (const m of MEMBERSHIP_RANGE_METRICS) {
+    const values = runs.map((r) => r[m]);
+    out[m] = { min: Math.min(...values), base: runs[1][m], max: Math.max(...values) };
+  }
+  return out;
 }

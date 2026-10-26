@@ -61,6 +61,34 @@ test.describe('Membership what-if', () => {
     await expect(cell).toContainText('1.0 staff h/month');
   });
 
+  test('visit ranges widen the result and survive reload', async ({ page }) => {
+    await open(page, 'intermediate');
+    await seedStudio(page);
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.membershipPlans = [{ id: 'p', name: 'Gold', monthlyFee: 100, creditsPerMonth: 120, memberDiscountPct: 0, creditsAtMemberPrice: false, eligible: ['studio'] }];
+      w.state.memberProfiles = [{ id: 'm', name: 'Regular', visits: { studio: 1 } }];
+      w.render();
+    });
+    await openPanel(page);
+    const cell = page.locator('.membership-results tbody td').first();
+    await expect(cell).not.toContainText('Visit range');
+
+    await page.locator('#membershipEditor summary', { hasText: 'Visit ranges' }).click();
+    await page.locator('#membershipRangeBody input[data-kind="visitsLow"]').first().fill('0');
+    await page.locator('#membershipRangeBody input[data-kind="visitsHigh"]').first().fill('3');
+    // 0 / 1 / 3 visits: member nets -$100 to +$20, you keep $90 to $130, 0 to 3 staff hours
+    await expect(cell).toContainText('Visit range: member saves -$100 to +$20; you keep $90 to $130; 0.0 to 3.0 staff h/month');
+
+    await page.reload();
+    await waitForPageReady(page);
+    await openPanel(page);
+    await expect(page.locator('#membershipRangeBody input[data-kind="visitsHigh"]').first()).toHaveValue('3');
+    await page.locator('#membershipRangeBody input[data-kind="visitsHigh"]').first().fill('');
+    await page.locator('#membershipRangeBody input[data-kind="visitsLow"]').first().fill('');
+    await expect(cell).not.toContainText('Visit range');
+  });
+
   test('stacking is opt-in: the checkbox lets credits redeem at the member price', async ({ page }) => {
     await open(page, 'intermediate');
     await seedStudio(page);

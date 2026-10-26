@@ -296,10 +296,10 @@ export function buildCSV(st: AppState, results: CalcResult) {
   sanitizePlans(st.membershipPlans).forEach((p) => {
     lines.push([csvCell(p.name), p.monthlyFee, p.creditsPerMonth, p.memberDiscountPct, p.creditsAtMemberPrice ? 'yes' : 'no', csvCell(JSON.stringify(namesOf(p.eligible)))].join(','));
   });
-  lines.push('', 'MEMBER PROFILES', 'Name,Visits/month by offering');
+  lines.push('', 'MEMBER PROFILES', 'Name,Visits/month by offering,Visits Low,Visits High');
   sanitizeProfiles(st.memberProfiles).forEach((p) => {
-    const visits = Object.fromEntries(Object.entries(p.visits).filter(([id]) => nameOf.has(id)).map(([id, v]) => [nameOf.get(id), v]));
-    lines.push(csvCell(p.name) + ',' + csvCell(JSON.stringify(visits)));
+    const byName = (v: Record<string, number> = {}) => csvCell(JSON.stringify(Object.fromEntries(Object.entries(v).filter(([id]) => nameOf.has(id)).map(([id, n]) => [nameOf.get(id), n]))));
+    lines.push([csvCell(p.name), byName(p.visits), p.visitsLow ? byName(p.visitsLow) : '', p.visitsHigh ? byName(p.visitsHigh) : ''].join(','));
   });
 
   return lines.join('\n');
@@ -1540,7 +1540,8 @@ export function importFromCSV(csvText: string) {
   const rawResources: Array<Record<string, unknown>> = [];
   const resourceNames: string[] = []; // per imported offering, aligned with `offerings`
   const rawPlans: Array<{ row: Record<string, unknown>; names: string[] }> = [];
-  const rawProfiles: Array<{ name: string; visits: Record<string, number> }> = [];
+  type VisitsByName = Record<string, number>;
+  const rawProfiles: Array<{ name: string; visits: VisitsByName; low?: VisitsByName; high?: VisitsByName }> = [];
 
   try {
     const lines = csvText.split('\n').map((line) => line.trim()).filter((line) => line);
@@ -1609,9 +1610,10 @@ export function importFromCSV(csvText: string) {
 
       if (section === 'profiles') {
         if (!headerSeen) { headerSeen = true; continue; }
-        const [name, visits] = splitCsvLine(line);
-        const parsed = parseJsonCell(visits, (v) => !!v && typeof v === 'object' && !Array.isArray(v)) as Record<string, number> | undefined;
-        if (name) rawProfiles.push({ name, visits: parsed ?? {} });
+        // Columns 3-4 (visit bounds) are optional so older files still import
+        const [name, visits, low, high] = splitCsvLine(line);
+        const asMap = (cell?: string) => parseJsonCell(cell, (v) => !!v && typeof v === 'object' && !Array.isArray(v)) as VisitsByName | undefined;
+        if (name) rawProfiles.push({ name, visits: asMap(visits) ?? {}, low: asMap(low), high: asMap(high) });
       }
 
       if (section === 'offerings') {
@@ -1691,10 +1693,10 @@ export function importFromCSV(csvText: string) {
       ? sanitizePlans(rawPlans.map((p) => ({ ...p.row, eligible: p.names.map((n) => idByName.get(n)).filter((id): id is string => !!id) })), uuid)
       : undefined;
     const memberProfiles = sawProfiles
-      ? sanitizeProfiles(rawProfiles.map((p) => ({
-        name: p.name,
-        visits: Object.fromEntries(Object.entries(p.visits).filter(([n]) => idByName.has(n)).map(([n, v]) => [idByName.get(n), v]))
-      })), uuid)
+      ? sanitizeProfiles(rawProfiles.map((p) => {
+        const byId = (v: VisitsByName = {}) => Object.fromEntries(Object.entries(v).filter(([n]) => idByName.has(n)).map(([n, x]) => [idByName.get(n), x]));
+        return { name: p.name, visits: byId(p.visits), visitsLow: byId(p.low), visitsHigh: byId(p.high) };
+      }), uuid)
       : undefined;
 
     // Validate offerings
