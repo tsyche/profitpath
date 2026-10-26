@@ -2767,6 +2767,8 @@ input[type="checkbox"] {
 
 .table td.group-actions {
   justify-content: space-between;
+  flex-wrap: wrap;
+  row-gap: 8px;
 }
 
 .table td.group-actions::before {
@@ -2786,6 +2788,50 @@ input[type="checkbox"] {
   font-size: 13px;
   border-radius: 10px;
   text-align: center;
+}
+
+/*
+  Read-only output tables (cost breakdown, result range, profit per hour) have no data-label cells,
+  so they keep a real table layout instead of the offering-card layout above.
+*/
+.table.table-flat {
+  display: table;
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.table-flat thead {
+  display: table-header-group;
+}
+
+.table-flat tbody {
+  display: table-row-group;
+}
+
+.table-flat tr {
+  display: table-row;
+  width: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.table-flat th,
+.table-flat td {
+  display: table-cell;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+}
+
+.table-flat td::before {
+  content: none;
 }
 
 /* Consistent Modal Styles - Replaces legacy modal styles */

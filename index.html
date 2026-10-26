@@ -732,7 +732,7 @@
 
         <div id="costBreakdown" class="cost-breakdown" hidden>
           <div class="muted" style="font-size: 12px;">Fixed costs by category (annual)</div>
-          <table class="table" aria-label="Fixed costs by category">
+          <table class="table table-flat" aria-label="Fixed costs by category">
             <tbody id="costBreakdownBody"></tbody>
           </table>
         </div>
@@ -750,7 +750,7 @@
           <div class="muted" style="font-size: 12px;"
             title="Min and max across running every low bound together and every high bound together. A scenario envelope, not a statistical interval.">
             Range across your low / high assumptions</div>
-          <table class="table" aria-label="Result range">
+          <table class="table table-flat" aria-label="Result range">
             <thead><tr><th>Metric</th><th>Min</th><th>Base</th><th>Max</th></tr></thead>
             <tbody id="rangeBandBody"></tbody>
           </table>
@@ -761,7 +761,7 @@
           <div class="muted" style="font-size: 12px;"
             title="Contribution (price - variable and labor costs) per delivered staff hour. Max discount is the deepest cut before delivery costs exceed the price.">
             Offerings by profit per staff hour</div>
-          <table class="table" aria-label="Offerings ranked by profit per staff hour">
+          <table class="table table-flat" aria-label="Offerings ranked by profit per staff hour">
             <thead><tr><th>Offering</th><th>Per hour</th><th title="Per hour at the best-case discount">At best discount</th><th>Max discount</th><th>Floor</th></tr></thead>
             <tbody id="offeringRankingBody"></tbody>
           </table>
@@ -923,6 +923,8 @@
             <p class="smallprint">What-if only: nothing here is included in the totals above. Credits are list-price dollars; revenue is the fee plus cash paid, and redeeming credits adds cost and staff hours but no revenue.</p>
             <div id="membershipEditor"></div>
             <h4 style="margin-top: 12px;">Comparison</h4>
+            <label class="smallprint" for="membershipTargetMargin">Target margin % (optional): adds the lowest fee that reaches it, with credits and discount unchanged
+              <input id="membershipTargetMargin" type="number" min="0" max="99" step="1" inputmode="decimal" style="width: 5em;" /></label>
             <div id="membershipResults"></div>
           </div>
         </div>

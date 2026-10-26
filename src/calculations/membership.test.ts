@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcMembership, calcMembershipRange, hasVisitRange, maxMembers, pruneMembership, sanitizePlans, sanitizeProfiles } from './membership'
+import { calcMembership, calcMembershipRange, hasVisitRange, maxMembers, recommendFee, pruneMembership, sanitizePlans, sanitizeProfiles } from './membership'
 import type { MembershipPlan, MemberProfile } from '../types'
 
 // Roadmap 24a: all figures hand-computed. Studio lists at $60 per session
@@ -230,5 +230,42 @@ describe('maxMembers', () => {
 
   it('a pool with zero hours caps members at 0', () => {
     expect(maxMembers(profile({ studio: 1 }), inBooth, [staff, { ...booth, hours: 0 }])).toEqual({ members: 0, binding: 'booth' })
+  })
+})
+
+// Roadmap 24e slice 4: fee for a target margin with credits and discount fixed.
+// Studio visit: list $60, cost $10, covered by credits (cash 0), so margin = 1 - 10 / fee.
+describe('recommendFee', () => {
+  it('solves fee = cost / (1 - margin) - cash: 50% target on $10 cost is $20', () => {
+    const r = recommendFee(plan({ monthlyFee: 999 }), profile({ studio: 1 }), offerings, 50)
+    expect(r).toEqual({ feasible: true, fee: 20, maxFee: 60 })
+    const check = calcMembership(plan({ monthlyFee: 20 }), profile({ studio: 1 }), offerings)
+    expect(check.marginPct).toBe(50)
+    expect(check.savings).toBeGreaterThan(0)
+  })
+
+  it('0% target is break-even', () => {
+    expect(recommendFee(plan(), profile({ studio: 1 }), offerings, 0)).toEqual({ feasible: true, fee: 10, maxFee: 60 })
+  })
+
+  it('infeasible when the fee needed would leave the member paying at least their regular spend', () => {
+    // 90% needs a $100 fee; the member only saves below $60
+    expect(recommendFee(plan(), profile({ studio: 1 }), offerings, 90)).toEqual({ feasible: false, reason: 'member-loses', fee: 100, maxFee: 60 })
+  })
+
+  it('cash already in the plan lowers the fee, floored at 0', () => {
+    // mixing is ineligible: $60 cash, so the 50% target is met with no fee at all
+    expect(recommendFee(plan(), profile({ studio: 1, mixing: 2 }), offerings, 50)).toEqual({ feasible: true, fee: 0, maxFee: 60 })
+  })
+
+  it('rounds the fee up to the cent so the target is never undershot', () => {
+    const r = recommendFee(plan(), profile({ studio: 1 }), offerings, 33)
+    expect(r.feasible && r.fee).toBe(14.93) // 10 / 0.67 = 14.925...
+  })
+
+  it('reports explicit failures for no visits and for an invalid target', () => {
+    expect(recommendFee(plan(), profile({}), offerings, 50)).toEqual({ feasible: false, reason: 'no-visits' })
+    expect(recommendFee(plan(), profile({ studio: 1 }), offerings, 100)).toEqual({ feasible: false, reason: 'invalid-target' })
+    expect(recommendFee(plan(), profile({ studio: 1 }), offerings, NaN)).toEqual({ feasible: false, reason: 'invalid-target' })
   })
 })

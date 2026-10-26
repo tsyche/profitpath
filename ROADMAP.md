@@ -81,10 +81,12 @@ Shipped 2026-10-24/25: multi-resource capacity pools (20) incl. staff-free resou
     - A simple optimistic/base/conservative 3-scenario toggle — applying a confidence band to guessed inputs (informed by item 22's confidence tags, if built) and showing a resulting range rather than one number — would better communicate uncertainty for exactly this "sketching before real data exists" use case
     - Effort: ~4-5 hours
 
-24e. **Membership What-If follow-ups** *(new, from 24a)*
+24e. **Membership What-If follow-ups** *(SHIPPED 2026-10-26: visit ranges, members per pool, fee optimizer; deferred lines below)*
     - ~~Credits-vs-visits ranges~~ *(SHIPPED 2026-10-25)*: optional low / high visits per offering on a profile (collapsed "Visit ranges" table); each result cell adds a line with member savings, your margin and staff hours across all-low / base / all-high (min/max over the runs, since fewer visits can raise margin). Persisted in scenarios, share URL and CSV (profile cols 3-4); display only.
-    - Members supportable per capacity pool: how many members of a profile fit before staff or a pool (item 20) saturates.
-    - Recommended-plan optimizer: suggest fee / credits / discount that hit a target margin while keeping actual member savings positive.
+    - ~~Members supportable per capacity pool~~ *(SHIPPED 2026-10-26)*: each result cell shows how many members fit before staff or a tagged pool saturates, naming the binding pool. Standalone headroom at target utilization.
+    - Deferred 2026-10-26: subtract current client load from that headroom (needs a stable meaning of "current" in Forecast mode); group offerings use per-visit hours, not per-seat.
+    - ~~Recommended-plan optimizer~~ *(SHIPPED 2026-10-26, fee only)*: optional session-only target margin % adds the lowest fee that reaches it while the member still saves, or an explicit "no fee works" line. Credits and discount stay as entered.
+    - Deferred 2026-10-26: solve credits or discount for a target margin (the fee-only solve is linear; those are not).
     - Feed members into `calc()`: only if the panel proves useful; today it is display only so credits can't double count as revenue.
     - Excel export carries no plans or profiles (nor expenses or resources); add with the others if that path is revisited.
 

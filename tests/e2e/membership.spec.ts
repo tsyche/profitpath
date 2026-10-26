@@ -173,4 +173,25 @@ test.describe('Membership what-if', () => {
     // 1 visit a month = 12 h a year against 52 booth hours: 4 members, booth binds
     await expect(page.locator('.membership-fit').first()).toContainText('Fits 4 members before Booth is full');
   });
+
+  test('target margin recommends a fee, or says plainly that none works', async ({ page }) => {
+    await open(page, 'intermediate');
+    await seedStudio(page);
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.membershipPlans = [{ id: 'p', name: 'Plan', monthlyFee: 100, creditsPerMonth: 120, memberDiscountPct: 0, eligible: ['studio'] }];
+      w.state.memberProfiles = [{ id: 'm', name: 'Regular', visits: { studio: 1 } }];
+      w.render();
+    });
+    await openPanel(page);
+    const fee = page.locator('.membership-fee');
+    await expect(fee).toHaveCount(0);
+    // $10 cost: 50% margin needs a $20 fee; the member saves anything below $60
+    await page.locator('#membershipTargetMargin').fill('50');
+    await expect(fee.first()).toContainText('Fee for 50.0% margin: $20 / month');
+    await page.locator('#membershipTargetMargin').fill('90');
+    await expect(fee.first()).toContainText('No fee reaches 90.0% margin while the member still saves');
+    await page.locator('#membershipTargetMargin').fill('');
+    await expect(fee).toHaveCount(0);
+  });
 });

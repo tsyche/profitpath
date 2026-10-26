@@ -1,4 +1,4 @@
-import { calcMembership, calcMembershipRange, hasVisitRange, maxMembers, sanitizePlans, sanitizeProfiles, MAX_PLANS, MAX_PROFILES } from '../../src/calculations/membership';
+import { calcMembership, calcMembershipRange, hasVisitRange, maxMembers, recommendFee, sanitizePlans, sanitizeProfiles, MAX_PLANS, MAX_PROFILES } from '../../src/calculations/membership';
 import type { CapacityPool, CatalogOffering } from '../../src/calculations/membership';
 import { STAFF_POOL_ID, activeResources, resourceAnnualHours } from '../../src/calculations/resources';
 import { fmtMoney0 } from '../../src/calculations/currency';
@@ -32,6 +32,8 @@ interface PanelDeps {
 
 let deps: PanelDeps | null = null;
 let lastHistoryField: string | null = null;
+/** Session-only target for the fee recommendation; blank (NaN) turns the line off. */
+let targetMarginPct = NaN;
 
 const $ = (sel: string) => document.querySelector<HTMLElement>(sel);
 const pct1 = (n: number) => n.toFixed(1) + '%';
@@ -133,6 +135,15 @@ function fitLine(profile: MemberProfile, s: PanelState): string {
   return 'Fits ' + cap.members + ' member' + (cap.members === 1 ? '' : 's') + ' before ' + escapeHtml(name) + ' is full (at target utilization, ignores your current clients)';
 }
 
+function feeLine(plan: MembershipPlan, profile: MemberProfile, offerings: PanelOffering[]): string | null {
+  if (Number.isNaN(targetMarginPct)) return null;
+  const r = recommendFee(plan, profile, offerings, targetMarginPct);
+  const target = pct1(targetMarginPct) + ' margin';
+  if (r.feasible) return 'Fee for ' + target + ': ' + fmtMoney0(r.fee) + ' / month (member still saves below ' + fmtMoney0(r.maxFee) + ')';
+  if (r.reason === 'member-loses') return 'No fee reaches ' + target + ' while the member still saves: needs ' + fmtMoney0(r.fee) + ', member saves only below ' + fmtMoney0(r.maxFee) + '. Change credits or discount.';
+  return r.reason === 'no-visits' ? 'Fee for ' + target + ': add visits to this profile' : 'Target margin must be 0 to 99%';
+}
+
 function cellHtml(plan: MembershipPlan, profile: MemberProfile, s: PanelState): string {
   const offerings = s.offerings;
   const r = calcMembership(plan, profile, offerings);
@@ -149,6 +160,8 @@ function cellHtml(plan: MembershipPlan, profile: MemberProfile, s: PanelState): 
   lines.push('You keep ' + fmtMoney0(r.margin) + ' of ' + fmtMoney0(r.revenue) + ' revenue' + (r.marginPct === null ? '' : ' (' + pct1(r.marginPct) + ' margin on revenue)'));
   lines.push(r.staffHours.toFixed(1) + ' staff h/month');
   lines.push('<span class="membership-fit">' + fitLine(profile, s) + '</span>');
+  const fee = feeLine(plan, profile, offerings);
+  if (fee) lines.push('<span class="membership-fee">' + fee + '</span>');
   const band = calcMembershipRange(plan, profile, offerings);
   if (band) {
     const span = (a: number, b: number) => (a === b ? fmtMoney0(a) : fmtMoney0(a) + ' to ' + fmtMoney0(b));
@@ -196,6 +209,11 @@ function recordHistory(key: string): void {
 
 function onInput(e: Event): void {
   const el = e.target;
+  if (el instanceof HTMLInputElement && el.id === 'membershipTargetMargin') {
+    targetMarginPct = el.value.trim() === '' ? NaN : Number(el.value);
+    renderMembershipResults();
+    return;
+  }
   if (!deps || !(el instanceof HTMLInputElement) || el.type === 'checkbox') return;
   const { plans, profiles } = listsOf(deps.getState());
   const kind = el.dataset.kind;

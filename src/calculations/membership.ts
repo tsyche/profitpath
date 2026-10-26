@@ -269,3 +269,24 @@ export function maxMembers(profile: MemberProfile, offerings: CatalogOffering[],
   }
   return best;
 }
+
+export type FeeRecommendation =
+  | { feasible: true; fee: number; maxFee: number }
+  | { feasible: false; reason: 'no-visits' | 'invalid-target' }
+  | { feasible: false; reason: 'member-loses'; fee: number; maxFee: number };
+
+/**
+ * Lowest monthly fee that reaches a target margin on revenue, with credits and discount held fixed
+ * (only the fee is solved). Margin is linear in the fee: revenue = cost / (1 - m), so fee = revenue - cash,
+ * floored at 0 and rounded up to the cent. Feasible only while the member still saves, i.e. fee < regularSpend - cash.
+ */
+export function recommendFee(plan: MembershipPlan, profile: MemberProfile, offerings: CatalogOffering[], targetMarginPct: number): FeeRecommendation {
+  if (!Number.isFinite(targetMarginPct) || targetMarginPct < 0 || targetMarginPct >= 100) return { feasible: false, reason: 'invalid-target' };
+  const base = calcMembership({ ...plan, monthlyFee: 0 }, profile, offerings);
+  if (base.regularSpend <= 0) return { feasible: false, reason: 'no-visits' };
+  const cash = base.memberSpend; // fee is 0 here, so memberSpend is cash alone
+  const maxFee = base.regularSpend - cash;
+  const needed = base.deliveryCost / (1 - targetMarginPct / 100) - cash;
+  const fee = Math.max(0, Math.ceil(needed * 100 - 1e-9) / 100);
+  return fee < maxFee ? { feasible: true, fee, maxFee } : { feasible: false, reason: 'member-loses', fee, maxFee };
+}

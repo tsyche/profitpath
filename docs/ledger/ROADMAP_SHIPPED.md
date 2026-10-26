@@ -5,6 +5,7 @@
 ## Shipped index
 
 - [x] 2026-10-25 — TypeScript migration (strict, all source and tests `.ts`, lint `--max-warnings 0`)
+- [x] 2026-10-26 — 24e. Membership What-If follow-ups (visit ranges, members per pool, fee optimizer)
 - [x] 2026-10-25 — 24a. Membership and prepaid-credit pricing calculator
 - [x] 2026-10-25 — 20. Multi-resource capacity pools
 - [x] 2026-10-25 — 12j. Offerings table view (closed, already satisfied)
@@ -55,6 +56,16 @@
 ### 2026-10-25 — TypeScript migration
 
 All source and tests are `.ts` with `strict: true`; the ratchet is retired (`tsc --noEmit` must be 0). `tests/e2e` is typechecked; unit `*.test.ts` files stay excluded (known gap, ~1,150 errors in the jsdom mock tests; tracked as ROADMAP 12x); `$`/`$$` are typed. Migration also surfaced and fixed real bugs, each with a test: insights under-utilization, dashboard export `getSummary`, customer analytics revenue, table focus restore (`tests/e2e/table-focus.spec.ts`). Plan: [typescript-migration](../plans/archive/typescript-migration.md).
+
+### 2026-10-26 — 24e. Membership What-If follow-ups
+
+Three display-only slices on the membership panel, nothing feeds `calc()`:
+
+- **Visit ranges** (982693c): optional low/high visits per offering on a profile; `calcMembershipRange` takes min/max across the all-low / base / all-high runs. CSV profile cols 3-4.
+- **Members per pool** (1f80464): `maxMembers` is the minimum over staff and tagged pools of floor(pool hours / member hours per year), staff-free pools put no hours on staff, and the binding pool is named. Staff hours come from the last `calc()`; headroom is standalone at target utilization.
+- **Fee optimizer**: `recommendFee` solves fee = cost / (1 - margin) - cash, floored at 0, rounded up to the cent. It returns an explicit infeasible result when the member would stop saving. It solves the fee only, with credits and discount held fixed. The target is session-only.
+
+Deferred lines are in ROADMAP 24e.
 
 ### 2026-10-25 — 24c. Ranged inputs: frequency bounds
 
