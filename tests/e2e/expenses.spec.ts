@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Fixed expenses table', () => {
@@ -10,8 +10,8 @@ test.describe('Fixed expenses table', () => {
     await waitForPageReady(page);
   });
 
-  const rows = (page) => page.locator('#expensesBody tr');
-  const fixedCosts = (page) => page.evaluate(() => (window as any).calc((window as any).state).annualFixedCosts);
+  const rows = (page: Page) => page.locator('#expensesBody tr');
+  const fixedCosts = (page: Page) => page.evaluate(() => (window as any).calc((window as any).state).annualFixedCosts);
 
   test('a weekly expense adds weekly x52 to fixed costs and survives reload', async ({ page }) => {
     const before = await fixedCosts(page);

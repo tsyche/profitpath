@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 /** Open the drawer, expand the Appearance section, and select a palette. */
-async function openDrawerAndSelectPalette(page, palette) {
+async function openDrawerAndSelectPalette(page: Page, palette: any) {
   await page.locator('#appMenuBtn').click();
   await expect(page.locator('#appDrawer')).toBeVisible();
 

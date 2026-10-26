@@ -283,7 +283,7 @@ export function bindScenariosAndGlobals(): void {
             populateComparisonDropdowns();
           } else {
             // Hide comparison results when modal is closed
-            $('#comparisonResults').style.display = 'none';
+            $('#comparisonResults')!.style.display = 'none';
           }
         }
       }

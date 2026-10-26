@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Saving a scenario under an existing name', () => {
@@ -10,7 +10,7 @@ test.describe('Saving a scenario under an existing name', () => {
     await waitForPageReady(page);
   });
 
-  const saved = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]'));
+  const saved = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]'));
 
   test('updates the existing scenario in place instead of adding a twin', async ({ page }) => {
     await page.evaluate(() => {
@@ -61,8 +61,8 @@ test.describe('Duplicating a scenario', () => {
 
     await expect(page.locator('.scenario-item', { hasText: 'Base copy' })).toBeVisible();
     const all = await page.evaluate(() => JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]'));
-    expect(all.map((s) => s.name).sort()).toEqual(['Base', 'Base copy']);
-    const [orig, copy] = ['Base', 'Base copy'].map((n) => all.find((s) => s.name === n));
+    expect(all.map((s: any) => s.name).sort()).toEqual(['Base', 'Base copy']);
+    const [orig, copy] = ['Base', 'Base copy'].map((n) => all.find((s: any) => s.name === n));
     expect(copy.id).not.toBe(orig.id);
     expect(copy.state.notes).toBe('baseline');
   });

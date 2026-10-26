@@ -80,7 +80,7 @@ test.describe('Scenario Workflows - E2E', () => {
       await expect(scenariosBtn).toBeVisible({ timeout: 5000 });
 
       // Listen for console errors
-      const errors = [];
+      const errors: string[] = [];
       page.on('pageerror', error => errors.push(error.message));
 
       await scenariosBtn.click();

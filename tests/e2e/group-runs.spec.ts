@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Group runs (cost per run, break-even fill)', () => {
@@ -13,9 +13,9 @@ test.describe('Group runs (cost per run, break-even fill)', () => {
     await waitForPageReady(page);
   });
 
-  const row = (page) => page.locator('#offeringsBody tr').first();
-  const runCost = (page) => page.locator('#groupRunsBody input').first();
-  const breakEven = (page) => page.locator('#groupRunsBody td[data-be]').first();
+  const row = (page: Page) => page.locator('#offeringsBody tr').first();
+  const runCost = (page: Page) => page.locator('#groupRunsBody input').first();
+  const breakEven = (page: Page) => page.locator('#groupRunsBody td[data-be]').first();
 
   test('shows a hint until a row is a group', async ({ page }) => {
     await page.locator('#groupRunsSection summary').click();

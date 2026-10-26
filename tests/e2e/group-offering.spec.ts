@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Group offerings', () => {
@@ -10,10 +10,10 @@ test.describe('Group offerings', () => {
     await waitForPageReady(page);
   });
 
-  const row = (page) => page.locator('#offeringsBody tr').first();
-  const typeSelect = (page) => row(page).locator('select[data-k="type"]');
-  const seats = (page) => row(page).locator('input[data-k="seats"]');
-  const fill = (page) => row(page).locator('input[data-k="fillPct"]');
+  const row = (page: Page) => page.locator('#offeringsBody tr').first();
+  const typeSelect = (page: Page) => row(page).locator('select[data-k="type"]');
+  const seats = (page: Page) => row(page).locator('input[data-k="seats"]');
+  const fill = (page: Page) => row(page).locator('input[data-k="fillPct"]');
 
   test('seats and fill only appear once the row is a group', async ({ page }) => {
     await expect(seats(page)).toHaveCount(0);

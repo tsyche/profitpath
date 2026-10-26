@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Mix % entry', () => {
@@ -17,7 +17,7 @@ test.describe('Mix % entry', () => {
     });
   });
 
-  const mixOf = (page) => page.evaluate(() => (window as any).state.offerings[0].mixPct);
+  const mixOf = (page: Page) => page.evaluate(() => (window as any).state.offerings[0].mixPct);
 
   for (const [typed, stored] of [['150', 100], ['-5', 0]] as const) {
     test(`typing ${typed} stores ${stored}`, async ({ page }) => {

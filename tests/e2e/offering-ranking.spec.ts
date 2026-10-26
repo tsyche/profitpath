@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Offerings by profit per staff hour', () => {
@@ -10,7 +10,7 @@ test.describe('Offerings by profit per staff hour', () => {
     await waitForPageReady(page);
   });
 
-  const statuses = (page) => page.locator('#offeringRankingBody td[data-status]');
+  const statuses = (page: Page) => page.locator('#offeringRankingBody td[data-status]');
 
   test('lists every offering and flags one priced below its delivery cost', async ({ page }) => {
     await expect(page.locator('#offeringRanking')).toBeVisible();
@@ -53,7 +53,7 @@ test.describe('Best-case discount', () => {
     await page.evaluate(() => {
       const w = window as any;
       Object.assign(w.state.offerings[0], { variableCostPerSession: 0, laborPctOfPrice: 0 });
-      w.state.offerings.slice(1).forEach((o) => Object.assign(o, { variableCostPerSession: 0, laborPctOfPrice: 0 }));
+      w.state.offerings.slice(1).forEach((o: any) => Object.assign(o, { variableCostPerSession: 0, laborPctOfPrice: 0 }));
       w.persistState?.();
       w.render();
     });

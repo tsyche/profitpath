@@ -1,4 +1,4 @@
-import type { CalcResult } from '../../src/types';
+import type { AppState, CalcResult } from '../../src/types';
 import { calc } from '../../src/calculations/index';
 import { displayPrice, isOneTime, isPerSession } from '../../src/calculations/offeringPrice';
 import { getRangeCase } from '../../src/calculations/rangeCase';
@@ -21,18 +21,18 @@ import { persistState, pushHistory, redo, state, undo } from '../state/appState'
 /** Main render pass: inputs, offerings table, KPI outputs and the panels that follow them. */
 
 export function setStateFromInputs() {
-  state.mode = $('#modeSelect').value;
+  state.mode = $('#modeSelect')!.value as AppState['mode'];
 
   // Validate and sanitize inputs for full-time and part-time employees
-  state.fullTimeEmployees = Math.max(0, Math.floor(safeParseNumber($('#fullTimeEmployees').value, 1)));
-  state.partTimeEmployees = Math.max(0, Math.floor(safeParseNumber($('#partTimeEmployees').value, 0)));
-  state.fullTimeEmployeePay = Math.max(0, safeParseNumber($('#fullTimeEmployeePay').value, 0));
-  state.partTimeEmployeePay = Math.max(0, safeParseNumber($('#partTimeEmployeePay').value, 0));
+  state.fullTimeEmployees = Math.max(0, Math.floor(safeParseNumber($('#fullTimeEmployees')!.value, 1)));
+  state.partTimeEmployees = Math.max(0, Math.floor(safeParseNumber($('#partTimeEmployees')!.value, 0)));
+  state.fullTimeEmployeePay = Math.max(0, safeParseNumber($('#fullTimeEmployeePay')!.value, 0));
+  state.partTimeEmployeePay = Math.max(0, safeParseNumber($('#partTimeEmployeePay')!.value, 0));
 
-  state.monthlyCosts = Math.max(0, safeParseNumber($('#monthlyCosts').value, 0));
-  state.processingFeePct = clamp(safeParseNumber($('#processingFeePct').value, 0), 0, 20);
-  state.productiveUtilizationPct = clamp(safeParseNumber($('#productiveUtilizationPct').value, 80), 0, 100);
-  state.targetUtilizationPct = clamp(safeParseNumber($('#targetUtilizationPct').value, 75), 0, 150);
+  state.monthlyCosts = Math.max(0, safeParseNumber($('#monthlyCosts')!.value, 0));
+  state.processingFeePct = clamp(safeParseNumber($('#processingFeePct')!.value, 0), 0, 20);
+  state.productiveUtilizationPct = clamp(safeParseNumber($('#productiveUtilizationPct')!.value, 80), 0, 100);
+  state.targetUtilizationPct = clamp(safeParseNumber($('#targetUtilizationPct')!.value, 75), 0, 150);
   state.lockMix = Boolean($('#lockMix')?.checked);
 }
 
@@ -119,7 +119,7 @@ export function render() {
 
   // Top-level inputs
   {
-    const el = $('#modeSelect'); if (el) el.value = state.mode;
+    const el = $('#modeSelect'); if (el) el.value = String(state.mode);
   }
 
   // Sync the appbar mode toggle (Forecast <-> Current) with current state.
@@ -141,25 +141,25 @@ export function render() {
   updateKeyMetrics();
 
   {
-    const el = $('#fullTimeEmployees'); if (el) el.value = state.fullTimeEmployees;
+    const el = $('#fullTimeEmployees'); if (el) el.value = String(state.fullTimeEmployees);
   }
   {
-    const el = $('#partTimeEmployees'); if (el) el.value = state.partTimeEmployees;
+    const el = $('#partTimeEmployees'); if (el) el.value = String(state.partTimeEmployees);
   }
   {
-    const el = $('#fullTimeEmployeePay'); if (el) el.value = state.fullTimeEmployeePay;
+    const el = $('#fullTimeEmployeePay'); if (el) el.value = String(state.fullTimeEmployeePay);
   }
   {
-    const el = $('#partTimeEmployeePay'); if (el) el.value = state.partTimeEmployeePay;
+    const el = $('#partTimeEmployeePay'); if (el) el.value = String(state.partTimeEmployeePay);
   }
   {
-    const el = $('#monthlyCosts'); if (el) el.value = state.monthlyCosts;
+    const el = $('#monthlyCosts'); if (el) el.value = String(state.monthlyCosts);
   }
   {
-    const el = $('#processingFeePct'); if (el) el.value = state.processingFeePct;
+    const el = $('#processingFeePct'); if (el) el.value = String(state.processingFeePct);
   }
   {
-    const el = $('#productiveUtilizationPct'); if (el) el.value = state.productiveUtilizationPct;
+    const el = $('#productiveUtilizationPct'); if (el) el.value = String(state.productiveUtilizationPct);
   }
 
   const isForecast = state.mode === 'forecast';
@@ -168,7 +168,7 @@ export function render() {
     if (targetEl) {
       const field = targetEl.closest('.field');
       if (field) field.classList.toggle('hidden', !isForecast);
-      targetEl.value = state.targetUtilizationPct;
+      targetEl.value = String(state.targetUtilizationPct);
     }
   }
 
@@ -182,7 +182,7 @@ export function render() {
 
   // Offerings table
   const tbody = $('#offeringsBody');
-  tbody.innerHTML = '';
+  tbody!.innerHTML = '';
 
   metrics.offerings.forEach((o, idx: number) => {
     const tr = document.createElement('tr');
@@ -245,7 +245,7 @@ export function render() {
       '<td class="cell-readonly group-metrics group-end" data-label="Annual Profit"><span class="mono" style="color:' + ((metrics.offeringMetrics[idx]?.margin || 0) > 0 ? 'var(--good)' : 'var(--bad)') + '">' + (fmtMoney0(metrics.offeringMetrics[idx]?.margin || 0)) + '</span></td>' +
       '<td class="cell-edit group-actions" data-label="Actions"><button class="btn small" data-action="duplicateOffering" data-i="' + (idx) + '" aria-label="Duplicate ' + (escapeHtml(o.name)) + '">Duplicate</button> <button class="btn small danger" data-action="removeOffering" data-i="' + (idx) + '" aria-label="Remove ' + (escapeHtml(o.name)) + '">Remove</button></td>';
 
-    tbody.appendChild(tr);
+    tbody!.appendChild(tr);
   });
 
   restoreTableFocus('offeringsTable');
@@ -265,19 +265,19 @@ export function render() {
     const sum = metrics.offerings.reduce((a: number, o) => a + (Number(o.mixPct) || 0), 0);
     const delta = Math.abs(sum - 100);
 
-    mixNote.classList.add('note-forecast');
-    if (state.lockMix) mixNote.classList.add('note-lock');
-    if (!state.lockMix && delta >= 0.05) mixNote.classList.add('note-warn');
+    mixNote!.classList.add('note-forecast');
+    if (state.lockMix) mixNote!.classList.add('note-lock');
+    if (!state.lockMix && delta >= 0.05) mixNote!.classList.add('note-warn');
 
-    mixNote.textContent = state.lockMix
+    mixNote!.textContent = state.lockMix
       ? 'Forecast mode: editing Mix % (locked to 100%, auto-balancing others)'
       : (delta < 0.05
         ? 'Forecast mode: editing Mix % (current total ' + (sum.toFixed(1)) + '%)'
         : 'Forecast mode: editing Mix % (current total ' + (sum.toFixed(1)) + '% — auto-normalized for calculations)');
   } else {
     const total = metrics.offerings.reduce((a: number, o) => a + (Number(o.currentClients) || 0), 0);
-    mixNote.classList.add('note-current');
-    mixNote.textContent = total > 0
+    mixNote!.classList.add('note-current');
+    mixNote!.textContent = total > 0
       ? 'Current mode: editing Clients (utilization computed from workload)'
       : 'Current mode: start by entering Clients';
   }
@@ -448,10 +448,10 @@ export function updateOutputs(metrics: CalcResult) {
     if (kpiSeTax) {
       if (metrics.income > 0) {
         kpiSeTax.textContent = fmtMoney0(metrics.seTax);
-        kpiFederalTax.textContent = fmtMoney0(metrics.federalTax);
-        kpiQuarterly.textContent = fmtMoney0(metrics.quarterlyEst);
-        kpiTakeHome.textContent = fmtMoney0(metrics.takeHome);
-        kpiTakeHome.style.color = metrics.takeHome > 0 ? 'var(--good)' : 'var(--bad)';
+        kpiFederalTax!.textContent = fmtMoney0(metrics.federalTax);
+        kpiQuarterly!.textContent = fmtMoney0(metrics.quarterlyEst);
+        kpiTakeHome!.textContent = fmtMoney0(metrics.takeHome);
+        kpiTakeHome!.style.color = metrics.takeHome > 0 ? 'var(--good)' : 'var(--bad)';
       } else {
         ['#kpiSeTax', '#kpiFederalTax', '#kpiQuarterly', '#kpiTakeHome'].forEach(id => {
           const el = $(id);
@@ -494,7 +494,7 @@ export function updateOutputs(metrics: CalcResult) {
 
     // Update debug panel if present
     const dbg = $('#debugPanel');
-    if (dbg && $('#debugBody') && !$('#debugBody').classList.contains('collapsed')) {
+    if (dbg && $('#debugBody') && !$('#debugBody')!.classList.contains('collapsed')) {
       dbg.textContent = JSON.stringify(metrics, null, 2);
     }
   } catch (e) {

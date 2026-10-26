@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Labor % of price column', () => {
@@ -10,7 +10,7 @@ test.describe('Labor % of price column', () => {
     await waitForPageReady(page);
   });
 
-  const input = (page) => page.locator('#offeringsBody input[data-k="laborPctOfPrice"]').first();
+  const input = (page: Page) => page.locator('#offeringsBody input[data-k="laborPctOfPrice"]').first();
 
   test('typing a percent changes variable costs and survives reload', async ({ page }) => {
     const readVar = () => page.evaluate(() => (window as any).calc((window as any).state).variableCosts);

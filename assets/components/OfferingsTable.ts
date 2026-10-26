@@ -194,12 +194,12 @@ export function addOffering() {
 
 export function bindOfferingsTable(): void {
   const body = $('#offeringsBody');
-  body.addEventListener('input', onTableInput);
-  body.addEventListener('blur', clearHistoryField, true); // Capture blur to clear field tracking
-  body.addEventListener('click', onTableClick);
+  body!.addEventListener('input', onTableInput);
+  body!.addEventListener('blur', clearHistoryField, true); // Capture blur to clear field tracking
+  body!.addEventListener('click', onTableClick);
   // Save state when table content changes
-  body.addEventListener('input', persistState);
-  body.addEventListener('click', () => setTimeout(persistState, 0));
+  body!.addEventListener('input', persistState);
+  body!.addEventListener('click', () => setTimeout(persistState, 0));
   const btn = $('#addOfferingBtn');
   if (btn) btn.addEventListener('click', addOffering);
 }

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Scenario currency', () => {
@@ -10,7 +10,7 @@ test.describe('Scenario currency', () => {
     await waitForPageReady(page);
   });
 
-  const pickEuro = (page) => page.evaluate(() => {
+  const pickEuro = (page: Page) => page.evaluate(() => {
     const el = document.querySelector('#currencySelect') as HTMLSelectElement;
     el.value = 'EUR';
     el.dispatchEvent(new Event('change', { bubbles: true }));

@@ -12,11 +12,11 @@ test.describe('ProfitPath App Tests', () => {
     // Check that main elements are present
     const bodyText = await page.textContent('body');
     expect(bodyText).toBeTruthy();
-    expect(bodyText.length).toBeGreaterThan(100);
+    expect(bodyText!.length).toBeGreaterThan(100);
   });
 
   test('no JavaScript errors', async ({ page }) => {
-    const errors = [];
+    const errors: Error[] = [];
     page.on('pageerror', error => errors.push(error));
     
     await page.goto('/');
@@ -29,7 +29,7 @@ test.describe('ProfitPath App Tests', () => {
 
   // updateOutputs catches render errors and only console.warns them, so pageerror alone never sees a broken render
   test('no swallowed render errors on load or re-render', async ({ page }) => {
-    const warnings = [];
+    const warnings: string[] = [];
     page.on('console', msg => { if (/updateOutputs error|render.*error/i.test(msg.text())) warnings.push(msg.text()); });
 
     await page.goto('/');

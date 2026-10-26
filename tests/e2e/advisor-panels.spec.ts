@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Mix Optimizer, Advanced Charts and version display', () => {
-  const open = async (page) => {
+  const open = async (page: Page) => {
     await page.addInitScript(() => {
       try {
         localStorage.setItem('onboardingCompleted', 'true');

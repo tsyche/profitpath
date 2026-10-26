@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Undo / redo', () => {
@@ -10,7 +10,7 @@ test.describe('Undo / redo', () => {
     await waitForPageReady(page);
   });
 
-  const edit = async (page, value: string) => {
+  const edit = async (page: Page, value: string) => {
     const f = page.locator('#fullTimeEmployees');
     await f.fill(value);
   };

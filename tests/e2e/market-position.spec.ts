@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Market position badge', () => {
@@ -21,8 +21,8 @@ test.describe('Market position badge', () => {
     await page.locator('#marketSection summary').click();
   });
 
-  const field = (page, k) => page.locator(`#marketBody input[data-k="${k}"]`).first();
-  const badge = (page) => page.locator('#marketBody tr').first().locator('.market-badge');
+  const field = (page: Page, k: any) => page.locator(`#marketBody input[data-k="${k}"]`).first();
+  const badge = (page: Page) => page.locator('#marketBody tr').first().locator('.market-badge');
 
   test('no badge until market numbers are entered, then it tracks the price live', async ({ page }) => {
     await expect(badge(page)).toHaveText('—');

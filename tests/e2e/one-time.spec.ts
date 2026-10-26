@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('One-time offering type', () => {
@@ -16,8 +16,8 @@ test.describe('One-time offering type', () => {
     });
   });
 
-  const row = (page) => page.locator('#offeringsBody tr').first();
-  const out = (page) => page.evaluate(() => { const w = window as any; const r = w.calc(w.state); return { revenue: r.revenue, hours: r.serviceHours }; });
+  const row = (page: Page) => page.locator('#offeringsBody tr').first();
+  const out = (page: Page) => page.evaluate(() => { const w = window as any; const r = w.calc(w.state); return { revenue: r.revenue, hours: r.serviceHours }; });
 
   test('price per sale x units sold drives revenue and staff hours drop to zero', async ({ page }) => {
     await row(page).locator('select[data-k="type"]').selectOption('one-time');

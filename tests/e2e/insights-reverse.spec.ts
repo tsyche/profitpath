@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Insights and Reverse Calculator panels', () => {
-  const open = async (page, settings: Record<string, unknown>) => {
+  const open = async (page: Page, settings: Record<string, unknown>) => {
     await page.addInitScript((s) => {
       try {
         localStorage.setItem('onboardingCompleted', 'true');
@@ -64,7 +64,7 @@ test.describe('Insights and Reverse Calculator panels', () => {
     const before = await pricing.textContent();
     await page.evaluate(() => {
       const w = window as any;
-      w.state.offerings.forEach((o) => { o.priceMonthly = o.priceMonthly * 0.5; });
+      w.state.offerings.forEach((o: any) => { o.priceMonthly = o.priceMonthly * 0.5; });
       w.render();
     });
     await expect(pricing).not.toHaveText(before as string);

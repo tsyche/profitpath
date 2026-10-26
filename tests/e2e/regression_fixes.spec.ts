@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Regression Fixes - UI & Logic', () => {
@@ -55,7 +55,7 @@ test.describe('Regression Fixes - UI & Logic', () => {
     await expect(undoSvg).toBeVisible();
   });
 
-  async function openImportFromDrawer(page) {
+  async function openImportFromDrawer(page: Page) {
     await page.locator('#appMenuBtn').click();
     await page.locator('.app-drawer .drawer-item', { hasText: 'Import CSV' }).click();
   }
@@ -85,7 +85,7 @@ test.describe('Regression Fixes - UI & Logic', () => {
 
     // We can't easily verify the native file picker opening, 
     // but we can verify no console errors are thrown on click
-    const errors = [];
+    const errors: string[] = [];
     page.on('console', msg => {
       if (msg.type() === 'error') errors.push(msg.text());
     });

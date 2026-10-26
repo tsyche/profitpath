@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-async function setup(page, { theme = 'dark' } = {}) {
+async function setup(page: Page, { theme = 'dark' } = {}) {
   await page.addInitScript((t) => {
     try {
       localStorage.setItem('profitpath-theme', t);
@@ -13,8 +13,8 @@ async function setup(page, { theme = 'dark' } = {}) {
 }
 
 // #helpBtn lives in #actionSources (hidden delegate container) — trigger via evaluate
-async function openHelpMenu(page) {
-  await page.evaluate(() => document.getElementById('helpBtn').click());
+async function openHelpMenu(page: Page) {
+  await page.evaluate(() => document.getElementById('helpBtn')!.click());
   await page.waitForSelector('.help-menu-btn', { timeout: 3000 });
 }
 

@@ -1,9 +1,9 @@
-import { expect } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 /**
  * Wait for the page to be fully loaded and ready for testing
  */
-export async function waitForPageReady(page) {
+export async function waitForPageReady(page: Page) {
   // Wait for DOM to be ready
   await page.waitForLoadState('domcontentloaded');
 
@@ -44,7 +44,7 @@ export async function waitForPageReady(page) {
 /**
  * Close onboarding/welcome dialogs if they appear
  */
-export async function closeOnboardingIfPresent(page) {
+export async function closeOnboardingIfPresent(page: Page) {
   try {
     // Forcefully remove any onboarding overlays to prevent test blocking
     await page.evaluate(() => {
@@ -58,7 +58,7 @@ export async function closeOnboardingIfPresent(page) {
       // Also try to remove any other modal overlays that might exist
       const modals = document.querySelectorAll('[class*="overlay"], [class*="modal"][class*="open"]');
       modals.forEach(modal => {
-        if (modal !== overlay && modal.style.zIndex > 1000) {
+        if (modal !== overlay && Number((modal as HTMLElement).style.zIndex) > 1000) {
           modal.remove();
           window.releaseScrollLock?.();
         }
@@ -74,7 +74,7 @@ export async function closeOnboardingIfPresent(page) {
 /**
  * Wait for calculations to complete
  */
-export async function waitForCalculations(page) {
+export async function waitForCalculations(page: Page) {
   // Wait for any loading indicators to disappear
   try {
     await page.waitForSelector('.loading, .spinner', { state: 'hidden', timeout: 2000 }).catch(() => {});
@@ -89,7 +89,7 @@ export async function waitForCalculations(page) {
 /**
  * Fill form inputs safely with validation
  */
-export async function safeFill(page, selector, value) {
+export async function safeFill(page: Page, selector: string, value: string) {
   try {
     const element = page.locator(selector);
     await element.waitFor({ state: 'visible', timeout: 3000 });
@@ -102,14 +102,14 @@ export async function safeFill(page, selector, value) {
     
     await page.waitForTimeout(100); // Small delay for React to update
   } catch (e) {
-    console.warn(`Failed to fill ${selector} with ${value}:`, e.message);
+    console.warn(`Failed to fill ${selector} with ${value}:`, (e as Error).message);
   }
 }
 
 /**
  * Click button safely with multiple fallback selectors
  */
-export async function safeClick(page, selectors) {
+export async function safeClick(page: Page, selectors: string | string[]) {
   if (typeof selectors === 'string') {
     selectors = [selectors];
   }
@@ -134,13 +134,13 @@ export async function safeClick(page, selectors) {
 /**
  * Get text content safely
  */
-export async function safeGetText(page, selector) {
+export async function safeGetText(page: Page, selector: string) {
   try {
     const element = page.locator(selector).first();
     await element.waitFor({ state: 'visible', timeout: 3000 });
     return await element.textContent();
   } catch (e) {
-    console.warn(`Could not get text from ${selector}:`, e.message);
+    console.warn(`Could not get text from ${selector}:`, (e as Error).message);
     return null;
   }
 }
@@ -148,7 +148,7 @@ export async function safeGetText(page, selector) {
 /**
  * Check if element exists and is visible
  */
-export async function isElementVisible(page, selector) {
+export async function isElementVisible(page: Page, selector: string) {
   try {
     const element = page.locator(selector).first();
     return await element.isVisible({ timeout: 2000 });

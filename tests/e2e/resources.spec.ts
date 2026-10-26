@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
-async function open(page, experienceLevel: string) {
+async function open(page: Page, experienceLevel: string) {
   await page.addInitScript((level) => {
     try {
       localStorage.setItem('onboardingCompleted', 'true');
@@ -12,7 +12,7 @@ async function open(page, experienceLevel: string) {
   await waitForPageReady(page);
 }
 
-const rows = (page) => page.locator('#resourcesBody tr');
+const rows = (page: Page) => page.locator('#resourcesBody tr');
 
 test.describe('Capacity resources', () => {
   test('hidden for beginners, shown from intermediate up', async ({ page }) => {
@@ -55,7 +55,7 @@ test.describe('Capacity resources', () => {
 
     await page.locator('#resourceTagBody select').first().selectOption({ label: 'Booth' });
     await expect(page.locator('#bottleneckLine')).toContainText('Bottleneck: Booth');
-    const pools = await page.evaluate(() => (window as any).calc((window as any).state).poolUtilization.map((p) => p.name));
+    const pools = await page.evaluate(() => (window as any).calc((window as any).state).poolUtilization.map((p: any) => p.name));
     expect(pools).toEqual(['Staff', 'Booth']);
 
     await page.reload();
@@ -73,7 +73,7 @@ test.describe('Capacity resources', () => {
     await expect(rows(page)).toHaveCount(0);
     await expect(page.locator('#resourceTagWrap')).toBeHidden();
     await expect(page.locator('#bottleneckLine')).toBeHidden();
-    const tagged = await page.evaluate(() => (window as any).state.offerings.filter((o) => o.resource).length);
+    const tagged = await page.evaluate(() => (window as any).state.offerings.filter((o: any) => o.resource).length);
     expect(tagged).toBe(0);
   });
   test('staff-free checkbox drops staff hours for tagged offerings and survives reload', async ({ page }) => {

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 /*
@@ -9,7 +9,7 @@ import { waitForPageReady } from './helpers';
  */
 const FORMATS = ['csv', 'excel', 'pdf', 'html', 'email', 'embed', 'schedule', 'financial-report'];
 
-async function openExportMenu(page) {
+async function openExportMenu(page: Page) {
   await page.locator('#appMenuBtn').click();
   await page.locator('.app-drawer .drawer-item', { hasText: 'Export' }).click();
   await expect(page.locator('#dwExport')).toHaveClass(/open/);
@@ -111,7 +111,7 @@ test.describe('Export Functionality - E2E', () => {
 
   test.describe('Export interaction', () => {
     test('choosing CSV runs the export and closes the drawer without errors', async ({ page }) => {
-      const errors = [];
+      const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
 
       await openExportMenu(page);
@@ -144,7 +144,7 @@ test.describe('Export Functionality - E2E', () => {
       // Only Chromium supports window.open in headless reliably for this test
       test.skip(browserName !== 'chromium', 'window.open popup tracking is Chromium-only in headless');
 
-      const errors = [];
+      const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
 
       // Intercept the popup

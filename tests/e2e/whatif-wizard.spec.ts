@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('What-if wizard', () => {
-  const open = async (page, level = 'beginner') => {
+  const open = async (page: Page, level = 'beginner') => {
     await page.addInitScript((l) => {
       try {
         localStorage.setItem('onboardingCompleted', 'true');
@@ -15,7 +15,7 @@ test.describe('What-if wizard', () => {
     await page.evaluate(() => (window as any).openWhatIfWizard());
     await expect(page.locator('#whatIfModal')).toBeVisible();
   };
-  const priceOf = (page) => page.locator('#offeringsBody tr').first().locator('input[data-k="priceMonthly"]');
+  const priceOf = (page: Page) => page.locator('#offeringsBody tr').first().locator('input[data-k="priceMonthly"]');
 
   test('available at beginner level and lists the scenarios', async ({ page }) => {
     await open(page);

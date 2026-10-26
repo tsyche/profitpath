@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 /*
  * Regression coverage for the header/menu redesign (modernize-ui).
@@ -13,23 +13,23 @@ import { test, expect } from '@playwright/test';
 // Treat a computed background colour as "dark" when its channels are low. We
 // compare the modal surface against the theme so a white-on-dark (or
 // dark-on-light) modal fails loudly.
-function channels(rgb) {
+function channels(rgb: string | null) {
   const m = (rgb || '').match(/\d+(\.\d+)?/g);
   if (!m) return null;
   return { r: +m[0], g: +m[1], b: +m[2] };
 }
-function isDark(rgb) {
+function isDark(rgb: string | null) {
   const c = channels(rgb);
   if (!c) return false;
   return c.r + c.g + c.b < 300; // ~<100 avg per channel
 }
-function isLight(rgb) {
+function isLight(rgb: string | null) {
   const c = channels(rgb);
   if (!c) return false;
   return c.r + c.g + c.b > 600; // ~>200 avg per channel
 }
 
-async function setup(page, { theme = 'dark', width, height } = {}) {
+async function setup(page: Page, { theme = 'dark', width, height }: { theme?: string; width?: number; height?: number } = {}) {
   if (width && height) await page.setViewportSize({ width, height });
   await page.addInitScript((t) => {
     try {
@@ -226,8 +226,8 @@ test.describe('KPI visual indicators', () => {
     const info = await page.evaluate(() => {
       const v = document.getElementById('kpiCapacity');
       return {
-        hasSvg: !!v.querySelector('svg'),
-        hasRingWrap: !!v.querySelector('.kpi-ring-wrap'),
+        hasSvg: !!v!.querySelector('svg'),
+        hasRingWrap: !!v!.querySelector('.kpi-ring-wrap'),
       };
     });
     expect(info.hasSvg).toBe(true);
@@ -237,9 +237,9 @@ test.describe('KPI visual indicators', () => {
   test('KPI card status classes applied (utilization and break-even)', async ({ page }) => {
     // Load a scenario with known utilization > 0
     await page.evaluate(() => {
-      const s = document.getElementById('employees');
+      const s = document.getElementById('employees') as HTMLInputElement | null;
       if (s) { s.value = '2'; s.dispatchEvent(new Event('input', { bubbles: true })); }
-      const c = document.getElementById('targetClients');
+      const c = document.getElementById('targetClients') as HTMLInputElement | null;
       if (c) { c.value = '20'; c.dispatchEvent(new Event('input', { bubbles: true })); }
     });
     await page.waitForTimeout(300);

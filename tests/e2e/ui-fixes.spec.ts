@@ -10,10 +10,10 @@ test.describe('UI fixes', () => {
     await page.goto('/');
     await page.waitForSelector('#appMenuBtn');
 
-    await page.evaluate(() => document.getElementById('appMenuBtn').click());
+    await page.evaluate(() => document.getElementById('appMenuBtn')!.click());
     await expect(page.locator('#appDrawer')).toHaveClass(/open/);
 
-    await page.evaluate(() => document.getElementById('appMenuBtn').click());
+    await page.evaluate(() => document.getElementById('appMenuBtn')!.click());
     await expect(page.locator('#appDrawer')).not.toHaveClass(/open/);
   });
 
@@ -26,7 +26,7 @@ test.describe('UI fixes', () => {
     });
     await page.goto('/');
     await page.waitForTimeout(500);
-    await page.evaluate(() => document.getElementById('helpBtn').click());
+    await page.evaluate(() => document.getElementById('helpBtn')!.click());
     await page.waitForSelector('.help-menu-btn[data-action="tooltips"]');
     await expect(page.locator('.help-menu-btn[data-action="tooltips"] strong')).toHaveText('Disable Tooltips');
   });
@@ -42,10 +42,10 @@ test.describe('UI fixes', () => {
     await page.waitForSelector('#customerAnalyticsToggle');
 
     await expect(page.locator('#customerAnalyticsBody')).toHaveClass(/collapsed/);
-    await page.evaluate(() => document.getElementById('customerAnalyticsToggle').click());
+    await page.evaluate(() => document.getElementById('customerAnalyticsToggle')!.click());
     await expect(page.locator('#customerAnalyticsBody')).not.toHaveClass(/collapsed/);
     // The panel should now contain the rendered dashboard, not be empty.
-    const len = await page.evaluate(() => document.getElementById('customerAnalyticsPanel').innerHTML.length);
+    const len = await page.evaluate(() => document.getElementById('customerAnalyticsPanel')!.innerHTML.length);
     expect(len).toBeGreaterThan(100);
   });
 
@@ -65,13 +65,13 @@ test.describe('UI fixes', () => {
 
     // Type a name and click Save
     await page.fill('#scenarioNameInput', 'Regression Test Scenario');
-    await page.evaluate(() => document.getElementById('saveScenarioBtn').click());
+    await page.evaluate(() => document.getElementById('saveScenarioBtn')!.click());
 
     // A confirm-save dialog should appear
     await page.waitForSelector('.modal-overlay .modal-btn', { timeout: 3000 });
     // Click the '💾 Save' confirm button
     await page.evaluate(() => {
-      const btns = [...document.querySelectorAll('.modal-btn')];
+      const btns = [...document.querySelectorAll<HTMLElement>('.modal-btn')];
       const saveBtn = btns.find(b => b.textContent.includes('Save'));
       if (saveBtn) saveBtn.click();
     });
@@ -102,12 +102,12 @@ test.describe('UI fixes', () => {
     await page.waitForSelector('.delete-btn', { timeout: 5000 });
 
     // Click delete on the seeded scenario
-    await page.evaluate(() => document.querySelector('.delete-btn').click());
+    await page.evaluate(() => document.querySelector<HTMLElement>('.delete-btn')!.click());
 
     // Confirm delete dialog should appear
     await page.waitForSelector('.modal-btn', { timeout: 3000 });
     await page.evaluate(() => {
-      const btns = [...document.querySelectorAll('.modal-btn')];
+      const btns = [...document.querySelectorAll<HTMLElement>('.modal-btn')];
       const delBtn = btns.find(b => b.textContent.includes('Delete'));
       if (delBtn) delBtn.click();
     });
@@ -138,12 +138,12 @@ test.describe('UI fixes', () => {
     await page.waitForSelector('.scenario-diff-wrap', { timeout: 5000 });
 
     const info = await page.evaluate(() => {
-      const lum = (s) => { const m = s.match(/\d+/g).map(Number); return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255; };
+      const lum = (s: any) => { const m = s.match(/\d+/g).map(Number); return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255; };
       const label = document.querySelector('.diff-col-label');
       const modal = document.querySelector('.modal-content');
       return {
-        textLum: lum(getComputedStyle(label).color),
-        bgLum: lum(getComputedStyle(modal).backgroundColor),
+        textLum: lum(getComputedStyle(label!).color),
+        bgLum: lum(getComputedStyle(modal!).backgroundColor),
       };
     });
     // Text should be light, background should be dark
@@ -207,7 +207,7 @@ test.describe('UI fixes', () => {
 
     // The field should receive the --copied class briefly
     const hasCopied = await page.evaluate(() => {
-      const el = document.querySelector('.copy-on-click');
+      const el = document.querySelector<HTMLInputElement>('.copy-on-click');
       return el && el.classList.contains('copy-on-click--copied');
     });
     expect(hasCopied).toBe(true);
@@ -239,7 +239,7 @@ test.describe('UI fixes', () => {
 
     // No text should be pre-selected on open
     const selectionLength = await page.evaluate(() => {
-      const el = document.querySelector('.copy-on-click');
+      const el = document.querySelector<HTMLInputElement>('.copy-on-click');
       if (!el) return -1;
       const start = el.selectionStart ?? 0;
       const end = el.selectionEnd ?? 0;
@@ -264,7 +264,7 @@ test.describe('UI fixes', () => {
     await page.waitForSelector('.copy-on-click', { timeout: 5000 });
 
     const embedCodeSelLen = await page.evaluate(() => {
-      const el = document.querySelector('.copy-on-click');
+      const el = document.querySelector<HTMLInputElement>('.copy-on-click');
       if (!el) return -1;
       return (el.selectionEnd ?? 0) - (el.selectionStart ?? 0);
     });
@@ -329,16 +329,16 @@ test.describe('UI fixes', () => {
     });
     // Wait for dropdown to be populated with scenario options (async import race on Chromium)
     await page.waitForFunction(() => {
-      const sel = document.getElementById('compareScenario1');
+      const sel = document.getElementById('compareScenario1') as HTMLSelectElement | null;
       return sel && sel.options.length > 1;
     }, { timeout: 5000 });
 
     // Select both scenarios
     await page.evaluate(() => {
-      document.getElementById('compareScenario1').value = 'cmp-1';
-      document.getElementById('compareScenario2').value = 'cmp-2';
+      (document.getElementById('compareScenario1') as HTMLSelectElement).value = 'cmp-1';
+      (document.getElementById('compareScenario2') as HTMLSelectElement).value = 'cmp-2';
     });
-    await page.evaluate(() => document.getElementById('compareBtn').click());
+    await page.evaluate(() => document.getElementById('compareBtn')!.click());
 
     // document.body must still exist and comparison modal must appear
     const bodyExists = await page.evaluate(() => !!document.body);

@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
-async function open(page, experienceLevel: string) {
+async function open(page: Page, experienceLevel: string) {
   await page.addInitScript((level) => {
     try {
       localStorage.setItem('onboardingCompleted', 'true');
@@ -13,7 +13,7 @@ async function open(page, experienceLevel: string) {
 }
 
 // One per-session offering: lists at $60 a visit (60 x 12 / 12), $10 variable cost, 1 staff hour.
-async function seedStudio(page) {
+async function seedStudio(page: Page) {
   await page.evaluate(() => {
     const w = window as any;
     w.state.offerings = [{ id: 'studio', name: 'Studio hour', priceMonthly: 60, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 10, laborPctOfPrice: 0, type: 'per-session', mixPct: 100, currentClients: 0 }];
@@ -24,7 +24,7 @@ async function seedStudio(page) {
   });
 }
 
-const openPanel = async (page) => {
+const openPanel = async (page: Page) => {
   await page.locator('#membershipToggle').click();
   await expect(page.locator('#membershipBody')).toBeVisible();
 };

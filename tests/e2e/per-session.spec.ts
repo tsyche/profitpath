@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Per-session pricing type', () => {
@@ -17,8 +17,8 @@ test.describe('Per-session pricing type', () => {
     });
   });
 
-  const row = (page) => page.locator('#offeringsBody tr').first();
-  const revenue = (page) => page.evaluate(() => (window as any).calc((window as any).state).revenue);
+  const row = (page: Page) => page.locator('#offeringsBody tr').first();
+  const revenue = (page: Page) => page.evaluate(() => (window as any).calc((window as any).state).revenue);
 
   test('price per session x visits drives revenue and visits keep the per-visit price fixed', async ({ page }) => {
     await row(page).locator('select[data-k="type"]').selectOption('per-session');

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2017",
     "module": "ESNext",
-    "lib": ["ES2017", "DOM"],
+    "lib": ["ES2017", "DOM", "DOM.Iterable"],
     "moduleResolution": "node",
     "noEmit": true,
     "strict": true,
@@ -12,7 +12,8 @@
   },
   "include": [
     "assets/**/*",
-    "src/**/*"
+    "src/**/*",
+    "tests/**/*"
   ],
   "exclude": [
     "node_modules",

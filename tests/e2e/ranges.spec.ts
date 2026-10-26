@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './helpers';
 
 test.describe('Ranged inputs (low / high)', () => {
@@ -13,11 +13,11 @@ test.describe('Ranged inputs (low / high)', () => {
     await waitForPageReady(page);
   });
 
-  const band = (page) => page.locator('#rangeBand');
-  const lowFill = (page) => page.locator('#rangesBody input[data-k="fillPctLow"]').first();
-  const highFill = (page) => page.locator('#rangesBody input[data-k="fillPctHigh"]').first();
+  const band = (page: Page) => page.locator('#rangeBand');
+  const lowFill = (page: Page) => page.locator('#rangesBody input[data-k="fillPctLow"]').first();
+  const highFill = (page: Page) => page.locator('#rangesBody input[data-k="fillPctHigh"]').first();
 
-  async function makeFirstRowGroup(page) {
+  async function makeFirstRowGroup(page: Page) {
     await page.locator('#offeringsBody tr').first().locator('select[data-k="type"]').selectOption('group');
     await page.locator('#offeringsBody tr').first().locator('input[data-k="seats"]').fill('8');
     await page.locator('#offeringsBody tr').first().locator('input[data-k="fillPct"]').fill('60');
@@ -32,8 +32,8 @@ test.describe('Ranged inputs (low / high)', () => {
     await highFill(page).fill('100');
     await expect(band(page)).toBeVisible();
 
-    const nums = async (metric) => page.locator(`#rangeBandBody tr[data-metric="${metric}"] td.mono`).allTextContents();
-    const toN = (t) => Number(t.replace(/[^0-9.-]/g, ''));
+    const nums = async (metric: any) => page.locator(`#rangeBandBody tr[data-metric="${metric}"] td.mono`).allTextContents();
+    const toN = (t: any) => Number(t.replace(/[^0-9.-]/g, ''));
     const [min, base, max] = (await nums('revenue')).map(toN);
     expect(min).toBeLessThan(base);
     expect(base).toBeLessThan(max);
@@ -99,8 +99,8 @@ test.describe('Confidence tags and notes', () => {
     await page.locator('#rangesSection summary').click();
   });
 
-  const sel = (page) => page.locator('#rangesBody select[data-k="confidence"]').first();
-  const note = (page) => page.locator('#rangesBody input[data-k="note"]').first();
+  const sel = (page: Page) => page.locator('#rangesBody select[data-k="confidence"]').first();
+  const note = (page: Page) => page.locator('#rangesBody input[data-k="note"]').first();
 
   test('tag and note persist across reload and a hostile note stays inert text', async ({ page }) => {
     await sel(page).selectOption('guess');
@@ -133,19 +133,19 @@ test.describe('Range case lens, spreads and badge', () => {
     await waitForPageReady(page);
   });
 
-  const band = (page) => page.locator('#rangeBand');
-  const lowFill = (page) => page.locator('#rangesBody input[data-k="fillPctLow"]').first();
-  const highFill = (page) => page.locator('#rangesBody input[data-k="fillPctHigh"]').first();
+  const band = (page: Page) => page.locator('#rangeBand');
+  const lowFill = (page: Page) => page.locator('#rangesBody input[data-k="fillPctLow"]').first();
+  const highFill = (page: Page) => page.locator('#rangesBody input[data-k="fillPctHigh"]').first();
 
-  async function makeFirstRowGroup(page) {
+  async function makeFirstRowGroup(page: Page) {
     await page.locator('#offeringsBody tr').first().locator('select[data-k="type"]').selectOption('group');
     await page.locator('#offeringsBody tr').first().locator('input[data-k="seats"]').fill('8');
     await page.locator('#offeringsBody tr').first().locator('input[data-k="fillPct"]').fill('60');
     await page.locator('#rangesSection summary').click();
   }
 
-  const kpiRevenue = (page) => page.locator('#kpiRevenue');
-  const money = async (loc) => Number((await loc.textContent())!.replace(/[^0-9.-]/g, ''));
+  const kpiRevenue = (page: Page) => page.locator('#kpiRevenue');
+  const money = async (loc: any) => Number((await loc.textContent())!.replace(/[^0-9.-]/g, ''));
 
   test('case toggle drives every output, tags it, and never rewrites the typed inputs', async ({ page }) => {
     await makeFirstRowGroup(page);

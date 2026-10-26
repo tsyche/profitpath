@@ -15,7 +15,7 @@ test.describe('KPI & section header visual polish', () => {
     await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
     const info = await page.evaluate(() => {
       const kpi = document.querySelector('.kpi');
-      const style = getComputedStyle(kpi);
+      const style = getComputedStyle(kpi!);
       return { backgroundImage: style.backgroundImage };
     });
     expect(info.backgroundImage).toContain('gradient');
@@ -25,7 +25,7 @@ test.describe('KPI & section header visual polish', () => {
     await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
     const info = await page.evaluate(() => {
       const kpi = document.querySelector('.kpi');
-      return getComputedStyle(kpi).backgroundImage;
+      return getComputedStyle(kpi!).backgroundImage;
     });
     expect(info).toContain('gradient');
   });
@@ -33,7 +33,7 @@ test.describe('KPI & section header visual polish', () => {
   test('card section headers (INPUTS/OUTPUTS) carry a gradient wash', async ({ page }) => {
     const info = await page.evaluate(() => {
       const header = document.querySelector('.card .card-h');
-      return getComputedStyle(header).backgroundImage;
+      return getComputedStyle(header!).backgroundImage;
     });
     expect(info).toContain('gradient');
   });
@@ -45,7 +45,7 @@ test.describe('KPI & section header visual polish', () => {
     await page.waitForTimeout(400);
     const lum = await page.evaluate(() => {
       const v = document.querySelector('.kpi .v');
-      const m = getComputedStyle(v).color.match(/\d+/g).map(Number);
+      const m = getComputedStyle(v!).color.match(/\d+/g)!.map(Number);
       return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255;
     });
     expect(lum).toBeGreaterThan(0.5);
@@ -54,7 +54,7 @@ test.describe('KPI & section header visual polish', () => {
   test('card section header heading has tightened line-height for rhythm', async ({ page }) => {
     const lineHeight = await page.evaluate(() => {
       const h2 = document.querySelector('.card .card-h h2');
-      return getComputedStyle(h2).lineHeight;
+      return getComputedStyle(h2!).lineHeight;
     });
     // 13px font-size * 1.2 line-height = 15.6px, well under the loose 1.6 body rhythm
     expect(parseFloat(lineHeight)).toBeLessThan(18);

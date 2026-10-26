@@ -1,18 +1,18 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-const isScrollLocked = (page) =>
+const isScrollLocked = (page: Page) =>
   page.evaluate(() => document.body.classList.contains('scroll-locked'));
 
-const lockCount = (page) =>
+const lockCount = (page: Page) =>
   page.evaluate(() => window._ppScrollLocks ?? 0);
 
 // Simulate a vertical touch swipe and return how many pixels the page scrolled.
-const touchScrollDelta = async (page, deltaY = 200) => {
+const touchScrollDelta = async (page: Page, deltaY = 200) => {
   const startY = await page.evaluate(() => window.scrollY);
   await page.evaluate((dy) => {
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
-    const touch = (type, y) => document.dispatchEvent(
+    const touch = (type: any, y: any) => document.dispatchEvent(
       new TouchEvent(type, { cancelable: true, bubbles: true, touches: [new Touch({ identifier: 1, target: document.body, clientX: cx, clientY: y })] })
     );
     touch('touchstart', cy);
@@ -54,7 +54,7 @@ test.describe('Background scroll lock', () => {
   test('templates modal releases scroll when scrim is clicked', async ({ page }) => {
     await page.locator('#templatesBtn').click();
     await expect(page.locator('#templatesModal')).toBeVisible();
-    await page.evaluate(() => document.querySelector('#templatesModal .pp-sheet-scrim').click());
+    await page.evaluate(() => document.querySelector<HTMLElement>('#templatesModal .pp-sheet-scrim')!.click());
     await page.waitForTimeout(300);
     expect(await isScrollLocked(page)).toBe(false);
     expect(await lockCount(page)).toBe(0);
@@ -76,7 +76,7 @@ test.describe('Background scroll lock', () => {
 
   test('settings modal locks scroll on open, releases on close', async ({ page }) => {
     // #settingsCogBtn is a hidden delegate target — invoke it directly
-    await page.evaluate(() => document.getElementById('settingsCogBtn').click());
+    await page.evaluate(() => document.getElementById('settingsCogBtn')!.click());
     await expect(page.locator('#settingsModal')).toBeVisible();
     expect(await isScrollLocked(page)).toBe(true);
 
@@ -87,9 +87,9 @@ test.describe('Background scroll lock', () => {
   });
 
   test('settings modal releases scroll when scrim is clicked', async ({ page }) => {
-    await page.evaluate(() => document.getElementById('settingsCogBtn').click());
+    await page.evaluate(() => document.getElementById('settingsCogBtn')!.click());
     await expect(page.locator('#settingsModal')).toBeVisible();
-    await page.evaluate(() => document.querySelector('#settingsModal .pp-sheet-scrim').click());
+    await page.evaluate(() => document.querySelector<HTMLElement>('#settingsModal .pp-sheet-scrim')!.click());
     await page.waitForTimeout(300);
     expect(await isScrollLocked(page)).toBe(false);
     expect(await lockCount(page)).toBe(0);
@@ -252,7 +252,7 @@ test.describe('Background scroll lock', () => {
 
   test('help menu dialog locks scroll on open, releases on close', async ({ page }) => {
     // #helpBtn is a hidden delegate target — invoke it directly
-    await page.evaluate(() => document.getElementById('helpBtn').click());
+    await page.evaluate(() => document.getElementById('helpBtn')!.click());
     await expect(page.locator('.onboarding-dialog-overlay')).toBeVisible();
     expect(await isScrollLocked(page)).toBe(true);
 
@@ -264,7 +264,7 @@ test.describe('Background scroll lock', () => {
   });
 
   test('help menu dialog releases scroll when scrim is clicked', async ({ page }) => {
-    await page.evaluate(() => document.getElementById('helpBtn').click());
+    await page.evaluate(() => document.getElementById('helpBtn')!.click());
     await expect(page.locator('.onboarding-dialog-overlay')).toBeVisible();
     // Click the scrim (the overlay itself, not the card)
     await page.evaluate(() => {
@@ -277,7 +277,7 @@ test.describe('Background scroll lock', () => {
   });
 
   test('help menu item click releases scroll before next action', async ({ page }) => {
-    await page.evaluate(() => document.getElementById('helpBtn').click());
+    await page.evaluate(() => document.getElementById('helpBtn')!.click());
     await expect(page.locator('.onboarding-dialog-overlay')).toBeVisible();
     // Click a non-tour action (tooltips toggle) — should release lock without starting tour
     await page.locator('.help-menu-btn[data-action="tooltips"]').click();
@@ -315,7 +315,7 @@ test.describe('Background scroll lock', () => {
       document.body.appendChild(spacer);
     });
 
-    await page.evaluate(() => document.getElementById('settingsCogBtn').click());
+    await page.evaluate(() => document.getElementById('settingsCogBtn')!.click());
     await expect(page.locator('#settingsModal')).toBeVisible();
 
     const delta = await touchScrollDelta(page, 300);
@@ -353,7 +353,7 @@ test.describe('Background scroll lock', () => {
       document.body.appendChild(spacer);
     });
 
-    await page.evaluate(() => document.getElementById('helpBtn').click());
+    await page.evaluate(() => document.getElementById('helpBtn')!.click());
     await expect(page.locator('.onboarding-dialog-overlay')).toBeVisible();
 
     const delta = await touchScrollDelta(page, 300);
