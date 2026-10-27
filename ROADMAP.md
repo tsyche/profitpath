@@ -50,6 +50,7 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
    - Fix options, roughly in order of effort: (a) compress the JSON before base64 (e.g. gzip) — quick win, doesn't fix staleness; (b) server-side scenario storage with a short opaque ID in the URL (like a pastebin) — fixes both length and staleness, but needs backend infra this project has avoided so far; (c) at minimum, surface a warning in the UI that share links are point-in-time snapshots, not live views
    - Effort: ~1 hour for (a), ~4-6 hours for (b) if backend storage is acceptable
    - 2026-10-23 trial: a 14-offering scenario produced a ~5.3 KB URL
+   - 2026-10-26: a 14.4 KB legacy-encoded link was refused outright by Claude-in-Chrome's URL safety check; the same scenario as a v2 link is 2.9 KB and loads fine. Length is a hard limit for some tools, not just cosmetic
 
 **Layout & Information Architecture** *(new category — Tim independently flagged this as "getting very busy on a single scrollable page view," agreed with while building the Sound Stage scenario)*
 
@@ -84,6 +85,19 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - The light palette fails `color-contrast`, so the scan skips that rule in light theme only. This is a palette change, not a one-line fix: pick AA-safe text/accent/muted tokens, then re-check charts, badges and KPI gradients.
     - Done when the skip is deleted from `a11y.spec.ts` and light theme passes at all three experience levels. Phase 0 of [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md) feeds the palette decision; do it before or with that pass, not after.
     - Effort: ~3-5 hours
+
+35. **Fixes from the 2026-10-26 TSS trial** *(new, 2026-10-26; a 13-offering Current-mode scenario with expenses, pools, group rows and two membership plans, on v0.8.57-beta)*
+    - Totals matched a hand calculation at both $1,500 and $3,300 rent (net $4,296 / -$17,304 a year). These are the gaps around them, worst first:
+    - **Membership What-If ignores `processingFeePct`.** `src/calculations/membership.ts` never applies the fee, so "You keep" is overstated by the fee share of fee + cash revenue (a $181 member month shows $119 kept instead of about $113).
+    - **Header Net income chip stays green when negative.** `updateKeyMetrics()` in `AppRender.ts` only sets text on `#abkIncome`/`#glIncome`, and `.ab-kpi.k-net b` is always `--accent-ink`. The Outputs pill (`#kpiIncome`) already maps good/warn/danger, so reuse that.
+    - **Reloading a `?scenario=` page silently discards edits.** The param stays in the address bar, so a refresh re-applies the link over the persisted state. Clear it with `history.replaceState` after a successful load (keeping `readonly=1`).
+    - **Share sanitizer clamps `hoursPerSession` to at least 0.1** (`miscService.ts` `sanitizeScenarioState`). A zero-hour subscription row gets phantom staff time and then tops "profit per staff hour" ($1,593/hr for a membership with 0 clients). `sessionsPerYear` is also floored to an integer of at least 1, so fractional cadences can't round-trip.
+    - **Profit per staff hour ranks `staffFree` rows by their session hours** (a no-staff rehearsal room shows $39/hr). Show "no staff" or rank them per pool hour instead.
+    - **Current mode ignores `fillPct` for group runs.** Runs are `ceil(clients / seats)` (`index.ts` ~L162/L230), so 77 seat-sales at 8 seats and 80% fill count as 10 runs, not 12, and staff hours drop to 20 a month instead of 24. Forecast already divides by fill.
+    - **Expenses table renders 1-up cards at half width.** `#offeringsBody` gets the auto-fit grid but the expenses `tbody` doesn't, so 11 expenses make a long single column with the right half empty.
+    - Gap, not bug: a membership plan has one credit pool, so a per-service entitlement (one class a month on top of credits) can't be modeled. Pair it with the 24f membership follow-ups.
+    - Each fix gets the smallest test that fails first: unit tests for the membership fee, sanitizer and fill math, and e2e tests for the chip colour, reload and expenses grid.
+    - Effort: ~3-4 hours total
 
 12x. **Typecheck unit tests (`**/*.test.ts`) and retire the accepted casts** *(new, TS-migration leftover)*
     - `**/*.test.ts` is excluded from `tsconfig.json`; including it gives ~1,158 errors (380 TS7005 implicit `any[]`, 204 TS18047, 186 TS2339) in the `src/test/*` jsdom mock tests. Fix per file (type the mocks), then drop the exclude; do it opportunistically when touching a test file.
