@@ -3,7 +3,7 @@
  * Handles all business logic calculations with caching and debugging support
  */
 
-import { annualExpenseTotal, sanitizeExpenses } from './expenses';
+import { annualExpenseTotal, annualizeExpense, loanYearOne, sanitizeExpenses } from './expenses';
 import { activeResources, resourceAnnualHours, sanitizeResources, STAFF_POOL_ID } from './resources';
 import { applyRangeCase, getRangeCase } from './rangeCase';
 import { breakEvenSeats, sanitizeCostPerRun } from './groupRuns';
@@ -92,7 +92,9 @@ function generateCacheKey(state: CalcState) {
     ...employeeKey,
     monthlyCosts: state.monthlyCosts,
     processingFeePct: state.processingFeePct,
-    expenses: sanitizeExpenses(state.expenses).map(e => [e.category, e.amount, e.frequency, e.lifeYears]),
+    processingFeePerTransaction: state.processingFeePerTransaction,
+    transactionsPerMonth: state.transactionsPerMonth,
+    expenses: sanitizeExpenses(state.expenses).map(e => [e.category, e.amount, e.frequency, e.lifeYears, e.loanAprPct]),
     resources: sanitizeResources(state.resources).map(r => [r.id, r.hoursPerWeek, r.weeksPerYear, r.staffFree === true]),
     productiveUtilizationPct: state.productiveUtilizationPct,
     targetUtilizationPct: state.targetUtilizationPct,
@@ -157,13 +159,33 @@ function annualVariableCostPerClient(o: SanitizedOffering): number {
   return baseVariableCostPerClient(o) + runCostPerClient(o);
 }
 
-/** Current-mode annual delivery cost: per-client costs plus one run cost per cohort (ceil(enrolled/seats)). */
+/**
+ * Current-mode runs for a group: seats only count when filled, so enrollment is
+ * spread over filled seats (seats * fillPct/100), like forecast's per-client hours.
+ * fillPct is clamped to 1-100 by sanitizeOfferings, so the divisor is always >= 1 seat.
+ */
+function currentGroupRuns(o: SanitizedOffering): number {
+  return o.type === 'group' ? Math.ceil(o.currentClients / (o.seats * (o.fillPct / 100))) : 0;
+}
+
+/** Current-mode annual delivery cost: per-client costs plus one run cost per cohort (currentGroupRuns). */
 function currentVariableCost(o: SanitizedOffering): number {
-  const runs = o.type === 'group' ? Math.ceil(o.currentClients / o.seats) : 0;
-  return o.currentClients * baseVariableCostPerClient(o) + runs * (o.type === 'group' ? o.costPerRun : 0);
+  return o.currentClients * baseVariableCostPerClient(o) + currentGroupRuns(o) * (o.type === 'group' ? o.costPerRun : 0);
 }
 
 const OFFERING_TYPES: readonly OfferingType[] = ['subscription', 'group', 'per-session', 'one-time'];
+
+/** Cash flow replaces capital amortization with purchase cash and adds loan principal repayment. */
+function yearOneCashAdjustment(expenses: ReturnType<typeof sanitizeExpenses>): number {
+  return expenses.reduce((sum, expense) => {
+    if (expense.category === 'Loan Payments' && expense.loanAprPct !== undefined) {
+      const loan = loanYearOne(expense);
+      return sum + loan.cash - loan.interest;
+    }
+    if (expense.frequency === 'one-time') return sum + expense.amount - annualizeExpense(expense);
+    return sum;
+  }, 0);
+}
 
 /** Single fallback point: anything unrecognized is a subscription. */
 export function normalizeOfferingType(v: unknown): OfferingType {
@@ -203,10 +225,11 @@ function groupBreakEven(o: SanitizedOffering, annualRevenue: number): Pick<Offer
 }
 
 /** Per-client unit economics, independent of how many clients there are. */
-function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHour' | 'maxDiscountPct' | 'discountPct' | 'discountedMarginPerHour' | 'contributionPerClientMonthly' | 'hourFree' | 'breakEvenSeats' | 'breakEvenFillPct'> {
+function unitEconomics(o: SanitizedOffering, free: ReadonlySet<string> = new Set()): Pick<OfferingMetric, 'marginPerHour' | 'maxDiscountPct' | 'discountPct' | 'discountedMarginPerHour' | 'contributionPerClientMonthly' | 'hourFree' | 'breakEvenSeats' | 'breakEvenFillPct'> {
   const revenue = o.priceMonthly * 12;
   const contribution = revenue - annualVariableCostPerClient(o);
-  const hours = annualStaffHoursPerClient(o);
+  // Staff-free offerings draw no staff time, so they rank as 'no staff' instead of by session hours.
+  const hours = o.resource && free.has(o.resource) ? 0 : annualStaffHoursPerClient(o);
   // Best-case discount comes off the price only; variable and labor cost stay priced off list
   const discountedContribution = revenue * (1 - o.discountPct / 100) - annualVariableCostPerClient(o);
   return {
@@ -222,12 +245,12 @@ function unitEconomics(o: SanitizedOffering): Pick<OfferingMetric, 'marginPerHou
 }
 
 /**
- * Current-mode staff hours: a group needs ceil(enrolled/seats) runs, each costing
+ * Current-mode staff hours: a group needs currentGroupRuns() runs, each costing
  * sessions*hours, so hours step with cohorts instead of scaling with enrollment.
  */
 function currentStaffHours(o: SanitizedOffering): number {
   const perRun = o.sessionsPerYear * o.hoursPerSession;
-  return o.type === 'group' ? Math.ceil(o.currentClients / o.seats) * perRun : o.currentClients * perRun;
+  return o.type === 'group' ? currentGroupRuns(o) * perRun : o.currentClients * perRun;
 }
 
 /**
@@ -293,7 +316,8 @@ function calculateCosts(params: CostParams): Costs {
   return {
     annualFixedCosts,
     annualPayroll,
-    totalFixedCosts: annualFixedCosts + annualPayroll
+    totalFixedCosts: annualFixedCosts + annualPayroll,
+    yearOneCashFlow: 0
   };
 }
 
@@ -367,7 +391,7 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
       variableCosts: offeringVariableCosts,
       margin: offeringMargin,
       marginPct: offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0,
-      ...unitEconomics(o)
+      ...unitEconomics(o, free)
     };
   });
 
@@ -433,7 +457,7 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
       variableCosts: offeringVariableCosts,
       margin: offeringMargin,
       marginPct: offeringRevenue > 0 ? (offeringMargin / offeringRevenue) * 100 : 0,
-      ...unitEconomics(o)
+      ...unitEconomics(o, free)
     };
   });
 
@@ -621,7 +645,8 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
 
   const monthlyCosts = clamp(toFinite(input.monthlyCosts), 0, MAX_MONEY);
   const processingFeePct = clamp(toFinite(input.processingFeePct), 0, 20);
-  const annualExpenses = annualExpenseTotal(sanitizeExpenses(input.expenses));
+  const expenses = sanitizeExpenses(input.expenses);
+  const annualExpenses = annualExpenseTotal(expenses) + clamp(toFinite(input.processingFeePerTransaction), 0, 100) * clamp(toFinite(input.transactionsPerMonth), 0, 1e7) * 12;
   const productiveUtilizationPct = clamp(toFinite(input.productiveUtilizationPct), 0, 100);
   const targetUtilizationPct = clamp(toFinite(input.targetUtilizationPct), 0, 150);
 
@@ -654,6 +679,7 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
     const costs = calculateCosts({ employees, employeePay, monthlyCosts, annualExpenses });
 
     const income = -costs.totalFixedCosts;
+    costs.yearOneCashFlow = income - yearOneCashAdjustment(expenses);
     const result: CalcResult = {
       mode,
       offerings,
@@ -704,6 +730,7 @@ export function calc(stateInput?: CalcState, options: CalcOptions = {}): CalcRes
 
   // Compile final result
   const income = modeResults.revenue - costs.totalFixedCosts - modeResults.variableCosts;
+  costs.yearOneCashFlow = income - yearOneCashAdjustment(expenses);
   const taxCalcs = calculateTax(income);
 
   const result: CalcResult = {

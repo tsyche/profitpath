@@ -50,6 +50,26 @@ describe('group offering, current mode (cohorts)', () => {
     expect(r.revenue).toBe(4 * 1200)
   })
 
+  it('fillPct opens extra cohorts: 77 clients, 8 seats, 80% fill needs 13 runs, not 10', () => {
+    // Roadmap 35: seats are only (seats * fillPct/100) actually filled, so runs =
+    // ceil(enrolled / filled seats) = ceil(77 / 6.4) = 13, not ceil(77 / 8) = 10.
+    const r = calc({ ...base, mode: 'current', offerings: [{ ...group, currentClients: 77, seats: 8, fillPct: 80 }] } as any)
+    expect(r.serviceHours).toBe(13 * 50)
+  })
+
+  it('fill 100 is unchanged: ceil(enrolled / seats)', () => {
+    const r = calc({ ...base, mode: 'current', offerings: [{ ...group, currentClients: 77, seats: 8, fillPct: 100 }] } as any)
+    expect(r.serviceHours).toBe(10 * 50)
+  })
+
+  it('fill divides cohorts for run cost too', () => {
+    const withRun = { ...group, costPerRun: 400, currentClients: 77, seats: 8, fillPct: 80 }
+    const base80 = calc({ ...base, mode: 'current', offerings: [withRun] } as any)
+    const full = calc({ ...base, mode: 'current', offerings: [{ ...withRun, fillPct: 100 }] } as any)
+    // 13 runs at 80% fill vs 10 at full: 3 more run costs
+    expect(base80.variableCosts - full.variableCosts).toBe(3 * 400)
+  })
+
   it('seats and fill do not affect a subscription row', () => {
     const sub = { ...group, type: 'subscription' }
     const a = calc({ ...base, mode: 'current', offerings: [sub] } as any)

@@ -224,7 +224,7 @@ function renderWizardList() {
   if (!body) return;
   wizardPick = null;
   $req('#whatIfTitle').textContent = 'What if?';
-  body.innerHTML = '<p class="pp-sheet-note">Pick a scenario to preview its effect on your numbers. Nothing changes until you apply it.</p><div class="wi-list">' +
+  body.innerHTML = '<p class="pp-sheet-note">Pick a scenario to preview its effect on your numbers. Nothing changes until you apply it. <a href="https://github.com/tsyche/profitpath/releases" target="_blank" rel="noopener noreferrer">See what’s new</a>.</p><div class="wi-list">' +
     wizardScenarios(state).map(s => '<button class="tmpl-card" type="button" data-wi="' + escapeHtml(s.id) + '"><span class="tmpl-name">' + escapeHtml(s.title) + '</span><span class="tmpl-sub">' + escapeHtml(s.blurb) + '</span></button>').join('') + '</div>';
 }
 

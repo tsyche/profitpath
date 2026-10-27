@@ -34,6 +34,8 @@ export interface Expense {
   frequency: ExpenseFrequency;
   /** Useful life in years; a 'one-time' purchase is spread evenly over it. Ignored for other frequencies. */
   lifeYears: number;
+  /** Annual percentage rate for amortizing loan rows; absent for other expenses. */
+  loanAprPct?: number;
 }
 
 /** A membership / prepaid-credit plan for the what-if panel; display only, never used by calc. */
@@ -49,6 +51,8 @@ export interface MembershipPlan {
   creditsAtMemberPrice?: boolean;
   /** Offering ids the credits and discount apply to. */
   eligible: string[];
+  /** Visits per month included for each offering id, before shared credits are used. */
+  includedVisits?: Record<string, number>;
 }
 
 /** A typical member: visits per month by offering id. */
@@ -159,6 +163,10 @@ export interface CalcState {
   monthlyCosts?: number;
   /** Card/payment processing fee as a % of list-price revenue; applied as a variable cost. */
   processingFeePct?: number;
+  /** Fixed fee charged per payment transaction. */
+  processingFeePerTransaction?: number;
+  /** Scenario-level average payment transactions per month; never inferred from client count. */
+  transactionsPerMonth?: number;
   expenses?: Expense[];
   /** Optional extra capacity pools; staff is always the implicit first pool. */
   resources?: Resource[];
@@ -250,6 +258,8 @@ export interface Costs {
   annualFixedCosts: number;
   annualPayroll: number;
   totalFixedCosts: number;
+  /** Estimated modeled cash remaining in year one, before taxes. */
+  yearOneCashFlow: number;
 }
 
 export interface OfferingMetric {

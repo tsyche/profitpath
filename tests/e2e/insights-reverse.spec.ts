@@ -32,6 +32,14 @@ test.describe('Insights and Reverse Calculator panels', () => {
     await expect(page.locator('#insightsResults img')).toHaveCount(0);
   });
 
+  test('What If links to the shipped release history', async ({ page }) => {
+    await open(page, gated);
+    await page.locator('#whatIfBtn').click();
+    const link = page.locator('#whatIfBody a', { hasText: 'See what’s new' });
+    await expect(link).toHaveAttribute('href', 'https://github.com/tsyche/profitpath/releases');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
   test('insights refresh when inputs change while open', async ({ page }) => {
     await open(page, gated);
     await page.locator('#insightsToggle').click();

@@ -189,6 +189,16 @@ function initMembershipSection() {
   initMembershipPanel({
     getState: () => state,
     getStaffTargetHours: () => { try { return calc(state).targetServiceHours; } catch { return 0; } },
+    getPoolUsageHours: () => {
+      try {
+        const metrics = calc(state);
+        const poolPct = new Map(metrics.poolUtilization.map((p) => [p.id, p.pct]));
+        return {
+          staff: metrics.serviceHours,
+          ...Object.fromEntries((state.resources || []).map((r) => [r.id, ((poolPct.get(r.id) || 0) / 100) * r.hoursPerWeek * r.weeksPerYear]))
+        };
+      } catch { return {}; }
+    },
     persist: persistState,
     pushHistory
   });

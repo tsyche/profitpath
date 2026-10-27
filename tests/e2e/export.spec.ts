@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { readXLSX } from '../../assets/utils/xlsx';
 import { waitForPageReady } from './helpers';
 
 /*
@@ -119,6 +121,45 @@ test.describe('Export Functionality - E2E', () => {
 
       // Delegation closes the drawer
       await expect(page.locator('.app-drawer')).not.toHaveClass(/open/);
+      expect(errors, errors.join('\n')).toHaveLength(0);
+    });
+  });
+
+  // Regression: roadmap 33 — the Excel export was a CSV blob missing most of the model
+  test.describe('Excel workbook export', () => {
+    test('downloads a real multi-sheet .xlsx carrying the model', async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+
+      const [download] = await Promise.all([
+        page.waitForEvent('download'),
+        (async () => {
+          await openExportMenu(page);
+          await page.locator('#dwExport .drawer-subitem[onclick*="excel"]').click();
+        })()
+      ]);
+
+      expect(download.suggestedFilename()).toMatch(/^profitpath-export-\d{4}-\d{2}-\d{2}\.xlsx$/);
+      const sheets = readXLSX(new Uint8Array(readFileSync(await download.path()!)));
+      expect(sheets.map((s) => s.name)).toEqual([
+        'Report',
+        'BUSINESS PARAMETERS',
+        'FINANCIAL RESULTS',
+        'SERVICE OFFERINGS',
+        'FIXED EXPENSES',
+        'RESOURCES',
+        'MEMBERSHIP PLANS',
+        'MEMBER PROFILES'
+      ]);
+
+      // The staffing input typed in beforeEach reaches the workbook as a number, not text
+      const params = sheets.find((s) => s.name === 'BUSINESS PARAMETERS')!;
+      expect(params.rows.find((r) => r[0] === 'Full-time Employees')).toEqual(['Full-time Employees', 3, 'people']);
+
+      // Financial results are actually computed — the old export never called calc()
+      const financial = sheets.find((s) => s.name === 'FINANCIAL RESULTS')!;
+      expect(String(financial.rows[1][1])).toMatch(/\d/);
+
       expect(errors, errors.join('\n')).toHaveLength(0);
     });
   });

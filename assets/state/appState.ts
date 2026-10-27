@@ -12,6 +12,8 @@ export const state: AppState = {
   partTimeEmployeePay: 30000,
   monthlyCosts: 250,
   processingFeePct: 0, // card/payment fee as % of revenue
+  processingFeePerTransaction: 0,
+  transactionsPerMonth: 0,
   expenses: [],
   resources: [], // extra capacity pools (booth, room) offerings can be tagged with
   membershipPlans: [], // membership what-if inputs (display only, never feed calc)

@@ -53,12 +53,52 @@ test.describe('Membership what-if', () => {
     await page.locator('#membershipVisitsBody input[data-kind="visits"]').first().fill('1');
 
     const cell = page.locator('.membership-results tbody td').first();
-    await expect(page.locator('.membership-results thead')).toContainText('Headline: credits minus fee = +$20');
+    await expect(page.locator('.membership-results thead')).toContainText('Fee $100 / month · credits $120 / month');
     await expect(cell).toContainText('Member pays $100 vs $60 regular');
     await expect(cell).toContainText('Member pays $40 more (66.7% of regular spend)');
     await expect(cell).toContainText('Credits unused $60 (50.0% of credits granted)');
     await expect(cell).toContainText('You keep $90 of $100 revenue (90.0% margin on revenue)');
     await expect(cell).toContainText('1.0 staff h/month');
+  });
+
+  test('processing fees reduce the business keep and fee recommendation', async ({ page }) => {
+    await open(page, 'intermediate');
+    await seedStudio(page);
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.processingFeePct = 2.9;
+      w.state.membershipPlans = [{ id: 'p', name: 'Gold', monthlyFee: 100, creditsPerMonth: 120, memberDiscountPct: 0, eligible: ['studio'] }];
+      w.state.memberProfiles = [{ id: 'm', name: 'Regular', visits: { studio: 1 } }];
+      w.render();
+    });
+    await openPanel(page);
+    const cell = page.locator('.membership-results tbody td').first();
+    await expect(cell).toContainText('You keep $87 of $97 revenue (89.7% margin on revenue)');
+    await page.locator('#membershipTargetMargin').fill('50');
+    await expect(page.locator('.membership-fee').first()).toContainText('Fee for 50.0% margin: $20 / month');
+  });
+
+  test('included service visits apply before credits and survive reload', async ({ page }) => {
+    await open(page, 'intermediate');
+    await seedStudio(page);
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.membershipPlans = [{ id: 'p', name: 'Gold', monthlyFee: 0, creditsPerMonth: 60, memberDiscountPct: 0, eligible: ['studio'], includedVisits: { studio: 1 } }];
+      w.state.memberProfiles = [{ id: 'm', name: 'Regular', visits: { studio: 2 } }];
+      w.persistState();
+      w.render();
+    });
+    await openPanel(page);
+    const cell = page.locator('.membership-results tbody td').first();
+    await expect(cell).toContainText('1.0 included visits used');
+    await expect(cell).toContainText('Credits unused $0');
+    await expect(cell).toContainText('You keep -$20 of $0 revenue');
+
+    await page.reload();
+    await waitForPageReady(page);
+    await openPanel(page);
+    await expect(page.locator('#membershipIncludedVisitsBody input').first()).toHaveValue('1');
+    await expect(page.locator('.membership-results tbody td').first()).toContainText('1.0 included visits used');
   });
 
   test('visit ranges widen the result and survive reload', async ({ page }) => {
@@ -174,6 +214,24 @@ test.describe('Membership what-if', () => {
     await expect(page.locator('.membership-fit').first()).toContainText('Fits 4 members before Booth is full');
   });
 
+  test('member capacity subtracts the scenario load from each pool', async ({ page }) => {
+    await open(page, 'intermediate');
+    await seedStudio(page);
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.mode = 'current';
+      w.state.targetUtilizationPct = 100;
+      w.state.resources = [{ id: 'booth', name: 'Booth', hoursPerWeek: 1, weeksPerYear: 52 }];
+      w.state.offerings[0].resource = 'booth';
+      w.state.offerings[0].currentClients = 2;
+      w.state.membershipPlans = [{ id: 'p', name: 'Plan', monthlyFee: 100, creditsPerMonth: 0, memberDiscountPct: 0, eligible: [] }];
+      w.state.memberProfiles = [{ id: 'm', name: 'Regular', visits: { studio: 1 } }];
+      w.render();
+    });
+    await openPanel(page);
+    await expect(page.locator('.membership-fit').first()).toContainText('Fits 2 members before Booth is full (after scenario load)');
+  });
+
   test('target margin recommends a fee, or says plainly that none works', async ({ page }) => {
     await open(page, 'intermediate');
     await seedStudio(page);
@@ -188,10 +246,26 @@ test.describe('Membership what-if', () => {
     await expect(fee).toHaveCount(0);
     // $10 cost: 50% margin needs a $20 fee; the member saves anything below $60
     await page.locator('#membershipTargetMargin').fill('50');
-    await expect(fee.first()).toContainText('Fee for 50.0% margin: $20 / month');
+    await expect(fee.first()).toContainText('Fee for 50.0% margin: $21 / month');
     await page.locator('#membershipTargetMargin').fill('90');
     await expect(fee.first()).toContainText('No fee reaches 90.0% margin while the member still saves');
     await page.locator('#membershipTargetMargin').fill('');
     await expect(fee).toHaveCount(0);
+  });
+
+  test('target margin can recommend credits or discount while holding other terms fixed', async ({ page }) => {
+    await open(page, 'intermediate');
+    await seedStudio(page);
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.membershipPlans = [{ id: 'p', name: 'Plan', monthlyFee: 0, creditsPerMonth: 0, memberDiscountPct: 0, eligible: ['studio'] }];
+      w.state.memberProfiles = [{ id: 'm', name: 'Regular', visits: { studio: 1 } }];
+      w.render();
+    });
+    await openPanel(page);
+    await page.locator('#membershipTargetMargin').fill('50');
+    const cell = page.locator('.membership-results tbody td').first();
+    await expect(cell).toContainText('Credits for 50.0% margin: $40 / month');
+    await expect(cell).toContainText('Discount for 50.0% margin: 66.7%');
   });
 });

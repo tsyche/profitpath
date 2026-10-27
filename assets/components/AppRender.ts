@@ -31,6 +31,8 @@ export function setStateFromInputs() {
 
   state.monthlyCosts = Math.max(0, safeParseNumber($('#monthlyCosts')!.value, 0));
   state.processingFeePct = clamp(safeParseNumber($('#processingFeePct')!.value, 0), 0, 20);
+  state.processingFeePerTransaction = Math.max(0, safeParseNumber($('#processingFeePerTransaction')!.value, 0));
+  state.transactionsPerMonth = Math.max(0, safeParseNumber($('#transactionsPerMonth')!.value, 0));
   state.productiveUtilizationPct = clamp(safeParseNumber($('#productiveUtilizationPct')!.value, 80), 0, 100);
   state.targetUtilizationPct = clamp(safeParseNumber($('#targetUtilizationPct')!.value, 75), 0, 150);
   state.lockMix = Boolean($('#lockMix')?.checked);
@@ -49,6 +51,8 @@ function resetDefaults() {
   state.partTimeEmployeePay = 30000;
   state.monthlyCosts = 250;
   state.processingFeePct = 0;
+  state.processingFeePerTransaction = 0;
+  state.transactionsPerMonth = 0;
   state.expenses = [];
   state.resources = [];
   state.membershipPlans = [];
@@ -159,6 +163,10 @@ export function render() {
     const el = $('#processingFeePct'); if (el) el.value = String(state.processingFeePct);
   }
   {
+    const el = $('#processingFeePerTransaction'); if (el) el.value = String(state.processingFeePerTransaction);
+    const count = $('#transactionsPerMonth'); if (count) count.value = String(state.transactionsPerMonth);
+  }
+  {
     const el = $('#productiveUtilizationPct'); if (el) el.value = String(state.productiveUtilizationPct);
   }
 
@@ -228,7 +236,7 @@ export function render() {
 
     tr.innerHTML = '<td class="cell-edit group-start group-inputs" data-label="Offering"><input aria-label="Offering name" type="text" value="' + (escapeHtml(o.name)) + '" data-k="name" data-i="' + (idx) + '" data-tooltip="Name of this service offering"/>' + confidenceBadgeHtml(state.offerings[idx]?.confidence) + '</td>' +
       '<td class="cell-edit group-inputs" data-label="Price">' + (priceCell) + '</td>' +
-      '<td class="cell-edit group-inputs" data-label="Sessions / yr">' + (oneTime ? '<span class="muted">—</span>' : '<input aria-label="Sessions per year for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.sessionsPerYear) + '" data-k="sessionsPerYear" data-i="' + (idx) + '" data-tooltip="' + sessionsTip + '"/>') + '</td>' +
+      '<td class="cell-edit group-inputs" data-label="Sessions / yr">' + (oneTime ? '<span class="muted">—</span>' : '<input aria-label="Sessions per year for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="0.1" value="' + (o.sessionsPerYear) + '" data-k="sessionsPerYear" data-i="' + (idx) + '" data-tooltip="' + sessionsTip + '"/>') + '</td>' +
       '<td class="cell-edit group-inputs" data-label="Hours / session">' + (oneTime ? '<span class="muted">—</span>' : '<input aria-label="Hours per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="0.1" value="' + (o.hoursPerSession) + '" data-k="hoursPerSession" data-i="' + (idx) + '" data-tooltip="Duration of each service session in hours"/>') + '</td>' +
       '<td class="cell-edit group-inputs" data-label="Var $ / session"><input aria-label="Variable cost per session for ' + (escapeHtml(o.name)) + '" type="number" min="0" step="1" value="' + (o.variableCostPerSession) + '" data-k="variableCostPerSession" data-i="' + (idx) + '" data-tooltip="Cost per session (materials, supplies, delivery, etc.)"/></td>' +
       '<td class="cell-edit group-inputs" data-label="Labor % of price"><input aria-label="Labor percent of list price for ' + (escapeHtml(o.name)) + '" type="number" min="0" max="100" step="1" value="' + (o.laborPctOfPrice || 0) + '" data-k="laborPctOfPrice" data-i="' + (idx) + '" data-tooltip="Contractor pay as a % of list price (added to Var $ / session)"/></td>' +
@@ -318,6 +326,7 @@ export function render() {
   setKpi('kpiBreakEvenRevenue', fmtMoney0(metrics.breakEvenRevenue));
   setKpi('kpiContributionMargin', fmtMoney0(metrics.contributionMarginPerClient));
   setKpi('kpiIncome', fmtMoney0(metrics.income));
+  setKpi('kpiYearOneCashFlow', fmtMoney0(metrics.yearOneCashFlow));
 
   updateOutputs(metrics);
 
@@ -514,9 +523,13 @@ function updateKeyMetrics() {
     const revenue = fmtMoney0(metrics.revenue || 0);
     const income = fmtMoney0(metrics.income || 0);
     const util = fmtPct1(metrics.capacityPct || 0);
+    const incomeStatus = (metrics.income || 0) >= 60000 ? 'good' : (metrics.income || 0) >= 0 ? 'warn' : 'danger';
+    const incomeColor = incomeStatus === 'good' ? 'var(--good)' : incomeStatus === 'warn' ? 'var(--warn)' : 'var(--bad)';
     setText('abkRevenue', revenue);
     setText('abkIncome', income);
     setText('abkUtil', util);
+    const abkIncome = $('#abkIncome'); if (abkIncome) abkIncome.style.color = incomeColor;
+    const glIncome = $('#glIncome'); if (glIncome) glIncome.style.color = incomeColor;
 
     // At-a-glance modal: full default set (Revenue, Net income, Clients,
     // Annual sessions, Utilization).

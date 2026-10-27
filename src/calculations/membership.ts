@@ -45,20 +45,27 @@ export interface MembershipResult {
   savingsPct: number | null;
   creditsUsed: number;
   creditsUnused: number;
+  includedVisitsUsed: number;
   /** Unused credits as % of credits granted; null when none are granted. */
   breakagePct: number | null;
   /** fee + cash; credit redemptions are not revenue. */
   revenue: number;
+  /** processingFeePct of fee + cash revenue, the fee the processor takes. */
+  fees: number;
+  /** revenue less fees; the cash the business keeps. */
+  keptRevenue: number;
   /** Delivery cost of every visit, redeemed or paid. */
   deliveryCost: number;
   margin: number;
-  /** Margin as % of revenue; null when revenue is 0. */
+  /** Margin as % of keptRevenue; null when keptRevenue is 0. */
   marginPct: number | null;
   staffHours: number;
 }
 
 const money = (v: unknown) => sanitizeRangeBound(v, 0, MAX_MONEY) ?? 0;
 const pct = (num: number, den: number) => (den > 0 ? (num / den) * 100 : null);
+/** Processing fee %, the same 0-20 band calc() uses (index.ts sanitize). */
+const feePctOf = (v: unknown) => sanitizeRangeBound(v, 0, 20) ?? 0;
 
 function cleanId(v: unknown, makeId: () => string): string {
   return typeof v === 'string' && v ? v.slice(0, MAX_ID_LENGTH) : makeId();
@@ -74,17 +81,21 @@ export function sanitizePlans(raw: unknown, makeId: () => string = () => ''): Me
   return raw
     .filter((p) => p && typeof p === 'object')
     .slice(0, MAX_PLANS)
-    .map((p: Record<string, unknown>) => ({
-      id: cleanId(p.id, makeId),
-      name: cleanName(p.name),
-      monthlyFee: money(p.monthlyFee),
-      creditsPerMonth: money(p.creditsPerMonth),
-      memberDiscountPct: sanitizeRangeBound(p.memberDiscountPct, 0, 100) ?? 0,
-      creditsAtMemberPrice: p.creditsAtMemberPrice === true,
-      eligible: Array.isArray(p.eligible)
-        ? p.eligible.filter((id): id is string => typeof id === 'string' && id !== '').slice(0, MAX_ELIGIBLE).map((id) => id.slice(0, MAX_ID_LENGTH))
-        : [],
-    }));
+    .map((p: Record<string, unknown>) => {
+      const includedVisits = cleanVisits(p.includedVisits, false);
+      return {
+        id: cleanId(p.id, makeId),
+        name: cleanName(p.name),
+        monthlyFee: money(p.monthlyFee),
+        creditsPerMonth: money(p.creditsPerMonth),
+        memberDiscountPct: sanitizeRangeBound(p.memberDiscountPct, 0, 100) ?? 0,
+        creditsAtMemberPrice: p.creditsAtMemberPrice === true,
+        eligible: Array.isArray(p.eligible)
+          ? p.eligible.filter((id): id is string => typeof id === 'string' && id !== '').slice(0, MAX_ELIGIBLE).map((id) => id.slice(0, MAX_ID_LENGTH))
+          : [],
+        ...(Object.keys(includedVisits).length ? { includedVisits } : {})
+      };
+    });
 }
 
 /** Visits per offering id, clamped to 0-1000 (fractions allowed). Bounds drop unusable entries; base visits default them to 0. */
@@ -122,7 +133,13 @@ export function pruneMembership(
   offeringIds: Set<string>
 ): { plans: MembershipPlan[]; profiles: MemberProfile[] } {
   return {
-    plans: plans.map((p) => ({ ...p, eligible: p.eligible.filter((id) => offeringIds.has(id)) })),
+    plans: plans.map((p) => {
+      const includedVisits = Object.fromEntries(Object.entries(p.includedVisits || {}).filter(([id]) => offeringIds.has(id)));
+      const out = { ...p, eligible: p.eligible.filter((id) => offeringIds.has(id)) };
+      if (Object.keys(includedVisits).length) out.includedVisits = includedVisits;
+      else delete out.includedVisits;
+      return out;
+    }),
     profiles: profiles.map((p) => {
       const keep = (v: Record<string, number>) => Object.fromEntries(Object.entries(v).filter(([id]) => offeringIds.has(id)));
       const out: MemberProfile = { ...p, visits: keep(p.visits) };
@@ -142,9 +159,10 @@ function visitPrice(o: CatalogOffering): number {
 }
 
 /** One plan against one profile, per month. Offerings missing from the catalog are ignored. */
-export function calcMembership(plan: MembershipPlan, profile: MemberProfile, offerings: CatalogOffering[]): MembershipResult {
+export function calcMembership(plan: MembershipPlan, profile: MemberProfile, offerings: CatalogOffering[], processingFeePct: number = 0): MembershipResult {
   const discount = plan.memberDiscountPct / 100;
   let balance = plan.creditsPerMonth;
+  let includedVisitsUsed = 0;
   let regularSpend = 0;
   let cash = 0;
   let deliveryCost = 0;
@@ -158,13 +176,17 @@ export function calcMembership(plan: MembershipPlan, profile: MemberProfile, off
     deliveryCost += visits * ((o.variableCostPerSession || 0) + ((o.laborPctOfPrice || 0) / 100) * price);
     if (!isOneTime(o)) staffHours += visits * (o.hoursPerSession || 0);
 
+    const included = Math.min(visits, o.id ? plan.includedVisits?.[o.id] || 0 : 0);
+    includedVisitsUsed += included;
+    const paidVisits = visits - included;
+    if (paidVisits <= 0) continue;
     if (!o.id || !plan.eligible.includes(o.id)) {
-      cash += visits * price;
+      cash += paidVisits * price;
       continue;
     }
     const memberPrice = price * (1 - discount);
     const creditPrice = plan.creditsAtMemberPrice ? memberPrice : price;
-    const lineCredits = visits * creditPrice;
+    const lineCredits = paidVisits * creditPrice;
     const covered = Math.min(balance, lineCredits);
     balance -= covered;
     const overflowVisits = creditPrice > 0 ? (lineCredits - covered) / creditPrice : 0;
@@ -173,7 +195,10 @@ export function calcMembership(plan: MembershipPlan, profile: MemberProfile, off
 
   const memberSpend = plan.monthlyFee + cash;
   const revenue = memberSpend;
-  const margin = revenue - deliveryCost;
+  // The processor takes its cut of fee + cash, the only revenue membership has.
+  const fees = revenue * (feePctOf(processingFeePct) / 100);
+  const keptRevenue = revenue - fees;
+  const margin = keptRevenue - deliveryCost;
   return {
     headlineSaving: plan.creditsPerMonth - plan.monthlyFee,
     regularSpend,
@@ -182,11 +207,14 @@ export function calcMembership(plan: MembershipPlan, profile: MemberProfile, off
     savingsPct: pct(regularSpend - memberSpend, regularSpend),
     creditsUsed: plan.creditsPerMonth - balance,
     creditsUnused: balance,
+    includedVisitsUsed,
     breakagePct: pct(balance, plan.creditsPerMonth),
     revenue,
+    fees,
+    keptRevenue,
     deliveryCost,
     margin,
-    marginPct: pct(margin, revenue),
+    marginPct: pct(margin, keptRevenue),
     staffHours,
   };
 }
@@ -216,9 +244,9 @@ function profileAt(p: MemberProfile, side: 'low' | 'high'): MemberProfile {
  * range band) and reports min/base/max per metric. Taken across the runs, not assumed from the side:
  * more visits can lower margin when credits redeem on costly services. Null when the profile has no bounds.
  */
-export function calcMembershipRange(plan: MembershipPlan, profile: MemberProfile, offerings: CatalogOffering[]): MembershipRange | null {
+export function calcMembershipRange(plan: MembershipPlan, profile: MemberProfile, offerings: CatalogOffering[], processingFeePct: number = 0): MembershipRange | null {
   if (!hasVisitRange(profile)) return null;
-  const runs = [profileAt(profile, 'low'), profile, profileAt(profile, 'high')].map((p) => calcMembership(plan, p, offerings));
+  const runs = [profileAt(profile, 'low'), profile, profileAt(profile, 'high')].map((p) => calcMembership(plan, p, offerings, processingFeePct));
   const out = {} as MembershipRange;
   for (const m of MEMBERSHIP_RANGE_METRICS) {
     const values = runs.map((r) => r[m]);
@@ -231,6 +259,8 @@ export function calcMembershipRange(plan: MembershipPlan, profile: MemberProfile
 export interface CapacityPool {
   id: string;
   name: string;
+  /** Annual hours already used by the scenario, subtracted from capacity. */
+  usedHours?: number;
   hours: number;
   /** Tagged offerings draw no staff hours (resources.ts staffFree). */
   staffFree?: boolean;
@@ -244,8 +274,8 @@ export interface MemberCapacity {
 }
 
 /**
- * How many members of a profile fit before a pool saturates: floor(pool hours / member hours per year),
- * minimum over the pools. Standalone headroom at target utilization; it ignores current clients.
+ * How many members of a profile fit before a pool saturates: floor(remaining pool hours / member hours per year),
+ * minimum over the pools. Existing scenario load is subtracted from target capacity.
  * Hours follow membership's own staffHours (hoursPerSession per visit), one-time rows add none.
  */
 export function maxMembers(profile: MemberProfile, offerings: CatalogOffering[], pools: CapacityPool[]): MemberCapacity {
@@ -264,7 +294,7 @@ export function maxMembers(profile: MemberProfile, offerings: CatalogOffering[],
   for (const p of pools) {
     const h = need.get(p.id) || 0;
     if (h <= 0) continue;
-    const members = Math.floor(p.hours / h);
+    const members = Math.floor(Math.max(0, p.hours - (p.usedHours || 0)) / h);
     if (best.members === null || members < best.members) best = { members, binding: p.id };
   }
   return best;
@@ -280,13 +310,64 @@ export type FeeRecommendation =
  * (only the fee is solved). Margin is linear in the fee: revenue = cost / (1 - m), so fee = revenue - cash,
  * floored at 0 and rounded up to the cent. Feasible only while the member still saves, i.e. fee < regularSpend - cash.
  */
-export function recommendFee(plan: MembershipPlan, profile: MemberProfile, offerings: CatalogOffering[], targetMarginPct: number): FeeRecommendation {
+export function recommendFee(plan: MembershipPlan, profile: MemberProfile, offerings: CatalogOffering[], targetMarginPct: number, processingFeePct: number = 0): FeeRecommendation {
   if (!Number.isFinite(targetMarginPct) || targetMarginPct < 0 || targetMarginPct >= 100) return { feasible: false, reason: 'invalid-target' };
-  const base = calcMembership({ ...plan, monthlyFee: 0 }, profile, offerings);
+  const base = calcMembership({ ...plan, monthlyFee: 0 }, profile, offerings, processingFeePct);
   if (base.regularSpend <= 0) return { feasible: false, reason: 'no-visits' };
   const cash = base.memberSpend; // fee is 0 here, so memberSpend is cash alone
   const maxFee = base.regularSpend - cash;
-  const needed = base.deliveryCost / (1 - targetMarginPct / 100) - cash;
+  // kept revenue is what the processor leaves, so target margin is solved on that.
+  const rate = feePctOf(processingFeePct) / 100;
+  const needed = base.deliveryCost / ((1 - targetMarginPct / 100) * (1 - rate)) - cash;
   const fee = Math.max(0, Math.ceil(needed * 100 - 1e-9) / 100);
   return fee < maxFee ? { feasible: true, fee, maxFee } : { feasible: false, reason: 'member-loses', fee, maxFee };
+}
+
+/** Recommended shared credit grant for a target margin, holding fee/discount fixed. */
+export function recommendCredits(plan: MembershipPlan, profile: MemberProfile, offerings: CatalogOffering[], targetMarginPct: number, processingFeePct = 0): number | null {
+  if (!Number.isFinite(targetMarginPct) || targetMarginPct < 0 || targetMarginPct >= 100) return null;
+  if (calcMembership(plan, profile, offerings, processingFeePct).regularSpend <= 0) return null;
+  let maxCredits = 0;
+  for (const o of offerings) {
+    const visits = o.id ? profile.visits[o.id] || 0 : 0;
+    if (!o.id || !plan.eligible.includes(o.id)) continue;
+    const remaining = Math.max(0, visits - (plan.includedVisits?.[o.id] || 0));
+    const price = visitPrice(o) * (plan.creditsAtMemberPrice ? 1 - plan.memberDiscountPct / 100 : 1);
+    maxCredits += remaining * price;
+  }
+  const centsMax = Math.ceil(maxCredits * 100);
+  const marginAt = (cents: number) => calcMembership({ ...plan, creditsPerMonth: cents / 100 }, profile, offerings, processingFeePct).marginPct ?? -Infinity;
+  const minMargin = marginAt(centsMax);
+  const maxMargin = marginAt(0);
+  if (targetMarginPct < minMargin - 0.01 || targetMarginPct > maxMargin + 0.01) return null;
+  let lo = 0;
+  let hi = centsMax;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (marginAt(mid) <= targetMarginPct) hi = mid;
+    else lo = mid + 1;
+  }
+  const candidates = [lo, Math.max(0, lo - 1)];
+  const best = candidates.reduce((a, b) => Math.abs(marginAt(a) - targetMarginPct) <= Math.abs(marginAt(b) - targetMarginPct) ? a : b);
+  return best / 100;
+}
+
+/** Recommended discount for a target margin, holding fee/credits fixed. */
+export function recommendDiscount(plan: MembershipPlan, profile: MemberProfile, offerings: CatalogOffering[], targetMarginPct: number, processingFeePct = 0): number | null {
+  if (!Number.isFinite(targetMarginPct) || targetMarginPct < 0 || targetMarginPct >= 100) return null;
+  if (calcMembership(plan, profile, offerings, processingFeePct).regularSpend <= 0) return null;
+  const marginAt = (tenths: number) => calcMembership({ ...plan, memberDiscountPct: tenths / 10 }, profile, offerings, processingFeePct).marginPct ?? -Infinity;
+  const minMargin = marginAt(1000);
+  const maxMargin = marginAt(0);
+  if (targetMarginPct < minMargin - 0.01 || targetMarginPct > maxMargin + 0.01) return null;
+  let lo = 0;
+  let hi = 1000;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (marginAt(mid) <= targetMarginPct) hi = mid;
+    else lo = mid + 1;
+  }
+  const candidates = [lo, Math.max(0, lo - 1)];
+  const best = candidates.reduce((a, b) => Math.abs(marginAt(a) - targetMarginPct) <= Math.abs(marginAt(b) - targetMarginPct) ? a : b);
+  return best / 10;
 }

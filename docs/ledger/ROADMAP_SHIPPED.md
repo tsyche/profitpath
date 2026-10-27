@@ -1,9 +1,11 @@
 # Shipped Roadmap Items
 
-**TL;DR:** Compact index of completed [ROADMAP.md](../../ROADMAP.md) work, followed by the original entries preserved verbatim. Partly shipped items (12o) stay in the roadmap until finished.
+**TL;DR:** History of completed work from [ROADMAP.md](../../ROADMAP.md), followed by the original entries. This ledger never tracks open work: move every follow-up, known gap, and conditional next step into the active roadmap before recording an item here.
 
 ## Shipped index
 
+- [x] 2026-10-26 — 33. Excel export parity (multi-sheet .xlsx via fflate, shared serializers)
+- [x] 2026-10-26 — 34. Light theme meets WCAG AA contrast
 - [x] 2026-10-25 — TypeScript migration (strict, all source and tests `.ts`, lint `--max-warnings 0`)
 - [x] 2026-10-25 — 24. Confidence-band / range output (Conservative / Base / Optimistic)
 - [x] 2026-10-25 — 24b. Group / cohort offerings
@@ -60,27 +62,27 @@
 
 ### 2026-10-25 — TypeScript migration
 
-All source and tests are `.ts` with `strict: true`; the ratchet is retired (`tsc --noEmit` must be 0). `tests/e2e` is typechecked; unit `*.test.ts` files stay excluded (known gap, ~1,150 errors in the jsdom mock tests; tracked as ROADMAP 12x); `$`/`$$` are typed. Migration also surfaced and fixed real bugs, each with a test: insights under-utilization, dashboard export `getSummary`, customer analytics revenue, table focus restore (`tests/e2e/table-focus.spec.ts`). Plan: [typescript-migration](../plans/archive/typescript-migration.md).
+All source and tests are `.ts` with `strict: true`; the ratchet is retired (`tsc --noEmit` must be 0). `tests/e2e` is typechecked; unit `*.test.ts` files stay excluded (known gap, ~1,150 errors in the jsdom mock tests; tracked in [ROADMAP.md item 12x](../../ROADMAP.md)); `$`/`$$` are typed. Migration also surfaced and fixed real bugs, each with a test: insights under-utilization, dashboard export `getSummary`, customer analytics revenue, table focus restore (`tests/e2e/table-focus.spec.ts`). Plan: [typescript-migration](../plans/archive/typescript-migration.md).
 
 ### 2026-10-26 — 32. Repo-wide accessibility e2e (axe-core)
 
-`tests/e2e/a11y.spec.ts` runs `@axe-core/playwright` at beginner, intermediate and advanced with panels expanded, plus the templates, what-if, glance and settings modals, the open drawer, and an inert-when-closed drawer check (24 tests, chromium + firefox). Dark theme runs the full WCAG 2 A/AA tag set; light theme skips only `color-contrast` (palette misses AA; deferred to the UI/UX pass, Phase 0).
+`tests/e2e/a11y.spec.ts` runs `@axe-core/playwright` at beginner, intermediate and advanced with panels expanded, plus the templates, what-if, glance and settings modals, the open drawer, and an inert-when-closed drawer check (24 tests, chromium + firefox). Dark and light themes run the full WCAG 2 A/AA tag set after item 34 fixed light-theme contrast.
 
 Fixes the scan drove: `for=` on 14 labels, aria-labels on undo/redo, `#debugPanel` tabindex + label, `#appDrawer` inert while closed, removed a mismatching `.ab-kpis` aria-label, removed `.section-disclaimer` opacity, capped heatmap alpha at 0.45, theme vars in the Settings level descriptions, and the offering Actions row layout (asserted in `layout-overflow.spec.ts`).
 
 ### 2026-10-26 — 24e. Membership What-If follow-ups
 
-Three display-only slices on the membership panel, nothing feeds `calc()`:
+Membership remains a display-only what-if panel; nothing feeds `calc()`:
 
 - **Visit ranges** (982693c): optional low/high visits per offering on a profile; `calcMembershipRange` takes min/max across the all-low / base / all-high runs. CSV profile cols 3-4.
-- **Members per pool** (1f80464): `maxMembers` is the minimum over staff and tagged pools of floor(pool hours / member hours per year), staff-free pools put no hours on staff, and the binding pool is named. Staff hours come from the last `calc()`; headroom is standalone at target utilization.
-- **Fee optimizer**: `recommendFee` solves fee = cost / (1 - margin) - cash, floored at 0, rounded up to the cent. It returns an explicit infeasible result when the member would stop saving. It solves the fee only, with credits and discount held fixed. The target is session-only.
+- **Members per pool** (1f80464): `maxMembers` subtracts modeled staff and tagged-pool load from target capacity, accounts for staff-free pools, and names the binding pool.
+- **Plan-term optimizer**: target margin suggests fee, shared credits, or discount one term at a time. It returns no suggestion when the target is unreachable.
 
-Deferred lines are in ROADMAP 24e.
+The remaining conditional follow-up is in [ROADMAP.md item 24f](../../ROADMAP.md).
 
 ### 2026-10-25 — 24c. Ranged inputs: frequency bounds
 
-Optional low/high on `sessionsPerYear` for every offering type except one-time (Forecast and Current; staff hours and variable cost both move). The Conservative case takes the high bound because more sessions cost more for the same monthly price. Every bound key now comes from one list (`RANGE_BOUND_KEYS`), with a parametrized test that each key survives `hasRanges`, the sanitizer, share URL, CSV and `withBounds`. CSV gains cols 25-26 (older files still import); the drivers line shows each offering's min/max profit. Chart ranges deferred into the UI/UX pass.
+Optional low/high on `sessionsPerYear` for every offering type except one-time (Forecast and Current; staff hours and variable cost both move). The Conservative case takes the high bound because more sessions cost more for the same monthly price. Every bound key now comes from one list (`RANGE_BOUND_KEYS`), with a parametrized test that each key survives `hasRanges`, the sanitizer, share URL, CSV and `withBounds`. CSV gains cols 25-26 (older files still import); the drivers line shows each offering's min/max profit. Chart ranges remain in [ROADMAP.md item 24f](../../ROADMAP.md).
 
 ### 2026-10-25 — 24a. Membership and prepaid-credit pricing calculator
 
@@ -115,7 +117,7 @@ Shipped as phases 1-3 (f11fd67 math, 8391cee persistence, 7ae525c panel). Plan: 
 
 ### 2026-10-25 — 30. One-time / capital expenses, amortized over useful life
 
-30. **One-time / capital expenses, separate from recurring monthly costs** *(SHIPPED 2026-10-25: new 'one-time' expense frequency; amount is the purchase price, spread evenly over a per-row Life (yrs) input, default 3, range 1-30. CSV gains a Life (yrs) column. Year-1 cash outlay is not modeled.)*
+30. **One-time / capital expenses, separate from recurring monthly costs** *(SHIPPED 2026-10-25: new 'one-time' expense frequency; amount is the purchase price, spread evenly over a per-row Life (yrs) input, default 3, range 1-30. CSV gains a Life (yrs) column. Year-1 cash outlay remains in [ROADMAP.md item 30a](../../ROADMAP.md).)*
     - Equipment purchases, buildout costs, and other one-time capital outlays are a different shape than recurring monthly overhead — today there's nowhere to put a "bought a new recording rig for $3,000 this year" line without distorting the monthly Overhead number
     - Covered by item 27's frequency field (one-time vs. monthly vs. annual) rather than needing its own separate feature — listed here mainly to make sure item 27's design explicitly accounts for this case rather than assuming everything recurs monthly
     - Effort: included in item 27's scope
@@ -129,14 +131,14 @@ Shipped as phases 1-3 (f11fd67 math, 8391cee persistence, 7ae525c panel). Plan: 
 
 ### 2026-10-24 — 29. Payment processing fees
 
-29. **Payment processing fees** *(SHIPPED 2026-10-24: global "Processing fee (% of revenue)" input, 0-20%, counted as a variable cost on every offering via `feePct` in the calc engine; persisted in share links, localStorage and CSV. A flat per-transaction amount was not built.)*
+29. **Payment processing fees** *(SHIPPED 2026-10-24: global "Processing fee (% of revenue)" input, 0-20%, counted as a variable cost on every offering via `feePct` in the calc engine; persisted in share links, localStorage and CSV. A flat per-transaction amount remains in [ROADMAP.md item 29a](../../ROADMAP.md).)*
     - A near-universal real cost for any business taking card payments (Stripe/Square-style ~2.9% + $0.30 per transaction) that isn't modeled anywhere today
     - As a category on item 27's expense table (percentage-of-revenue type rather than flat amount), or as a simple global "processing fee %" input applied to revenue — either would capture a cost every single template business (consulting, fitness, photography, etc.) actually pays
     - Effort: ~2-3 hours
 
 ### 2026-10-24 — 31. Loan / debt payments
 
-31. **Loan / debt payments** *(SHIPPED 2026-10-24: covered by item 27. Enter a `Loan Payments` expense with a flat payment; no principal/interest tracking.)*
+31. **Loan / debt payments** *(SHIPPED 2026-10-24: covered by item 27. Enter a `Loan Payments` expense with a flat payment; principal/interest tracking remains in [ROADMAP.md item 31a](../../ROADMAP.md).)*
     - Principal + interest payments on business loans or equipment financing — common for businesses financing a buildout or gear, not represented today
     - Simplest version: a "Debt Service" expense category (item 27) with a flat monthly payment amount; a more complete version would track principal/interest split and remaining term for payoff projections, but that's a bigger feature than this app's current scope suggests is warranted yet
     - Effort: ~1-2 hours for the simple flat-payment version once item 27 exists
@@ -144,7 +146,7 @@ Shipped as phases 1-3 (f11fd67 math, 8391cee persistence, 7ae525c panel). Plan: 
 ### 2026-10-24 — 12r, 12v, 12w. Insights follow-ups
 
 - 12r: results re-run (debounced 300 ms) when inputs change after a first Calculate; new 'combined' lever applies one multiple to prices and volume (client counts in Current, target utilization in Forecast), ranked after cost reduction.
-- 12v: four new wizard scenarios (part-time hire, price + volume, price + hire, move prices toward market average). Market scenario converts the display price (per month, visit or sale) back to priceMonthly; rows without a market average are left alone. Still open: a "what's new" tie-in.
+- 12v: four new wizard scenarios (part-time hire, price + volume, price + hire, move prices toward market average). Market scenario converts the display price (per month, visit or sale) back to priceMonthly; rows without a market average are left alone. A "what's new" tie-in remains in [ROADMAP.md item 12aa](../../ROADMAP.md).
 - 12w: Mix Optimizer fixes one-time rows' mix share (they have no hours or demand cap, so it piled 99% into them); ranking table shows 'n/a' per hour for hour-free rows (`hourFree` on `OfferingMetric`) and sorts them last.
 - Also added: an e2e guard for swallowed `updateOutputs` render errors (a top-level `let` read before initialization only surfaced as a console warning).
 
@@ -402,7 +404,7 @@ Superseded by item 18: the per-session type does this conversion in the Price ce
 
 ### 2026-10-25 — 24c. Ranged inputs: original entry
 
-24c. **Ranged inputs for assumptions (low / base / high)** *(SHIPPED 2026-10-25; 2026-10-24: optional low/high on group fill % (Forecast) and current clients (Current); collapsed "Ranges" table under Fixed Expenses; Outputs band shows min / base / max for revenue, profit, clients, utilization and break-even clients; persisted via share URL, CSV (cols 12-15) and sanitizers; item 22 link shipped as the "top drivers" line. 2026-10-25: low/high on sessions per year (all types but one-time; CSV cols 25-26), per-offering min/max profit in the drivers line. Deferred: chart ranges, folded into [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md))*
+24c. **Ranged inputs for assumptions (low / base / high)** *(SHIPPED 2026-10-25; 2026-10-24: optional low/high on group fill % (Forecast) and current clients (Current); collapsed "Ranges" table under Fixed Expenses; Outputs band shows min / base / max for revenue, profit, clients, utilization and break-even clients; persisted via share URL, CSV (cols 12-15) and sanitizers; item 22 link shipped as the "top drivers" line. 2026-10-25: low/high on sessions per year (all types but one-time; CSV cols 25-26), per-offering min/max profit in the drivers line. Chart ranges remain in [ROADMAP.md item 24f](../../ROADMAP.md), which links the UI/UX plan.)*
     - Let any guessed input (fill %, visit frequency, client count) carry a low/base/high value and show results as a range. Pairs with item 22 (confidence tags) as the input side of item 24's range output.
     - Covers "known capacity, unknown demand" in Current mode: real counts stay point values, guesses become ranges.
     - Design note: the band is a scenario envelope (all lows together, all highs together via `calcRange` in `src/calculations/ranges.ts`), not a statistical interval; min/max are taken across the runs, so it stays honest when more clients means more loss.
@@ -411,11 +413,32 @@ Superseded by item 18: the per-session type does this conversion in the Price ce
 
 ### 2026-10-26 — 24e. Membership What-If follow-ups: original entry
 
-24e. **Membership What-If follow-ups** *(SHIPPED 2026-10-26: visit ranges, members per pool, fee optimizer; deferred lines below)*
+24e. **Membership What-If follow-ups** *(SHIPPED 2026-10-26: visit ranges, member capacity after scenario load, and fee/credits/discount target optimizer)*
     - ~~Credits-vs-visits ranges~~ *(SHIPPED 2026-10-25)*: optional low / high visits per offering on a profile (collapsed "Visit ranges" table); each result cell adds a line with member savings, your margin and staff hours across all-low / base / all-high (min/max over the runs, since fewer visits can raise margin). Persisted in scenarios, share URL and CSV (profile cols 3-4); display only.
     - ~~Members supportable per capacity pool~~ *(SHIPPED 2026-10-26)*: each result cell shows how many members fit before staff or a tagged pool saturates, naming the binding pool. Standalone headroom at target utilization.
-    - Deferred 2026-10-26: subtract current client load from that headroom (needs a stable meaning of "current" in Forecast mode); group offerings use per-visit hours, not per-seat.
-    - ~~Recommended-plan optimizer~~ *(SHIPPED 2026-10-26, fee only)*: optional session-only target margin % adds the lowest fee that reaches it while the member still saves, or an explicit "no fee works" line. Credits and discount stay as entered.
-    - Deferred 2026-10-26: solve credits or discount for a target margin (the fee-only solve is linear; those are not).
-    - Feed members into `calc()`: only if the panel proves useful; today it is display only so credits can't double count as revenue.
-    - Excel export carries no plans or profiles (nor expenses or resources); add with the others if that path is revisited.
+    - ~~Member capacity after scenario load~~ *(SHIPPED 2026-10-26)*: subtracts modeled scenario usage from staff and tagged-pool target capacity.
+    - ~~Plan-term optimizer~~ *(SHIPPED 2026-10-26)*: target-margin suggestions for fee, shared credits, and discount, each solved independently while other terms stay fixed.
+    - Feed members into `calc()` only if the panel proves useful; this conditional remains in [ROADMAP.md item 24f](../../ROADMAP.md).
+    - Excel parity shipped in item 33.
+
+### 2026-10-26 — 33. Excel export parity: original entry
+
+33. **Excel export parity** *(new, 2026-10-26)*
+    - The Excel export carries only offerings and outputs; membership plans and profiles, expenses, capacity resources, ranges, confidence tags and group run costs are missing, so a TSS-style scenario loses most of its model on export. CSV and the share URL already carry them.
+    - Add a sheet per missing block (or fold into existing sheets), reuse the CSV serializers so the two can't drift, and add a round-trip e2e/unit test that fails when a persisted field is absent from the workbook (a parity check against the same field list the share URL uses).
+    - Effort: ~3-4 hours
+
+### 2026-10-26 — 34. Light theme meets WCAG AA contrast: original entry
+
+34. **Light theme meets WCAG AA contrast** *(new, 2026-10-26; found by the axe scan in `tests/e2e/a11y.spec.ts`)*
+    - The light palette fails `color-contrast`, so the scan skips that rule in light theme only. This is a palette change, not a one-line fix: pick AA-safe text/accent/muted tokens, then re-check charts, badges and KPI gradients.
+    - Done when the skip is deleted from `a11y.spec.ts` and light theme passes at all three experience levels. Phase 0 of [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md) feeds the palette decision; do it before or with that pass, not after.
+    - Effort: ~3-5 hours
+
+### 2026-10-26 — Follow-ups from shipped items 12v, 29, 30 and 31
+
+- 12aa: What If intro links to the GitHub Releases history.
+- 29a: added a flat per-transaction fee and explicit average monthly transaction count; transaction count is never inferred from clients.
+- 30a: added Year 1 cash flow before tax. Profit keeps one-time purchases amortized; cash flow includes the full purchase amount.
+- 31a: loan expense rows accept opening balance, APR and term. Annual profit includes interest; Year 1 cash flow includes scheduled principal and interest payments.
+- CSV and workbook reports include the fee settings, loan APR and Year 1 cash flow.

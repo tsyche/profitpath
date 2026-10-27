@@ -231,6 +231,7 @@ describe('Fuzz: sanitizeScenarioState', () => {
       const allowed = new Set([
         'mode', 'offerings', 'fullTimeEmployees', 'partTimeEmployees',
         'fullTimeEmployeePay', 'partTimeEmployeePay', 'monthlyCosts', 'processingFeePct',
+        'processingFeePerTransaction', 'transactionsPerMonth',
         'productiveUtilizationPct', 'targetUtilizationPct', 'lockMix', 'loadedTemplate',
         'notes', 'currency', 'expenses', 'resources', 'membershipPlans', 'memberProfiles'
       ]);
@@ -288,8 +289,8 @@ describe('Fuzz: sanitizeScenarioState', () => {
         expect(o.name.length).toBeLessThanOrEqual(120);
         expect(Number.isFinite(o.priceMonthly)).toBe(true);
         expect(o.priceMonthly).toBeGreaterThanOrEqual(0);
-        expect(o.sessionsPerYear).toBeGreaterThanOrEqual(1);
-        expect(o.hoursPerSession).toBeGreaterThanOrEqual(0.1);
+        expect(o.sessionsPerYear).toBeGreaterThanOrEqual(0);
+        expect(o.hoursPerSession).toBeGreaterThanOrEqual(0);
         expect(o.mixPct).toBeGreaterThanOrEqual(0);
         expect(o.mixPct).toBeLessThanOrEqual(100);
       }

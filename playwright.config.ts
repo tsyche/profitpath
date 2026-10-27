@@ -13,7 +13,7 @@ export default defineConfig({
   use: {
     // Dedicated e2e port (strict) so tests never attach to an unrelated dev
     // server that happens to be running on the dev port 3120
-    baseURL: 'http://localhost:3121',
+    baseURL: 'http://127.0.0.1:3121',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -32,8 +32,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev -- --port 3121 --strictPort',
-    url: 'http://localhost:3121',
+    command: 'npm run dev -- --port 3121 --strictPort --host 127.0.0.1',
+    url: 'http://127.0.0.1:3121',
     reuseExistingServer: false,
     timeout: 60000,
   },

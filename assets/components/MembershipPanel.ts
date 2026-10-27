@@ -1,4 +1,4 @@
-import { calcMembership, calcMembershipRange, hasVisitRange, maxMembers, recommendFee, sanitizePlans, sanitizeProfiles, MAX_PLANS, MAX_PROFILES } from '../../src/calculations/membership';
+import { calcMembership, calcMembershipRange, hasVisitRange, maxMembers, recommendCredits, recommendDiscount, recommendFee, sanitizePlans, sanitizeProfiles, MAX_PLANS, MAX_PROFILES } from '../../src/calculations/membership';
 import type { CapacityPool, CatalogOffering } from '../../src/calculations/membership';
 import { STAFF_POOL_ID, activeResources, resourceAnnualHours } from '../../src/calculations/resources';
 import { fmtMoney0 } from '../../src/calculations/currency';
@@ -20,12 +20,14 @@ interface PanelState {
   memberProfiles?: MemberProfile[];
   resources?: Resource[];
   targetUtilizationPct?: number;
+  processingFeePct?: number;
 }
 
 interface PanelDeps {
   getState: () => PanelState;
   /** Staff hours a year at target utilization, from the last calc(). */
   getStaffTargetHours: () => number;
+  getPoolUsageHours: () => Record<string, number>;
   persist: () => void;
   pushHistory: () => void;
 }
@@ -80,6 +82,17 @@ function editorHtml(s: PanelState): string {
       '</tbody></table></div>'
     : '';
 
+  const includedVisitsTable = plans.length && offerings.length
+    ? '<details class="smallprint" style="margin-top: 8px;"' + (plans.some((p) => Object.keys(p.includedVisits || {}).length > 0) ? ' open' : '') + '><summary>Included visits by service (optional)</summary>' +
+      '<p class="smallprint">Included visits are used first each month, before shared credits. Delivery costs and staff hours still count.</p>' +
+      '<div class="table-wrap"><table class="table membership-table" aria-label="Included monthly visits by plan and service"><thead><tr><th>Included visits / month</th>' +
+      plans.map((p) => '<th>' + escapeHtml(p.name) + '</th>').join('') + '</tr></thead><tbody id="membershipIncludedVisitsBody">' +
+      offerings.map((o, oi) => '<tr><td data-label="Offering">' + escapeHtml(offeringName(o, oi)) + '</td>' +
+        plans.map((p, pi) => '<td class="cell-edit" data-label="' + escapeHtml(p.name) + '"><input type="number" min="0" max="1000" step="0.5" aria-label="Included monthly visits for ' + escapeHtml(p.name) + ' at ' + escapeHtml(offeringName(o, oi)) +
+          '" value="' + num(o.id ? p.includedVisits?.[o.id] || 0 : 0) + '" data-kind="includedVisits" data-i="' + pi + '" data-o="' + escapeHtml(o.id || '') + '"/></td>').join('') + '</tr>').join('') +
+      '</tbody></table></div></details>'
+    : '';
+
   const visitsTable = profiles.length && offerings.length
     ? '<div class="table-wrap"><table class="table membership-table" aria-label="Visits per month for each member profile"><thead><tr><th>Visits / month</th>' +
       profiles.map((p, i) => '<th><input aria-label="Member profile name" type="text" maxlength="100" value="' + escapeHtml(p.name) + '" data-kind="profile" data-k="name" data-i="' + i + '"/>' +
@@ -108,7 +121,7 @@ function editorHtml(s: PanelState): string {
 
   const profilesEmpty = profiles.length ? '' : '<p class="smallprint">No member profiles yet. A profile is a typical member: how many visits a month, per service.</p>';
 
-  return planTable + eligibleTable + profilesEmpty + visitsTable + rangeTable +
+  return planTable + eligibleTable + includedVisitsTable + profilesEmpty + visitsTable + rangeTable +
     '<div class="section-actions" style="margin-top: 8px;">' +
     '<button class="btn" type="button" id="addMembershipPlanBtn" data-action="addPlan"' + (plans.length >= MAX_PLANS ? ' disabled' : '') + '>Add plan</button> ' +
     '<button class="btn" type="button" id="addMemberProfileBtn" data-action="addProfile"' + (profiles.length >= MAX_PROFILES ? ' disabled' : '') + '>Add member profile</button></div>';
@@ -121,9 +134,10 @@ function signed(n: number): string {
 /** Staff plus each active resource, in annual hours at target utilization. */
 function capacityPools(s: PanelState): CapacityPool[] {
   const target = (s.targetUtilizationPct ?? 100) / 100;
+  const usage = deps?.getPoolUsageHours() || {};
   return [
-    { id: STAFF_POOL_ID, name: 'Staff', hours: deps?.getStaffTargetHours() ?? 0 },
-    ...activeResources(s.resources).map((r) => ({ id: r.id, name: r.name, hours: resourceAnnualHours(r) * target, ...(r.staffFree ? { staffFree: true } : {}) }))
+    { id: STAFF_POOL_ID, name: 'Staff', hours: deps?.getStaffTargetHours() ?? 0, usedHours: usage[STAFF_POOL_ID] || 0 },
+    ...activeResources(s.resources).map((r) => ({ id: r.id, name: r.name, hours: resourceAnnualHours(r) * target, usedHours: usage[r.id] || 0, ...(r.staffFree ? { staffFree: true } : {}) }))
   ];
 }
 
@@ -132,12 +146,12 @@ function fitLine(profile: MemberProfile, s: PanelState): string {
   const cap = maxMembers(profile, s.offerings, pools);
   if (cap.members === null) return 'Members that fit: no limit (no staff or pool hours)';
   const name = pools.find((p) => p.id === cap.binding)?.name ?? '';
-  return 'Fits ' + cap.members + ' member' + (cap.members === 1 ? '' : 's') + ' before ' + escapeHtml(name) + ' is full (at target utilization, ignores your current clients)';
+  return 'Fits ' + cap.members + ' member' + (cap.members === 1 ? '' : 's') + ' before ' + escapeHtml(name) + ' is full (after scenario load)';
 }
 
-function feeLine(plan: MembershipPlan, profile: MemberProfile, offerings: PanelOffering[]): string | null {
+function feeLine(plan: MembershipPlan, profile: MemberProfile, offerings: PanelOffering[], processingFeePct: number): string | null {
   if (Number.isNaN(targetMarginPct)) return null;
-  const r = recommendFee(plan, profile, offerings, targetMarginPct);
+  const r = recommendFee(plan, profile, offerings, targetMarginPct, processingFeePct);
   const target = pct1(targetMarginPct) + ' margin';
   if (r.feasible) return 'Fee for ' + target + ': ' + fmtMoney0(r.fee) + ' / month (member still saves below ' + fmtMoney0(r.maxFee) + ')';
   if (r.reason === 'member-loses') return 'No fee reaches ' + target + ' while the member still saves: needs ' + fmtMoney0(r.fee) + ', member saves only below ' + fmtMoney0(r.maxFee) + '. Change credits or discount.';
@@ -146,7 +160,7 @@ function feeLine(plan: MembershipPlan, profile: MemberProfile, offerings: PanelO
 
 function cellHtml(plan: MembershipPlan, profile: MemberProfile, s: PanelState): string {
   const offerings = s.offerings;
-  const r = calcMembership(plan, profile, offerings);
+  const r = calcMembership(plan, profile, offerings, s.processingFeePct);
   const saving = r.savings >= 0
     ? 'Member saves ' + fmtMoney0(r.savings)
     : 'Member pays ' + fmtMoney0(-r.savings) + ' more';
@@ -157,12 +171,19 @@ function cellHtml(plan: MembershipPlan, profile: MemberProfile, s: PanelState): 
   if (plan.creditsPerMonth > 0) {
     lines.push('Credits unused ' + fmtMoney0(r.creditsUnused) + (r.breakagePct === null ? '' : ' (' + pct1(r.breakagePct) + ' of credits granted)'));
   }
-  lines.push('You keep ' + fmtMoney0(r.margin) + ' of ' + fmtMoney0(r.revenue) + ' revenue' + (r.marginPct === null ? '' : ' (' + pct1(r.marginPct) + ' margin on revenue)'));
+  if (r.includedVisitsUsed > 0) lines.push(r.includedVisitsUsed.toFixed(1) + ' included visits used');
+  lines.push('You keep ' + fmtMoney0(r.margin) + ' of ' + fmtMoney0(r.keptRevenue) + ' revenue' + (r.marginPct === null ? '' : ' (' + pct1(r.marginPct) + ' margin on revenue)'));
   lines.push(r.staffHours.toFixed(1) + ' staff h/month');
   lines.push('<span class="membership-fit">' + fitLine(profile, s) + '</span>');
-  const fee = feeLine(plan, profile, offerings);
+  const fee = feeLine(plan, profile, offerings, s.processingFeePct ?? 0);
   if (fee) lines.push('<span class="membership-fee">' + fee + '</span>');
-  const band = calcMembershipRange(plan, profile, offerings);
+  if (!Number.isNaN(targetMarginPct)) {
+    const credits = recommendCredits(plan, profile, offerings, targetMarginPct, s.processingFeePct);
+    const discount = recommendDiscount(plan, profile, offerings, targetMarginPct, s.processingFeePct);
+    if (credits !== null) lines.push('<span class="membership-fee">Credits for ' + pct1(targetMarginPct) + ' margin: ' + fmtMoney0(credits) + ' / month</span>');
+    if (discount !== null) lines.push('<span class="membership-fee">Discount for ' + pct1(targetMarginPct) + ' margin: ' + pct1(discount) + '</span>');
+  }
+  const band = calcMembershipRange(plan, profile, offerings, s.processingFeePct);
   if (band) {
     const span = (a: number, b: number) => (a === b ? fmtMoney0(a) : fmtMoney0(a) + ' to ' + fmtMoney0(b));
     lines.push('<span class="membership-range">Visit range: member saves ' + (band.savings.min === band.savings.max ? signed(band.savings.min) : signed(band.savings.min) + ' to ' + signed(band.savings.max)) +
@@ -174,7 +195,8 @@ function cellHtml(plan: MembershipPlan, profile: MemberProfile, s: PanelState): 
 function resultsHtml(s: PanelState): string {
   const { plans, profiles } = listsOf(s);
   if (!plans.length || !profiles.length) return '<p class="smallprint">Add at least one plan and one member profile to compare.</p>';
-  const head = plans.map((p) => '<th>' + escapeHtml(p.name) + '<div class="smallprint">Headline: credits minus fee = ' + signed(p.creditsPerMonth - p.monthlyFee) + '</div></th>').join('');
+  const head = plans.map((p) => '<th>' + escapeHtml(p.name) + '<div class="smallprint">Fee ' + fmtMoney0(p.monthlyFee) + ' / month · credits ' + fmtMoney0(p.creditsPerMonth) + ' / month' +
+    (Object.keys(p.includedVisits || {}).length ? ' · service visits included' : '') + '</div></th>').join('');
   const rows = profiles.map((pr) =>
     '<tr><th scope="row">' + escapeHtml(pr.name) + '</th>' + plans.map((pl) => '<td>' + cellHtml(pl, pr, s) + '</td>').join('') + '</tr>').join('');
   return '<div class="table-wrap"><table class="table membership-results" aria-label="Membership comparison"><thead><tr><th></th>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
@@ -223,6 +245,17 @@ function onInput(e: Event): void {
     if (!row) return;
     recordHistory('plan-' + el.dataset.i + '-' + k);
     row[k] = (sanitizePlans([{ ...row, [k]: el.value }], () => String(row.id))[0] as unknown as Record<string, unknown>)[k];
+    changed(false);
+  } else if (kind === 'includedVisits') {
+    const row = plans[Number(el.dataset.i)];
+    const oid = el.dataset.o;
+    if (!row || !oid) return;
+    recordHistory('includedVisits-' + el.dataset.i + '-' + oid);
+    const clean = sanitizePlans([{ ...row, includedVisits: { [oid]: el.value } }], () => row.id)[0].includedVisits?.[oid] || 0;
+    const map = { ...(row.includedVisits || {}) };
+    if (clean > 0) map[oid] = clean;
+    else delete map[oid];
+    row.includedVisits = map;
     changed(false);
   } else if (kind === 'profile' && k === 'name') {
     const row = profiles[Number(el.dataset.i)];

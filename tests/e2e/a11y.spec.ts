@@ -3,10 +3,9 @@ import AxeBuilder from '@axe-core/playwright';
 import { waitForPageReady } from './helpers';
 
 // ROADMAP 32: axe-core scan of the whole app at each experience level, collapsible panels expanded.
-// Fails on Critical/Serious. Dark theme is held to the full rule set. The light theme's palette misses WCAG AA
-// contrast (muted text ~4.0-4.4:1, accent greens/ambers on white 1.5-3.8:1); that is a palette redesign owned by the
-// UI/UX pass (docs/plans/ui-ux-pass.md), so only color-contrast is skipped there. Shrink this, never grow it silently.
-const LIGHT_THEME_SKIPPED_RULES = ['color-contrast'];
+// Fails on Critical/Serious, both themes, full rule set. Roadmap 34 re-tuned the light palette (deep status
+// inks, AA-safe muted/accent, faint section/row/cell tints) so the light theme no longer skips color-contrast.
+// Shrink the scan's tolerance never; grow it only with a roadmap entry saying why.
 
 async function open(page: Page, experienceLevel: string, theme?: string) {
   await page.addInitScript(([level, t]) => {
@@ -43,7 +42,7 @@ for (const scheme of ['dark', 'light'] as const) {
       test(`no critical or serious axe violations at ${level} level`, async ({ page }) => {
         await open(page, level);
         await expandPanels(page);
-        expect(await scan(page, scheme === 'light' ? LIGHT_THEME_SKIPPED_RULES : [])).toEqual([]);
+        expect(await scan(page)).toEqual([]);
       });
     }
   });

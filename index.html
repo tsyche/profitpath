@@ -433,6 +433,16 @@
                 title="Typically about 2.9% for card payments" />
               <div class="hint">Counted as a variable cost on every offering; 0 if you don't take cards.</div>
             </div>
+            <div class="field">
+              <label for="processingFeePerTransaction">Flat fee per transaction</label>
+              <input id="processingFeePerTransaction" type="number" min="0" max="100" step="0.01" value="0" />
+              <div class="hint">Added to the percentage fee; transaction count is entered separately.</div>
+            </div>
+            <div class="field">
+              <label for="transactionsPerMonth">Payment transactions per month</label>
+              <input id="transactionsPerMonth" type="number" min="0" step="1" value="0" />
+              <div class="hint">Average count. Not inferred from clients or offerings.</div>
+            </div>
 
             <div class="field">
               <label title="Percentage of paid hours available for billable work" for="productiveUtilizationPct">Productive utilization</label>
@@ -522,8 +532,9 @@
                   <th title="What the cost is for">Expense</th>
                   <th title="Cost category">Category</th>
                   <th title="Amount charged each period">Amount</th>
+                  <th title="Annual percentage rate; used for loan payment rows">APR %</th>
                   <th title="How often the amount is charged; one-time purchases are spread over their useful life">Frequency</th>
-                  <th title="Useful life of a one-time purchase, in years">Life (yrs)</th>
+                  <th title="Useful life of a purchase or loan term, in years">Life / term (yrs)</th>
                   <th></th>
                 </tr>
               </thead>
@@ -532,7 +543,7 @@
           </div>
 
           <div class="smallprint" id="expensesNote">
-            Added on top of Overhead (monthly) in the inputs. Weekly is x52 per year, monthly x12; a one-time purchase is spread evenly over its life in years.
+            Added on top of Other overhead. One-time purchases are amortized for profit but use the full amount in Year 1 cash flow. Loan rows use opening balance, APR, and term; interest reduces profit and full payments reduce cash flow.
           </div>
         </div>
 
@@ -710,6 +721,11 @@
             <div class="k">Fixed costs</div>
             <div class="v" id="kpiFixedCosts">$0</div>
             <div class="sub">Annual overhead</div>
+          </div>
+          <div class="kpi" title="Revenue less modeled expenses, with full one-time purchases and loan payments included; before tax">
+            <div class="k">Year 1 cash flow</div>
+            <div class="v" id="kpiYearOneCashFlow">$0</div>
+            <div class="sub">Before tax; includes purchases and loan principal</div>
           </div>
           <div class="kpi" title="Total annual salary for all team members">
             <div class="k">Payroll</div>
@@ -923,8 +939,9 @@
             <p class="smallprint">What-if only: nothing here is included in the totals above. Credits are list-price dollars; revenue is the fee plus cash paid, and redeeming credits adds cost and staff hours but no revenue.</p>
             <div id="membershipEditor"></div>
             <h4 style="margin-top: 12px;">Comparison</h4>
-            <label class="smallprint" for="membershipTargetMargin">Target margin % (optional): adds the lowest fee that reaches it, with credits and discount unchanged
-              <input id="membershipTargetMargin" type="number" min="0" max="99" step="1" inputmode="decimal" style="width: 5em;" /></label>
+            <label class="smallprint" for="membershipTargetMargin">Target margin % (optional): suggests fee, credits, or discount one at a time
+              <input id="membershipTargetMargin" type="number" min="0" max="99.9" step="0.1" inputmode="decimal" style="width: 5em;" /></label>
+            <p class="smallprint">Each suggestion changes one term and holds the other plan terms fixed.</p>
             <div id="membershipResults"></div>
           </div>
         </div>

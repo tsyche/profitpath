@@ -33,6 +33,7 @@ export function sanitizeExpenses(raw: unknown, makeId: () => string = () => ''):
     .map((e: Record<string, unknown>) => {
       const amount = Number(e.amount);
       const life = e.lifeYears === '' || e.lifeYears == null ? NaN : Number(e.lifeYears);
+      const loanAprPct = Number(e.loanAprPct);
       return {
         id: typeof e.id === 'string' && e.id ? e.id.slice(0, 64) : makeId(),
         name: (typeof e.name === 'string' ? e.name : '').trim().slice(0, MAX_NAME_LENGTH),
@@ -40,6 +41,7 @@ export function sanitizeExpenses(raw: unknown, makeId: () => string = () => ''):
         amount: Number.isFinite(amount) ? Math.min(MAX_EXPENSE_AMOUNT, Math.max(0, amount)) : 0,
         frequency: EXPENSE_FREQUENCIES.includes(e.frequency as ExpenseFrequency) ? (e.frequency as ExpenseFrequency) : 'monthly',
         lifeYears: Number.isFinite(life) ? Math.min(MAX_LIFE_YEARS, Math.max(1, life)) : DEFAULT_LIFE_YEARS,
+        ...(Number.isFinite(loanAprPct) ? { loanAprPct: Math.min(100, Math.max(0, loanAprPct)) } : {}),
       };
     });
 }
@@ -50,8 +52,25 @@ export function annualizeExpense(e: Pick<Expense, 'amount' | 'frequency'> & { li
   return e.amount * PERIODS_PER_YEAR[e.frequency];
 }
 
+/** Scheduled loan payment and year-one interest; amount is opening balance, lifeYears is term. */
+export function loanYearOne(e: Pick<Expense, 'amount' | 'lifeYears' | 'loanAprPct'>): { payment: number; interest: number; cash: number } {
+  const months = Math.max(1, Math.round((e.lifeYears || DEFAULT_LIFE_YEARS) * 12));
+  const monthlyRate = Math.max(0, e.loanAprPct || 0) / 1200;
+  const payment = monthlyRate === 0 ? e.amount / months : e.amount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -months));
+  let balance = e.amount;
+  let interest = 0;
+  let cash = 0;
+  for (let month = 0; month < Math.min(12, months); month++) {
+    const monthInterest = balance * monthlyRate;
+    interest += monthInterest;
+    cash += Math.min(payment, balance + monthInterest);
+    balance = Math.max(0, balance + monthInterest - payment);
+  }
+  return { payment, interest, cash };
+}
+
 export function annualExpenseTotal(expenses: Expense[]): number {
-  return expenses.reduce((sum, e) => sum + annualizeExpense(e), 0);
+  return expenses.reduce((sum, e) => sum + (e.category === 'Loan Payments' && e.loanAprPct !== undefined ? loanYearOne(e).interest : annualizeExpense(e)), 0);
 }
 
 /** Monthly overhead as the user thinks of it: the free-form field plus all expense line items. */
@@ -81,12 +100,18 @@ export interface CostBreakdownRow {
 }
 
 /** Annual overhead by category (plus the free-form 'Other overhead' field), largest first. Ties out to annualFixedCosts. */
-export function costBreakdown(state: { monthlyCosts?: unknown; expenses?: unknown }): CostBreakdownRow[] {
+export function costBreakdown(state: { monthlyCosts?: unknown; expenses?: unknown; processingFeePerTransaction?: unknown; transactionsPerMonth?: unknown }): CostBreakdownRow[] {
   const totals = new Map<string, number>();
   const other = Number(state.monthlyCosts);
   if (Number.isFinite(other) && other > 0) totals.set('Other overhead', other * 12);
+  const fee = Number(state.processingFeePerTransaction);
+  const transactions = Number(state.transactionsPerMonth);
+  if (Number.isFinite(fee) && fee > 0 && Number.isFinite(transactions) && transactions > 0) {
+    totals.set('Payment Processing', fee * transactions * 12);
+  }
   for (const e of sanitizeExpenses(state.expenses)) {
-    totals.set(e.category, (totals.get(e.category) || 0) + annualizeExpense(e));
+    const annual = e.category === 'Loan Payments' && e.loanAprPct !== undefined ? loanYearOne(e).interest : annualizeExpense(e);
+    totals.set(e.category, (totals.get(e.category) || 0) + annual);
   }
   const sum = [...totals.values()].reduce((s, v) => s + v, 0);
   return [...totals.entries()]

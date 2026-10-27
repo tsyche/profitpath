@@ -4,6 +4,10 @@ This document provides comprehensive information for AI agents and developers wo
 
 ## Project Overview
 
+### Roadmap handoff
+
+`ROADMAP.md` is the only source for unfinished work. Before moving an item to the shipped ledger, move every deferred follow-up, known gap, and conditional next step into `ROADMAP.md` with enough context to act on it. Keep partial items in the roadmap until all follow-ups are complete. The shipped ledger records completed work and links to any still-open roadmap item; it never owns open work.
+
 **ProfitPath** is a client-side profitability and capacity simulator for recurring service businesses. It provides real-time calculations, scenario management, and advanced export capabilities with a focus on progressive disclosure for different user experience levels.
 
 ### Core Value Proposition

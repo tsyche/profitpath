@@ -17,6 +17,11 @@
   --warn: #fbbf24;
   --bad: #fb7185;
   --good: #34d399;
+  /* Text that sits ON a --good/--bad/--warn fill; the fills are light in dark
+     theme and deep in light theme, so the ink flips with them. */
+  --on-good: #04231a;
+  --on-bad: #2a0a10;
+  --on-warn: #1a1200;
 
   /* ===== Motion system (theme-independent) ================================= */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -58,6 +63,12 @@
   --overlay-1: rgba(255, 255, 255, 0.04);
   --overlay-2: rgba(255, 255, 255, 0.07);
   --overlay-3: rgba(255, 255, 255, 0.12);
+  /* offerings-table cell fills; tokenised so light theme can go light instead of
+     painting black overlays on white (roadmap 34: those mid-gray cells failed AA) */
+  --cell-fill: rgba(0, 0, 0, 0.18);
+  --cell-fill-readonly: rgba(0, 0, 0, 0.16);
+  --row-fill: rgba(255, 255, 255, 0.07);
+  --section-tint: rgba(0, 0, 0, 0.14);
 
   --accent: #5eead4;
   --accent-2: #38bdf8;
@@ -88,18 +99,36 @@
   --panel: #ffffff;
   --panel-2: #eef1f5;
   --text: #1a1f26;
-  --muted: #5b636e;
+  /* AA-safe on white and on the tinted section-box/overlay backgrounds the
+     dark palette gets away with (roadmap 34): 800-level inks, ~5.5:1 worst case */
+  --muted: #4b5360;
+  --good: #065f46;
+  --bad: #9f1239;
+  --warn: #92400e;
+  --on-good: #ffffff;
+  --on-bad: #ffffff;
+  --on-warn: #ffffff;
   --border: rgba(15, 23, 42, 0.10);
   --border-strong: rgba(15, 23, 42, 0.18);
   /* tonal overlays on top of light surfaces (dark-on-light) */
   --overlay-1: rgba(15, 23, 42, 0.035);
   --overlay-2: rgba(15, 23, 42, 0.06);
   --overlay-3: rgba(15, 23, 42, 0.10);
+  --cell-fill: rgba(15, 23, 42, 0.045);
+  --cell-fill-readonly: rgba(15, 23, 42, 0.025);
+  /* Section box + row + cell each tint the background; three dark overlays on
+     white stack into mid-gray (roadmap 34). Light theme keeps each layer faint
+     so the composite stays near-white and secondary text keeps its contrast. */
+  --row-fill: rgba(15, 23, 42, 0.025);
+  --section-tint: rgba(15, 23, 42, 0.035);
 
-  --accent: #0d9488;     /* deep teal: legible fill on white */
-  --accent-2: #0284c7;
-  --accent-ink: #0f766e; /* accent as TEXT on light */
-  --accent-rgb: 13, 148, 136;
+  /* One step deeper than the 600 tints: white text on these fills clears 4.5:1
+     (the old #059669 / #0284c7 fills sat at 3.8-4.1:1), and the ink clears
+     4.5:1 on every light surface including the amber-tinted viz boxes. */
+  --accent: #047857;
+  --accent-2: #0e7490;
+  --accent-ink: #115e59; /* accent as TEXT on light */
+  --accent-rgb: 4, 120, 87;
   --on-accent: #ffffff;
   --input-bg: #ffffff;
   --surface-hover: #e4e8ee;
@@ -123,8 +152,8 @@
   --accent-rgb: 56, 189, 248; --on-accent: #062033;
 }
 :root[data-theme="light"][data-palette="sky"] {
-  --accent: #0284c7; --accent-2: #4f46e5; --accent-ink: #0369a1;
-  --accent-rgb: 2, 132, 199; --on-accent: #ffffff;
+  --accent: #0369a1; --accent-2: #4f46e5; --accent-ink: #075985;
+  --accent-rgb: 3, 105, 161; --on-accent: #ffffff;
 }
 
 :root[data-palette="emerald"] {
@@ -132,8 +161,8 @@
   --accent-rgb: 52, 211, 153; --on-accent: #04231a;
 }
 :root[data-theme="light"][data-palette="emerald"] {
-  --accent: #059669; --accent-2: #0891b2; --accent-ink: #047857;
-  --accent-rgb: 5, 150, 105; --on-accent: #ffffff;
+  --accent: #047857; --accent-2: #0e7490; --accent-ink: #115e59;
+  --accent-rgb: 4, 120, 87; --on-accent: #ffffff;
 }
 
 :root[data-palette="indigo"] {
@@ -141,7 +170,7 @@
   --accent-rgb: 165, 180, 252; --on-accent: #10132e;
 }
 :root[data-theme="light"][data-palette="indigo"] {
-  --accent: #4f46e5; --accent-2: #0284c7; --accent-ink: #4338ca;
+  --accent: #4f46e5; --accent-2: #0369a1; --accent-ink: #3730a3;
   --accent-rgb: 79, 70, 229; --on-accent: #ffffff;
 }
 
@@ -150,8 +179,8 @@
   --accent-rgb: 251, 191, 36; --on-accent: #231803;
 }
 :root[data-theme="light"][data-palette="amber"] {
-  --accent: #d97706; --accent-2: #ea580c; --accent-ink: #b45309;
-  --accent-rgb: 217, 119, 6; --on-accent: #ffffff;
+  --accent: #b45309; --accent-2: #c2410c; --accent-ink: #92400e;
+  --accent-rgb: 180, 83, 9; --on-accent: #ffffff;
 }
 
 :root[data-palette="rose"] {
@@ -159,7 +188,7 @@
   --accent-rgb: 251, 113, 133; --on-accent: #3b0a0f;
 }
 :root[data-theme="light"][data-palette="rose"] {
-  --accent: #e11d48; --accent-2: #ea580c; --accent-ink: #be123c;
+  --accent: #e11d48; --accent-2: #c2410c; --accent-ink: #9f1239;
   --accent-rgb: 225, 29, 72; --on-accent: #ffffff;
 }
 
@@ -1497,13 +1526,18 @@ button:focus {
 .btn.danger {
   border-color: transparent;
   background: var(--bad);
-  color: #2a0a10;
+  color: var(--on-bad);
   font-weight: 600;
 }
 
 .btn.danger:hover {
   background: #fd8a9b;
   box-shadow: var(--elev-2);
+}
+
+/* the dark-theme hover tint is a lighter pink; on the deep light-theme fill it needs to go darker */
+:root[data-theme="light"] .btn.danger:hover {
+  background: #be123c;
 }
 
 .btn.small {
@@ -1840,7 +1874,8 @@ button:focus {
 }
 
 .perf-content .perf-value {
-  color: #5eead4;
+  /* token, not the dark-theme hex: the panel paints light in light theme */
+  color: var(--accent-ink);
   font-weight: 600;
 }
 
@@ -2140,7 +2175,7 @@ input[type="range"]::-moz-range-thumb {
 
 .simple-chart .offering-item .o-val {
   font-family: var(--mono);
-  color: var(--accent);
+  color: var(--accent-ink);
   margin-left: 12px;
 }
 
@@ -2476,7 +2511,7 @@ input[type="checkbox"] {
 .section-box {
   border-radius: 14px;
   border: 1px solid var(--overlay-3);
-  background: rgba(0, 0, 0, 0.14);
+  background: var(--section-tint);
   padding: var(--gap);
 }
 
@@ -2654,9 +2689,18 @@ input[type="checkbox"] {
   width: 100%;
 }
 
+#expensesBody {
+  display: grid;
+  /* Match offerings: expenses cards auto-fit instead of a single 1-up column. */
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--gap);
+  width: 100%;
+}
+
 /* Limit max width of each offering card so 2 fit nicely on desktop */
 @media (min-width: 800px) {
-  #offeringsBody {
+  #offeringsBody,
+  #expensesBody {
     grid-template-columns: repeat(auto-fit, minmax(280px, 340px));
   }
 }
@@ -2670,7 +2714,7 @@ input[type="checkbox"] {
   padding: 12px;
   border-radius: 16px;
   border: 1px solid var(--border-strong);
-  background: var(--overlay-2);
+  background: var(--row-fill);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
 }
 
@@ -2683,7 +2727,7 @@ input[type="checkbox"] {
   border-radius: 12px;
   border: 1px solid var(--overlay-3);
   margin: 7px 0;
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--cell-fill);
 }
 
 .table td::before {
@@ -2756,7 +2800,7 @@ input[type="checkbox"] {
 }
 
 .table td.cell-readonly {
-  background: rgba(0, 0, 0, 0.16);
+  background: var(--cell-fill-readonly);
   border-color: var(--border);
 }
 
@@ -5027,7 +5071,7 @@ input[type="checkbox"] {
 .seg button { border: 0; background: transparent; color: inherit; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
 .seg button + button { border-left: 1px solid var(--border); }
 .seg button.active { background: var(--accent); color: #fff; }
-.range-case-chip { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--warn); color: #000; vertical-align: middle; }
+.range-case-chip { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--warn); color: var(--on-warn); vertical-align: middle; }
 .range-case-chip[hidden] { display: none; }
 .spread-field { font-size: 12px; margin-left: 8px; white-space: nowrap; }
 .spread-field input { width: 52px; margin: 0 2px; }

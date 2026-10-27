@@ -11,11 +11,13 @@ export function getShareBase() {
 import type { AppState, CalcResult, ExperienceLevel, Offering, Scenario } from '../../src/types';
 import { deflateSync, inflateSync, strToU8, strFromU8 } from 'fflate';
 import { clamp, errMsg } from '../utils/helpers';
+import { buildXLSX } from '../utils/xlsx';
+import { buildReportSections, buildWorkbookSheets, reportPreamble, type ReportCell } from './reportSections';
 import { normalizeOfferingType } from '../../src/calculations/index';
 import { rangeCaseTag } from '../../src/calculations/rangeCase';
-import { frequencyCsvCells, rangeCsvCells, sanitizeOfferingRange } from '../../src/calculations/ranges';
-import { marketCsvCells, sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
-import { normalizeConfidence, sanitizeNote, sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
+import { sanitizeOfferingRange } from '../../src/calculations/ranges';
+import { sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
+import { sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
 import { sanitizeExpenses, totalMonthlyOverhead } from '../../src/calculations/expenses';
 import { sanitizeCostPerRun } from '../../src/calculations/groupRuns';
 import { sanitizeResources } from '../../src/calculations/resources';
@@ -58,8 +60,6 @@ function loadScript(src: string) {
   });
 }
 
-const fmtPct1 = (n: number) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
-
 // Utility function to clamp values between min and max
 // Coerce a value to a finite number within [min, max], or return fallback
 function toFiniteNumber(value: unknown, fallback: number, min: number, max: number) {
@@ -90,8 +90,8 @@ export function sanitizeScenarioState(data: Record<string, unknown>): import('..
       id: typeof o.id === 'string' && o.id ? o.id.slice(0, 64) : uuid(),
       name: (typeof o.name === 'string' ? o.name : '').trim().slice(0, MAX_NAME_LENGTH) || `Offering ${idx + 1}`,
       priceMonthly: toFiniteNumber(o.priceMonthly, 100, 0, 1e9),
-      sessionsPerYear: Math.floor(toFiniteNumber(o.sessionsPerYear, 12, 1, 100000)),
-      hoursPerSession: toFiniteNumber(o.hoursPerSession, 1, 0.1, 10000),
+      sessionsPerYear: toFiniteNumber(o.sessionsPerYear, 12, 0, 100000),
+      hoursPerSession: toFiniteNumber(o.hoursPerSession, 1, 0, 10000),
       variableCostPerSession: toFiniteNumber(o.variableCostPerSession, 0, 0, 1e9),
       laborPctOfPrice: toFiniteNumber(o.laborPctOfPrice, 0, 0, 100),
       discountPct: toFiniteNumber(o.discountPct, 0, 0, 100),
@@ -122,6 +122,8 @@ export function sanitizeScenarioState(data: Record<string, unknown>): import('..
     partTimeEmployeePay: toFiniteNumber(data.partTimeEmployeePay, 30000, 0, 1e9),
     monthlyCosts: toFiniteNumber(data.monthlyCosts, 250, 0, 1e9),
     processingFeePct: toFiniteNumber(data.processingFeePct, 0, 0, 20),
+    processingFeePerTransaction: toFiniteNumber(data.processingFeePerTransaction, 0, 0, 100),
+    transactionsPerMonth: toFiniteNumber(data.transactionsPerMonth, 0, 0, 1e7),
     productiveUtilizationPct: toFiniteNumber(data.productiveUtilizationPct, 80, 1, 100),
     targetUtilizationPct: toFiniteNumber(data.targetUtilizationPct, 75, 1, 150),
     lockMix: data.lockMix === true,
@@ -237,72 +239,24 @@ export function csvCell(value: unknown) {
   return '"' + s.replace(/"/g, '""') + '"';
 }
 
-// Name of the resource an offering is tagged with, or '' (CSV carries names; import resolves them back to ids)
-function resourceName(o: { resource?: string }, resources: unknown): string {
-  return sanitizeResources(resources).find((r) => r.id === o.resource)?.name || '';
+// A CSV cell: strings are quoted (and formula-guarded), numbers stay bare so
+// import's parseFloat sees them and spreadsheets treat them as numeric.
+function csvValue(v: ReportCell) {
+  if (typeof v === 'number') return String(v);
+  if (v === '') return '';
+  return csvCell(v);
 }
 
-// Builds the CSV report; importFromCSV reads the parameters, offerings and expenses sections back
+// Builds the CSV report from the shared report sections; importFromCSV reads the
+// parameters, offerings and expenses sections back. The Excel workbook renders
+// the same sections, so the two formats cannot drift apart.
 export function buildCSV(st: AppState, results: CalcResult) {
-  const lines = [
-    'ProfitPath Business Analysis Report',
-    'Generated: ' + csvCell(new Date().toLocaleString()),
-    'Mode: ' + (st.mode === 'forecast' ? 'Forecast' : 'Current'),
-    ...(rangeCaseTag() ? ['Range case: ' + rangeCaseTag()] : []),
-    '',
-    'BUSINESS PARAMETERS',
-    'Parameter,Value,Unit',
-    'Full-time Employees,' + st.fullTimeEmployees + ',people',
-    'Part-time Employees,' + st.partTimeEmployees + ',people',
-    'FT Annual Pay,' + st.fullTimeEmployeePay + ',USD/yr',
-    'PT Annual Pay,' + st.partTimeEmployeePay + ',USD/yr',
-    'Other Overhead,' + st.monthlyCosts + ',USD/mo',
-    'Processing Fee,' + (st.processingFeePct || 0) + ',%',
-    'Productive Utilization,' + st.productiveUtilizationPct + ',%',
-    'Target Utilization,' + st.targetUtilizationPct + ',%',
-    '',
-    'FINANCIAL RESULTS',
-    'Metric,Value,Unit',
-    'Total Annual Revenue,' + csvCell(fmtMoney0(results.revenue)) + ',USD/yr',
-    'Total Variable Costs,' + csvCell(fmtMoney0(results.variableCosts)) + ',USD/yr',
-    'Net Profit(Loss),' + csvCell(fmtMoney0(results.income)) + ',USD/yr',
-    'Profit Margin,' + (fmtPct1(((results.income || 0) / (results.revenue || 1)) * 100)) + ',%',
-    'Capacity Utilization,' + (fmtPct1(results.capacityPct || 0)) + ',%',
-    '',
-    'SERVICE OFFERINGS',
-    'Name,Monthly Price,Sessions/yr,Hours/session,Var Cost/session,Mix %,Current Clients,Labor % of price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High,Best Discount %,Confidence,Note,Market Low,Market High,Market Avg,Market Note,Resource,Cost per run,Sessions Low,Sessions High',
-  ];
-
-  st.offerings.forEach((o) => {
-    lines.push(
-      csvCell(o.name) + ',' + (o.priceMonthly) + ',' + (o.sessionsPerYear) + ',' + (o.hoursPerSession) + ',' + (o.variableCostPerSession) + ',' + (o.mixPct) + ',' + (o.currentClients) + ',' + (o.laborPctOfPrice || 0) + ',' + normalizeOfferingType(o.type) + ',' + (o.seats || 1) + ',' + (o.fillPct || 100) + ',' + rangeCsvCells(o) + ',' + (o.discountPct || 0) + ',' + (normalizeConfidence(o.confidence) || '') + ',' + csvCell(sanitizeNote(o.note) || '') + ',' + marketCsvCells(o).join(',') + ',' + csvCell(sanitizeNote(o.marketNote) || '') + ',' + csvCell(resourceName(o, st.resources)) + ',' + sanitizeCostPerRun(o.costPerRun) + ',' + frequencyCsvCells(o)
-    );
-  });
-
-  lines.push('', 'FIXED EXPENSES', 'Name,Category,Amount,Frequency,Life (yrs)');
-  sanitizeExpenses(st.expenses).forEach((e) => {
-    lines.push(csvCell(e.name) + ',' + csvCell(e.category) + ',' + e.amount + ',' + e.frequency + ',' + e.lifeYears);
-  });
-
-  lines.push('', 'RESOURCES', 'Name,Hours/week,Weeks/year,Staff-free');
-  sanitizeResources(st.resources).forEach((r) => {
-    lines.push(csvCell(r.name) + ',' + r.hoursPerWeek + ',' + r.weeksPerYear + ',' + (r.staffFree ? 'yes' : 'no'));
-  });
-
-  // Plans and profiles carry offering names (as JSON cells, so any character survives); import resolves them back to ids
-  const nameOf = new Map<string, string>((st.offerings || []).map((o) => [o.id, o.name] as [string, string]));
-  const namesOf = (ids: string[]) => ids.map((id) => nameOf.get(id)).filter((n) => n !== undefined);
-  lines.push('', 'MEMBERSHIP PLANS', 'Name,Monthly Fee,Credits/month,Member Discount %,Credits At Member Price,Eligible Offerings');
-  sanitizePlans(st.membershipPlans).forEach((p) => {
-    lines.push([csvCell(p.name), p.monthlyFee, p.creditsPerMonth, p.memberDiscountPct, p.creditsAtMemberPrice ? 'yes' : 'no', csvCell(JSON.stringify(namesOf(p.eligible)))].join(','));
-  });
-  lines.push('', 'MEMBER PROFILES', 'Name,Visits/month by offering,Visits Low,Visits High');
-  sanitizeProfiles(st.memberProfiles).forEach((p) => {
-    const byName = (v: Record<string, number> = {}) => csvCell(JSON.stringify(Object.fromEntries(Object.entries(v).filter(([id]) => nameOf.has(id)).map(([id, n]) => [nameOf.get(id), n]))));
-    lines.push([csvCell(p.name), byName(p.visits), p.visitsLow ? byName(p.visitsLow) : '', p.visitsHigh ? byName(p.visitsHigh) : ''].join(','));
-  });
-
-  return lines.join('\n');
+  const parts = [...reportPreamble(st)];
+  for (const s of buildReportSections(st, results)) {
+    if (s.csv === false) continue;
+    parts.push([s.title, s.header.join(','), ...s.rows.map((row) => row.map(csvValue).join(','))].join('\n'));
+  }
+  return parts.join('\n\n');
 }
 
 export function exportAsCSV() {
@@ -708,6 +662,16 @@ export function loadScenarioFromURL() {
     // old state
     Object.assign(window.state, sanitized);
     if (typeof window.render === 'function') window.render();
+    // Roadmap 35: drop the scenario payload from the address bar so a reload
+    // re-reads persisted state instead of re-applying the (possibly stale) link.
+    // Keep readonly=1 so a shared read-only view stays locked.
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('scenario')) {
+        url.searchParams.delete('scenario');
+        window.history.replaceState(window.history.state, document.title, url.pathname + url.search + url.hash);
+      }
+    } catch { /* ignore */ }
     return true;
   } catch (e) {
     console.error('Failed to load scenario from URL:', e);
@@ -810,35 +774,21 @@ export function loadIndustryTemplate(templateId: string) {
 }
 
 export function exportAsExcel() {
-  const state = window.state;
-  const fmtPct = (n: number) => n.toFixed(1) + '%';
+  const st: AppState = state;
+  let results: CalcResult;
+  try {
+    results = typeof calc === 'function' ? calc(st) : ({ state: st, metrics: {} } as unknown as CalcResult);
+  } catch (e) {
+    console.error('Calculation failed in exportAsExcel:', e);
+    showNotification('Could not build the Excel workbook: calculation error', 'error');
+    return;
+  }
 
-  const lines = [
-    'ProfitPath Analysis Report' + caseSuffix(),
-    'Generated: ' + new Date().toLocaleString(),
-    '',
-    'BUSINESS OVERVIEW',
-    'Metric,Value',
-    'Employees,' + state.employees,
-    'Employee Pay,' + fmtMoney0(state.employeePay),
-    'Monthly Costs,' + fmtMoney0(totalMonthlyOverhead(state)),
-    'Productive Utilization,' + fmtPct(state.productiveUtilizationPct),
-    'Target Utilization,' + fmtPct(state.targetUtilizationPct),
-    '',
-    'SERVICE OFFERINGS',
-    'Service Name,Monthly Price,Sessions/Year,Hours/Session,Variable Cost,Mix %,Current Clients,Labor % of Price,Type,Seats,Fill %,Fill % Low,Fill % High,Clients Low,Clients High,Best Discount %,Confidence,Note,Market Low,Market High,Market Avg,Market Note,Resource,Cost per run,Sessions Low,Sessions High'
-  ];
-
-  state.offerings.forEach((o) => {
-    lines.push(
-      `${csvCell(o.name)},${o.priceMonthly},${o.sessionsPerYear},${o.hoursPerSession},${o.variableCostPerSession},${o.mixPct},${o.currentClients},${o.laborPctOfPrice || 0},${normalizeOfferingType(o.type)},${o.seats || 1},${o.fillPct || 100},${rangeCsvCells(o)},${o.discountPct || 0},${normalizeConfidence(o.confidence) || ''},${csvCell(sanitizeNote(o.note) || '')},${marketCsvCells(o).join(',')},${csvCell(sanitizeNote(o.marketNote) || '')},${csvCell(resourceName(o, state.resources))},${sanitizeCostPerRun(o.costPerRun)},${frequencyCsvCells(o)}`
-    );
-  });
-
-  const csv = lines.join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  downloadOrShare(blob, 'profitpath-export-' + new Date().toISOString().split('T')[0] + '.csv');
-  showNotification('Excel export downloaded!', 'success');
+  const bytes = buildXLSX(buildWorkbookSheets(st, results));
+  // fresh Uint8Array: fflate's bytes are ArrayBufferLike, Blob wants ArrayBuffer-backed
+  const blob = new Blob([new Uint8Array(bytes)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  downloadOrShare(blob, 'profitpath-export-' + new Date().toISOString().split('T')[0] + '.xlsx');
+  showNotification('Excel workbook downloaded!', 'success');
 
   // Track Excel export
   trackEvent('export', { format: 'excel' });
@@ -1503,6 +1453,8 @@ const SETTINGS_KEYS: Record<string, string> = {
   parttimeemployeepay: 'partTimeEmployeePay', 'pt annual pay': 'partTimeEmployeePay',
   monthlycosts: 'monthlyCosts', 'other overhead': 'monthlyCosts', 'monthly overhead': 'monthlyCosts',
   processingfeepct: 'processingFeePct', 'processing fee': 'processingFeePct',
+  processingfeepertransaction: 'processingFeePerTransaction', 'flat processing fee': 'processingFeePerTransaction',
+  transactionspermonth: 'transactionsPerMonth', 'transactions per month': 'transactionsPerMonth',
   productiveutilizationpct: 'productiveUtilizationPct', 'productive utilization': 'productiveUtilizationPct',
   targetutilizationpct: 'targetUtilizationPct', 'target utilization': 'targetUtilizationPct'
 };
@@ -1539,7 +1491,7 @@ export function importFromCSV(csvText: string) {
   const rawExpenses: Array<Record<string, unknown>> = [];
   const rawResources: Array<Record<string, unknown>> = [];
   const resourceNames: string[] = []; // per imported offering, aligned with `offerings`
-  const rawPlans: Array<{ row: Record<string, unknown>; names: string[] }> = [];
+  const rawPlans: Array<{ row: Record<string, unknown>; names: string[]; included: VisitsByName }> = [];
   type VisitsByName = Record<string, number>;
   const rawProfiles: Array<{ name: string; visits: VisitsByName; low?: VisitsByName; high?: VisitsByName }> = [];
 
@@ -1577,6 +1529,8 @@ export function importFromCSV(csvText: string) {
           if (key === 'partTimeEmployeePay') settings.partTimeEmployeePay = Math.max(0, numValue);
           if (key === 'monthlyCosts') settings.monthlyCosts = Math.max(0, numValue);
           if (key === 'processingFeePct') settings.processingFeePct = Math.max(0, Math.min(20, numValue));
+          if (key === 'processingFeePerTransaction') settings.processingFeePerTransaction = Math.max(0, Math.min(100, numValue));
+          if (key === 'transactionsPerMonth') settings.transactionsPerMonth = Math.max(0, Math.min(1e7, numValue));
           if (key === 'productiveUtilizationPct') settings.productiveUtilizationPct = Math.max(0, Math.min(100, numValue));
           if (key === 'targetUtilizationPct') settings.targetUtilizationPct = Math.max(0, numValue);
         }
@@ -1584,8 +1538,8 @@ export function importFromCSV(csvText: string) {
 
       if (section === 'expenses') {
         if (!headerSeen) { headerSeen = true; continue; }
-        const [name, category, amount, frequency, lifeYears] = splitCsvLine(line);
-        if (name) rawExpenses.push({ name, category, amount: parseFloat(amount), frequency: (frequency || '').toLowerCase(), lifeYears: parseFloat(lifeYears) });
+        const [name, category, amount, frequency, lifeYears, loanAprPct] = splitCsvLine(line);
+        if (name) rawExpenses.push({ name, category, amount: parseFloat(amount), frequency: (frequency || '').toLowerCase(), lifeYears: parseFloat(lifeYears), ...(loanAprPct !== '' ? { loanAprPct: parseFloat(loanAprPct) } : {}) });
       }
 
       if (section === 'resources') {
@@ -1596,14 +1550,15 @@ export function importFromCSV(csvText: string) {
 
       if (section === 'plans') {
         if (!headerSeen) { headerSeen = true; continue; }
-        const [name, monthlyFee, creditsPerMonth, memberDiscountPct, atMember, eligible] = splitCsvLine(line);
+        const [name, monthlyFee, creditsPerMonth, memberDiscountPct, atMember, eligible, included] = splitCsvLine(line);
         if (name) {
           rawPlans.push({
             row: {
               name, monthlyFee: parseFloat(monthlyFee), creditsPerMonth: parseFloat(creditsPerMonth),
               memberDiscountPct: parseFloat(memberDiscountPct), creditsAtMemberPrice: /^(yes|true)$/i.test((atMember || '').trim())
             },
-            names: parseJsonCell(eligible, Array.isArray) as string[] ?? []
+            names: parseJsonCell(eligible, Array.isArray) as string[] ?? [],
+            included: parseJsonCell(included, (v) => !!v && typeof v === 'object' && !Array.isArray(v)) as VisitsByName ?? {}
           });
         }
       }
@@ -1631,8 +1586,8 @@ export function importFromCSV(csvText: string) {
           id: `offering-${uuid()}`,
           name: values[0] || 'New Offering',
           priceMonthly: parseFloat(values[1]) || 0,
-          sessionsPerYear: Math.max(1, Math.floor(parseFloat(values[2]) || 1)),
-          hoursPerSession: Math.max(0.1, parseFloat(values[3]) || 1),
+          sessionsPerYear: Number.isFinite(parseFloat(values[2])) ? Math.max(0, parseFloat(values[2])) : 1,
+          hoursPerSession: Number.isFinite(parseFloat(values[3])) ? Math.max(0, parseFloat(values[3])) : 1,
           variableCostPerSession: Math.max(0, parseFloat(values[4]) || 0),
           mixPct: Math.max(0, Math.min(100, parseFloat(values[5]) || 0)),
           currentClients: Math.max(0, Math.floor(parseFloat(values[6]) || 0)),
@@ -1690,7 +1645,11 @@ export function importFromCSV(csvText: string) {
     const idByName = new Map<string, string>();
     offerings.forEach((o) => { if (o.name && o.id && !idByName.has(o.name)) idByName.set(o.name, o.id); });
     const membershipPlans = sawPlans
-      ? sanitizePlans(rawPlans.map((p) => ({ ...p.row, eligible: p.names.map((n) => idByName.get(n)).filter((id): id is string => !!id) })), uuid)
+      ? sanitizePlans(rawPlans.map((p) => ({
+        ...p.row,
+        eligible: p.names.map((n) => idByName.get(n)).filter((id): id is string => !!id),
+        includedVisits: Object.fromEntries(Object.entries(p.included).filter(([n]) => idByName.has(n)).map(([n, x]) => [idByName.get(n), x]))
+      })), uuid)
       : undefined;
     const memberProfiles = sawProfiles
       ? sanitizeProfiles(rawProfiles.map((p) => {

@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { readXLSX } from '../../assets/utils/xlsx';
 import { waitForPageReady } from './helpers';
 
 test.describe('Scenario currency', () => {
@@ -35,9 +37,10 @@ test.describe('Scenario currency', () => {
       page.waitForEvent('download'),
       page.evaluate(() => (window as any).exportAsExcel())
     ]);
-    const chunks: Buffer[] = [];
-    for await (const c of await download.createReadStream()) chunks.push(c as Buffer);
-    const text = Buffer.concat(chunks).toString('utf8');
+    expect(download.suggestedFilename()).toMatch(/\.xlsx$/);
+    // A real workbook now, so read the cells back rather than grepping CSV text
+    const sheets = readXLSX(new Uint8Array(readFileSync(await download.path()!)));
+    const text = sheets.flatMap((s) => s.rows.flat()).map((v) => String(v ?? '')).join('\n');
     expect(text).toContain('€');
     expect(text).not.toContain('$');
   });

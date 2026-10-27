@@ -25,6 +25,19 @@ const state: any = {
 const results = { revenue: 1, variableCosts: 0, income: 1, capacityPct: 50 };
 
 describe('resources: sanitizeScenarioState', () => {
+  it('preserves zero-hour subscriptions and fractional session cadences', () => {
+    const result = sanitizeScenarioState({
+      offerings: [{ id: 'membership', name: 'Membership', priceMonthly: 100, sessionsPerYear: 0.5, hoursPerSession: 0, mixPct: 100 }]
+    })!;
+    expect(result.offerings[0]).toMatchObject({ sessionsPerYear: 0.5, hoursPerSession: 0 });
+  });
+
+  it('CSV import preserves zero-hour rows and fractional session cadences', () => {
+    const csv = 'Offerings\nName,Price,Sessions,Hours,Var,Mix,Clients\nMembership,100,0.5,0,0,100,0\n';
+    const result = importFromCSV(csv);
+    expect(result.data.offerings[0]).toMatchObject({ sessionsPerYear: 0.5, hoursPerSession: 0 });
+  });
+
   it('keeps resources and valid tags', () => {
     const out = sanitizeScenarioState(state)!;
     expect(out.resources).toEqual(state.resources);

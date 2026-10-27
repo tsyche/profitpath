@@ -21,7 +21,7 @@ export function renderCostBreakdown() {
   const wrap = $('#costBreakdown');
   const body = $('#costBreakdownBody');
   if (!wrap || !body) return;
-  const rows = state.expenses.length ? costBreakdown(state) : [];
+  const rows = costBreakdown(state);
   wrap.hidden = rows.length === 0;
   body.innerHTML = rows.map(r => '<tr><td>' + escapeHtml(r.label) + '</td><td class="mono">' + fmtMoney0(r.annual) + '</td><td class="mono">' + fmtPct1(r.pct) + '</td></tr>').join('');
 }
@@ -33,11 +33,13 @@ export function renderExpenses() {
   tbody.innerHTML = '';
   state.expenses.forEach((e, idx) => {
     const tr = document.createElement('tr');
+    const loan = e.category === 'Loan Payments';
     tr.innerHTML = '<td class="cell-edit" data-label="Expense"><input aria-label="Expense name" type="text" maxlength="100" value="' + escapeHtml(e.name) + '" data-k="name" data-i="' + idx + '"/></td>' +
       '<td class="cell-edit" data-label="Category"><select aria-label="Category for ' + escapeHtml(e.name) + '" data-k="category" data-i="' + idx + '">' + opts(EXPENSE_CATEGORIES, e.category) + '</select></td>' +
-      '<td class="cell-edit" data-label="Amount"><input aria-label="Amount for ' + escapeHtml(e.name) + '" type="number" min="0" step="1" value="' + e.amount + '" data-k="amount" data-i="' + idx + '"/></td>' +
-      '<td class="cell-edit" data-label="Frequency"><select aria-label="Frequency for ' + escapeHtml(e.name) + '" data-k="frequency" data-i="' + idx + '">' + opts(EXPENSE_FREQUENCIES, e.frequency) + '</select></td>' +
-      '<td class="cell-edit" data-label="Life (yrs)"><input aria-label="Useful life in years for ' + escapeHtml(e.name) + '" type="number" min="1" max="30" step="1" value="' + e.lifeYears + '"' + (e.frequency === 'one-time' ? '' : ' disabled') + ' data-k="lifeYears" data-i="' + idx + '"/></td>' +
+      '<td class="cell-edit" data-label="' + (loan ? 'Loan balance' : 'Amount') + '"><input aria-label="' + (loan ? 'Opening loan balance for ' : 'Amount for ') + escapeHtml(e.name) + '" type="number" min="0" step="1" value="' + e.amount + '" data-k="amount" data-i="' + idx + '"/></td>' +
+      '<td class="cell-edit" data-label="APR %"><input aria-label="APR for ' + escapeHtml(e.name) + '" type="number" min="0" max="100" step="0.01" value="' + (e.loanAprPct ?? 0) + '"' + (loan ? '' : ' disabled') + ' data-k="loanAprPct" data-i="' + idx + '"/></td>' +
+      '<td class="cell-edit" data-label="Frequency"><select aria-label="Frequency for ' + escapeHtml(e.name) + '" data-k="frequency" data-i="' + idx + '"' + (loan ? ' disabled' : '') + '>' + opts(EXPENSE_FREQUENCIES, e.frequency) + '</select></td>' +
+      '<td class="cell-edit" data-label="Life / term (yrs)"><input aria-label="' + (loan ? 'Loan term' : 'Useful life') + ' in years for ' + escapeHtml(e.name) + '" type="number" min="1" max="30" step="1" value="' + e.lifeYears + '"' + (e.frequency === 'one-time' || loan ? '' : ' disabled') + ' data-k="lifeYears" data-i="' + idx + '"/></td>' +
       '<td class="cell-edit" data-label="Actions"><button class="btn small danger" data-action="removeExpense" data-i="' + idx + '" aria-label="Remove ' + escapeHtml(e.name) + '">Remove</button></td>';
     tbody.appendChild(tr);
   });
@@ -59,6 +61,11 @@ function onExpenseInput(e: Event) {
     // Per-row sanitizer is the single source of truth for clamping and fallbacks
     const [clean] = sanitizeExpenses([{ ...row, [k]: el.value }], () => row.id);
     (row as unknown as Record<string, unknown>)[k] = (clean as unknown as Record<string, unknown>)[k];
+      if (k === 'category') {
+        if (row.category === 'Loan Payments' && row.loanAprPct === undefined) row.loanAprPct = 0;
+        if (row.category !== 'Loan Payments') delete row.loanAprPct;
+        renderExpenses();
+      }
     if (k === 'frequency') {
       const life = el.closest('tr')?.querySelector('[data-k="lifeYears"]');
       if (life instanceof HTMLInputElement) life.disabled = row.frequency !== 'one-time';

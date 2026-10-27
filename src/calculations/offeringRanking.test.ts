@@ -124,3 +124,17 @@ describe('best-case discount (roadmap 24d)', () => {
     expect(row({ discountPct: 500 }).discountPct).toBe(100)
   })
 })
+
+describe('staff-free offerings in the ranking (roadmap 35)', () => {
+  beforeEach(() => clearCalculationCache())
+
+  it('a staff-free resource row is hour-free and ranks after rows with staff hours', () => {
+    const staffFreeResource = { id: 'booth', name: 'Booth', hoursPerWeek: 10, weeksPerYear: 52, staffFree: true }
+    const freeRow = { ...sub, name: 'Rehearsal', resource: 'booth', priceMonthly: 100 }
+    const staffed = { ...sub, name: 'Lesson' }
+    const r = calc({ ...base, resources: [staffFreeResource], offerings: [freeRow, staffed] } as any)
+    const rows = rankOfferings(r.offeringMetrics as any)
+    expect(rows.find((x: any) => x.name === 'Rehearsal')!.hourFree).toBe(true)
+    expect(rows[rows.length - 1].name).toBe('Rehearsal')
+  })
+})

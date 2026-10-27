@@ -8,11 +8,11 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **UI/UX pass Phase 0** ([plan](docs/plans/ui-ux-pass.md)): `/audit-ux-e2e` + `/audit-usability` evidence, absorbing items 25/26 and the light-theme contrast fix (24f). The Setup column keeps growing and gating is still ad hoc.
-2. **12o remainder**: share-link staleness and a server-side short ID (needs a backend decision, so only the warning is cheap).
-3. **12s flake watch**: `labor-pct.spec.ts` and `membership.spec.ts` flakes are parked, not reproducible; reopen only with failure output.
+1. **Close TSS trial fixes and membership entitlements** (items 35 and 24g). Code and regression coverage are in place; run the Playwright checks, then close those roadmap items.
+2. **UI/UX pass Phase 0** ([plan](docs/plans/ui-ux-pass.md)): `/audit-ux-e2e` + `/audit-usability` evidence, absorbing items 25/26 and the light-theme contrast fix (24f). The Setup column keeps growing and gating is still ad hoc.
+3. **36 share saved scenarios + bundle link** (phase 1 of the [decision workbench](docs/plans/decision-workbench.md); client-side only, includes a security fix to the existing `compareStates` link). Server-hosted short links are deferred under item 12o until backend work is prioritized.
 
-Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing trustworthy data, not on code. Shipped work is indexed in the [ledger](docs/ledger/ROADMAP_SHIPPED.md).
+`12s` flake watch stays parked until failure output makes the failure reproducible. Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing trustworthy data, not on code. Shipped work is indexed in the [ledger](docs/ledger/ROADMAP_SHIPPED.md).
 
 ---
 
@@ -44,14 +44,6 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
    - Consider a single "Advisor" tab/section that surfaces the top insight/suggestion from each, with links to expand the full panel
    - Effort: ~3-4 hours
 
-12o. **Share URLs are absurdly long** *(PARTLY SHIPPED 2026-10-24: v2 links are deflated + base64url via `fflate`, about 4-5x shorter, legacy links still decode; staleness of old links and a server-side short ID remain open)* *(new — found trialing a real business; Tim's reaction on seeing one: "lol")*
-   - The Share feature encodes the entire scenario JSON (every offering's full field set, plus the full Presentation Notes text) as a base64 blob in a `?scenario=` query param — a 12-offering scenario with a few paragraphs of notes produced a URL several thousand characters long, unusable in most contexts (chat apps, SMS, some URL-length-limited systems) and unpleasant to paste anywhere
-   - Also has a real staleness trap: a previously-copied share URL is a frozen snapshot — editing and re-saving the scenario does *not* update URLs already shared, so an old link can silently show stale data (including stale Presentation Notes) with no indication it's out of date
-   - Fix options, roughly in order of effort: (a) compress the JSON before base64 (e.g. gzip) — quick win, doesn't fix staleness; (b) server-side scenario storage with a short opaque ID in the URL (like a pastebin) — fixes both length and staleness, but needs backend infra this project has avoided so far; (c) at minimum, surface a warning in the UI that share links are point-in-time snapshots, not live views
-   - Effort: ~1 hour for (a), ~4-6 hours for (b) if backend storage is acceptable
-   - 2026-10-23 trial: a 14-offering scenario produced a ~5.3 KB URL
-   - 2026-10-26: a 14.4 KB legacy-encoded link was refused outright by Claude-in-Chrome's URL safety check; the same scenario as a v2 link is 2.9 KB and loads fine. Length is a hard limit for some tools, not just cosmetic
-
 **Layout & Information Architecture** *(new category — Tim independently flagged this as "getting very busy on a single scrollable page view," agreed with while building the Sound Stage scenario)*
 
 25. **Restructure past-the-fold sections into tabs**
@@ -73,31 +65,26 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
 
 24f. **Deferred follow-ups from shipped 24c / 24e / 32** *(new, 2026-10-26)*
     - Chart ranges (24c): folded into [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md).
-    - Membership (24e): subtract current client load from members-per-pool headroom (needs a stable meaning of "current" in Forecast mode; group offerings use per-visit hours, not per-seat); solve credits or discount for a target margin (non-linear); feed members into `calc()` only if the panel proves useful. Excel parity is item 33.
-    - Effort: ~1-2 hours each, none urgent
+    - Membership headroom now subtracts modeled scenario load, and the target-margin optimizer suggests fee, credits or discount separately. The remaining conditional follow-up is to feed members into `calc()` only if real use shows the display-only panel is insufficient.
+    - Excel parity shipped as item 33. Per-service entitlements are tracked separately in item 24g.
+    - Effort: ~1-2 hours for chart ranges; membership integration stays conditional.
 
-33. **Excel export parity** *(new, 2026-10-26)*
-    - The Excel export carries only offerings and outputs; membership plans and profiles, expenses, capacity resources, ranges, confidence tags and group run costs are missing, so a TSS-style scenario loses most of its model on export. CSV and the share URL already carry them.
-    - Add a sheet per missing block (or fold into existing sheets), reuse the CSV serializers so the two can't drift, and add a round-trip e2e/unit test that fails when a persisted field is absent from the workbook (a parity check against the same field list the share URL uses).
+35. **Fixes from the 2026-10-26 TSS trial** *(new, 2026-10-26; 13-offering Current-mode scenario with expenses, pools, groups and membership plans)*
+    - The scenario totals matched a hand calculation at $1,500 and $3,300 rent (net $4,296 / -$17,304 annually); these are the surrounding gaps.
+    - Membership What-If applies `processingFeePct` to fee plus cash revenue.
+    - Header Net income chip uses the same good / warn / danger status as the Outputs KPI.
+    - A successfully loaded `?scenario=` link is removed from the address bar while preserving `readonly=1`, so refresh does not overwrite later edits with the shared snapshot.
+    - Share sanitization preserves zero-hour subscriptions and fractional `sessionsPerYear`.
+    - Staff-free offerings are excluded from staff-hour rankings.
+    - Current-mode group runs use fill-adjusted seats for both run costs and staff hours.
+    - Expense cards use the same responsive grid as offering cards.
+    - Each fix requires its smallest regression test.
+
+24g. **Membership per-service entitlements** *(new, 2026-10-26; discovered in the TSS trial)*
+    - A plan supports only one shared credit pool today, so a plan cannot include a service-specific allowance such as one class per month plus general credits.
+    - Add optional per-offering monthly included visits, account for those before shared credits and paid visits, and carry the setting through scenario storage, share links, CSV and Excel.
+    - Keep the calculation display-only until membership value is established; test the entitlement and persistence paths.
     - Effort: ~3-4 hours
-
-34. **Light theme meets WCAG AA contrast** *(new, 2026-10-26; found by the axe scan in `tests/e2e/a11y.spec.ts`)*
-    - The light palette fails `color-contrast`, so the scan skips that rule in light theme only. This is a palette change, not a one-line fix: pick AA-safe text/accent/muted tokens, then re-check charts, badges and KPI gradients.
-    - Done when the skip is deleted from `a11y.spec.ts` and light theme passes at all three experience levels. Phase 0 of [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md) feeds the palette decision; do it before or with that pass, not after.
-    - Effort: ~3-5 hours
-
-35. **Fixes from the 2026-10-26 TSS trial** *(new, 2026-10-26; a 13-offering Current-mode scenario with expenses, pools, group rows and two membership plans, on v0.8.57-beta)*
-    - Totals matched a hand calculation at both $1,500 and $3,300 rent (net $4,296 / -$17,304 a year). These are the gaps around them, worst first:
-    - **Membership What-If ignores `processingFeePct`.** `src/calculations/membership.ts` never applies the fee, so "You keep" is overstated by the fee share of fee + cash revenue (a $181 member month shows $119 kept instead of about $113).
-    - **Header Net income chip stays green when negative.** `updateKeyMetrics()` in `AppRender.ts` only sets text on `#abkIncome`/`#glIncome`, and `.ab-kpi.k-net b` is always `--accent-ink`. The Outputs pill (`#kpiIncome`) already maps good/warn/danger, so reuse that.
-    - **Reloading a `?scenario=` page silently discards edits.** The param stays in the address bar, so a refresh re-applies the link over the persisted state. Clear it with `history.replaceState` after a successful load (keeping `readonly=1`).
-    - **Share sanitizer clamps `hoursPerSession` to at least 0.1** (`miscService.ts` `sanitizeScenarioState`). A zero-hour subscription row gets phantom staff time and then tops "profit per staff hour" ($1,593/hr for a membership with 0 clients). `sessionsPerYear` is also floored to an integer of at least 1, so fractional cadences can't round-trip.
-    - **Profit per staff hour ranks `staffFree` rows by their session hours** (a no-staff rehearsal room shows $39/hr). Show "no staff" or rank them per pool hour instead.
-    - **Current mode ignores `fillPct` for group runs.** Runs are `ceil(clients / seats)` (`index.ts` ~L162/L230), so 77 seat-sales at 8 seats and 80% fill count as 10 runs, not 12, and staff hours drop to 20 a month instead of 24. Forecast already divides by fill.
-    - **Expenses table renders 1-up cards at half width.** `#offeringsBody` gets the auto-fit grid but the expenses `tbody` doesn't, so 11 expenses make a long single column with the right half empty.
-    - Gap, not bug: a membership plan has one credit pool, so a per-service entitlement (one class a month on top of credits) can't be modeled. Pair it with the 24f membership follow-ups.
-    - Each fix gets the smallest test that fails first: unit tests for the membership fee, sanitizer and fill math, and e2e tests for the chip colour, reload and expenses grid.
-    - Effort: ~3-4 hours total
 
 12x. **Typecheck unit tests (`**/*.test.ts`) and retire the accepted casts** *(new, TS-migration leftover)*
     - `**/*.test.ts` is excluded from `tsconfig.json`; including it gives ~1,158 errors (380 TS7005 implicit `any[]`, 204 TS18047, 186 TS2339) in the `src/test/*` jsdom mock tests. Fix per file (type the mocks), then drop the exclude; do it opportunistically when touching a test file.
@@ -141,6 +128,11 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - **Note**: Significant scope, may require ML infrastructure
     - Effort: ~12-15 hours
 
+12o. **Server-hosted short share links** *(deferred; backend-dependent)*
+    - Store shared scenarios behind short opaque IDs to reduce link length and let recipients see updated scenarios.
+    - Requires backend infrastructure, hosting, and an account / retention decision. No backend work is planned until the roadmap reaches that phase.
+    - Current compressed links remain point-in-time snapshots; the Share flow warns users to resend after edits.
+
 ---
 
 ## Monetization Strategy
@@ -182,5 +174,5 @@ This section tracks common feature requests, friction points, and competitive ga
 
 ### Test Coverage Status (October 2026)
 - **744 unit tests** across 65 files (743 passing, 1 skipped), plus **474 Playwright e2e tests** across 40 files on chromium + firefox; 0 lint warnings, typecheck 0 errors
-- Key areas: calculation engine and fuzz tests, scenarios, feature gating, export/import, scroll lock, mobile layout, tooltips, security (XSS, CSV injection), performance, optimizer and advanced charts, axe a11y at every experience level (light-theme contrast skipped, see 24f)
+- Key areas: calculation engine and fuzz tests, scenarios, feature gating, export/import, scroll lock, mobile layout, tooltips, security (XSS, CSV injection), performance, optimizer and advanced charts, axe a11y at every experience level in both themes
 - Detail lives in [CLAUDE.md](CLAUDE.md#testing-strategy)

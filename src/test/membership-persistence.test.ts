@@ -10,7 +10,7 @@ const offering = (name: string) => ({
 });
 
 const plans = [
-  { id: 'pl1', name: 'Gold, "VIP"', monthlyFee: 100, creditsPerMonth: 120, memberDiscountPct: 10, creditsAtMemberPrice: true, eligible: ['Studio, "A"', 'Mixing'] },
+  { id: 'pl1', name: 'Gold, "VIP"', monthlyFee: 100, creditsPerMonth: 120, memberDiscountPct: 10, creditsAtMemberPrice: true, eligible: ['Studio, "A"', 'Mixing'], includedVisits: { 'Studio, "A"': 1 } },
   { id: 'pl2', name: '=SUM(A1)', monthlyFee: 0, creditsPerMonth: 0, memberDiscountPct: 20, creditsAtMemberPrice: false, eligible: [] }
 ];
 const profiles = [{ id: 'pr1', name: 'Regular', visits: { 'Studio, "A"': 2, Mixing: 1.5 } }];
@@ -90,6 +90,10 @@ describe('membership: CSV round trip', () => {
   it('re-links eligibility by name to the imported offering ids', () => {
     expect(r.data.membershipPlans[0].eligible).toEqual([idOf('Studio, "A"'), idOf('Mixing')]);
     expect(r.data.membershipPlans[1].eligible).toEqual([]);
+  });
+
+  it('re-links included visits by offering name', () => {
+    expect(r.data.membershipPlans[0].includedVisits).toEqual({ [idOf('Studio, "A"')]: 1 });
   });
 
   it('re-links profile visits by name, keeping fractions', () => {

@@ -62,7 +62,8 @@ export function renderCustomerAnalyticsDashboard(metrics: CustomerMetrics | null
  */
 function generateDashboardHTML(summary: AcquisitionSummary, _cac: number, _ltv: LTVResult, churn: ChurnResult, _growth: GrowthResult) {
   const healthColor = getHealthColor(summary.healthScore);
-  const cacHealthColor = summary.ltvToCAC.health === 'healthy' ? '#34d399' : summary.ltvToCAC.health === 'fair' ? '#fbbf24' : '#fb7185';
+  // theme tokens, not hexes: the light palette needs the deep status inks for AA contrast
+  const cacHealthColor = summary.ltvToCAC.health === 'healthy' ? 'var(--good)' : summary.ltvToCAC.health === 'fair' ? 'var(--warn)' : 'var(--bad)';
 
   return `
     <div class="customer-analytics-dashboard" style="background: var(--panel); border-radius: 12px; padding: 16px; margin: 16px 0;">
@@ -150,10 +151,9 @@ function generateDashboardHTML(summary: AcquisitionSummary, _cac: number, _ltv: 
  * Get color based on health score
  */
 function getHealthColor(score: number) {
-  if (score >= 80) return '#34d399'; // good
-  if (score >= 60) return '#fbbf24'; // warn
-  if (score >= 40) return '#f97316'; // bad
-  return '#fb7185'; // critical
+  if (score >= 80) return 'var(--good)';
+  if (score >= 60) return 'var(--warn)';
+  return 'var(--bad)'; // bad and critical share the deep red ink
 }
 
 /**

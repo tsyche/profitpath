@@ -12,6 +12,19 @@ test.describe('Fixed expenses table', () => {
 
   const rows = (page: Page) => page.locator('#expensesBody tr');
   const fixedCosts = (page: Page) => page.evaluate(() => (window as any).calc((window as any).state).annualFixedCosts);
+  const yearOneCash = (page: Page) => page.evaluate(() => (window as any).calc((window as any).state).yearOneCashFlow);
+
+  test('flat processing fees use an explicit transaction count', async ({ page }) => {
+    const before = await fixedCosts(page);
+    await page.locator('#processingFeePerTransaction').fill('0.3');
+    await page.locator('#transactionsPerMonth').fill('100');
+    await expect.poll(() => fixedCosts(page)).toBe(before + 360);
+    await page.reload();
+    await waitForPageReady(page);
+    await expect(page.locator('#processingFeePerTransaction')).toHaveValue('0.3');
+    await expect(page.locator('#transactionsPerMonth')).toHaveValue('100');
+    await expect.poll(() => fixedCosts(page)).toBe(before + 360);
+  });
 
   test('a weekly expense adds weekly x52 to fixed costs and survives reload', async ({ page }) => {
     const before = await fixedCosts(page);
@@ -44,6 +57,22 @@ test.describe('Fixed expenses table', () => {
     await waitForPageReady(page);
     await expect(rows(page).first().locator('input[data-k="lifeYears"]')).toHaveValue('5');
     expect(await fixedCosts(page)).toBe(before + 600);
+    expect(await yearOneCash(page)).toBeLessThan(await page.evaluate(() => (window as any).calc((window as any).state).income));
+  });
+
+  test('a loan row subtracts interest from profit and principal from year-one cash flow', async ({ page }) => {
+    await page.locator('#addExpenseBtn').click();
+    const row = rows(page).first();
+    await row.locator('select[data-k="category"]').selectOption('Loan Payments');
+    await row.locator('input[data-k="amount"]').fill('10000');
+    await row.locator('input[data-k="loanAprPct"]').fill('12');
+    await row.locator('input[data-k="lifeYears"]').fill('10');
+    const values = await page.evaluate(() => {
+      const r = (window as any).calc((window as any).state);
+      return { income: r.income, cash: r.yearOneCashFlow, costs: r.annualFixedCosts };
+    });
+    expect(values.costs).toBeGreaterThan(0);
+    expect(values.cash).toBeLessThan(values.income);
   });
 
   test('removing a row drops its cost', async ({ page }) => {
@@ -97,5 +126,15 @@ test.describe('Fixed expenses table', () => {
     await expect(page.locator('#costBreakdownBody tr', { hasText: 'Marketing' })).toContainText('$1,200');
     await rows(page).first().locator('button[data-action="removeExpense"]').click();
     await expect(page.locator('#costBreakdown')).toBeHidden();
+  });
+
+  test('expense cards use the available width in the responsive grid', async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 900 });
+    await page.locator('#addExpenseBtn').click();
+    await page.locator('#addExpenseBtn').click();
+    const columns = await page.locator('#expensesBody').evaluate((el) =>
+      getComputedStyle(el).gridTemplateColumns.split(' ').length
+    );
+    expect(columns).toBeGreaterThan(1);
   });
 });

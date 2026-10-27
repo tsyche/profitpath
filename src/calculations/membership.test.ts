@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcMembership, calcMembershipRange, hasVisitRange, maxMembers, recommendFee, pruneMembership, sanitizePlans, sanitizeProfiles } from './membership'
+import { calcMembership, calcMembershipRange, hasVisitRange, maxMembers, recommendCredits, recommendDiscount, recommendFee, pruneMembership, sanitizePlans, sanitizeProfiles } from './membership'
 import type { MembershipPlan, MemberProfile } from '../types'
 
 // Roadmap 24a: all figures hand-computed. Studio lists at $60 per session
@@ -30,6 +30,17 @@ describe('calcMembership', () => {
     expect(r.marginPct).toBe(90)
     expect(r.staffHours).toBe(1)
   })
+
+  it('uses service-specific included visits before shared credits', () => {
+    const p = plan({ monthlyFee: 0, creditsPerMonth: 60, eligible: ['studio'], includedVisits: { studio: 1 } });
+    const m = calcMembership(p, profile({ studio: 2 }), offerings);
+    expect(m.includedVisitsUsed).toBe(1);
+    expect(m.creditsUsed).toBe(60);
+    expect(m.memberSpend).toBe(0);
+    expect(m.regularSpend).toBe(120);
+    expect(m.deliveryCost).toBe(20);
+    expect(m.staffHours).toBe(2);
+  });
 
   it('ineligible service is cash at list and uses no credits', () => {
     const r = calcMembership(plan(), profile({ studio: 1, mixing: 2 }), offerings)
@@ -111,6 +122,60 @@ describe('calcMembership', () => {
     const r = calcMembership(plan({ eligible: ['sale'] }), profile({ sale: 1 }), [sale])
     expect(r.regularSpend).toBe(120)
     expect(r.staffHours).toBe(0)
+  })
+})
+
+// Roadmap 35: the member's payment fee (processingFeePct) must hit the "you keep"
+// figures, same as calc() applies it. Without it, "You keep" overstates by the
+// fee share of fee + cash revenue.
+describe('calcMembership processing fee', () => {
+  const fee = (processingFeePct: number) =>
+    calcMembership(plan({ monthlyFee: 100 }), profile({ studio: 1 }), offerings, processingFeePct)
+
+  it('applies the fee to fee + cash revenue (the only revenue membership has)', () => {
+    const r = fee(2.9)
+    // revenue 100, fee 2.9, so the business keeps 97.1 of the 100
+    expect(r.fees).toBeCloseTo(2.9, 6)
+    expect(r.revenue).toBe(100)
+    expect(r.keptRevenue).toBeCloseTo(97.1, 6)
+  })
+
+  it('"You keep" (margin) is measured against kept revenue, not gross', () => {
+    const r = fee(2.9)
+    // deliveryCost 10, keptRevenue 97.1 -> margin 87.1; gross-based margin would be 90
+    expect(r.margin).toBeCloseTo(87.1, 6)
+    expect(r.margin).not.toBeCloseTo(90, 6)
+  })
+
+  it('marginPct is off kept revenue', () => {
+    const r = fee(2.9)
+    expect(r.marginPct).toBeCloseTo((87.1 / 97.1) * 100, 4)
+  })
+
+  it('defaults to no fee', () => {
+    const r = calcMembership(plan({ monthlyFee: 100 }), profile({ studio: 1 }), offerings)
+    expect(r.fees).toBe(0)
+    expect(r.keptRevenue).toBe(100)
+    expect(r.margin).toBe(90)
+  })
+
+  it('the fee never changes what the member pays or saves', () => {
+    const r = fee(5)
+    // studio is eligible: fee 100 + cash 0; credits cover the visit entirely
+    expect(r.memberSpend).toBe(100)
+    expect(r.savings).toBe(-40)
+  })
+
+  it('clamps an out-of-range fee to 0-20', () => {
+    expect(calcMembership(plan({ monthlyFee: 100 }), profile({ studio: 1 }), offerings, 1e9).fees).toBeCloseTo(20, 6)
+    expect(calcMembership(plan({ monthlyFee: 100 }), profile({ studio: 1 }), offerings, -5).fees).toBe(0)
+  })
+
+  it('recommendFee targets the margin on kept revenue', () => {
+    // revenue = fee + cash, kept = revenue*(1-0.02), margin = kept - delivery.
+    // With cash 0 and delivery 10, 50% margin needs kept = 20 -> fee = 20/0.98 = 20.4081...
+    const r = recommendFee(plan({ monthlyFee: 999, creditsPerMonth: 120 }), profile({ studio: 1 }), offerings, 50, 2)
+    expect(r.feasible && r.fee).toBeCloseTo(20.41, 2)
   })
 })
 
@@ -231,6 +296,13 @@ describe('maxMembers', () => {
   it('a pool with zero hours caps members at 0', () => {
     expect(maxMembers(profile({ studio: 1 }), inBooth, [staff, { ...booth, hours: 0 }])).toEqual({ members: 0, binding: 'booth' })
   })
+
+  it('subtracts existing scenario load before counting additional members', () => {
+    expect(maxMembers(profile({ studio: 1 }), inBooth, [
+      { ...staff, usedHours: 64 },
+      { ...booth, usedHours: 16 }
+    ])).toEqual({ members: 3, binding: 'booth' })
+  })
 })
 
 // Roadmap 24e slice 4: fee for a target margin with credits and discount fixed.
@@ -269,3 +341,27 @@ describe('recommendFee', () => {
     expect(recommendFee(plan(), profile({ studio: 1 }), offerings, NaN)).toEqual({ feasible: false, reason: 'invalid-target' })
   })
 })
+
+describe('recommendCredits and recommendDiscount', () => {
+  const terms = plan({ monthlyFee: 0, creditsPerMonth: 0, memberDiscountPct: 0 });
+
+  it('solves shared credits for a target margin while holding other terms fixed', () => {
+    expect(recommendCredits(terms, profile({ studio: 1 }), offerings, 50)).toBe(40);
+  });
+
+  it('sanitizes and prunes included visits by offering', () => {
+    const p = sanitizePlans([{ ...plan(), includedVisits: { studio: 1.5, gone: -1, junk: 'nope' } }])[0];
+    expect(p.includedVisits).toEqual({ studio: 1.5, gone: 0, junk: 0 });
+    const pruned = pruneMembership([p], [], new Set(['studio']));
+    expect(pruned.plans[0].includedVisits).toEqual({ studio: 1.5 });
+  });
+
+  it('solves a discount in 0.1 point steps for a target margin', () => {
+    expect(recommendDiscount(terms, profile({ studio: 1 }), offerings, 50)).toBe(66.7);
+  });
+
+  it('returns null when target is outside the achievable range or there are no visits', () => {
+    expect(recommendCredits(terms, profile({ studio: 1 }), offerings, 95)).toBeNull();
+    expect(recommendDiscount(terms, profile({}), offerings, 50)).toBeNull();
+  });
+});

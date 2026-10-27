@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calc, clearCalculationCache } from './index'
-import { annualizeExpense, costBreakdown, monthlyCategorySpend, sanitizeExpenses, scaleOverhead, totalMonthlyOverhead, EXPENSE_CATEGORIES } from './expenses'
+import { annualizeExpense, costBreakdown, loanYearOne, monthlyCategorySpend, sanitizeExpenses, scaleOverhead, totalMonthlyOverhead, EXPENSE_CATEGORIES } from './expenses'
 import { buildCSV, importFromCSV, sanitizeScenarioState } from '../../assets/services/miscService'
 
 // Roadmap 27: structured expense line items. monthlyCosts stays as "other overhead".
@@ -85,6 +85,27 @@ describe('calc with expenses', () => {
   it('applies with no offerings too', () => {
     const r = calc({ ...base, offerings: [], expenses: [exp(100, 'monthly')] } as any)
     expect(r.annualFixedCosts).toBe(12000 + 1200)
+  })
+
+  it('counts flat transaction fees from the explicit monthly transaction count', () => {
+    const result = calc({ ...base, processingFeePerTransaction: 0.3, transactionsPerMonth: 100 } as any)
+    expect(result.annualFixedCosts).toBe(12000 + 360)
+    expect(costBreakdown({ monthlyCosts: 1000, expenses: [], processingFeePerTransaction: 0.3, transactionsPerMonth: 100 })
+      .reduce((total, row) => total + row.annual, 0)).toBe(result.annualFixedCosts)
+  })
+
+  it('keeps one-time purchase profit amortized and includes full purchase in year-one cash flow', () => {
+    const result = calc({ ...base, expenses: [exp(9000, 'one-time', { lifeYears: 3 })] } as any)
+    expect(result.annualFixedCosts).toBe(12000 + 3000)
+    expect(result.yearOneCashFlow).toBe(result.income - 6000)
+  })
+
+  it('uses loan interest for profit and principal repayment for year-one cash flow', () => {
+    const loan = { category: 'Loan Payments', amount: 10000, frequency: 'monthly', lifeYears: 10, loanAprPct: 12 }
+    const schedule = loanYearOne(loan as any)
+    const result = calc({ ...base, expenses: [loan] } as any)
+    expect(result.annualFixedCosts).toBeCloseTo(12000 + schedule.interest, 2)
+    expect(result.yearOneCashFlow).toBeCloseTo(result.income - (schedule.cash - schedule.interest), 2)
   })
 })
 
@@ -191,9 +212,17 @@ describe('one-time expenses', () => {
   })
 
   it('survives scenario sanitizing and a CSV round trip', () => {
-    const st = sanitizeScenarioState({ ...base, expenses: [exp(3000, 'one-time', { lifeYears: 5 })] })
+    const st = sanitizeScenarioState({
+      ...base,
+      processingFeePerTransaction: 0.3,
+      transactionsPerMonth: 100,
+      expenses: [exp(3000, 'one-time', { lifeYears: 5 }), exp(10000, 'monthly', { category: 'Loan Payments', lifeYears: 10, loanAprPct: 12 })]
+    })
     expect(st?.expenses?.[0]).toMatchObject({ frequency: 'one-time', lifeYears: 5 })
+    expect(st).toMatchObject({ processingFeePerTransaction: 0.3, transactionsPerMonth: 100 })
     const parsed: any = importFromCSV(buildCSV(st, calc(base as any)))
     expect(parsed.data.expenses[0]).toMatchObject({ amount: 3000, frequency: 'one-time', lifeYears: 5 })
+    expect(parsed.data.expenses[1]).toMatchObject({ amount: 10000, category: 'Loan Payments', lifeYears: 10, loanAprPct: 12 })
+    expect(parsed.data.settings).toMatchObject({ processingFeePerTransaction: 0.3, transactionsPerMonth: 100 })
   })
 })

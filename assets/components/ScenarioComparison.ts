@@ -97,6 +97,8 @@ export function handleCSVImport(file: File) {
     if (settings.partTimeEmployeePay !== undefined) state.partTimeEmployeePay = settings.partTimeEmployeePay;
     if (settings.monthlyCosts !== undefined) state.monthlyCosts = settings.monthlyCosts;
     if (settings.processingFeePct !== undefined) state.processingFeePct = settings.processingFeePct;
+    if (settings.processingFeePerTransaction !== undefined) state.processingFeePerTransaction = settings.processingFeePerTransaction;
+    if (settings.transactionsPerMonth !== undefined) state.transactionsPerMonth = settings.transactionsPerMonth;
     if (settings.productiveUtilizationPct !== undefined) state.productiveUtilizationPct = settings.productiveUtilizationPct;
     if (settings.targetUtilizationPct !== undefined) state.targetUtilizationPct = settings.targetUtilizationPct;
 
