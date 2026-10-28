@@ -8,7 +8,7 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **Product-flow redesign** (item 25): hold a real UI/UX planning session before coding. Redesign the overwhelming single-page model into a clear business setup → assumptions → decision workflow.
+1. **Product-flow redesign** (item 25): [draft plan](docs/plans/product-flow-redesign.md). Model / Results / Compare with optional guidance is the accepted direction; next, establish the reproducible baseline and review a clickable prototype before application implementation.
 2. **Decision workbench Phase 3** (item 38): compare 2-4 scenarios with offering deltas, a goal line, break-even sales loss, and a plain-language verdict.
 3. **Typecheck unit tests** (item 12x): include `**/*.test.ts` in `tsconfig.json` and retire accepted casts. Low priority; do opportunistically.
 
@@ -34,6 +34,7 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
 **Layout & Information Architecture** *(new category — Tim independently flagged this as "getting very busy on a single scrollable page view," agreed with while building the Sound Stage scenario)*
 
 25. **Product-flow redesign** *(reopened 2026-10-28; requires a real plan before code)*
+    - [Redesign plan](docs/plans/product-flow-redesign.md) drafted 2026-10-28. Tim accepted Model / Results / Compare with optional first-time guidance. Open: full reproducible baseline, prototype review, revised experience-level matrix, then phased implementation and journey validation. Item 38 retains ownership of the richer decision comparison.
     - The 2026-10-27 UI containment pass shipped persisted Setup groups, a sticky summary, and Analyze/Customers tabs. It did not materially change the app's single-page workflow or reduce its conceptual load.
     - Starting evidence: the heuristic audit scored usability **7/10** (4 major, 6 minor, 3 cosmetic findings). Its central diagnosis was long single-column Setup and Outputs flows, ad-hoc progressive disclosure, and advanced tools with no visible value until expanded. Live evidence separately recorded mobile overflow, a template-blocking welcome modal, 19 advanced/expert controls exposed in one scroll, and high search cost in dense offering scenarios.
     - Audit caveat: the heuristic report says it was desk analysis with live browser evidence deferred, while the live-evidence record says a browser walkthrough ran. Reconcile that contradiction with a fresh, reproducible desktop and mobile audit before relying on either conclusion.
