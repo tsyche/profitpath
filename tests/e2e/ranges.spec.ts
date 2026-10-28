@@ -170,6 +170,23 @@ test.describe('Range case lens, spreads and badge', () => {
     await expect(page.locator('.range-case-chip').first()).toBeHidden();
   });
 
+  test('sales-loss assumptions reduce price-change demand in both base and conservative cases', async ({ page }) => {
+    await page.locator('#rangesSection summary').click();
+    const row = page.locator('#rangesBody tr').first();
+    await row.locator('input[data-k="salesLossPct"]').fill('20');
+    await row.locator('input[data-k="salesLossPctLow"]').fill('5');
+    await row.locator('input[data-k="salesLossPctHigh"]').fill('40');
+
+    const baseClients = await page.evaluate(() => (window as any).calc((window as any).state).clients);
+    await page.locator('#rangeCaseToggle [data-case="conservative"]').click();
+    const conservativeClients = await page.evaluate(() => (window as any).calc((window as any).state).clients);
+    await page.locator('#rangeCaseToggle [data-case="optimistic"]').click();
+    const optimisticClients = await page.evaluate(() => (window as any).calc((window as any).state).clients);
+
+    expect(conservativeClients).toBeLessThan(baseClients);
+    expect(optimisticClients).toBeGreaterThan(baseClients);
+  });
+
   test('a case snaps back to base when the bounds go away, and never survives a reload', async ({ page }) => {
     await makeFirstRowGroup(page);
     await lowFill(page).fill('30');

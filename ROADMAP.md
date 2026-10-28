@@ -8,10 +8,8 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **Decision workbench Phase 2** (item 37): model sales lost after price changes in both modes. Client-side bundle link (Phase 1) shipped; server-hosted short links remain deferred under item 12o.
-2. **Typecheck unit tests** (item 12x): include `**/*.test.ts` in `tsconfig.json` and retire accepted casts. Low priority; do opportunistically.
-3. **Industry Benchmarks** (item 10): blocked on trusted benchmark and regional pricing data.
-2. **Decision workbench Phase 2** (item 37): model sales lost after price changes in both modes. Client-side bundle link (Phase 1) shipped; server-hosted short links remain deferred under item 12o.
+1. **Product-flow redesign** (item 25): hold a real UI/UX planning session before coding. Redesign the overwhelming single-page model into a clear business setup → assumptions → decision workflow.
+2. **Decision workbench Phase 3** (item 38): compare 2-4 scenarios with offering deltas, a goal line, break-even sales loss, and a plain-language verdict.
 3. **Typecheck unit tests** (item 12x): include `**/*.test.ts` in `tsconfig.json` and retire accepted casts. Low priority; do opportunistically.
 
 Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing trustworthy data, not on code. Shipped work is indexed in the [ledger](docs/ledger/ROADMAP_SHIPPED.md).
@@ -35,6 +33,17 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
 
 **Layout & Information Architecture** *(new category — Tim independently flagged this as "getting very busy on a single scrollable page view," agreed with while building the Sound Stage scenario)*
 
+25. **Product-flow redesign** *(reopened 2026-10-28; requires a real plan before code)*
+    - The 2026-10-27 UI containment pass shipped persisted Setup groups, a sticky summary, and Analyze/Customers tabs. It did not materially change the app's single-page workflow or reduce its conceptual load.
+    - Starting evidence: the heuristic audit scored usability **7/10** (4 major, 6 minor, 3 cosmetic findings). Its central diagnosis was long single-column Setup and Outputs flows, ad-hoc progressive disclosure, and advanced tools with no visible value until expanded. Live evidence separately recorded mobile overflow, a template-blocking welcome modal, 19 advanced/expert controls exposed in one scroll, and high search cost in dense offering scenarios.
+    - Audit caveat: the heuristic report says it was desk analysis with live browser evidence deferred, while the live-evidence record says a browser walkthrough ran. Reconcile that contradiction with a fresh, reproducible desktop and mobile audit before relying on either conclusion.
+    - Start with a brainstorming and planning session. Do not treat accordion sections or tabs alone as the solution.
+    - Goal: a coherent flow from business setup → offerings → assumptions → decision, with users able to build the model separately from reading and acting on its results.
+    - Evaluate scenario-first entry, a focused offering editor, guided template/onboarding paths, progressive specialist tools, and a dedicated decision workspace. Compare options against the current edit-and-see loop; select the smallest coherent information architecture only after the comparison.
+    - Plan against concrete journeys: first model from a template, a 12-offering hybrid business, changing one price with a sales-loss assumption, comparing options, and exporting/sharing the conclusion. Include beginner, advanced, 375px mobile, keyboard-only, and screen-reader use.
+    - Keep the existing data model and calculations stable unless the approved plan demonstrates a required change. Preserve accessibility, keyboard navigation, mobile use, and deep-link/share behavior.
+    - Done when a user can understand where to start, what to enter next, and where to find the answer without scanning the entire application; prove this with journey-based Playwright coverage, accessibility checks, and a human walkthrough. Re-score the experience after implementation.
+
 **Business Model Fidelity** *(new category — found trialing a real hybrid subscription+hourly business, The Sound Stage, a voice/acting/recording studio)*
 
 24f. **Deferred follow-ups from shipped 24c / 24e / 32** *(new, 2026-10-26)*
@@ -43,8 +52,11 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - Excel parity shipped as item 33. Per-service entitlements shipped as item 24g.
     - Effort: ~1-2 hours for chart ranges; membership integration stays conditional.
 
-37-39. **Decision workbench later phases** *([plan](docs/plans/decision-workbench.md))*
-    - 37: model sales lost after price changes in both modes.
+37. **Sales loss after a price change** ✅ shipped 2026-10-27
+    - Per-offering low, base and high loss assumptions reduce modeled demand, revenue, costs, and utilization in both modes.
+    - Conservative uses the higher loss and Optimistic the lower loss through the existing range-case lens.
+
+38-39. **Decision workbench later phases** *([plan](docs/plans/decision-workbench.md))*
     - 38: 2-4 scenario decision view with offering deltas, goal line, and break-even sales loss.
     - 39: derive membership discount floor and value ladder warnings from plans.
     - These remain separate after the client-side bundle ships.
@@ -116,7 +128,7 @@ Privacy-first freemium model planned post-launch. The app will remain fully free
   - GoatCounter analytics + APK release pipeline hardened: build-time platform stamping (web vs APK), real `versionCode`/`versionName` on every build, auto-generated release notes
   - Scroll lock reference-counting leaks fixed across 3 sites (modal double-open, analytics↔advanced dashboard transition); dead logo link fixed
 - **Next priorities**: see Recommended Next 3 above.
-- **Strategic positioning**: Core financial-modeling + export + performance + advanced-analytics + accessibility-scan foundation is complete, and the release/distribution pipeline (web + APK) is now solid after this round of hardening. Insights and Reverse Calculator are now reachable; the data-model gaps from the 2026-08 trial (per-session, one-time, group, expenses, pools, ranges, membership) are shipped, so focus moves to the UI/UX pass. Mobile app launch is waiting on a full Xcode install. Enterprise features deferred until market demand validates investment.
+- **Strategic positioning**: Core financial-modeling + export + performance + advanced-analytics + accessibility-scan foundation is complete, and the release/distribution pipeline (web + APK) is now solid after this round of hardening. Insights and Reverse Calculator are now reachable; the data-model gaps from the 2026-08 trial (per-session, one-time, group, expenses, pools, ranges, membership) are shipped. Next, redesign the product flow rather than adding more containment to the single-page interface. Mobile app launch is waiting on a full Xcode install. Enterprise features deferred until market demand validates investment.
 - **Known debt**: Capacitor stuck at v5.7.8 until Xcode 15+ is installed (macOS is no longer the blocker) — 5 high-severity tar vulnerabilities in @capacitor/cli will resolve with the Capacitor v8 upgrade.
 - **Blocked major bumps** (ignored in `.github/dependabot.yml`; 2026-09-25): vitest/@vitest/ui 5 fails 11 unit tests; jsdom 30, jest-dom 7 and typescript 7 untried. Also note `@capacitor/cli` is ^8 while `@capacitor/core` and the platform packages are ^5 — a pre-existing mismatch to resolve with the Capacitor upgrade. Remove each ignore once fixed.
 

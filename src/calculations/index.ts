@@ -7,6 +7,7 @@ import { annualExpenseTotal, annualizeExpense, loanYearOne, sanitizeExpenses } f
 import { activeResources, resourceAnnualHours, sanitizeResources, STAFF_POOL_ID } from './resources';
 import { applyRangeCase, getRangeCase } from './rangeCase';
 import { breakEvenSeats, sanitizeCostPerRun } from './groupRuns';
+import { retainedSalesShare, sanitizeSalesLossPct } from './salesLoss';
 import { clamp } from '../../assets/utils/helpers';
 import type {
   BreakEven,
@@ -112,7 +113,8 @@ function generateCacheKey(state: CalcState) {
       costPerRun: o.costPerRun,
       resource: o.resource,
       mixPct: o.mixPct,
-      currentClients: o.currentClients
+      currentClients: o.currentClients,
+      salesLossPct: o.salesLossPct
     }))
   });
 }
@@ -270,6 +272,7 @@ function sanitizeOfferings(offerings: Offering[], feePct = 0, resourceIds: Reado
       laborPctOfPrice: clamp(toFinite(o.laborPctOfPrice), 0, 100),
       feePct,
       discountPct: clamp(toFinite(o.discountPct), 0, 100),
+      salesLossPct: sanitizeSalesLossPct(o.salesLossPct),
       type: normalizeOfferingType(o.type),
       seats: Math.floor(clamp(finiteOr(o.seats, 1), 1, MAX_COUNT)),
       fillPct: clamp(finiteOr(o.fillPct, 100), 1, 100),
@@ -344,15 +347,6 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
     return acc + share * staffPoolHoursPerClient(o, free);
   }, 0);
 
-  const sessionsPerClient = offerings.reduce((acc, o, idx) =>
-    acc + (shares[idx] || 0) * o.sessionsPerYear, 0);
-
-  const revenuePerClient = offerings.reduce((acc, o, idx) =>
-    acc + (shares[idx] || 0) * (o.priceMonthly * 12), 0);
-
-  const variableCostPerClient = offerings.reduce((acc, o, idx) =>
-    acc + (shares[idx] || 0) * annualVariableCostPerClient(o), 0);
-
   // Each resource caps clients too: its tagged hours per client against its own target hours
   const poolHoursPerClient = resources.map((r) => offerings.reduce((acc, o, idx) =>
     o.resource === r.id ? acc + (shares[idx] || 0) * annualStaffHoursPerClient(o) : acc, 0));
@@ -364,20 +358,10 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
   const clients = resources.reduce((cap, r, i) => poolHoursPerClient[i] > 0 ?
     Math.min(cap, Math.floor(resourceAnnualHours(r) * (targetUtilizationPct / 100) / poolHoursPerClient[i])) : cap, staffClients);
 
-  const totalSessions = clients * sessionsPerClient;
-  const revenue = clients * revenuePerClient;
-  const variableCosts = clients * variableCostPerClient;
-
-  // A resource that binds leaves staff under target; otherwise staff sits at target as before
-  const serviceHours = clients < staffClients ? clients * serviceHoursPerClient : capacity.targetServiceHours;
-  const staffPct = utilizationPct(serviceHours, capacity.annualServiceHours);
-  const { poolUtilization, bottleneck } = buildPools(staffPct, resources, poolHoursPerClient.map((h) => h * clients));
-  const capacityPct = bottleneck.pct;
-
   // Per-offering metrics
   const offeringMetrics = offerings.map((o, idx) => {
     const share = shares[idx] || 0;
-    const offeringClients = Math.floor(clients * share);
+    const offeringClients = Math.floor(clients * share * retainedSalesShare(o));
     const offeringSessions = offeringClients * o.sessionsPerYear;
     const offeringRevenue = offeringClients * (o.priceMonthly * 12);
     const offeringVariableCosts = offeringClients * annualVariableCostPerClient(o);
@@ -395,8 +379,20 @@ function calculateForecastMode(offerings: SanitizedOffering[], capacity: Capacit
     };
   });
 
+  const clientsAfterLoss = offeringMetrics.reduce((total, metric) => total + metric.clients, 0);
+  const totalSessions = offeringMetrics.reduce((total, metric) => total + metric.sessions, 0);
+  const revenue = offeringMetrics.reduce((total, metric) => total + metric.revenue, 0);
+  const variableCosts = offeringMetrics.reduce((total, metric) => total + metric.variableCosts, 0);
+  const serviceHours = offerings.reduce((total, offering, idx) =>
+    total + offeringMetrics[idx].clients * staffPoolHoursPerClient(offering, free), 0);
+  const staffPct = utilizationPct(serviceHours, capacity.annualServiceHours);
+  const resourceHours = resources.map((resource) => offerings.reduce((total, offering, idx) =>
+    total + (offering.resource === resource.id ? offeringMetrics[idx].clients * annualStaffHoursPerClient(offering) : 0), 0));
+  const { poolUtilization, bottleneck } = buildPools(staffPct, resources, resourceHours);
+  const capacityPct = bottleneck.pct;
+
   return {
-    clients,
+    clients: clientsAfterLoss,
     totalSessions,
     serviceHours,
     capacityPct,
@@ -425,12 +421,14 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
 
   // Calculate from actual current clients
   offerings.forEach(o => {
-    const offeringSessions = o.currentClients * o.sessionsPerYear;
-    const offeringRevenue = o.currentClients * (o.priceMonthly * 12);
-    const offeringVariableCosts = currentVariableCost(o);
-    const offeringServiceHours = o.resource && free.has(o.resource) ? 0 : currentStaffHours(o);
+    const retainedClients = Math.floor(o.currentClients * retainedSalesShare(o));
+    const adjusted = { ...o, currentClients: retainedClients };
+    const offeringSessions = retainedClients * o.sessionsPerYear;
+    const offeringRevenue = retainedClients * (o.priceMonthly * 12);
+    const offeringVariableCosts = currentVariableCost(adjusted);
+    const offeringServiceHours = o.resource && free.has(o.resource) ? 0 : currentStaffHours(adjusted);
 
-    clients += o.currentClients;
+    clients += retainedClients;
     totalSessions += offeringSessions;
     serviceHours += offeringServiceHours;
     revenue += offeringRevenue;
@@ -439,19 +437,24 @@ function calculateCurrentMode(offerings: SanitizedOffering[], capacity: Capacity
 
   const staffPct = utilizationPct(serviceHours, capacity.annualServiceHours);
   const { poolUtilization, bottleneck } = buildPools(staffPct, resources,
-    resources.map((r) => offerings.reduce((acc, o) => o.resource === r.id ? acc + currentStaffHours(o) : acc, 0)));
+    resources.map((r) => offerings.reduce((acc, o) => {
+      const adjusted = { ...o, currentClients: Math.floor(o.currentClients * retainedSalesShare(o)) };
+      return o.resource === r.id ? acc + currentStaffHours(adjusted) : acc;
+    }, 0)));
   const capacityPct = bottleneck.pct;
 
   // Per-offering metrics
   const offeringMetrics = offerings.map(o => {
-    const offeringSessions = o.currentClients * o.sessionsPerYear;
-    const offeringRevenue = o.currentClients * (o.priceMonthly * 12);
-    const offeringVariableCosts = currentVariableCost(o);
+    const retainedClients = Math.floor(o.currentClients * retainedSalesShare(o));
+    const adjusted = { ...o, currentClients: retainedClients };
+    const offeringSessions = retainedClients * o.sessionsPerYear;
+    const offeringRevenue = retainedClients * (o.priceMonthly * 12);
+    const offeringVariableCosts = currentVariableCost(adjusted);
     const offeringMargin = offeringRevenue - offeringVariableCosts;
 
     return {
       name: o.name,
-      clients: o.currentClients,
+      clients: retainedClients,
       sessions: offeringSessions,
       revenue: offeringRevenue,
       variableCosts: offeringVariableCosts,

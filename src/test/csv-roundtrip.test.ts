@@ -11,7 +11,7 @@ const state = {
   productiveUtilizationPct: 80,
   targetUtilizationPct: 75,
   offerings: [
-    { id: 'o1', name: 'Coaching, "premium"', priceMonthly: 1000, sessionsPerYear: 12, hoursPerSession: 2, variableCostPerSession: 10, mixPct: 100, currentClients: 4, laborPctOfPrice: 0, type: 'subscription', seats: 1, fillPct: 100 },
+    { id: 'o1', name: 'Coaching, "premium"', priceMonthly: 1000, sessionsPerYear: 12, hoursPerSession: 2, variableCostPerSession: 10, mixPct: 100, currentClients: 4, laborPctOfPrice: 0, type: 'subscription', seats: 1, fillPct: 100, salesLossPct: 20, salesLossPctLow: 5, salesLossPctHigh: 40 },
   ],
   expenses: [
     { id: 'e1', name: 'Rent, main office', category: 'Rent/Lease', amount: 1200, frequency: 'monthly' },
@@ -37,7 +37,12 @@ describe('CSV export -> import round trip', () => {
 
   it('restores offerings with commas and quotes in the name', () => {
     expect(r.data.offerings).toHaveLength(1);
-    expect(r.data.offerings[0].name).toBe('Coaching, "premium"');
+    expect(r.data.offerings[0]).toMatchObject({
+      name: 'Coaching, "premium"',
+      salesLossPct: 20,
+      salesLossPctLow: 5,
+      salesLossPctHigh: 40
+    });
   });
 
   it('restores expenses and undoes the formula-guard prefix', () => {

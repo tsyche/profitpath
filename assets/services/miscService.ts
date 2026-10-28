@@ -17,6 +17,7 @@ import { normalizeOfferingType } from '../../src/calculations/index';
 import { rangeCaseTag } from '../../src/calculations/rangeCase';
 import { sanitizeOfferingRange } from '../../src/calculations/ranges';
 import { sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
+import { sanitizeSalesLossBounds, sanitizeSalesLossPct } from '../../src/calculations/salesLoss';
 import { sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
 import { sanitizeExpenses, totalMonthlyOverhead } from '../../src/calculations/expenses';
 import { sanitizeCostPerRun } from '../../src/calculations/groupRuns';
@@ -95,6 +96,8 @@ export function sanitizeScenarioState(data: Record<string, unknown>): import('..
       variableCostPerSession: toFiniteNumber(o.variableCostPerSession, 0, 0, 1e9),
       laborPctOfPrice: toFiniteNumber(o.laborPctOfPrice, 0, 0, 100),
       discountPct: toFiniteNumber(o.discountPct, 0, 0, 100),
+      salesLossPct: toFiniteNumber(o.salesLossPct, 0, 0, 100),
+      ...sanitizeSalesLossBounds(o),
       type: normalizeOfferingType(o.type),
       seats: Math.floor(toFiniteNumber(o.seats, 1, 1, 100000)),
       fillPct: toFiniteNumber(o.fillPct, 100, 1, 100),
@@ -1605,6 +1608,9 @@ export function importFromCSV(csvText: string) {
             fillPctLow: values[11], fillPctHigh: values[12], currentClientsLow: values[13], currentClientsHigh: values[14],
             sessionsPerYearLow: values[24], sessionsPerYearHigh: values[25]
           }),
+          // Columns 27-29 are optional sales-loss assumptions; older rows retain the zero/default behavior
+          salesLossPct: sanitizeSalesLossPct(values[26]),
+          ...sanitizeSalesLossBounds({ salesLossPctLow: values[27], salesLossPctHigh: values[28] }),
           // Column 16 is optional: best-case discount %
           discountPct: Math.max(0, Math.min(100, parseFloat(values[15]) || 0)),
           // Columns 17-18 are optional: confidence tag and note

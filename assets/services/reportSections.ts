@@ -72,7 +72,10 @@ function offeringRow(o: AppOffering, st: AppState): ReportCell[] {
     sanitizeNote(o.marketNote) || '',
     resourceName(o, st.resources),
     sanitizeCostPerRun(o.costPerRun),
-    ...RANGE_BOUND_KEYS.slice(4).map((k) => bound(o, k))
+    ...RANGE_BOUND_KEYS.slice(4).map((k) => bound(o, k)),
+    o.salesLossPct || 0,
+    o.salesLossPctLow ?? '',
+    o.salesLossPctHigh ?? ''
   ];
 }
 
@@ -124,7 +127,7 @@ export function buildReportSections(st: AppState, results: CalcResult): ReportSe
         'Name', 'Monthly Price', 'Sessions/yr', 'Hours/session', 'Var Cost/session', 'Mix %', 'Current Clients',
         'Labor % of price', 'Type', 'Seats', 'Fill %', 'Fill % Low', 'Fill % High', 'Clients Low', 'Clients High',
         'Best Discount %', 'Confidence', 'Note', 'Market Low', 'Market High', 'Market Avg', 'Market Note',
-        'Resource', 'Cost per run', 'Sessions Low', 'Sessions High'
+        'Resource', 'Cost per run', 'Sessions Low', 'Sessions High', 'Sales Loss %', 'Sales Loss Low', 'Sales Loss High'
       ],
       rows: (st.offerings || []).map((o) => offeringRow(o, st))
     },

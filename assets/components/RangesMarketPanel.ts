@@ -5,6 +5,7 @@ import { displayPrice, isOneTime, isPerSession } from '../../src/calculations/of
 import { bandMoves, calcRange, calcRangeDrivers, suggestRanges, sanitizeOfferingRange } from '../../src/calculations/ranges';
 import type { RangeMetric } from '../../src/calculations/ranges';
 import { getRangeCase } from '../../src/calculations/rangeCase';
+import { sanitizeSalesLossBounds, sanitizeSalesLossPct } from '../../src/calculations/salesLoss';
 import { marketBadge, sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
 import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
 import { fmtMoney0 } from '../../src/calculations/currency';
@@ -70,7 +71,7 @@ export function renderRangesTable() {
   if (!tbody) return;
   const isForecast = state.mode === 'forecast';
   const cell = (o: AppOffering, idx: number, k: string, label: string, on: boolean) => on
-    ? '<td class="cell-edit" data-label="' + label + '"><input aria-label="' + label + ' for ' + escapeHtml(o.name) + '" type="number" min="' + (k.startsWith('current') ? 0 : 1) +
+    ? '<td class="cell-edit" data-label="' + label + '"><input aria-label="' + label + ' for ' + escapeHtml(o.name) + '" type="number" min="' + (k.startsWith('current') || k.startsWith('salesLoss') ? 0 : 1) +
       '"' + (k.startsWith('fill') ? ' max="100"' : '') + ' step="1" placeholder="none" value="' + ((o as unknown as Bag)[k] ?? '') + '" data-k="' + k + '" data-i="' + idx + '"/></td>'
     : '<td data-label="' + label + '"><span class="muted">—</span></td>';
   tbody.innerHTML = state.offerings.map((o, idx) => {
@@ -80,6 +81,7 @@ export function renderRangesTable() {
       cell(o, idx, 'fillPctLow', 'Fill % low', fill) + cell(o, idx, 'fillPctHigh', 'Fill % high', fill) +
       cell(o, idx, 'currentClientsLow', 'Clients low', !isForecast) + cell(o, idx, 'currentClientsHigh', 'Clients high', !isForecast) +
       cell(o, idx, 'sessionsPerYearLow', 'Sessions/yr low', freq) + cell(o, idx, 'sessionsPerYearHigh', 'Sessions/yr high', freq) +
+      cell(o, idx, 'salesLossPctLow', 'Sales loss low', true) + cell(o, idx, 'salesLossPct', 'Sales loss base', true) + cell(o, idx, 'salesLossPctHigh', 'Sales loss high', true) +
       '<td class="cell-edit" data-label="Confidence"><select class="confidence-select" aria-label="Confidence for ' + escapeHtml(o.name) + '" data-k="confidence" data-i="' + idx + '" data-confidence="' + (o.confidence || '') + '">' +
       '<option value="">Untagged</option>' + CONFIDENCE_LEVELS.map(c => '<option value="' + c + '"' + (o.confidence === c ? ' selected' : '') + '>' + CONFIDENCE_LABELS[c] + '</option>').join('') + '</select></td>' +
       '<td class="cell-edit" data-label="Note"><input aria-label="Note for ' + escapeHtml(o.name) + '" type="text" maxlength="' + MAX_NOTE_LENGTH + '" placeholder="Source or caveat" value="' + escapeHtml(o.note || '') + '" data-k="note" data-i="' + idx + '"/></td></tr>';
@@ -141,7 +143,11 @@ function onRangeInput(e: Event) {
   pushHistoryOnce(fieldKey);
   // The shared sanitizer is the single source of truth; blank or junk clears the bound
   const isMeta = k === 'confidence' || k === 'note';
-  const clean = (isMeta ? sanitizeOfferingMeta({ [k]: el.value }) : sanitizeOfferingRange({ [k]: el.value })) as unknown as Bag;
+  const isSalesLossBase = k === 'salesLossPct';
+  const isSalesLossBound = k === 'salesLossPctLow' || k === 'salesLossPctHigh';
+  const clean = (isMeta ? sanitizeOfferingMeta({ [k]: el.value }) : isSalesLossBase
+    ? { [k]: sanitizeSalesLossPct(el.value) }
+    : isSalesLossBound ? sanitizeSalesLossBounds({ [k]: el.value }) : sanitizeOfferingRange({ [k]: el.value })) as unknown as Bag;
   if (clean[k] === undefined) delete o[k];
   else o[k] = clean[k];
   if (k === 'confidence') {
@@ -151,7 +157,7 @@ function onRangeInput(e: Event) {
   persistState();
   try {
     // Under an optimistic/conservative case a bound edit moves every output, so redraw them all
-    if (getRangeCase() !== 'base' && k !== 'confidence' && k !== 'note') {
+    if ((getRangeCase() !== 'base' && k !== 'confidence' && k !== 'note') || isSalesLossBase) {
       render();
       const again = document.querySelector(`#rangesBody [data-i="${el.dataset.i}"][data-k="${k}"]`);
       if (again instanceof HTMLElement) again.focus();

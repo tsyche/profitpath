@@ -2,7 +2,7 @@
 
 **TL;DR:** Turn scenario planning into a decision tool: build options as saved scenarios, compare them in one plain-language view under conservative assumptions, and share the whole set with one link. Most building blocks already exist; this plan connects them.
 
-**Status:** Building
+**Status:** Building (Phases 1-2 shipped)
 **Fold into:** [FEATURES.md](../../FEATURES.md) (scenario and comparison features) and the "Key Files Structure" notes in [AGENTS.md](../../AGENTS.md) and [CLAUDE.md](../../CLAUDE.md).
 
 ## Problem
@@ -33,6 +33,11 @@ Found in the 2026-10-26 TSS pricing trial: deciding between "today's prices", a 
 | 4 | 39 Membership-derived floor + value ladder | Worst-case member price per offering computed from the plans; a warning when a cheaper product beats a pricier one | Unit tests against the TSS numbers |
 
 Each phase ships on its own. Phase 1 unblocks the TSS owner review today; 3 depends on 2 for the break-even sales-loss column.
+
+## Progress
+
+- **Phase 1 / item 36:** shipped 2026-10-27. Selected saved scenarios can be sent and imported as a client-side compressed bundle.
+- **Phase 2 / item 37:** shipped 2026-10-27. Each offering has low, base, and high sales-loss assumptions after a price change. The calculator applies loss to demand, revenue, costs, and utilization in Forecast and Current modes; the existing Conservative and Optimistic cases select the higher and lower assumptions.
 
 ## Design notes
 

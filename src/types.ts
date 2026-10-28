@@ -110,6 +110,11 @@ export interface Offering {
   /** Optional bounds on sessionsPerYear (frequency); ignored for one-time offerings. */
   sessionsPerYearLow?: number;
   sessionsPerYearHigh?: number;
+  /** Expected sales lost after changing this offering's price; 0 means no loss. */
+  salesLossPct?: number;
+  /** Optional optimistic / conservative bounds on expected sales loss. */
+  salesLossPctLow?: number;
+  salesLossPctHigh?: number;
   /** Optional reliability tag and short note; display only, never used by calc. */
   confidence?: Confidence;
   note?: string;
@@ -138,6 +143,7 @@ export interface SanitizedOffering extends Offering {
   /** Global processing fee %, stamped on by calc(); not stored on offerings. */
   feePct?: number;
   discountPct: number;
+  salesLossPct: number;
   type: OfferingType;
   seats: number;
   fillPct: number;
@@ -184,13 +190,16 @@ export interface CalcState {
 
 /** An offering in app state: the UI always fills every field. */
 // laborPctOfPrice, type, seats and fillPct stay optional: older saved states and templates omit them (0 / subscription / 1 / 100)
-export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'costPerRun' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'sessionsPerYearLow' | 'sessionsPerYearHigh' | 'confidence' | 'note' | 'marketLow' | 'marketHigh' | 'marketAvg' | 'marketNote' | 'resource'>> & {
+export type AppOffering = Required<Omit<Offering, 'laborPctOfPrice' | 'discountPct' | 'type' | 'seats' | 'fillPct' | 'costPerRun' | 'fillPctLow' | 'fillPctHigh' | 'currentClientsLow' | 'currentClientsHigh' | 'sessionsPerYearLow' | 'sessionsPerYearHigh' | 'salesLossPct' | 'salesLossPctLow' | 'salesLossPctHigh' | 'confidence' | 'note' | 'marketLow' | 'marketHigh' | 'marketAvg' | 'marketNote' | 'resource'>> & {
   laborPctOfPrice?: number;
   discountPct?: number;
   type?: OfferingType;
   seats?: number;
   fillPct?: number;
   costPerRun?: number;
+  salesLossPct?: number;
+  salesLossPctLow?: number;
+  salesLossPctHigh?: number;
   fillPctLow?: number;
   fillPctHigh?: number;
   currentClientsLow?: number;

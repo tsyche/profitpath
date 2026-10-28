@@ -1,4 +1,5 @@
 import type { CalcState, Offering } from '../types';
+import { sanitizeSalesLossPct } from './salesLoss';
 
 /**
  * Optimistic / base / conservative lens over the low/high bounds. calc() applies the
@@ -59,10 +60,10 @@ const boundApplies = (o: Offering, k: RangeBoundKey) => !(k.startsWith('sessions
 /** True when any offering carries at least one bound that applies to its type. */
 export function hasRanges(offerings: Offering[] | undefined): boolean {
   return (offerings || []).some(
-    (o) => o && RANGE_BOUND_KEYS.some((k) => {
-      const b = o[k];
-      return boundApplies(o, k) && b !== undefined && b !== null && (b as unknown) !== '';
-    })
+    (o) => Boolean(o) && (RANGE_BOUND_KEYS.some((k) => {
+      const b = o![k];
+      return boundApplies(o!, k) && b !== undefined && b !== null && (b as unknown) !== '';
+    }) || o!.salesLossPctLow !== undefined || o!.salesLossPctHigh !== undefined)
   );
 }
 
@@ -82,6 +83,8 @@ export function withBounds(offerings: Offering[], side: 'low' | 'high'): Offerin
     const baseClients = clampClients(o.currentClients) ?? 0;
     const rest: Offering = { ...o };
     for (const k of RANGE_BOUND_KEYS) delete rest[k];
+    delete rest.salesLossPctLow;
+    delete rest.salesLossPctHigh;
     const out: Offering = {
       ...rest,
       fillPct: pick(baseFill, clampFill(side === 'low' ? o.fillPctLow : o.fillPctHigh), side),
@@ -91,6 +94,9 @@ export function withBounds(offerings: Offering[], side: 'low' | 'high'): Offerin
       const bound = clampSessions(side === 'low' ? o.sessionsPerYearHigh : o.sessionsPerYearLow);
       if (bound !== undefined) out.sessionsPerYear = pick(Number(o.sessionsPerYear) || 0, bound, flip);
     }
+    const baseLoss = sanitizeSalesLossPct(o.salesLossPct);
+    const lossBound = sanitizeRangeBound(side === 'low' ? o.salesLossPctHigh : o.salesLossPctLow, 0, 100);
+    out.salesLossPct = lossBound === undefined ? baseLoss : (side === 'low' ? Math.max(baseLoss, lossBound) : Math.min(baseLoss, lossBound));
     return out;
   });
 }

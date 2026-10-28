@@ -227,7 +227,7 @@ export function render() {
       : '<span class="muted">—</span>';
 
     const estClients = isForecast
-      ? Math.floor(metrics.clients * ((o.mixPct || 0) / 100))
+      ? metrics.offeringMetrics[idx]?.clients ?? 0
       : o.currentClients;
 
     const estSessions = isForecast
