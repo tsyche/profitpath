@@ -25,6 +25,7 @@ async function seedStudio(page: Page) {
 }
 
 const openPanel = async (page: Page) => {
+  await page.locator('#analysisCustomersTab').click();
   await page.locator('#membershipToggle').click();
   await expect(page.locator('#membershipBody')).toBeVisible();
 };
@@ -37,6 +38,7 @@ test.describe('Membership what-if', () => {
     await page2.addInitScript(() => localStorage.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'intermediate' })));
     await page2.goto('/');
     await waitForPageReady(page2);
+    await page2.locator('#analysisCustomersTab').click();
     await expect(page2.locator('#membershipWrapper')).toBeVisible();
   });
 
@@ -75,7 +77,7 @@ test.describe('Membership what-if', () => {
     const cell = page.locator('.membership-results tbody td').first();
     await expect(cell).toContainText('You keep $87 of $97 revenue (89.7% margin on revenue)');
     await page.locator('#membershipTargetMargin').fill('50');
-    await expect(page.locator('.membership-fee').first()).toContainText('Fee for 50.0% margin: $20 / month');
+    await expect(page.locator('.membership-fee').first()).toContainText('Fee for 50.0% margin: $21 / month');
   });
 
   test('included service visits apply before credits and survive reload', async ({ page }) => {
@@ -155,6 +157,9 @@ test.describe('Membership what-if', () => {
     await expect(page.locator('#membershipPlansBody tr')).toHaveCount(3);
     await expect(page.locator('#addMembershipPlanBtn')).toBeDisabled();
     await page.locator('#membershipPlansBody tr').first().locator('input[data-k="name"]').fill('Keeper');
+    await expect.poll(() => page.evaluate(() =>
+      JSON.parse(localStorage.getItem('profitpath-state') || '{}').membershipPlans?.[0]?.name
+    )).toBe('Keeper');
 
     await page.reload();
     await waitForPageReady(page);
@@ -201,6 +206,7 @@ test.describe('Membership what-if', () => {
     await seedStudio(page);
     await page.evaluate(() => {
       const w = window as any;
+      w.state.mode = 'current';
       w.state.targetUtilizationPct = 100;
       w.state.resources = [{ id: 'booth', name: 'Booth', hoursPerWeek: 1, weeksPerYear: 52 }];
       w.state.offerings[0].resource = 'booth';
@@ -246,7 +252,7 @@ test.describe('Membership what-if', () => {
     await expect(fee).toHaveCount(0);
     // $10 cost: 50% margin needs a $20 fee; the member saves anything below $60
     await page.locator('#membershipTargetMargin').fill('50');
-    await expect(fee.first()).toContainText('Fee for 50.0% margin: $21 / month');
+    await expect(fee.first()).toContainText('Fee for 50.0% margin: $20 / month');
     await page.locator('#membershipTargetMargin').fill('90');
     await expect(fee.first()).toContainText('No fee reaches 90.0% margin while the member still saves');
     await page.locator('#membershipTargetMargin').fill('');

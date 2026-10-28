@@ -22,8 +22,48 @@ test.describe('Header KPIs stay in sync with Outputs (roadmap 12i)', () => {
     const header = await page.locator('#abkRevenue').textContent();
     const outputs = await page.locator('#kpiRevenue').textContent();
     expect(header).toBe(outputs);
+    await expect(page.locator('#setupSummaryRevenue')).toHaveText(outputs!);
     const income = [await page.locator('#abkIncome').textContent(), await page.locator('#kpiIncome').textContent()];
     expect(income[0]).toBe(income[1]);
+    await expect(page.locator('#setupSummaryIncome')).toHaveText(income[1]!);
+    const utilization = await page.locator('#kpiCapacity').textContent();
+    expect(utilization).not.toBeNull();
+    await expect(page.locator('#setupSummaryUtilization')).toHaveText(utilization!);
+  });
+
+  test('summary stays below the app bar while Setup scrolls on desktop and mobile', async ({ page }) => {
+    await page.addInitScript(() => {
+      try { localStorage.setItem('onboardingCompleted', 'true'); } catch { /* ignore */ }
+    });
+    await page.goto('/');
+    await waitForPageReady(page);
+
+    for (let i = 0; i < 9; i++) await page.locator('#addOfferingBtn').click();
+    await page.locator('#addOfferingBtn').scrollIntoViewIfNeeded();
+    const desktop = await page.locator('.setup-summary').evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { position: style.position, top: style.top };
+    });
+    expect(desktop.position).toBe('sticky');
+    expect(desktop.top).not.toBe('auto');
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.locator('#controls').evaluate((controls) => {
+      let scroller = controls.parentElement as HTMLElement | null;
+      while (scroller) {
+        const style = getComputedStyle(scroller);
+        if (/(auto|scroll)/.test(style.overflowY) && scroller.scrollHeight > scroller.clientHeight) break;
+        scroller = scroller.parentElement;
+      }
+      (scroller ?? document.scrollingElement!).scrollTop = (controls as HTMLElement).offsetTop + 250;
+    });
+    const mobile = await page.locator('.setup-summary').evaluate((el) => {
+      const bar = document.querySelector('.appbar')!.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
+      return { position: getComputedStyle(el).position, top: rect.top, appbarBottom: bar.bottom };
+    });
+    expect(mobile.position).toBe('sticky');
+    expect(mobile.top).toBeGreaterThanOrEqual(mobile.appbarBottom);
   });
 
   test('negative net income uses the danger color in both header chips', async ({ page }) => {
@@ -34,7 +74,7 @@ test.describe('Header KPIs stay in sync with Outputs (roadmap 12i)', () => {
     await waitForPageReady(page);
     await page.evaluate(() => {
       const w = window as any;
-      Object.assign(w.state, { fullTimeEmployees: 1, fullTimeEmployeePay: 100000, partTimeEmployees: 0 });
+      Object.assign(w.state, { mode: 'current', fullTimeEmployees: 1, fullTimeEmployeePay: 100000, partTimeEmployees: 0 });
       w.state.offerings = [{ id: 'a', name: 'Service', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 100, currentClients: 1 }];
       w.render();
     });
@@ -45,6 +85,6 @@ test.describe('Header KPIs stay in sync with Outputs (roadmap 12i)', () => {
     ]);
     expect(colors[0]).toBe(colors[2]);
     expect(colors[1]).toBe(colors[2]);
-    expect(colors[0]).not.toBe(getComputedStyle(document.documentElement).getPropertyValue('--accent-ink').trim());
+    await expect(page.locator('#kpiIncome').locator('xpath=ancestor::*[contains(@class,"pill")]')).toHaveClass(/pill--danger/);
   });
 });

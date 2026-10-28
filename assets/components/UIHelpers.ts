@@ -1,6 +1,8 @@
-import { deleteScenario } from "../services/scenarioService";
-import { getAllScenarios, escapeHtml } from "../services/miscService";
+import { deleteScenario, duplicateScenario, loadScenario, saveScenario } from "../services/scenarioService";
+import { getAllScenarios, escapeHtml, populateComparisonDropdowns } from "../services/miscService";
 import { createModal } from "../components/Modal";
+import { showScenarioBundleLink } from "../services/scenarioBundle";
+import { showToast } from "../services/modalService";
 
 // UI Components and Helpers
 
@@ -24,6 +26,7 @@ export function openScenarioModal() {
     const id = escapeHtml(s.id);
     return `
     <div class="scenario-item" data-scenario-id="${id}">
+      <label class="bundle-choice"><input type="checkbox" class="bundle-select" value="${id}" aria-label="Select ${name} for sharing"></label>
       <div>
         <div class="scenario-item-name">${name}</div>
         <div class="scenario-item-meta">${ts ? 'Saved ' + ts : ''}</div>
@@ -49,9 +52,11 @@ export function openScenarioModal() {
       
       <div class="scenarios-list-section" style="margin-bottom: 24px;">
         <h4 style="margin: 0 0 12px; color: var(--text); font-size: 16px;">📂 Load Saved Scenarios</h4>
+        <p class="smallprint">Select up to four saved scenarios to share as one snapshot link.</p>
         <div id="scenariosList" class="scenarios-list" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(0,0,0,0.1);">
           ${scenarios.length === 0 ? '<div style="padding: 20px; text-align: center; color: var(--muted);">No saved scenarios yet.</div>' : scenariosList}
         </div>
+        <button class="btn small" id="shareBundleBtn" type="button" disabled>Share selected</button>
       </div>
 
       <div class="comparison-section">
@@ -105,13 +110,27 @@ export function openScenarioModal() {
         dropdown2.appendChild(option2);
       });
     } else {
-      import('../services/miscService').then((miscService) => {
-        miscService.populateComparisonDropdowns();
-      });
+      populateComparisonDropdowns();
     }
   };
 
   populateDropdowns();
+
+  const selectedIds = () => Array.from(modal.querySelectorAll<HTMLInputElement>('.bundle-select:checked')).map(input => input.value);
+  modal.addEventListener('change', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || !target.classList.contains('bundle-select')) return;
+    if (selectedIds().length > 4) {
+      target.checked = false;
+      showToast('Select up to four scenarios', 'info');
+    }
+    const shareButton = modal.querySelector<HTMLButtonElement>('#shareBundleBtn');
+    if (shareButton) shareButton.disabled = selectedIds().length === 0;
+  });
+  modal.querySelector('#shareBundleBtn')?.addEventListener('click', () => {
+    const selected = selectedIds();
+    showScenarioBundleLink(scenarios.filter(scenario => selected.includes(scenario.id)));
+  });
 
   // Set up event delegation for scenario buttons
   modal.addEventListener('click', (e) => {
@@ -133,15 +152,14 @@ export function openScenarioModal() {
           { text: '❌ Cancel', primary: false },
           {
             text: '📂 Load', primary: true, action: async () => {
-              const scenarioService = await import('../services/scenarioService');
-              await scenarioService.loadScenario(scenarioId);
+              await loadScenario(scenarioId);
               renderScenariosList();
             }
           }
         ]
       });
     } else if (btn.classList.contains('duplicate-btn')) {
-      import('../services/scenarioService').then(svc => svc.duplicateScenario(scenarioId));
+      duplicateScenario(scenarioId);
     } else if (btn.classList.contains('delete-btn')) {
       showDeleteConfirmation(scenarioId, async () => {
         await deleteScenario(scenarioId);
@@ -165,8 +183,7 @@ export function openScenarioModal() {
             { text: '❌ Cancel', primary: false },
             {
               text: '💾 Save', primary: true, action: async () => {
-                const scenarioService = await import('../services/scenarioService');
-                await scenarioService.saveScenario(scenarioName);
+                await saveScenario(scenarioName);
                 input.value = '';
                 renderScenariosList();
               }
@@ -204,17 +221,13 @@ export function openScenarioModal() {
       if (dropdown1?.value && dropdown2?.value) {
         performComparisonInModal(dropdown1.value, dropdown2.value, modal);
       } else {
-        import('../services/modalService').then((modalService) => {
-          modalService.showToast('Please select two scenarios to compare');
-        });
+        showToast('Please select two scenarios to compare');
       }
     });
   }
 
   // Populate comparison dropdowns
-  import('../services/miscService').then((miscService) => {
-    miscService.populateComparisonDropdowns();
-  });
+  populateComparisonDropdowns();
 }
 
 // Function to perform comparison within modal context
@@ -236,9 +249,7 @@ export function performComparison(scenarioId1: string, scenarioId2: string, moda
   const scenario2 = scenarios.find((s) => s.id === scenarioId2);
 
   if (!scenario1 || !scenario2) {
-    import('../services/modalService').then((modalService) => {
-      modalService.showToast('Scenario not found');
-    });
+    showToast('Scenario not found');
     return;
   }
 

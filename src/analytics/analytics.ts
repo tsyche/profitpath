@@ -304,8 +304,3 @@ if (typeof window !== 'undefined' && !window.__TEST_MODE__) {
 }
 
 export { AnalyticsCollector };
-
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = AnalyticsCollector;
-}

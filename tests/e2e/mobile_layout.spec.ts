@@ -202,7 +202,12 @@ test.describe('Mobile layout & modal consistency', () => {
     await page.reload();
     await waitForPageReady(page);
 
-    for (const id of ['customerAnalyticsToggle', 'perfToggle', 'debugToggle']) {
+    await page.locator('#analysisCustomersTab').click();
+    const customerAnalyticsToggle = page.locator('#customerAnalyticsToggle');
+    await customerAnalyticsToggle.scrollIntoViewIfNeeded();
+    await customerAnalyticsToggle.click();
+
+    for (const id of ['perfToggle', 'debugToggle']) {
       const btn = page.locator('#' + id);
       await btn.scrollIntoViewIfNeeded();
       await btn.click();

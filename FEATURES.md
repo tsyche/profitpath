@@ -1,5 +1,7 @@
 # Current Features
 
+**TL;DR:** ProfitPath models service pricing, costs, capacity, scenarios, and shareable decisions entirely in the browser.
+
 ProfitPath is a comprehensive profitability and capacity simulator for recurring service businesses.
 
 ## Core Functionality
@@ -18,11 +20,13 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Profit/Loss Waterfall**: Interactive chart showing revenue flow and cost breakdown
 - **Client Mix Optimizer**: Suggests the offering mix that maximizes projected profit or utilization within current capacity (Intermediate+ experience levels)
 - **Advanced Charts**: Price × utilization sensitivity heat map, balanced scorecard radar (profitability, utilization, growth headroom, cost efficiency, diversification), and client capacity funnel (Advanced experience level)
+- **Advisor**: One entry point for insights, take-home goals, offering mix, and charts; opens each full tool (Intermediate+ experience levels)
 
 ### Data Management
 - **Scenario Saving**: Save unlimited scenarios with descriptive names
 - **Auto-save**: Automatic persistence of current work to localStorage
 - **Shareable URLs**: Encode scenarios in URLs for easy sharing with stakeholders
+- **Scenario Bundles**: Select up to four saved scenarios and share one snapshot link; recipients choose whether to import them, and duplicate names get a suffix
 - **Import/Export**: Load scenarios from URLs or share via email
 - **Embeddable Widgets**: Generate iframe embed codes for website integration
 - **Social Media Sharing**: Open Graph and Twitter Card support for rich previews

@@ -5,11 +5,13 @@ import { errStack } from './utils/helpers';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { bindCsvImport, initScenarioComparison, showScenarioComparisonDiff } from './components/ScenarioComparison';
 import { initAppState, persistState, pushHistory, redo, state, undo } from './state/appState';
-import { bindPanelToggle, initAdvancedChartsPanel, initAnalysisPanels, initCustomerAnalyticsPanel, initInsightsPanel, initMixOptimizerPanel, initReversePanel, initWhatIfWizard } from './components/AnalysisPanels';
+import { bindPanelToggle, initAdvancedChartsPanel, initAdvisorPanel, initAnalysisPanels, initCustomerAnalyticsPanel, initInsightsPanel, initMixOptimizerPanel, initReversePanel, initWhatIfWizard } from './components/AnalysisPanels';
 import { bindControls, render, syncCurrencySelect, updateOutputs } from './components/AppRender';
 import { initSettings } from './components/SettingsPanel';
 import { bindMenus, bindScenariosAndGlobals } from './components/AppMenus';
 import { initSensitivityPanel } from './components/SensitivityPanel';
+import { initAnalysisTabs, refreshAnalysisTabs } from './components/AnalysisTabs';
+import { initSetupGroups } from './components/SetupGroups';
 import { initDebugPanel, initPerfPanel } from './components/DebugPanel';
 import { enterReadOnlyMode, hideContextualHelp, initOnboarding } from './components/Onboarding';
 import { initializeProgressiveDisclosure } from './utils/progressiveDisclosure';
@@ -27,6 +29,7 @@ import { bindRangesMarket } from './components/RangesMarketPanel';
 import { bindResources, refreshAfterResourceEdit } from './components/ResourcesPanel';
 import { showToast } from './services/modalService';
 import { INDUSTRY_TEMPLATES } from './services/industryTemplates';
+import { promptScenarioBundleImport } from './services/scenarioBundle';
 
 // Make $ and $$ globally available for other modules
 if (typeof window !== 'undefined') {
@@ -93,15 +96,20 @@ if (!loadedFromURL) {
 const compareStatesParam = new URLSearchParams(window.location.search).get('compareStates');
 if (compareStatesParam) {
   try {
-    const payload = JSON.parse(decodeURIComponent(atob(decodeURIComponent(compareStatesParam)).replace(/[^A-Za-z0-9@*_+\-.\/]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'))));
-    if (payload.s1 && payload.s2) {
+    if (compareStatesParam.length > 20000) throw new Error('Comparison link too large');
+    const payload: unknown = JSON.parse(decodeURIComponent(atob(compareStatesParam).replace(/[^A-Za-z0-9@*_+\-.\/]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'))));
+    if (payload && typeof payload === 'object' && 's1' in payload && 's2' in payload) {
+      const pair = payload as { s1: { name?: unknown; state?: unknown }; s2: { name?: unknown; state?: unknown } };
+      const first = sanitizeScenarioState(pair.s1?.state as Record<string, unknown>);
+      const second = sanitizeScenarioState(pair.s2?.state as Record<string, unknown>);
+      if (!first || !second) throw new Error('Invalid comparison states');
       // Names come from an untrusted share link — coerce to a bounded string.
       // (They are also escaped at render time; this just caps storage size.)
-      const safeName = (n: unknown) => String(n == null ? 'Shared scenario' : n).slice(0, 120);
+      const safeName = (n: unknown) => (typeof n === 'string' ? n : 'Shared scenario').slice(0, 120);
       // Create temporary comparison scenarios in localStorage
       const tempScenarios = [
-        { id: 'temp-s1', name: safeName(payload.s1.name), timestamp: new Date().toLocaleString(), state: payload.s1.state },
-        { id: 'temp-s2', name: safeName(payload.s2.name), timestamp: new Date().toLocaleString(), state: payload.s2.state }
+        { id: 'temp-s1', name: safeName(pair.s1.name), timestamp: new Date().toLocaleString(), state: first },
+        { id: 'temp-s2', name: safeName(pair.s2.name), timestamp: new Date().toLocaleString(), state: second }
       ];
       localStorage.setItem('profitpath-temp-compare', JSON.stringify(tempScenarios));
     }
@@ -126,6 +134,7 @@ try {
   const dbg = $('#debugPanel');
   if (dbg) dbg.textContent = 'Render error: ' + errStack(e);
 }
+promptScenarioBundleImport();
 
 // Auto-open comparison if shared link was used
 const tempCompareData = localStorage.getItem('profitpath-temp-compare');
@@ -210,6 +219,7 @@ try {
   initDebugPanel(() => state);
   initPerfPanel();
   initAnalysisPanels({ getState: () => state, pushHistory, persistState, render });
+  initAdvisorPanel();
   initSensitivityPanel(() => state);
   initCustomerAnalyticsPanel();
   initMixOptimizerPanel();
@@ -219,6 +229,8 @@ try {
   initReversePanel();
   initAdvancedChartsPanel();
   initWhatIfWizard();
+  initAnalysisTabs();
+  initSetupGroups();
 } catch {
   try {
     persistState();
@@ -305,4 +317,5 @@ if (typeof showScenarioComparisonDiff === 'function') window.showScenarioCompari
 // initializeScenarios();
 
 initializeProgressiveDisclosure();
+refreshAnalysisTabs();
 initTooltips();

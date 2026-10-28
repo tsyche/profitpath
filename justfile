@@ -14,47 +14,51 @@ setup:
 # --- Development ---
 
 # Start dev server (Vite on localhost:3120)
-dev: setup
+dev:
     npm run dev
 
 # Build for production
-build: setup
+build:
     npm run build
 
 # Preview production build
-preview: setup
+preview:
     npm run preview
 
 # --- Testing ---
 
 # Run all tests (unit + e2e)
-test: setup
+test:
     npm run test:run && npm run test:e2e
 
 # Run Vitest unit tests only
-test-unit: setup
+test-unit:
     npm run test:run
 
 # Run Playwright e2e tests only
-test-e2e: setup
+test-e2e:
     npm run test:e2e
 
 # Run Playwright e2e tests with visible browser
-test-e2e-headed: setup
+test-e2e-headed:
     npm run test:e2e:headed
+
+# Run Chromium + Firefox in Docker without changing host dependencies
+test-e2e-container *args:
+    bash scripts/test-e2e-container.sh {{args}}
 
 # --- Linting ---
 
 # Lint check (ESLint)
-lint: setup
+lint:
     npm run lint
 
 # Auto-fix linting issues
-lintfix: setup
+lintfix:
     npm run lint:fix
 
-# Type check JS/TS (checkJs, non-strict; about 300 known errors, see docs/plans/typescript-migration.md)
-typecheck: setup
+# Type check TypeScript (strict; zero errors required)
+typecheck:
     npm run typecheck
 
 # --- Maintenance ---

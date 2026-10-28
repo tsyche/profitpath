@@ -4,6 +4,12 @@
 
 ## Shipped index
 
+- [x] 2026-10-27 — 36. Share selected saved scenarios in one snapshot link (decision workbench Phase 1)
+- [x] 2026-10-27 — 12d. "Advisor" unified panel for scattered analytics features
+- [x] 2026-10-27 — 12s. Persisted-state E2E assertion for labor-pct and membership flakes
+- [x] 2026-10-27 — 24g. Membership per-service entitlements
+- [x] 2026-10-27 — 35. TSS trial fixes (13-offering Current-mode scenario)
+
 - [x] 2026-10-26 — 33. Excel export parity (multi-sheet .xlsx via fflate, shared serializers)
 - [x] 2026-10-26 — 34. Light theme meets WCAG AA contrast
 - [x] 2026-10-25 — TypeScript migration (strict, all source and tests `.ts`, lint `--max-warnings 0`)
@@ -432,7 +438,7 @@ Superseded by item 18: the per-session type does this conversion in the Price ce
 
 34. **Light theme meets WCAG AA contrast** *(new, 2026-10-26; found by the axe scan in `tests/e2e/a11y.spec.ts`)*
     - The light palette fails `color-contrast`, so the scan skips that rule in light theme only. This is a palette change, not a one-line fix: pick AA-safe text/accent/muted tokens, then re-check charts, badges and KPI gradients.
-    - Done when the skip is deleted from `a11y.spec.ts` and light theme passes at all three experience levels. Phase 0 of [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md) feeds the palette decision; do it before or with that pass, not after.
+    - Done when the skip is deleted from `a11y.spec.ts` and light theme passes at all three experience levels. The UI/UX pass is recorded in [the 25–26 ledger entry](#2026-10-27--2526-uiux-pass).
     - Effort: ~3-5 hours
 
 ### 2026-10-26 — Follow-ups from shipped items 12v, 29, 30 and 31
@@ -442,3 +448,27 @@ Superseded by item 18: the per-session type does this conversion in the Price ce
 - 30a: added Year 1 cash flow before tax. Profit keeps one-time purchases amortized; cash flow includes the full purchase amount.
 - 31a: loan expense rows accept opening balance, APR and term. Annual profit includes interest; Year 1 cash flow includes scheduled principal and interest payments.
 - CSV and workbook reports include the fee settings, loan APR and Year 1 cash flow.
+
+### 2026-10-27 — 35. TSS trial fixes
+
+Eight gaps surfaced by a 13-offering Current-mode scenario (expenses, pools, groups, membership plans) closed with smallest regression tests: Membership What-If applies `processingFeePct` to fee plus cash revenue; header Net income chip uses the same good/warn/danger status as the Outputs KPI; a loaded `?scenario=` link is removed from the address bar while preserving `readonly=1`; share sanitization preserves zero-hour subscriptions and fractional `sessionsPerYear`; staff-free offerings are excluded from staff-hour rankings; Current-mode group runs use fill-adjusted seats for run costs and staff hours; expense cards use the same responsive grid as offering cards. Scenario totals matched a hand calculation at $1,500 and $3,300 rent (net $4,296 / -$17,304 annually).
+
+### 2026-10-27 — 24g. Membership per-service entitlements
+
+Optional per-offering monthly included visits on a membership plan, accounted for before shared credits and paid visits, carried through scenario storage, share links, CSV and Excel. Calculation stays display-only until membership value is established. Entitlement and persistence paths covered by tests.
+
+### 2026-10-27 — 12s. Persisted-state E2E assertion for flakes
+
+`labor-pct.spec.ts` and `membership.spec.ts` ('caps at 3 plans, survives reload') now assert the intended value reached `profitpath-state` before reloading. Closed after a clean Chromium + Firefox full-suite pass (500 tests, 0 failures). No retries added.
+
+### 2026-10-27 — 12d. "Advisor" unified panel
+
+One collapsible entry point contains Insights Engine, Reverse Calculator, Mix Optimizer, and Advanced Charts, surfacing their available summaries. Close condition (browser gate) met.
+
+### 2026-10-27 — 36. Share selected saved scenarios in one snapshot link (decision workbench Phase 1)
+
+Select up to four saved scenarios, share a compressed bundle, import only after confirmation. Imported states sanitized, payload size bounded, names deduped. Existing `compareStates` link sanitizes states as well as names before calculation. Chromium + Firefox E2E gate passed. Server-hosted short links remain deferred under [ROADMAP.md item 12o](../../ROADMAP.md).
+
+### 2026-10-27 — 25–26. UI/UX pass
+
+Setup now keeps Revenue, Net Income, and Utilization visible while scrolling. Native persisted Setup groups reduce the editing column, reopen on invalid native fields, and meet mobile touch and bottom-nav clearance checks. Outputs keeps Overview visible while existing gated panels live in accessible, persisted Analyze and Customers tabs; Beginner sees no empty tabs and Diagnostics remain separate. Chromium, Firefox, axe, lint, typecheck, and build gates passed. Decision record: [archived UI/UX pass](../plans/archive/ui-ux-pass.md).

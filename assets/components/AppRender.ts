@@ -6,7 +6,7 @@ import { fmtMoney0, normalizeCurrency, taxBasisNote } from '../../src/calculatio
 import { confidenceBadgeHtml } from './RangeCasePanel';
 import { renderGroupRunResults, renderGroupRunsTable } from './GroupRunsPanel';
 import { renderMembershipPanel, renderMembershipResults } from './MembershipPanel';
-import { renderInsightsPanel, scheduleReverseRefresh } from './AnalysisPanels';
+import { renderAdvisorPanel, renderInsightsPanel, scheduleReverseRefresh } from './AnalysisPanels';
 import { renderCostBreakdown, renderExpenses } from './ExpensesPanel';
 import { renderMarketTable, renderOfferingRanking, renderRangeBand, renderRangesTable } from './RangesMarketPanel';
 import { renderResources } from './ResourcesPanel';
@@ -409,6 +409,7 @@ export function updateOutputs(metrics: CalcResult) {
     renderMembershipResults();
     renderGroupRunResults();
     if (!$('#insightsBody')?.classList.contains('collapsed')) renderInsightsPanel();
+    if (!$('#advisorBody')?.classList.contains('collapsed')) renderAdvisorPanel();
     scheduleReverseRefresh();
     if (kpiPayroll) kpiPayroll.textContent = fmtMoney0(metrics.annualPayroll);
     if (kpiVariableCosts) kpiVariableCosts.textContent = fmtMoney0(metrics.variableCosts);
@@ -528,8 +529,12 @@ function updateKeyMetrics() {
     setText('abkRevenue', revenue);
     setText('abkIncome', income);
     setText('abkUtil', util);
+    setText('setupSummaryRevenue', revenue);
+    setText('setupSummaryIncome', income);
+    setText('setupSummaryUtilization', util);
     const abkIncome = $('#abkIncome'); if (abkIncome) abkIncome.style.color = incomeColor;
     const glIncome = $('#glIncome'); if (glIncome) glIncome.style.color = incomeColor;
+    const setupSummaryIncome = $('#setupSummaryIncome'); if (setupSummaryIncome) setupSummaryIncome.style.color = incomeColor;
 
     // At-a-glance modal: full default set (Revenue, Net income, Clients,
     // Annual sessions, Utilization).

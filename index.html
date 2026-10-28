@@ -368,8 +368,14 @@
           <button class="btn" id="resetBtn" type="button">Reset defaults</button>
         </div>
       </div>
+      <section class="setup-summary" aria-label="Current scenario summary">
+        <div><span>Revenue</span><strong id="setupSummaryRevenue">—</strong></div>
+        <div><span>Net income</span><strong id="setupSummaryIncome">—</strong></div>
+        <div><span>Utilization</span><strong id="setupSummaryUtilization">—</strong></div>
+      </section>
       <div class="card-b">
-        <div class="section-box inputs-fields">
+        <details class="section-box inputs-fields setup-group" id="setupBasics" data-setup-group="basics" open>
+          <summary><h3>Business basics</h3></summary>
           <div class="row">
             <div class="field" style="min-width: 210px;">
               <label title="Choose how to analyze your business" for="modeSelect">Mode</label>
@@ -458,10 +464,11 @@
               <div class="hint">Used only in Forecasting mode.</div>
             </div>
           </div>
-        </div>
+        </details>
 
         <!-- Presentation notes: editable in normal mode, displayed prominently in read-only mode -->
-        <div class="scenario-notes-wrap section-box">
+        <details class="scenario-notes-wrap section-box setup-group" id="setupNotes" data-setup-group="notes">
+          <summary><h3>Scenario notes</h3></summary>
           <label class="scenario-notes-label" for="scenarioNotes">Presentation Notes
             <span class="scenario-notes-hint">Optional context for anyone you share this with</span>
           </label>
@@ -469,15 +476,13 @@
             placeholder="Add notes, context, or assumptions to include when sharing this scenario…"
             maxlength="2000"></textarea>
           <p id="scenarioNotesDisplay" class="scenario-notes-display" hidden></p>
-        </div>
+        </details>
 
-        <div class="section-box offerings-section">
-          <div class="section-h">
-            <h3>Service Offerings</h3>
-            <div class="section-actions">
-              <button class="btn primary" id="addOfferingBtn" type="button"
-                title="Add a new service offering to your business">Add offering</button>
-            </div>
+        <details class="section-box offerings-section setup-group" id="setupOfferings" data-setup-group="offerings" open>
+          <summary><h3>Service Offerings</h3></summary>
+          <div class="section-actions">
+            <button class="btn primary" id="addOfferingBtn" type="button"
+              title="Add a new service offering to your business">Add offering</button>
           </div>
 
           <div class="note" id="mixNote"></div>
@@ -514,15 +519,13 @@
             Notes: Mix % is interpreted as a % of customers (not revenue). In forecasting mode, totals are
             auto-normalized for the math.
           </div>
-        </div>
+        </details>
 
-        <div class="section-box expenses-section">
-          <div class="section-h">
-            <h3>Fixed Expenses</h3>
-            <div class="section-actions">
-              <button class="btn primary" id="addExpenseBtn" type="button"
-                title="Add a recurring fixed cost such as rent, insurance, or a weekly contractor">Add expense</button>
-            </div>
+        <details class="section-box expenses-section setup-group" id="setupCosts" data-setup-group="costs" open>
+          <summary><h3>Costs</h3></summary>
+          <div class="section-actions">
+            <button class="btn primary" id="addExpenseBtn" type="button"
+              title="Add a recurring fixed cost such as rent, insurance, or a weekly contractor">Add expense</button>
           </div>
 
           <div class="table-wrap">
@@ -545,15 +548,13 @@
           <div class="smallprint" id="expensesNote">
             Added on top of Other overhead. One-time purchases are amortized for profit but use the full amount in Year 1 cash flow. Loan rows use opening balance, APR, and term; interest reduces profit and full payments reduce cash flow.
           </div>
-        </div>
+        </details>
 
-        <div class="section-box resources-section advanced-feature" id="resourcesSection">
-          <div class="section-h">
-            <h3>Capacity resources (optional)</h3>
-            <div class="section-actions">
-              <button class="btn" id="addResourceBtn" type="button"
-                title="Add a shared pool such as a booth, room, or bay that caps how many clients you can serve">Add resource</button>
-            </div>
+        <details class="section-box resources-section advanced-feature setup-group" id="resourcesSection" data-setup-group="resources">
+          <summary><h3>Capacity resources (optional)</h3></summary>
+          <div class="section-actions">
+            <button class="btn" id="addResourceBtn" type="button"
+              title="Add a shared pool such as a booth, room, or bay that caps how many clients you can serve">Add resource</button>
           </div>
           <div class="smallprint">
             Staff hours are one pool. Add a booth, room, or bay with its own weekly hours, then tag the offerings that use it.
@@ -585,9 +586,9 @@
               <tbody id="resourceTagBody"></tbody>
             </table>
           </div>
-        </div>
+        </details>
 
-        <details class="section-box advanced-feature ranges-section" id="rangesSection">
+        <details class="section-box advanced-feature ranges-section setup-group" id="rangesSection" data-setup-group="ranges">
           <summary><h3 style="display: inline">Ranges &amp; confidence (optional)</h3></summary>
           <div class="smallprint">
             Guessing fill or client counts? Enter a low and high; Outputs shows the min and max across all lows together and all highs together.
@@ -619,7 +620,7 @@
           </div>
         </details>
 
-        <details class="section-box advanced-feature group-runs-section" id="groupRunsSection">
+        <details class="section-box advanced-feature group-runs-section setup-group" id="groupRunsSection" data-setup-group="group-runs">
           <summary><h3 style="display: inline">Group runs (optional)</h3></summary>
           <div class="smallprint">
             A run is one cohort going through its Sessions / yr. Enter what one run costs you regardless of how full it is (room hire, hired instructor, consumables);
@@ -639,7 +640,7 @@
           </div>
         </details>
 
-        <details class="section-box advanced-feature market-section" id="marketSection">
+        <details class="section-box advanced-feature market-section setup-group" id="marketSection" data-setup-group="market">
           <summary><h3 style="display: inline">Market position (optional)</h3></summary>
           <div class="smallprint">
             Enter what the market charges in the same units as your Price (per month, or per session for per-session rows). Green: inside the range and clears the price floor.
@@ -847,6 +848,12 @@
           <div id="richVisualizations" class="rich-visualizations" style="display: none;"></div>
         </div>
 
+        <div id="analysisTabs" class="output-tabs" role="tablist" aria-label="Output details" hidden>
+          <button id="analysisAnalyzeTab" type="button" role="tab" aria-controls="analysisAnalyzePanel" aria-selected="false" tabindex="-1">Analyze</button>
+          <button id="analysisCustomersTab" type="button" role="tab" aria-controls="analysisCustomersPanel" aria-selected="false" tabindex="-1">Customers</button>
+        </div>
+
+        <section id="analysisAnalyzePanel" class="output-tab-panel" role="tabpanel" aria-labelledby="analysisAnalyzeTab" tabindex="-1" hidden>
         <!-- Sensitivity Analysis panel (collapsible) -->
         <div class="sensitivity-wrapper advanced-feature">
           <button id="sensitivityToggle" class="debug-toggle" aria-expanded="false" aria-controls="sensitivityBody"
@@ -880,6 +887,14 @@
                 title="Reset all sliders to their baseline values">↺ Reset</button>
               <div id="sensitivityResults" style="margin-top: 12px;"></div>
             </div>
+          </div>
+        </div>
+
+        <div class="advisor-wrapper advanced-feature">
+          <button id="advisorToggle" class="debug-toggle" aria-expanded="false" aria-controls="advisorBody">▶ Advisor</button>
+          <div id="advisorBody" class="debug-body collapsed" aria-hidden="true">
+            <p class="smallprint">Start with a suggestion, then open the full tool.</p>
+            <div id="advisorSummary"></div>
           </div>
         </div>
 
@@ -930,6 +945,8 @@
           </div>
         </div>
 
+        </section>
+        <section id="analysisCustomersPanel" class="output-tab-panel" role="tabpanel" aria-labelledby="analysisCustomersTab" tabindex="-1" hidden>
         <!-- Membership what-if panel (collapsible) -->
         <div class="membership-wrapper advanced-feature" id="membershipWrapper">
           <button id="membershipToggle" class="debug-toggle" aria-expanded="false" aria-controls="membershipBody"
@@ -947,7 +964,7 @@
         </div>
 
         <!-- Advanced Charts panel (collapsible) -->
-        <div class="advanced-charts-wrapper advanced-feature">
+        <div class="advanced-charts-wrapper expert-feature">
           <button id="advancedChartsToggle" class="debug-toggle" aria-expanded="false" aria-controls="advancedChartsBody"
             title="Multi-variable sensitivity heat map, balanced scorecard radar, and client capacity funnel">▶
             Advanced Charts</button>
@@ -972,6 +989,7 @@
           </div>
         </div>
 
+        </section>
         <!-- Performance monitoring panel (collapsible) -->
         <div class="perf-wrapper expert-feature">
           <button id="perfToggle" class="debug-toggle" aria-expanded="false" aria-controls="perfBody"

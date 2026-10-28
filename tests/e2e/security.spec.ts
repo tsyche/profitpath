@@ -38,4 +38,20 @@ test.describe('Security — share-link XSS', () => {
     // The injected onerror must never have fired.
     expect(await page.evaluate(() => window.__xssFired)).toBe(false);
   });
+
+  test('malformed comparison states are rejected without breaking the app', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.addInitScript(() => localStorage.setItem('onboardingCompleted', 'true'));
+    const payload = {
+      s1: { name: 'Malformed', state: { ...state, offerings: 'not an array' } },
+      s2: { name: 'Safe', state }
+    };
+    const param = encodeURIComponent(Buffer.from(JSON.stringify(payload)).toString('base64'));
+    await page.goto('/?compareStates=' + param, { waitUntil: 'networkidle' });
+    await expect(page.locator('#addOfferingBtn')).toBeVisible();
+    await expect(page.locator('.scenario-diff-wrap')).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem('profitpath-temp-compare'))).toBeNull();
+    expect(errors).toEqual([]);
+  });
 });

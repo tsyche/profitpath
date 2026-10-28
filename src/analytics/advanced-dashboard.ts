@@ -649,10 +649,4 @@ class AdvancedAnalyticsDashboard {
 }
 
 export { AdvancedAnalyticsDashboard };
-
-// Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = AdvancedAnalyticsDashboard;
-} else {
-  window.AdvancedAnalyticsDashboard = AdvancedAnalyticsDashboard;
-}
+window.AdvancedAnalyticsDashboard = AdvancedAnalyticsDashboard;

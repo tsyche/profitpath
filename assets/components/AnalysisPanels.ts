@@ -14,6 +14,7 @@ import { escapeHtml } from '../services/miscService';
 import { showToast } from '../services/modalService';
 import { fmtPct1 } from '../utils/format';
 import { resetSliders } from './SensitivityPanel';
+import { getExperienceLevel } from '../../src/settings/index';
 
 /** Collapsible analysis panels: customer analytics, mix optimizer, insights, reverse calculator, what-if wizard, advanced charts. */
 
@@ -38,6 +39,54 @@ let reverseHasRun = false;
 let reverseRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 
 const $ = $opt;
+
+export function renderAdvisorPanel() {
+  const summary = $('#advisorSummary');
+  if (!summary) return;
+  let insight = 'No issues found for the current scenario.';
+  let mix = 'Add at least two offerings to find a suggested mix.';
+  try {
+    const metrics = calc(state);
+    const top = generateInsights(metrics, state).sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity])[0];
+    if (top) insight = top.title + ': ' + top.message;
+    const optimal = optimizeMix(state, metrics, 'profit');
+    if (optimal) mix = optimal.improved ? optimal.message : 'Your current mix is close to optimal for profit.';
+  } catch (e) {
+    console.warn('Advisor summary failed:', e);
+  }
+  const items = [
+    ['insightsToggle', 'Insights', insight],
+    ['reverseToggle', 'Take-home goal', 'Enter a desired annual take-home to see the required changes.'],
+    ['mixOptimizerToggle', 'Offering mix', mix],
+    ['advancedChartsToggle', 'Charts', 'Explore price, utilization, and capacity together.']
+  ];
+  summary.innerHTML = items.filter(([target]) => {
+    if (target === 'advancedChartsToggle' && getExperienceLevel() !== 'advanced') return false;
+    const panel = document.getElementById(target)?.closest<HTMLElement>('.advanced-feature, .expert-feature');
+    return panel && getComputedStyle(panel).display !== 'none';
+  }).map(([target, label, detail]) =>
+    '<div class="advisor-item"><p><strong>' + escapeHtml(label) + ':</strong> ' + escapeHtml(detail) + '</p>' +
+    '<button class="btn secondary small" type="button" data-advisor-target="' + target + '">Open ' + escapeHtml(label) + '</button></div>'
+  ).join('');
+}
+
+export function initAdvisorPanel() {
+  const body = $('#advisorBody');
+  for (const selector of ['.mix-optimizer-wrapper', '.insights-wrapper', '.reverse-calculator-wrapper', '.advanced-charts-wrapper']) {
+    const panel = document.querySelector(selector);
+    if (body && panel) body.appendChild(panel);
+  }
+  bindPanelToggle('#advisorToggle', '#advisorBody', renderAdvisorPanel);
+  $('#advisorSummary')?.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-advisor-target]');
+    if (!button) return;
+    const target = document.getElementById(button.dataset.advisorTarget || '');
+    if (!target) return;
+    if (target.getAttribute('aria-expanded') !== 'true') target.click();
+    target.scrollIntoView({ block: 'start' });
+    target.focus();
+  });
+}
 
 // Customer Analytics twisty (advanced feature). The markup existed but was never
 // wired, so the toggle did nothing — connect it and render on expand.

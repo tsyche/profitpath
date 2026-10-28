@@ -1,5 +1,5 @@
 import type { Scenario } from '../../src/types';
-import { getAllScenarios, sanitizeScenarioState } from "./miscService";
+import { getAllScenarios, populateComparisonDropdowns, sanitizeScenarioState } from "./miscService";
 import { uuid } from "../utils/helpers";
 import { renderScenariosList } from "../components/UIHelpers";
 import { showToast } from "./modalService";
@@ -73,9 +73,7 @@ function performSave(name: string) {
 
     // Update dropdowns immediately after localStorage is updated
     const modalOverlay = document.querySelector('.modal-overlay');
-    import('./miscService').then(miscService => {
-      miscService.populateComparisonDropdowns(modalOverlay);
-    });
+    populateComparisonDropdowns(modalOverlay);
 
     // Update UI to remove template badge
     if (window.render) {
@@ -113,7 +111,7 @@ export function duplicateScenario(scenarioId: string) {
     scenarios.push(copy);
     localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
     renderScenariosList();
-    import('./miscService').then(m => m.populateComparisonDropdowns(document.querySelector('.modal-overlay')));
+    populateComparisonDropdowns(document.querySelector('.modal-overlay'));
     showToast(`Duplicated as "${copy.name}"`, 'success');
   } catch (e) {
     console.error('Failed to duplicate scenario:', e);
@@ -138,9 +136,7 @@ export function loadScenario(scenarioId: string) {
     // Update the scenarios modal UI in real time
     setTimeout(() => {
       renderScenariosList();
-      import('./miscService').then(miscService => {
-        miscService.populateComparisonDropdowns();
-      });
+      populateComparisonDropdowns();
     }, 100);
   } catch (e) {
     console.error('Failed to load scenario:', e);
@@ -216,11 +212,9 @@ export function deleteScenario(scenarioId: string) {
       // Defer rendering to next tick to avoid blocking
       setTimeout(() => {
         renderScenariosList();
-        import('./miscService').then(miscService => {
-          // Find the modal overlay to pass as context
-          const modalOverlay = document.querySelector('.modal-overlay');
-          miscService.populateComparisonDropdowns(modalOverlay);
-        });
+        // Find the modal overlay to pass as context
+        const modalOverlay = document.querySelector('.modal-overlay');
+        populateComparisonDropdowns(modalOverlay);
         // Don't close modal - let user continue working
       }, 0);
 

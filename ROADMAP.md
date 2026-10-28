@@ -8,11 +8,13 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **Close TSS trial fixes and membership entitlements** (items 35 and 24g). Code and regression coverage are in place; run the Playwright checks, then close those roadmap items.
-2. **UI/UX pass Phase 0** ([plan](docs/plans/ui-ux-pass.md)): `/audit-ux-e2e` + `/audit-usability` evidence, absorbing items 25/26 and the light-theme contrast fix (24f). The Setup column keeps growing and gating is still ad hoc.
-3. **36 share saved scenarios + bundle link** (phase 1 of the [decision workbench](docs/plans/decision-workbench.md); client-side only, includes a security fix to the existing `compareStates` link). Server-hosted short links are deferred under item 12o until backend work is prioritized.
+1. **Decision workbench Phase 2** (item 37): model sales lost after price changes in both modes. Client-side bundle link (Phase 1) shipped; server-hosted short links remain deferred under item 12o.
+2. **Typecheck unit tests** (item 12x): include `**/*.test.ts` in `tsconfig.json` and retire accepted casts. Low priority; do opportunistically.
+3. **Industry Benchmarks** (item 10): blocked on trusted benchmark and regional pricing data.
+2. **Decision workbench Phase 2** (item 37): model sales lost after price changes in both modes. Client-side bundle link (Phase 1) shipped; server-hosted short links remain deferred under item 12o.
+3. **Typecheck unit tests** (item 12x): include `**/*.test.ts` in `tsconfig.json` and retire accepted casts. Low priority; do opportunistically.
 
-`12s` flake watch stays parked until failure output makes the failure reproducible. Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing trustworthy data, not on code. Shipped work is indexed in the [ledger](docs/ledger/ROADMAP_SHIPPED.md).
+Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing trustworthy data, not on code. Shipped work is indexed in the [ledger](docs/ledger/ROADMAP_SHIPPED.md).
 
 ---
 
@@ -31,60 +33,21 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
     - Geographic pricing variations by region
     - Effort: ~4-5 hours
 
-**Cleanup / Small Wins**
-
-12s. **Fix: `labor-pct.spec.ts` flakes under full-suite load** *(new)*
-   - Passes alone, fails intermittently in the full Playwright run; find the race or timeout instead of retrying it away
-   - 2026-10-24: not reproducible. 160 runs (10-12 workers, 8 CPU burners) all passed, and the last 3 CI `Tests` runs were green. Parked; reopen with the failure output if it recurs, and don't add retries
-   - 2026-10-25: `membership.spec.ts` 'caps at 3 plans, survives reload' failed once (chromium) in a full run, then passed 12/12 alone. Likely race: it `fill()`s the plan name and reloads at once, so the save may not have landed. Same rule: reopen with the failure output; fix by waiting on persisted state, not retries
-   - Effort: ~1 hour
-
-12d. **"Advisor" unified panel for scattered analytics features** *(new)*
-   - Insights Engine, Reverse Calculator, Mix Optimizer, and Advanced Charts are four separate collapsed panels a user has to know to expand individually — low discoverability
-   - Consider a single "Advisor" tab/section that surfaces the top insight/suggestion from each, with links to expand the full panel
-   - Effort: ~3-4 hours
-
 **Layout & Information Architecture** *(new category — Tim independently flagged this as "getting very busy on a single scrollable page view," agreed with while building the Sound Stage scenario)*
-
-25. **Restructure past-the-fold sections into tabs**
-    - Today, Inputs + Offerings + Outputs + Simple Visualizations + Sensitivity Analysis + Client Mix Optimizer + Advanced Charts + Customer Analytics + Performance/Debug all stack vertically on one page. Building a 12-offering scenario meant constant scrolling to get from editing an offering back to checking its effect on Outputs, or to reach any of the analysis accordions below
-    - Recommended shape: keep **Inputs + Offerings + core Outputs (KPI cards, break-even, tax estimate)** as the persistent default view — that's the tight edit-and-see-the-effect loop that needs to stay adjacent — and move the deeper analysis accordions (Sensitivity Analysis, Client Mix Optimizer, Advanced Charts, Customer Analytics) into an actual tab bar rather than independently-collapsible sections stacked below each other. A rough split:
-      - **Setup** tab (or default view): Mode, staffing/overhead/utilization inputs, Service Offerings table, Presentation Notes
-      - **Dashboard** tab: KPI summary, Simple Visualizations, Break-Even Analysis, Tax Estimates
-      - **Analyze** tab: Sensitivity Analysis, Client Mix Optimizer, Advanced Charts
-      - **Customers** tab: Customer Analytics (CAC/LTV/churn/growth)
-    - This also aligns with the existing mobile bottom-nav pattern (per the test suite's "Bottom-nav clearance" coverage) — tabs work naturally on both desktop and the APK build, so this isn't a desktop-only change
-    - The Performance/cache-stats panel is a dev diagnostic, not a business feature — could stay a small fixed-position debug toggle rather than earning its own tab
-    - Effort: ~6-8 hours (real IA/layout rework, not just visual polish — worth a design pass on exactly where each accordion lands before implementation)
-
-26. **Sticky mini-summary while scrolling/editing**
-    - Smaller companion to item 25: even with tabs, the Setup tab alone (staffing inputs + a 12-row offerings table) is long. A small sticky strip showing live Revenue/Net Income/Utilization while scrolling through offerings (the existing top-bar KPIs, just persistently visible rather than scrolling out of view) would keep the edit-and-see-the-effect loop tight without needing to scroll back up after every change
-    - Effort: ~2 hours
 
 **Business Model Fidelity** *(new category — found trialing a real hybrid subscription+hourly business, The Sound Stage, a voice/acting/recording studio)*
 
 24f. **Deferred follow-ups from shipped 24c / 24e / 32** *(new, 2026-10-26)*
-    - Chart ranges (24c): folded into [docs/plans/ui-ux-pass.md](docs/plans/ui-ux-pass.md).
+    - Chart ranges (24c): remains open; related layout work shipped in [the 25–26 ledger entry](docs/ledger/ROADMAP_SHIPPED.md#2026-10-27--2526-uiux-pass).
     - Membership headroom now subtracts modeled scenario load, and the target-margin optimizer suggests fee, credits or discount separately. The remaining conditional follow-up is to feed members into `calc()` only if real use shows the display-only panel is insufficient.
-    - Excel parity shipped as item 33. Per-service entitlements are tracked separately in item 24g.
+    - Excel parity shipped as item 33. Per-service entitlements shipped as item 24g.
     - Effort: ~1-2 hours for chart ranges; membership integration stays conditional.
 
-35. **Fixes from the 2026-10-26 TSS trial** *(new, 2026-10-26; 13-offering Current-mode scenario with expenses, pools, groups and membership plans)*
-    - The scenario totals matched a hand calculation at $1,500 and $3,300 rent (net $4,296 / -$17,304 annually); these are the surrounding gaps.
-    - Membership What-If applies `processingFeePct` to fee plus cash revenue.
-    - Header Net income chip uses the same good / warn / danger status as the Outputs KPI.
-    - A successfully loaded `?scenario=` link is removed from the address bar while preserving `readonly=1`, so refresh does not overwrite later edits with the shared snapshot.
-    - Share sanitization preserves zero-hour subscriptions and fractional `sessionsPerYear`.
-    - Staff-free offerings are excluded from staff-hour rankings.
-    - Current-mode group runs use fill-adjusted seats for both run costs and staff hours.
-    - Expense cards use the same responsive grid as offering cards.
-    - Each fix requires its smallest regression test.
-
-24g. **Membership per-service entitlements** *(new, 2026-10-26; discovered in the TSS trial)*
-    - A plan supports only one shared credit pool today, so a plan cannot include a service-specific allowance such as one class per month plus general credits.
-    - Add optional per-offering monthly included visits, account for those before shared credits and paid visits, and carry the setting through scenario storage, share links, CSV and Excel.
-    - Keep the calculation display-only until membership value is established; test the entitlement and persistence paths.
-    - Effort: ~3-4 hours
+37-39. **Decision workbench later phases** *([plan](docs/plans/decision-workbench.md))*
+    - 37: model sales lost after price changes in both modes.
+    - 38: 2-4 scenario decision view with offering deltas, goal line, and break-even sales loss.
+    - 39: derive membership discount floor and value ladder warnings from plans.
+    - These remain separate after the client-side bundle ships.
 
 12x. **Typecheck unit tests (`**/*.test.ts`) and retire the accepted casts** *(new, TS-migration leftover)*
     - `**/*.test.ts` is excluded from `tsconfig.json`; including it gives ~1,158 errors (380 TS7005 implicit `any[]`, 204 TS18047, 186 TS2339) in the `src/test/*` jsdom mock tests. Fix per file (type the mocks), then drop the exclude; do it opportunistically when touching a test file.
@@ -143,7 +106,7 @@ Privacy-first freemium model planned post-launch. The app will remain fully free
 
 ## Status & Notes
 
-- **Current status**: Application is fully functional with comprehensive test coverage (744 unit tests across 65 files, 1 skipped, plus 474 Playwright e2e tests across 40 files on chromium + firefox; axe a11y scan included), dev server stable. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
+- **Current status**: Application is fully functional with comprehensive test coverage (780 unit tests across 65 files, 1 skipped, plus 500 Playwright e2e tests across 40 files on chromium + firefox; axe a11y scan included), dev server stable. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
 - **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ advanced visualizations (heat map, radar, funnel), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard, ✅ data visualization KPI indicators, ✅ help & onboarding enhancements, ✅ UI modernization (dark/light, Material, app-bar, all-modals theming), ✅ financial report export, ✅ LRU calc cache, ✅ client mix optimizer.
 - **Latest milestones** (July 2026):
   - Client Mix Optimizer: grid-search + hill-climbing mix suggestions, fully wired panel
@@ -173,6 +136,6 @@ This section tracks common feature requests, friction points, and competitive ga
 **How to use**: Update this list after customer conversations, support tickets, or user interviews. Use to validate roadmap priorities and surface unexpected user needs.
 
 ### Test Coverage Status (October 2026)
-- **744 unit tests** across 65 files (743 passing, 1 skipped), plus **474 Playwright e2e tests** across 40 files on chromium + firefox; 0 lint warnings, typecheck 0 errors
+- **780 unit tests** across 65 files (779 passing, 1 skipped), plus **500 Playwright e2e tests** across 40 files on chromium + firefox; 0 lint warnings, typecheck 0 errors
 - Key areas: calculation engine and fuzz tests, scenarios, feature gating, export/import, scroll lock, mobile layout, tooltips, security (XSS, CSV injection), performance, optimizer and advanced charts, axe a11y at every experience level in both themes
 - Detail lives in [CLAUDE.md](CLAUDE.md#testing-strategy)

@@ -1623,6 +1623,19 @@ button:focus {
   margin-top: 10px;
 }
 
+.advisor-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.advisor-item:last-child {
+  border-bottom: 0;
+}
+
+.advisor-item p {
+  margin: 0 0 6px;
+}
+
 .cost-breakdown td:not(:first-child),
 .cost-breakdown th:not(:first-child) {
   text-align: right;
@@ -2518,6 +2531,19 @@ input[type="checkbox"] {
 .section-box+.section-box {
   margin-top: calc(var(--gap) * 2);
 }
+
+.setup-group > summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+.setup-group > summary::-webkit-details-marker { display: none; }
+.setup-group > summary::after { content: "⌄"; margin-left: auto; color: var(--muted); transition: transform var(--dur-1) var(--ease); }
+.setup-group:not([open]) > summary::after { transform: rotate(-90deg); }
+.setup-group > summary h3 { margin: 0; font-size: 12px; letter-spacing: .3px; text-transform: uppercase; color: var(--muted); }
+.setup-group > .section-actions { display: flex; justify-content: flex-end; margin: 0 0 var(--gap); }
 
 .section-h {
   display: flex;
@@ -4791,6 +4817,33 @@ input[type="checkbox"] {
 .ab-kpi b { font-size: 14px; font-weight: 750; letter-spacing: -.01em; margin-top: 2px; font-family: var(--mono); color: var(--text); }
 .ab-kpi.k-net b { color: var(--accent-ink); }
 
+/* Keeps the three decision metrics in view while a long Setup card scrolls. */
+.setup-summary {
+  position: sticky;
+  top: calc(var(--appbar-h) + env(safe-area-inset-top) + 8px);
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 10px 12px 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: var(--elev-2);
+  backdrop-filter: blur(10px);
+}
+#controls { overflow: visible; }
+.setup-summary > div { min-width: 0; padding: 7px 10px; }
+.setup-summary > div + div { border-left: 1px solid var(--border); }
+.setup-summary span { display: block; overflow: hidden; color: var(--muted); font-size: 10px; letter-spacing: .04em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.setup-summary strong { display: block; overflow: hidden; margin-top: 2px; color: var(--text); font-family: var(--mono); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+
+.output-tabs { display: flex; gap: 4px; margin-top: 18px; border-bottom: 1px solid var(--border); }
+.output-tabs[hidden] { display: none; }
+.output-tabs button { border: 0; border-bottom: 2px solid transparent; padding: 8px 12px; background: transparent; color: var(--muted); font: inherit; font-weight: 650; cursor: pointer; }
+.output-tabs button[aria-selected="true"] { border-bottom-color: var(--accent); color: var(--accent-ink); }
+.output-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.output-tab-panel { padding-top: 12px; }
+
 /* Mode toggle (Forecast <-> Current) */
 .ab-badge { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; flex: none;
   border-radius: 999px; background: rgba(var(--accent-rgb), .12); border: 1px solid rgba(var(--accent-rgb), .30);
@@ -4866,6 +4919,9 @@ input[type="checkbox"] {
 }
 @media (max-width: 768px) {
   .appbar { gap: 6px; padding-left: 8px; padding-right: 8px; }
+  .setup-summary { margin: 8px 8px 0; top: calc(var(--appbar-h) + env(safe-area-inset-top) + 6px); }
+  .setup-summary > div { padding: 7px 8px; }
+  .setup-summary strong { font-size: 13px; }
   .ab-primary { display: none; }            /* Scenarios/Templates live in the bottom bar */
   .appbar .ab-word { display: none; }       /* drop the wordmark in the bar; drawer keeps it */
   .ab-undo, .ab-right { display: inline-flex; }  /* undo/redo + theme stay put */

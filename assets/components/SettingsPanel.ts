@@ -197,10 +197,13 @@ function updateUIForSettings() {
     { selector: '.debug-wrapper', setting: 'showDebugPanel' },
     { selector: '.perf-wrapper', setting: 'showPerformanceMetrics' },
     { selector: '.sensitivity-wrapper', setting: 'showSensitivityAnalysis' },
+    { selector: '.advisor-wrapper', setting: 'showInsights' },
     { selector: '.mix-optimizer-wrapper', setting: 'showMixOptimizer' },
     { selector: '.insights-wrapper', setting: 'showInsights' },
     { selector: '.reverse-calculator-wrapper', setting: 'showReverseCalculator' },
-    { selector: '.advanced-charts-wrapper', setting: 'showAdvancedCharts' }
+    { selector: '.advanced-charts-wrapper', setting: 'showAdvancedCharts' },
+    { selector: '.membership-wrapper', setting: 'showAdvancedCalculations' },
+    { selector: '.customer-analytics-wrapper', setting: 'showAdvancedCalculations' }
   ];
 
   elementsToToggle.forEach(({ selector, setting }) => {

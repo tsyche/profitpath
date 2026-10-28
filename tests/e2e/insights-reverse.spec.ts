@@ -13,15 +13,23 @@ test.describe('Insights and Reverse Calculator panels', () => {
     await waitForPageReady(page);
   };
   const gated = { experienceLevel: 'intermediate', showInsights: true, showReverseCalculator: true };
+  const openAdvisor = async (page: Page) => {
+    await page.locator('#analysisAnalyzeTab').click();
+    await page.locator('#advisorToggle').click();
+  };
 
   test('hidden at beginner level', async ({ page }) => {
     await open(page, { experienceLevel: 'beginner', showInsights: false, showReverseCalculator: false });
+    await expect(page.locator('#advisorToggle')).toBeHidden();
     await expect(page.locator('#insightsToggle')).toBeHidden();
     await expect(page.locator('#reverseToggle')).toBeHidden();
   });
 
   test('insights panel lists alerts and what-ifs, and a hostile offering name stays inert text', async ({ page }) => {
     await open(page, gated);
+    await expect(page.locator('#analysisAnalyzeTab')).toBeVisible();
+    await openAdvisor(page);
+    await expect(page.locator('#advisorSummary .advisor-item')).toHaveCount(3);
     await page.locator('#offeringsBody tr').first().locator('input[data-k="name"]').fill('<img src=x onerror=window.__pwned=1>');
     await page.locator('#insightsToggle').click();
 
@@ -42,6 +50,7 @@ test.describe('Insights and Reverse Calculator panels', () => {
 
   test('insights refresh when inputs change while open', async ({ page }) => {
     await open(page, gated);
+    await openAdvisor(page);
     await page.locator('#insightsToggle').click();
     const before = await page.locator('#insightsResults').innerText();
     await page.locator('#offeringsBody tr').first().locator('input[data-k="priceMonthly"]').fill('1');
@@ -50,6 +59,7 @@ test.describe('Insights and Reverse Calculator panels', () => {
 
   test('reverse calculator: rejects blank input, then solves all five levers', async ({ page }) => {
     await open(page, gated);
+    await openAdvisor(page);
     await page.locator('#reverseToggle').click();
     await page.locator('#reverseRun').click();
     await expect(page.locator('#reverseResults')).toContainText('above zero');
@@ -64,6 +74,7 @@ test.describe('Insights and Reverse Calculator panels', () => {
 
   test('reverse calculator: results refresh on their own when inputs change after a run', async ({ page }) => {
     await open(page, gated);
+    await openAdvisor(page);
     await page.locator('#reverseToggle').click();
     await page.locator('#reverseTarget').fill('80000');
     await page.locator('#reverseRun').click();
@@ -80,6 +91,7 @@ test.describe('Insights and Reverse Calculator panels', () => {
 
   test('reverse calculator: an absurd target is reported as not realistic, never as Recommended', async ({ page }) => {
     await open(page, gated);
+    await openAdvisor(page);
     await page.locator('#reverseToggle').click();
     await page.locator('#reverseTarget').fill('50000000');
     await page.locator('#reverseTarget').press('Enter');

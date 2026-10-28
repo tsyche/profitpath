@@ -2,7 +2,7 @@
 
 **TL;DR:** Turn scenario planning into a decision tool: build options as saved scenarios, compare them in one plain-language view under conservative assumptions, and share the whole set with one link. Most building blocks already exist; this plan connects them.
 
-**Status:** Draft
+**Status:** Building
 **Fold into:** [FEATURES.md](../../FEATURES.md) (scenario and comparison features) and the "Key Files Structure" notes in [AGENTS.md](../../AGENTS.md) and [CLAUDE.md](../../CLAUDE.md).
 
 ## Problem

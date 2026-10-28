@@ -118,6 +118,11 @@ test.describe('Fixed expenses table', () => {
   });
 
   test('cost breakdown appears with expenses, groups by category, and ties out to fixed costs', async ({ page }) => {
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.monthlyCosts = 0;
+      w.render();
+    });
     await expect(page.locator('#costBreakdown')).toBeHidden();
     await page.locator('#addExpenseBtn').click();
     await rows(page).first().locator('input[data-k="amount"]').fill('100');
@@ -129,7 +134,7 @@ test.describe('Fixed expenses table', () => {
   });
 
   test('expense cards use the available width in the responsive grid', async ({ page }) => {
-    await page.setViewportSize({ width: 1200, height: 900 });
+    await page.setViewportSize({ width: 1728, height: 900 });
     await page.locator('#addExpenseBtn').click();
     await page.locator('#addExpenseBtn').click();
     const columns = await page.locator('#expensesBody').evaluate((el) =>

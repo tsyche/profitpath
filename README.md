@@ -52,6 +52,7 @@ just dev
 just setup           # Install dependencies
 just dev             # Start dev server with hot reload (localhost:3120)
 just test            # Run all tests (unit + e2e)
+just test-e2e-container # Run Chromium + Firefox in a disposable Docker container
 just lint            # Check code quality
 just build           # Production build
 just preview         # Preview production build
@@ -59,6 +60,12 @@ just fresh           # Complete reset: clean dependencies, install, test, lint, 
 ```
 
 For full list of available commands, run `just --list`.
+
+Run `just setup` after cloning or changing dependencies. Other checks use the
+installed dependencies without reinstalling them. If the host sandbox blocks
+browser startup, `just test-e2e-container` uses a source snapshot and the
+Playwright image matching the lockfile; it requires a running Docker engine and
+writes logs and failure artifacts to `e2e-results/container/`.
 
 ### Testing scenarios
 

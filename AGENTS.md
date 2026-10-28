@@ -32,7 +32,7 @@ assets/
 ├── app.ts               # Entry point: boot order, window globals, URL/localStorage load, wire()
 ├── styles.css           # Styling and responsive design
 ├── accessibility.js     # Accessibility enhancements
-├── components/          # UI panels, each with a bind/init entry called from app.ts (AppRender.ts = render()/updateOutputs, OfferingsTable, ExpensesPanel, ResourcesPanel, RangesMarketPanel, SettingsPanel, AppMenus, AnalysisPanels, ...)
+├── components/          # UI panels, each with a bind/init entry called from app.ts (AppRender.ts = render()/updateOutputs, OfferingsTable, ExpensesPanel, ResourcesPanel, RangesMarketPanel, SettingsPanel, AppMenus, AnalysisPanels, AnalysisTabs, SetupGroups, ...)
 ├── state/              # appState.ts (state, persistState, undo/redo history) and hooks.ts (render/updateOutputs callbacks for handlers)
 ├── hooks/              # Custom hooks (useTableFocus.js)
 ├── services/           # Business logic modules
@@ -80,6 +80,11 @@ manifest.json        # PWA configuration
 ```
 
 ### Core Modules
+
+#### UI layout
+- `AnalysisTabs.ts` keeps Outputs Overview visible and places existing gated advanced panels in persisted Analyze and Customers tabs.
+- `SetupGroups.ts` persists native Setup disclosure state; invalid native fields reopen their owning group.
+- The sticky Setup summary shows Revenue, Net Income, and Utilization below the fixed app bar.
 
 #### 1. Calculation Engine (`src/calculations/index.ts`)
 - **Purpose**: Handles all business logic calculations with caching and debugging support

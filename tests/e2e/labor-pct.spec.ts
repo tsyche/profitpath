@@ -18,6 +18,9 @@ test.describe('Labor % of price column', () => {
     await input(page).fill('40');
     await input(page).blur();
     await expect.poll(readVar).toBeGreaterThan(before);
+    await expect.poll(() => page.evaluate(() =>
+      JSON.parse(localStorage.getItem('profitpath-state') || '{}').offerings?.[0]?.laborPctOfPrice
+    )).toBe(40);
 
     await page.reload();
     await waitForPageReady(page);
@@ -27,6 +30,9 @@ test.describe('Labor % of price column', () => {
   test('survives a share link', async ({ page }) => {
     await input(page).fill('25');
     await input(page).blur();
+    await expect.poll(() => page.evaluate(() =>
+      JSON.parse(localStorage.getItem('profitpath-state') || '{}').offerings?.[0]?.laborPctOfPrice
+    )).toBe(25);
     const url = await page.evaluate(() => (window as any).encodeScenarioToURL?.((window as any).state)
       ?? null);
     test.skip(!url, 'encodeScenarioToURL not exposed on window');
