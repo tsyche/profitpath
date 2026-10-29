@@ -136,7 +136,7 @@ export function enterReadOnlyMode(state: { notes?: string }): void {
   const redoBtn = document.getElementById('redoBtn') as HTMLButtonElement | null;
   if (undoBtn) undoBtn.disabled = true;
   if (redoBtn) redoBtn.disabled = true;
-  if (usesWorkspaces()) applyReadOnlyControls();
+  applyReadOnlyControls();
 }
 
 function showWelcomeDialog() {

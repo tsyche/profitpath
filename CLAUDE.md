@@ -85,9 +85,9 @@ manifest.json        # PWA configuration
 - `AnalysisTabs.ts` keeps Outputs Overview visible and places existing gated advanced panels in persisted Analyze and Customers tabs.
 - `SetupGroups.ts` persists native Setup disclosure state; invalid native fields reopen their owning group.
 - The sticky Setup summary shows Revenue, Net Income, and Utilization below the fixed app bar.
-- The approved workspace preview is `/?layout=workspaces`; the previous layout remains the default pending item 25 acceptance. `WorkspaceShell.ts` owns Model/Results/Compare navigation and scenario context; `OfferingEditor.ts`, `WorkspaceEntry.ts`, `WorkspaceResults.ts`, and `WorkspaceShare.ts` compose the existing controls and tools. Scoped styles live in `assets/workspaces.css`.
+- Settings → Layout switches between Classic and Workspaces and remembers `profitpath-layout` on this device. Explicit `?layout=legacy` / `?layout=workspaces` links override that preference without changing it. Classic remains the new-device default pending item 25 acceptance; keep both layouts during the transition. `WorkspaceShell.ts` owns Model/Results/Compare navigation and scenario context; `OfferingEditor.ts`, `WorkspaceEntry.ts`, `WorkspaceResults.ts`, and `WorkspaceShare.ts` compose the existing controls and tools. Scoped styles live in `assets/workspaces.css`.
 - `src/ui/workspaceNavigation.ts` parses allowlisted views. Navigation preferences and `assets/state/pendingInputs.ts` invalid text stay outside financial state/undo. Incomplete numeric edits retain last-valid results and block save/share. `persistState()` returns success and publishes draft status; shared payloads stay in the URL if storage fails.
-- Workspace scenario URLs carry the active case independently of financial state. Read-only snapshots keep native control locks across render/reload; Try a change leaves read-only mode. Comparison links/embeds carry both sanitized snapshots, retained in memory for recipient exports without adding saved scenarios.
+- Workspace scenario URLs carry the active case independently of financial state. Layout switching preserves the model, case, and read-only locks; incomplete edits or draft-save failures block switching. Read-only snapshots keep native control locks across render/reload in both layouts; Try a change leaves read-only mode. Comparison links/embeds carry both sanitized snapshots and their case, retained in memory for recipient exports without adding saved scenarios or depending on the recipient draft's ranges. Comparison CSV/PDF label the case and annual period and include all eight financial summary rows.
 - Preview experience levels control initial detail; core inputs, specialist tools, Compare, and exports remain reachable at every level. Advanced diagnostics remain in Settings. See [experience levels](docs/experience-levels.md).
 
 #### 1. Calculation Engine (`src/calculations/index.ts`)
@@ -220,12 +220,13 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (812 unit tests across 72 files — 811 passing, 1 existing skip — plus 570 Playwright e2e cases across 47 files, Chromium + Firefox)
+#### Test Coverage (819 unit tests across 72 files — 818 passing, 1 existing skip — plus 580 Playwright e2e cases across 47 files, Chromium + Firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)
 - **Business Logic Tests**: Comprehensive calculation validation
-- **E2E Tests**: Playwright suites in `tests/e2e/` (Chromium + Firefox, dedicated port 3121), including 56 workspace journey/axe cases. Use `just test-e2e-container` when native browser startup is sandbox-blocked; see [testing guide](tests/e2e/README.md).
+- **E2E Tests**: Playwright suites in `tests/e2e/` (Chromium + Firefox, dedicated port 3121), including 66 workspace journey/axe cases. Use `just test-e2e-container` when native browser startup is sandbox-blocked; see [testing guide](tests/e2e/README.md).
+- **Production offline checks**: Four Chromium/Firefox cases in `tests/offline/` build the production bundle and verify reloads, editing, and switching both layouts with a warmed service-worker cache. Run `just test-e2e-container --config tests/offline/playwright.config.ts` (port 3123).
 - **Design review**: Separate baseline/prototype tests in `tests/design/` (30 cases across Chromium + Firefox, port 3122). Run `just test-e2e-container --config tests/design/playwright.config.ts`; the development-only prototype is `docs/plans/prototypes/product-flow.html`.
 
 #### Test Files

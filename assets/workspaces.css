@@ -8,7 +8,7 @@
 .workspace-layout #workspaceContext, .workspace-layout #workspaceSaveStatus { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
 .workspace-layout .workspace-eyebrow { margin: 0 0 8px; text-transform: uppercase; color: var(--muted); letter-spacing: .1em; font-size: 11px; font-weight: 650; }
 .workspace-layout .workspace-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.workspace-layout .workspace-actions .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.workspace-layout .workspace-actions .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font-family: var(--sans); }
 .workspace-layout .workspace-context-more { position: relative; }
 .workspace-layout .workspace-context-more > summary { cursor: pointer; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; list-style: none; }
 .workspace-layout .workspace-context-more > div { position: absolute; right: 0; top: 100%; z-index: 90; min-width: 180px; display: grid; gap: 6px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); box-shadow: var(--elev-3); }

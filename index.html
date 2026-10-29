@@ -309,6 +309,14 @@
           <div class="settings-section">
             <h4>Preferences</h4>
             <div class="settings-options">
+              <label class="settings-select-label" for="layoutPreference">
+                <span id="layoutPreferenceLabel">Layout</span>
+                <select id="layoutPreference" aria-labelledby="layoutPreferenceLabel" aria-describedby="layoutPreferenceHint">
+                  <option value="legacy">Classic · single page</option>
+                  <option value="workspaces">Workspaces · Model, Results, Compare</option>
+                </select>
+              </label>
+              <p class="hint" id="layoutPreferenceHint">Both use the same model. Switching starts a new undo history. Your choice is remembered on this device.</p>
               <label class="settings-check"><input type="checkbox" id="showTooltips"> Show tooltips</label>
             </div>
           </div>

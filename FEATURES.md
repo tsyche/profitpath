@@ -53,7 +53,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 
 ### User Experience
 
-The approved [workspace preview](docs/experience-levels.md#workspace-preview) is available through `?layout=workspaces`. Model groups business setup and focused offering editing; Results leads with annual figures and question-led tools; Compare uses saved baseline/alternative scenarios. The previous layout remains the default pending the human walkthrough and release gates in [ROADMAP item 25](ROADMAP.md).
+Choose **Settings → Layout** to switch between Classic and the approved [workspace preview](docs/experience-levels.md#workspace-preview). The choice is remembered on this device; both layouts use the same model. Model groups business setup and focused offering editing; Results leads with annual figures and question-led tools; Compare uses saved baseline/alternative scenarios. Classic remains the default for new devices pending the human walkthrough and release gates in [ROADMAP item 25](ROADMAP.md).
 
 In the preview, experience levels control initial detail while all modeling inputs, specialist tools, Compare, and exports remain reachable. Incomplete numeric edits keep last-valid results and block saving/sharing. Shared snapshot reloads retain the selected case, and read-only recipients can use **Try a change** to create an editable copy.
 

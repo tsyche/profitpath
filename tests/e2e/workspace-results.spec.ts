@@ -2,6 +2,9 @@ import { test, expect, type Page } from '@playwright/test';
 import { fitnessFixture, hybridFixture } from '../../assets/prototypes/fixtures';
 import { readFile } from 'node:fs/promises';
 import { readXLSX } from '../../assets/utils/xlsx';
+import { calc } from '../../src/calculations/index';
+import { applyRangeCase } from '../../src/calculations/rangeCase';
+import { fmtMoney0 } from '../../src/calculations/currency';
 
 async function open(page: Page) {
   await page.addInitScript(model => {
@@ -103,7 +106,12 @@ test('shared read-only fields stay locked after rendering and reload; Try a chan
 test('the 375px Results screen shows all three primary figures without horizontal scroll', async ({ page }, info) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await open(page);
+  await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: info.outputPath('workspace-results-mobile.png') });
+  const actionRows = await page.locator('.workspace-context .workspace-actions').evaluate(element =>
+    [...element.children].map(action => action.getBoundingClientRect().top)
+  );
+  expect(new Set(actionRows).size, 'Primary actions must fit above the Results without an extra row').toBe(1);
   const bounds = await page.locator('#workspacePrimaryMetrics').boundingBox();
   expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(754);
   expect(await page.evaluate(() => document.body.scrollWidth)).toBe(375);
@@ -157,6 +165,54 @@ test('a shared comparison keeps its snapshots available for export and closes cl
   await dialog.getByRole('button', { name: 'Close dialog', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem('profitpath-scenarios'))).toBeNull();
+});
+
+test('comparison CSV and PDF identify the selected case and keep the displayed financial metrics', async ({ page, context }) => {
+  await context.addInitScript(() => { window.print = () => {}; });
+  const model = fitnessFixture();
+  model.offerings[0].sessionsPerYearLow = 24;
+  model.offerings[0].sessionsPerYearHigh = 60;
+  const alternative = { ...model, monthlyCosts: 500 };
+  const payload = Buffer.from(JSON.stringify({
+    s1: { name: 'Baseline', state: model },
+    s2: { name: 'Higher overhead', state: alternative }
+  })).toString('base64');
+  await page.addInitScript(() => localStorage.setItem('profitpath-onboarding-completed', 'true'));
+  for (const selected of ['base', 'conservative', 'optimistic'] as const) {
+    await page.goto('/?layout=workspaces&case=' + selected + '&compareStates=' + encodeURIComponent(payload));
+    const dialog = page.getByRole('dialog', { name: 'Scenario Comparison: Baseline vs Higher overhead', exact: true });
+    await expect(dialog).toBeVisible();
+    const label = selected[0].toUpperCase() + selected.slice(1) + ' case';
+    const rows = await dialog.locator('.scenario-diff-row').evaluateAll(elements =>
+      elements.slice(0, 8).map(row => [...row.children].map(cell => cell.textContent!.trim()))
+    );
+    expect(rows.find(row => row[0] === 'Net Income')![1]).toBe(
+      fmtMoney0(calc(applyRangeCase(model, selected), { ignoreCase: true }).income)
+    );
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      dialog.getByRole('button', { name: 'Export CSV', exact: false }).click()
+    ]);
+    const csv = await readFile((await download.path())!, 'utf8');
+    expect(csv).toContain('Range case: ' + label);
+    expect(csv).toContain('Annual results');
+    const [popup] = await Promise.all([
+      page.waitForEvent('popup'),
+      dialog.getByRole('button', { name: 'Export PDF', exact: false }).click()
+    ]);
+    await expect(popup.locator('body')).toContainText(label);
+    await expect(popup.locator('body')).toContainText('Annual results');
+    for (const row of rows) {
+      for (const cell of row) {
+        expect(csv).toContain(cell.replace(/"/g, '""'));
+        await expect(popup.locator('body')).toContainText(cell);
+      }
+    }
+    await popup.close();
+    await dialog.getByRole('button', { name: 'Get Embed Code', exact: false }).click();
+    const embed = await page.getByRole('dialog', { name: 'Embed Comparison', exact: false }).locator('textarea').inputValue();
+    expect(embed).toContain('case=' + selected);
+  }
 });
 
 test('a snapshot remains recoverable after a draft storage quota failure', async ({ page, browser }) => {

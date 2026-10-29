@@ -3,7 +3,34 @@ import { showToast } from '../services/modalService';
 import { setTooltipsEnabled } from '../utils/tooltipManager';
 import { updateTooltipsUIOnly } from './Onboarding';
 import { $ } from '../utils/dom';
-import { usesWorkspaces } from '../../src/ui/workspaceNavigation';
+import { LAYOUT_PREFERENCE_KEY, usesWorkspaces } from '../../src/ui/workspaceNavigation';
+import { ensureValidInputs, hasPendingInputs } from '../state/pendingInputs';
+import { persistState } from '../state/appState';
+import { getRangeCase } from '../../src/calculations/rangeCase';
+
+function changeLayout(select: HTMLSelectElement) {
+  const current = usesWorkspaces() ? 'workspaces' : 'legacy';
+  const next = select.value;
+  if (next !== 'legacy' && next !== 'workspaces' || next === current) return;
+  select.value = current;
+  if (hasPendingInputs()) {
+    window.ppCloseModal('settingsModal');
+    ensureValidInputs();
+    return;
+  }
+  if (!persistState()) {
+    showToast('The draft could not be saved. Free device storage before switching layouts.', 'error');
+    return;
+  }
+  try { localStorage.setItem(LAYOUT_PREFERENCE_KEY, next); } catch {
+    showToast('The layout choice could not be saved. Free device storage and try again.', 'error');
+    return;
+  }
+  const url = new URL(window.location.href);
+  url.searchParams.set('layout', next);
+  url.searchParams.set('case', getRangeCase());
+  window.location.assign(url.href);
+}
 
 /** Settings modal: experience level, feature toggles and the feature-gated sections. */
 
@@ -12,6 +39,8 @@ function refreshDesktopSettings() {
   if (typeof document === 'undefined') return; // guard when running in non-DOM environments
   try {
     const settings = loadSettings();
+    const layout = document.querySelector<HTMLSelectElement>('#layoutPreference');
+    if (layout) layout.value = usesWorkspaces() ? 'workspaces' : 'legacy';
 
     // Update experience level radios
     const experienceRadios = document.querySelectorAll<HTMLInputElement>('input[name="experienceLevel"]');
@@ -87,6 +116,8 @@ function initializeSettings() {
   // Only attach event listeners once to prevent duplicates
   if (!settingsInitialized) {
     settingsInitialized = true;
+    const layout = document.querySelector<HTMLSelectElement>('#layoutPreference');
+    layout?.addEventListener('change', () => changeLayout(layout));
 
     // Set experience level radio buttons
     const experienceRadios = document.querySelectorAll<HTMLInputElement>('input[name="experienceLevel"]');

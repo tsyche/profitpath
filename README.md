@@ -46,7 +46,7 @@ just dev
 
 2. Open http://localhost:3120 in your browser.
 
-The approved product-flow redesign is available at [the workspace preview](http://localhost:3120/?layout=workspaces). It separates Model, Results, and Compare while preserving the existing calculations. The previous layout remains the default until release validation and a human walkthrough are complete. See [experience levels](docs/experience-levels.md#workspace-preview) for the preview's navigation and detail behavior.
+Choose **Settings → Layout** to switch between Classic (the original single page) and Workspaces (Model, Results, Compare). Both use the same model; the choice is remembered on this device. Classic remains the default for new devices while release validation continues. The [workspace preview](http://localhost:3120/?layout=workspaces) also opens directly. See [experience levels](docs/experience-levels.md#workspace-preview) for navigation and detail behavior.
 
 ## Development
 

@@ -8,7 +8,9 @@ These levels are implemented as feature gates in `src/settings/index.ts` (see `F
 
 ## Workspace preview
 
-Open `/?layout=workspaces` for the approved Model / Results / Compare flow. The previous layout remains the default while [ROADMAP item 25](../ROADMAP.md) completes release validation.
+Choose **Settings → Layout → Workspaces** for the approved Model / Results / Compare flow; choose **Classic** to return to the original single page. Both layouts remain available during the transition. The choice is remembered on this device, outside financial state and undo. Classic remains the default for new devices while [ROADMAP item 25](../ROADMAP.md) completes release validation.
+
+Explicit `?layout=workspaces` and `?layout=legacy` links override the remembered choice without replacing it. Switching reloads the view and starts a new undo history while preserving the model, selected case, named saves, and read-only status. Incomplete edits and draft-save failures block switching so a reload cannot discard unsaved input.
 
 - **Model:** Business, Offerings, Costs, People & capacity, and Assumptions reuse the existing financial controls. Offerings have a focused editor and an optional dense table.
 - **Results:** Annual net income before tax, revenue, and utilization come first. Expand a question for cost breakdowns, service contributions, growth limits, income tools, customer plans, or assumption exploration.

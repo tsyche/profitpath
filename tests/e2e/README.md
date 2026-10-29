@@ -18,13 +18,13 @@ The container runner forwards Playwright arguments. Avoid shell metacharacters i
 
 ## Coverage and layout selection
 
-The default layout remains covered by the existing calculation, scenario, export, mobile, accessibility, security, offline, and tool journeys. Tests use `.spec.ts` files and shared TypeScript helpers.
+The default layout remains covered by the existing calculation, scenario, export, mobile, accessibility, security, and tool journeys. Tests use `.spec.ts` files and shared TypeScript helpers.
 
 The opt-in `?layout=workspaces` preview has four suites:
 
-- `workspace-shell.spec.ts`: navigation, URL/history/reload, keyboard focus, undo separation, and saved-scenario entry.
+- `workspace-shell.spec.ts`: navigation, URL/history/reload, keyboard focus, undo separation, saved-scenario entry, and the remembered Classic/Workspaces choice, including case/read-only preservation and blocked switching for incomplete edits or draft-save failures.
 - `workspace-model.spec.ts`: optional entry, last-valid numeric input, save/undo, and 12-offering Forecast/Current editing on desktop and mobile.
-- `workspace-results.spec.ts`: tool destinations, first-screen mobile figures, case-preserving CSV/share, read-only copying, quota recovery, and portable comparison embeds/recipient exports.
+- `workspace-results.spec.ts`: tool destinations, first-screen mobile figures, case-preserving CSV/share, read-only copying, quota recovery, portable comparison embeds/recipient exports, and comparison CSV/PDF labels and financial values across all cases.
 - `workspace-accessibility.spec.ts`: keyboard workspace focus and axe scans across all experience levels, light/dark themes, desktop/mobile, and the expanded offering editor.
 
 The separate development prototype and baseline captures use port 3122:
@@ -35,11 +35,20 @@ just test-e2e-container --config tests/design/playwright.config.ts
 
 These design tests do not replace real-application regression tests or the required human device/screen-reader walkthrough before cutover.
 
+Production offline checks use port 3123 and a separate config:
+
+```bash
+just test-e2e-container --config tests/offline/playwright.config.ts
+```
+
+These build the actual production bundle, warm its service-worker cache, disconnect the browser, and verify reloads, model editing, and switching between both layouts. Loopback `127.0.0.2` exercises production worker registration; localhost development deliberately unregisters the worker.
+
 ## Results and debugging
 
 - Container logs, exit status, screenshots, and retained failure videos are under `e2e-results/container/`.
 - Native runs write artifacts under `test-results/`.
 - The list reporter runs locally; CI also writes `e2e-results/report.json`.
+- Failed CI runs upload `test-results/` screenshots, videos, error context, and any retry trace as the `playwright-report` artifact.
 - Container runs use four workers and zero retries. Native CI allows one retry and reports a retried pass as flaky.
 - Use `npm run test:e2e:ui` for interactive native debugging when browser startup is permitted.
 

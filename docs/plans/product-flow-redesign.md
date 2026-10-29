@@ -1,10 +1,10 @@
 # ProfitPath product-flow redesign
 
-**TL;DR:** Replace the long Inputs/Outputs page with Model, Results, and Compare workspaces inside one scenario context. Keep live feedback while editing, make each offering manageable on its own, and reveal specialist tools when they help answer a question.
+**TL;DR:** Introduce Model, Results, and Compare workspaces inside one scenario context, with a remembered Settings choice between the original Classic layout and Workspaces during the transition. Keep live feedback while editing, make each offering manageable on its own, and reveal specialist tools when they help answer a question.
 
-**Status:** Building — Tim approved continuation with feature parity on 2026-10-28. The Phase 2 shell and substantial Phase 3–4 implementation are available behind `?layout=workspaces`; remaining validation and cutover gates are open.
+**Status:** Building — Tim approved continuation with feature parity on 2026-10-28 and requested a user-visible layout choice on 2026-10-29. The Phase 2 shell and substantial Phase 3–4 implementation are available through Settings → Layout or `?layout=workspaces`; remaining validation and cutover gates are open.
 
-**Last updated:** 2026-10-28
+**Last updated:** 2026-10-29
 
 **Scope:** [ROADMAP recommended priority #1 / item 25](../../ROADMAP.md): navigation, onboarding, model editing, results hierarchy, contextual disclosure, accessibility, and mobile flow.
 
@@ -307,7 +307,7 @@ Effort ranges are rough engineering estimates, not delivery commitments; they ex
 
 ### Implementation checkpoint — 2026-10-28
 
-The application preview is `http://localhost:3120/?layout=workspaces` through `just dev`; the default remains the previous layout. The standalone prototype is a separate review artifact. Default cutover remains gated by the acceptance items below.
+The application preview is `http://localhost:3120/?layout=workspaces` through `just dev`, also available through Settings → Layout. Classic remains the default for new devices; returning devices use their remembered choice unless a link explicitly selects a layout. The standalone prototype is a separate review artifact. Default cutover remains gated by the acceptance items below.
 
 - **Implemented:** workspace/history/focus controller and scenario context; consolidated Costs and People & capacity using existing controls; offering search/filter/focused editor sharing existing mutation handlers; optional original-table editing; transient invalid text with last-valid financial state; undo/redo; inline template previews and blank entry; question-led Results using existing tools; existing two-option comparison; share/export review; case metadata in workspace links and CSV reimport; confirmation before replacing a local draft with a shared snapshot.
 - **Owners:** `WorkspaceShell.ts`, `OfferingEditor.ts`, `WorkspaceEntry.ts`, `WorkspaceResults.ts`, and `WorkspaceShare.ts` under `assets/components/`; `assets/workspaces.css`; `assets/state/pendingInputs.ts`; `assets/utils/readOnly.ts`; `src/ui/workspaceNavigation.ts`. Calculation formulas and financial scenario schemas remain unchanged.
@@ -317,13 +317,24 @@ The application preview is `http://localhost:3120/?layout=workspaces` through `j
 - **Persistence/share:** shared state survives reload before URL payload cleanup; quota failures retain the recoverable URL and show draft-save failure. Read-only reload/copy and explicit comparison labels pass in both browsers. Comparison links/embeds use the same portable payload, recipient snapshots stay in page memory for export, and closing a shared comparison leaves no scenario-library modal or saved-scenario pollution.
 - **Official docs:** architecture notes, experience-level behavior, feature overview, README preview entry, and the E2E testing guide describe the opt-in implementation. The previous layout remains the default.
 
+**CI follow-up, 2026-10-29:** [Tests run 40823830884](https://github.com/tsyche/profitpath/actions/runs/40823830884) for `5b43379` completed with 565 browser cases passing, four existing skips, and one Firefox failure in `workspace-results.spec.ts:103`. The 375×812 primary Results block ended at **765.1167px**, above the **754px** limit on both the first attempt and its single CI retry. The earlier local runs did not close this CI counterexample; the checkpoint below records the diagnosis and local fix without relaxing the threshold. APK build, GitLab mirroring, and Pages deployment succeeded.
+
+### Regression and transition checkpoint — 2026-10-29
+
+- **Firefox cause and fix:** CI retained only its JSON report: the screenshot upload targeted a nonexistent `playwright-report/`. Adding CI's DejaVu Sans to the disposable Playwright container reproduced **765.1167px** exactly. Firefox's system-font buttons push More onto a second row, adding 44px plus a 6px gap. Workspace actions now use the bundled font. The strengthened mobile test fails before the fix and passes afterward at **715.1167px**, retaining the **754px** threshold. Failure artifacts now upload from `test-results/`; remote CI verification awaits the next approved push.
+- **User-visible transition choice:** Settings → Layout offers Classic and Workspaces and remembers the choice on this device. Explicit layout links override the preference without replacing it. Switching reloads the shell and starts fresh undo history; it preserves the model, selected case, named scenarios, and read-only locks, and blocks on incomplete edits or failed draft persistence. Both layouts remain available during the transition.
+- **Comparison export content:** CSV/PDF now label the case and annual period; PDF includes all eight financial summary rows. Shared comparisons retain a case independently of the recipient's unrelated draft, which can reset the global case when it has no ranges. Regression coverage checks displayed values, CSV/PDF content, and re-shared embed case parameters for Base, Conservative, and Optimistic.
+- **Production offline proof:** Four Chromium/Firefox cases build the production bundle, warm the service-worker cache, disconnect, and verify reloads, model edits, and switching both layouts. Firefox can reuse its browser font cache without a worker fetch; the check verifies that the bundled font actually loads offline.
+- **Final release verification:** The complete **580-case** release run passes **576**, skips four existing Firefox cases, and has no failures or retries. All **66 workspace cases** pass, including the new layout-choice and comparison-export regressions. Lint, strict typecheck, production build, and **818 unit tests across 72 files** pass; one existing unit skip remains. This is local working-tree evidence, not a rerun of remote CI.
+
 Remaining work stays owned by ROADMAP item 25:
 
 | Gate | State / exact action |
 |---|---|
+| CI mobile Results | Local fail-before/pass-after proof is complete. Confirm remote CI after the next approved push; retain the 754px threshold. |
 | Human walkthrough | Required before default cutover: desktop/375px model-edit-result-compare-share tasks, screen-reader announcements/navigation, physical-device software-keyboard behavior, 200% zoom/reflow, and actual print/mail-app handoff. Browser viewport tests and axe scans do not prove these. |
 | Measured acceptance | Record participant task times/comprehension and re-score against the baseline. Styling remains refinable; no further design approval is required. |
-| Cutover/finalization | Complete format-content parity review (including selected-case labels in comparison CSV/PDF); after human acceptance, verify offline/service-worker behavior for the final shell, switch the default, retire obsolete markup/switch, fold remaining durable details into official docs, and archive this plan. Do not claim full parity or archive it before those gates close. |
+| Cutover/finalization | Comparison CSV/PDF case/content checks and warmed-cache offline tests pass. After human acceptance, repeat release gates if the shell changes, decide the new-device default, fold durable details into official docs, and archive this plan. Retain the user-visible layout choice and original layout during the transition; their later retirement is a separate decision. Do not claim full parity or archive the plan before the acceptance gates close. |
 
 Use `just test-e2e-container` for browser verification in this managed environment. Native Chromium hits macOS sandbox Mach-port restrictions; browser caches under `~/Library` are protected.
 
@@ -345,7 +356,7 @@ For code phases run `just lint`, `just typecheck`, `just test-unit`, and `just b
 | Existing DOM-centric code breaks when moved | Stable IDs where practical, one binding per control, real-component integration and browser tests |
 | Redesign expands into comparison or modeling work | Keep items 38/39 separately owned; schema/math changes require a demonstrated requirement |
 
-Roll out cohesive slices locally behind a temporary layout switch sharing the same state and calculations. Keep the current layout available through acceptance testing, then remove the switch and obsolete markup once the new flow is proven. Do not maintain two permanent products.
+Both layouts share the same state, calculations, and domain controls. Tim requested a user-visible, remembered choice on 2026-10-29: retain Classic and Workspaces during the transition, including after any new-device default change. Retirement of Classic and its layout choice requires a later decision; do not remove them as part of the current cutover.
 
 Rollback restores the previous shell/assets without transforming scenario data. New navigation preferences can be ignored by the old UI. Verify the rollback with saved drafts and share links, and include the service worker/offline asset cache in release checks. Do not reset user storage to resolve a UI migration issue.
 
@@ -369,6 +380,7 @@ Rollback restores the previous shell/assets without transforming scenario data. 
 | Implemented for review | Focused offering editor, compact live summary, three primary Results figures; real calculator, isolated synthetic draft |
 | Approved and implemented in preview | Experience levels become initial-detail preferences; the matrix above keeps core modeled inputs and Compare discoverable at every level |
 | Approved by Tim, 2026-10-28 | Prototype direction and continuation after review; preserve feature parity and refine styling during implementation |
+| Requested by Tim, 2026-10-29 | Keep Classic and Workspaces available through a remembered Settings layout choice during the transition; defer retirement |
 | Recorded in Phase 0 | Full current baseline and active-case share reset; six golden calculations retained for compatibility |
 | Pending release validation | Participant availability/task targets, human screen-reader/device walkthrough, full export/share parity, and Phases 2–5 acceptance gates |
 

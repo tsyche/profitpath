@@ -354,7 +354,7 @@ export function render() {
   // Update template source badge
   updateTemplateBadge();
   restorePendingInputs();
-  if (usesWorkspaces()) applyReadOnlyControls();
+  applyReadOnlyControls();
   window.dispatchEvent(new CustomEvent('profitpath:rendered'));
 }
 

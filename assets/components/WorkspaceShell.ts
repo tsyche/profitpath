@@ -252,7 +252,7 @@ export function initWorkspaceShell({ shared = false } = {}) {
   const reset = $('#resetBtn');
   if (reset) {
     const resetGroup = document.createElement('details');
-    resetGroup.innerHTML = '<summary>Data and layout</summary><p class="smallprint">Reset the working model or return to the previous layout. Named saved scenarios remain on this device.</p><a class="btn" href="?layout=legacy">Use previous layout</a>';
+    resetGroup.innerHTML = '<summary>Reset working model</summary><p class="smallprint">Named saved scenarios remain on this device.</p>';
     resetGroup.appendChild(reset);
     $('#settingsMenu')!.appendChild(resetGroup);
   }

@@ -20,7 +20,20 @@ export function workspaceViewKey(view: WorkspaceView): string {
   return view.workspace === 'model' ? `model/${view.section}${view.offeringId ? '/' + view.offeringId : ''}` : view.workspace;
 }
 
-/** Temporary opt-in while the old shell remains available for cutover acceptance. */
+export const LAYOUT_PREFERENCE_KEY = 'profitpath-layout';
+export type Layout = 'legacy' | 'workspaces';
+
+/** Explicit links override the device preference without changing it. */
+export function resolveLayout(search: string, preference: string | null): Layout {
+  const requested = new URLSearchParams(search).get('layout');
+  if (requested === 'legacy' || requested === 'workspaces') return requested;
+  return preference === 'workspaces' ? 'workspaces' : 'legacy';
+}
+
+/** Both layouts remain available during the transition; new devices start in Classic. */
 export function usesWorkspaces(): boolean {
-  return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('layout') === 'workspaces';
+  if (typeof window === 'undefined') return false;
+  let preference: string | null = null;
+  try { preference = localStorage.getItem(LAYOUT_PREFERENCE_KEY); } catch { /* Explicit links still work without storage. */ }
+  return resolveLayout(window.location.search, preference) === 'workspaces';
 }

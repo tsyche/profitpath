@@ -103,7 +103,7 @@ const urlAtStartup = new URL(window.location.href);
 const deferSharedSnapshot = Boolean(usesWorkspaces() && urlAtStartup.searchParams.has('scenario') &&
   persistedDraft && sanitizeScenarioState(persistedDraft) && sanitizeScenarioState(decodeScenarioFromURL() as Record<string, unknown>));
 const sharedCase = urlAtStartup.searchParams.get('case');
-if (usesWorkspaces()) setRangeCase(deferSharedSnapshot ? 'base' : sharedCase);
+setRangeCase(deferSharedSnapshot ? 'base' : sharedCase);
 // Load scenario from URL first (if present), then localStorage.
 const loadedFromURL = !deferSharedSnapshot && loadScenarioFromURL();
 
@@ -134,7 +134,7 @@ if (compareStatesParam) {
         { id: 'temp-s1', name: safeName(pair.s1.name), timestamp: new Date().toLocaleString(), state: first },
         { id: 'temp-s2', name: safeName(pair.s2.name), timestamp: new Date().toLocaleString(), state: second }
       ];
-      setSharedComparisonScenarios(tempScenarios);
+      setSharedComparisonScenarios(tempScenarios, sharedCase);
       sharedComparisonReady = true;
     }
   } catch (e) {
@@ -145,7 +145,7 @@ if (compareStatesParam) {
 wire();
 
 // Read-only mode: lock all inputs when ?readonly=1 is present in the URL
-if (!deferSharedSnapshot && (loadedFromURL || usesWorkspaces()) && isReadOnlyURL()) enterReadOnlyMode(state);
+if (!deferSharedSnapshot && isReadOnlyURL()) enterReadOnlyMode(state);
 
 // Restore any scheduled report generation
 restoreScheduling();

@@ -1,7 +1,7 @@
 import type { AppOffering, AppState, Scenario } from '../../src/types';
 import * as misc from '../services/miscService';
 import { escapeHtml, getAllScenarios, getShareBase, snapshotContextURL } from '../services/miscService';
-import { setRangeCase } from '../../src/calculations/rangeCase';
+import { applyRangeCase, getRangeCase, RANGE_CASE_LABELS, RANGE_CASES, setRangeCase, type RangeCase } from '../../src/calculations/rangeCase';
 import { usesWorkspaces } from '../../src/ui/workspaceNavigation';
 import { clearPendingInputs } from '../state/pendingInputs';
 import { calc } from '../../src/calculations/index';
@@ -22,14 +22,20 @@ interface ComparisonDeps {
 let deps: ComparisonDeps | null = null;
 type ComparisonScenario = Pick<Scenario, 'id' | 'name' | 'timestamp' | 'state' | 'data'>;
 let sharedScenarios: ComparisonScenario[] = [];
+let sharedCase: RangeCase = 'base';
 
 /** Shared snapshots belong to this page session, never the recipient's saved library. */
-export function setSharedComparisonScenarios(scenarios: ComparisonScenario[]) {
+export function setSharedComparisonScenarios(scenarios: ComparisonScenario[], selectedCase: unknown = 'base') {
   sharedScenarios = scenarios;
+  sharedCase = RANGE_CASES.find(value => value === selectedCase) || 'base';
 }
 
 function comparisonScenarios(): ComparisonScenario[] {
   return [...sharedScenarios, ...getAllScenarios()];
+}
+
+function comparisonCase(first: ComparisonScenario, second: ComparisonScenario): RangeCase {
+  return sharedScenarios.includes(first) && sharedScenarios.includes(second) ? sharedCase : getRangeCase();
 }
 
 function comparisonSnapshotURL(first: ComparisonScenario, second: ComparisonScenario): string {
@@ -37,7 +43,9 @@ function comparisonSnapshotURL(first: ComparisonScenario, second: ComparisonScen
   const json = JSON.stringify({ s1: snapshot(first), s2: snapshot(second) });
   const payload = btoa(encodeURIComponent(json).replace(/%([0-9A-F]{2})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16))));
   if (payload.length > 20000) throw new Error('Comparison link too large');
-  return snapshotContextURL(getShareBase() + '?compareStates=' + encodeURIComponent(payload));
+  const url = new URL(snapshotContextURL(getShareBase() + '?compareStates=' + encodeURIComponent(payload)));
+  url.searchParams.set('case', comparisonCase(first, second));
+  return url.toString();
 }
 
 export function initScenarioComparison(d: ComparisonDeps): void {
@@ -182,8 +190,9 @@ export function showScenarioComparisonDiff(id1: string, id2: string, onClose: ((
   }
 
   // Compute metrics for both scenarios
-  const metrics1 = calc(scenario1.data || scenario1.state);
-  const metrics2 = calc(scenario2.data || scenario2.state);
+  const selectedCase = comparisonCase(scenario1, scenario2);
+  const metrics1 = calc(applyRangeCase(scenario1.data || scenario1.state, selectedCase), { ignoreCase: true });
+  const metrics2 = calc(applyRangeCase(scenario2.data || scenario2.state, selectedCase), { ignoreCase: true });
 
   // Define metrics to compare with hints about what's "better"
   const metricsToCompare = [
@@ -199,6 +208,7 @@ export function showScenarioComparisonDiff(id1: string, id2: string, onClose: ((
 
   // Build header row
   let contentHtml = '<div class="scenario-diff-wrap">';
+  contentHtml += `<p class="smallprint">${RANGE_CASE_LABELS[selectedCase]} case · Annual results</p>`;
   contentHtml += '<div class="scenario-diff-header">';
   contentHtml += '<div class="diff-col-label"></div>';
   contentHtml += '<div class="diff-col-s1"><strong>' + escapeHtml(scenario1.name) + '</strong><span class="diff-date">' + escapeHtml(scenario1.timestamp) + '</span></div>';
@@ -318,13 +328,15 @@ window.exportComparisonAsCSV = function (id1: string, id2: string) {
     return;
   }
 
-  const metrics1 = calc(scenario1.data || scenario1.state);
-  const metrics2 = calc(scenario2.data || scenario2.state);
+  const selectedCase = comparisonCase(scenario1, scenario2);
+  const metrics1 = calc(applyRangeCase(scenario1.data || scenario1.state, selectedCase), { ignoreCase: true });
+  const metrics2 = calc(applyRangeCase(scenario2.data || scenario2.state, selectedCase), { ignoreCase: true });
 
   // Create CSV content. Every cell goes through csvCell so untrusted names and
   // negative numbers (which start with '-') can't be executed as spreadsheet formulas.
   const cell = misc.csvCell;
-  let csvContent = ['Metric', cell(scenario1.name), cell(scenario2.name), 'Change'].join(',') + '\n';
+  let csvContent = cell(`Range case: ${RANGE_CASE_LABELS[selectedCase]} case`) + '\n' + cell('Annual results') + '\n\n';
+  csvContent += ['Metric', cell(scenario1.name), cell(scenario2.name), 'Change'].join(',') + '\n';
 
   const metricsToCompare = [
     { label: 'Clients', key: 'clients', format: fmtInt },
@@ -409,15 +421,17 @@ window.exportComparisonAsPDF = function (id1: string, id2: string) {
   // Create a printable version of the comparison
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
-  const metrics1 = calc(scenario1.data || scenario1.state);
-  const metrics2 = calc(scenario2.data || scenario2.state);
+  const selectedCase = comparisonCase(scenario1, scenario2);
+  const metrics1 = calc(applyRangeCase(scenario1.data || scenario1.state, selectedCase), { ignoreCase: true });
+  const metrics2 = calc(applyRangeCase(scenario2.data || scenario2.state, selectedCase), { ignoreCase: true });
 
   const n1 = escapeHtml(scenario1.name);
   const n2 = escapeHtml(scenario2.name);
+  const caseLabel = `${RANGE_CASE_LABELS[selectedCase]} case`;
   let printContent = `
     <html>
       <head>
-        <title>Scenario Comparison: ${n1} vs ${n2}</title>
+        <title>Scenario Comparison: ${n1} vs ${n2} (${caseLabel})</title>
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
           h1 { color: #333; }
@@ -431,6 +445,7 @@ window.exportComparisonAsPDF = function (id1: string, id2: string) {
       <body>
         <h1>Scenario Comparison</h1>
         <h2>${n1} vs ${n2}</h2>
+        <p>${caseLabel} · Annual results</p>
         <table>
           <tr><th>Metric</th><th>${n1}</th><th>${n2}</th><th>Change</th></tr>
   `;
@@ -439,7 +454,11 @@ window.exportComparisonAsPDF = function (id1: string, id2: string) {
     { label: 'Clients', key: 'clients', format: fmtInt },
     { label: 'Revenue', key: 'revenue', format: fmtMoney0 },
     { label: 'Net Income', key: 'income', format: fmtMoney0 },
-    { label: 'Utilization', key: 'capacityPct', format: fmtPct1 }
+    { label: 'Utilization', key: 'capacityPct', format: fmtPct1 },
+    { label: 'Fixed Costs', key: 'totalFixedCosts', format: fmtMoney0 },
+    { label: 'Variable Costs', key: 'variableCosts', format: fmtMoney0 },
+    { label: 'Break-even Clients', key: 'breakEvenClients', format: fmtInt },
+    { label: 'Contribution Margin/Client', key: 'contributionMarginPerClient', format: fmtMoney0 }
   ];
 
   metricsToCompare.forEach(m => {
