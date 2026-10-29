@@ -20,6 +20,7 @@ test.describe('Regression: Presentation Notes restore', () => {
     await waitForPageReady(page);
     await expect(page.locator('#scenarioNotes')).toHaveValue(NOTES);
     await expect(page).not.toHaveURL(/scenario=/);
+    await page.locator('#setupNotes > summary').click();
     await page.fill('#scenarioNotes', 'Edited after opening the shared snapshot');
     await page.reload();
     await waitForPageReady(page);
@@ -29,6 +30,7 @@ test.describe('Regression: Presentation Notes restore', () => {
   test('typed notes survive a reload', async ({ page }) => {
     await page.goto('/');
     await waitForPageReady(page);
+    await page.locator('#setupNotes > summary').click();
     await page.fill('#scenarioNotes', NOTES);
     await page.reload();
     await waitForPageReady(page);

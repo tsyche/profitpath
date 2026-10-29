@@ -3,6 +3,7 @@ import { showToast } from '../services/modalService';
 import { setTooltipsEnabled } from '../utils/tooltipManager';
 import { updateTooltipsUIOnly } from './Onboarding';
 import { $ } from '../utils/dom';
+import { usesWorkspaces } from '../../src/ui/workspaceNavigation';
 
 /** Settings modal: experience level, feature toggles and the feature-gated sections. */
 
@@ -31,14 +32,21 @@ function refreshDesktopSettings() {
 
 // Level description panel
 function updateLevelDescription(level: string) {
+  if (usesWorkspaces()) {
+    const container = document.getElementById('levelDescription');
+    if (container) container.textContent = level === 'advanced'
+      ? 'More initial detail. Delivery fields open in the focused editor; specialist tools stay grouped by question. All core inputs, Compare, and every export remain available.'
+      : 'A quieter starting view. All core inputs, Compare, and every export remain available. Open a relevant question to use specialist tools.';
+    return;
+  }
   const descriptions: Record<string, { enabled: string[]; locked: string[] }> = {
     beginner: {
-      enabled: ['Basic calculations', 'Simple exports', 'Tooltips', 'Scenario management'],
-      locked: ['Advanced calculations', 'Detailed breakdowns', 'Scenario comparison', 'Full export suite', 'Debug panel']
+      enabled: ['Basic calculations', 'All exports', 'Tooltips', 'Scenario management'],
+      locked: ['Advanced calculations', 'Detailed breakdowns', 'Scenario comparison', 'Debug panel']
     },
     intermediate: {
-      enabled: ['Basic calculations', 'Advanced calculations', 'Detailed breakdowns', 'Scenario comparison', 'Tooltips', 'Simple exports'],
-      locked: ['Full export suite (Excel, PDF, Email)', 'Debug panel']
+      enabled: ['Basic calculations', 'Advanced calculations', 'Detailed breakdowns', 'Scenario comparison', 'Tooltips', 'All exports'],
+      locked: ['Debug panel']
     },
     advanced: {
       enabled: ['Basic calculations', 'Advanced calculations', 'Detailed breakdowns', 'Scenario comparison', 'Sensitivity analysis', 'Tooltips', 'CSV import', 'Undo/Redo', 'Full export suite (Excel, PDF, HTML, Email)', 'Debug panel', 'Performance metrics', 'Scenario comparison tools'],
@@ -104,7 +112,7 @@ function initializeSettings() {
             intermediate: 'Advanced calculations and scenario tools unlocked.',
             advanced: 'All features enabled, including export suite and debug panel.'
           };
-          showToast(`${labels[level]} mode — ${hints[level]}`, 'info', 1800);
+          showToast(usesWorkspaces() ? `${labels[level]} initial detail selected. All modeling inputs and exports remain available.` : `${labels[level]} mode — ${hints[level]}`, 'info', 1800);
 
           // Show toast for tooltips change if it occurred
           if (prevTooltipsState !== newTooltipsState) {

@@ -28,7 +28,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Shareable URLs**: Encode scenarios in URLs for easy sharing with stakeholders
 - **Scenario Bundles**: Select up to four saved scenarios and share one snapshot link; recipients choose whether to import them, and duplicate names get a suffix
 - **Import/Export**: Load scenarios from URLs or share via email
-- **Embeddable Widgets**: Generate iframe embed codes for website integration
+- **Embeddable Widgets**: Generate iframe codes with portable scenario snapshots, including both options for a comparison
 - **Social Media Sharing**: Open Graph and Twitter Card support for rich previews
 - **Industry Templates**: Pre-built configurations for consulting, cleaning, landscaping, fitness, photography, and handyman services
 - **Scenario Comparison**: Side-by-side comparison of saved scenarios with key metrics and differences
@@ -39,8 +39,8 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 
 ### Export & Reporting
 - **Multiple Formats**: Professional CSV with detailed headers and units, Excel (with formulas), PDF (with charts), HTML pages
-- **Email Sharing**: Send reports directly from the application
-- **Automated Scheduling**: Set up recurring report generation
+- **Email Sharing**: Open a report draft in your mail application
+- **Scheduling Information**: Explains that automated delivery requires a server and is unavailable in this version
 
 ### Testing Infrastructure
 - **Industry Templates**: 6 working templates (consulting, cleaning, landscaping, fitness, photography, handyman) loadable from the Templates menu
@@ -52,6 +52,11 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **PWA Ready**: Installable web app with native app-like experience
 
 ### User Experience
+
+The approved [workspace preview](docs/experience-levels.md#workspace-preview) is available through `?layout=workspaces`. Model groups business setup and focused offering editing; Results leads with annual figures and question-led tools; Compare uses saved baseline/alternative scenarios. The previous layout remains the default pending the human walkthrough and release gates in [ROADMAP item 25](ROADMAP.md).
+
+In the preview, experience levels control initial detail while all modeling inputs, specialist tools, Compare, and exports remain reachable. Incomplete numeric edits keep last-valid results and block saving/sharing. Shared snapshot reloads retain the selected case, and read-only recipients can use **Try a change** to create an editable copy.
+
 - **Progressive Disclosure**: Beginner-friendly interface with optional advanced features
 - **Experience Levels**: Beginner, Intermediate, and Advanced user modes with appropriate feature sets
 	- See `docs/experience-levels.md` for a full mapping of which features are visible at each level and guidance for maintainers.

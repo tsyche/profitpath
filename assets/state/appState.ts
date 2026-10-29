@@ -1,5 +1,6 @@
 import * as businessLogic from '../services/businessLogic';
 import type { AppState } from '../../src/types';
+import { clearPendingInputs, hasPendingInputs } from './pendingInputs';
 
 /** Core app state, localStorage persistence and the undo/redo history. */
 
@@ -43,22 +44,28 @@ let deps: AppStateDeps | null = null;
 
 export function initAppState(d: AppStateDeps): void {
   deps = d;
+  window.addEventListener('profitpath:pending-inputs', updateUndoRedoButtons);
 }
 
 // Persist state to localStorage (global helper so other modules can call it)
-export function persistState(): void {
+export function persistState(): boolean {
   try {
     localStorage.setItem('profitpath-state', JSON.stringify(state));
+    window.dispatchEvent(new CustomEvent('profitpath:draft-status', { detail: true }));
+    return true;
   } catch (e) {
     console.warn('Failed to persist state:', e);
+    window.dispatchEvent(new CustomEvent('profitpath:draft-status', { detail: false }));
+    return false;
   }
 }
 
 export function updateUndoRedoButtons(): void {
   const undoBtn = document.querySelector<HTMLButtonElement>('#undoBtn');
   const redoBtn = document.querySelector<HTMLButtonElement>('#redoBtn');
-  if (undoBtn) undoBtn.disabled = undoStack.length === 0;
-  if (redoBtn) redoBtn.disabled = redoStack.length === 0;
+  const readOnly = document.body.classList.contains('pp-readonly');
+  if (undoBtn) undoBtn.disabled = readOnly || undoStack.length === 0 && !hasPendingInputs();
+  if (redoBtn) redoBtn.disabled = readOnly || redoStack.length === 0;
 }
 
 export function pushHistory(): void {
@@ -81,8 +88,14 @@ export function clearHistoryField(): void {
 }
 
 export function undo(): void {
+  if (document.body.classList.contains('pp-readonly')) return;
+  const incomplete = hasPendingInputs();
+  clearPendingInputs();
   const prev = undoStack.pop();
-  if (prev === undefined) return;
+  if (prev === undefined) {
+    if (incomplete) { deps!.render(); updateUndoRedoButtons(); }
+    return;
+  }
   redoStack.push(JSON.stringify(state));
   Object.assign(state, JSON.parse(prev));
   persistState();
@@ -92,6 +105,8 @@ export function undo(): void {
 }
 
 export function redo(): void {
+  if (document.body.classList.contains('pp-readonly')) return;
+  clearPendingInputs();
   const next = redoStack.pop();
   if (next === undefined) return;
   undoStack.push(JSON.stringify(state));

@@ -3,6 +3,7 @@ import { getAllScenarios, populateComparisonDropdowns, sanitizeScenarioState } f
 import { uuid } from "../utils/helpers";
 import { renderScenariosList } from "../components/UIHelpers";
 import { showToast } from "./modalService";
+import { clearPendingInputs, ensureValidInputs } from '../state/pendingInputs';
 
 // Scenario Management
 
@@ -10,6 +11,7 @@ import { showToast } from "./modalService";
 let isDeletingScenario = false;
 
 export function saveScenario(name: string) {
+  if (!ensureValidInputs()) return;
   if (!name || !name.trim()) {
     showToast('Please enter a scenario name', 'error');
     return;
@@ -79,6 +81,7 @@ function performSave(name: string) {
     if (window.render) {
       window.render();
     }
+    window.dispatchEvent(new CustomEvent('profitpath:scenario', { detail: { action: 'saved', name } }));
 
     // Show success notification
     showToast(existingIdx >= 0 ? 'Scenario updated' : 'Scenario saved successfully!', 'success');
@@ -162,12 +165,14 @@ export function performLoad(scenario: Scenario) {
       showToast('Scenario data is invalid', 'error');
       return;
     }
+    clearPendingInputs();
     Object.assign(window.state, sanitized);
     window.state.loadedTemplate = null; // Clear template badge when loading scenarios
 
     // Save loaded scenario as current state (appState's zero-arg persistState)
     if (typeof window.persistState === 'function') window.persistState();
     window.render();
+    window.dispatchEvent(new CustomEvent('profitpath:scenario', { detail: { action: 'loaded', name: scenario.name || 'Unnamed scenario' } }));
     // Don't close modal - let user continue working
 
     // Show success notification

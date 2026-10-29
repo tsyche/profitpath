@@ -6,6 +6,7 @@ import { clamp, safeParseNumber, uuid } from '../utils/helpers';
 import { clearHistoryField, persistState, pushHistory, pushHistoryOnce, state } from '../state/appState';
 import { render, updateOutputs, updateValidationDisplay } from '../state/hooks';
 import { $ } from '../utils/dom';
+import { clearPendingInputs, validatePendingInput } from '../state/pendingInputs';
 
 /** Main offerings table: input and click handlers, add offering. */
 
@@ -16,13 +17,12 @@ export function onTableInput(e: Event) {
   const k = el.dataset.k;
   const i = Number(el.dataset.i);
   if (!k || !Number.isFinite(i)) return;
+  const o = state.offerings[i];
+  if (!o || !validatePendingInput(el)) return;
 
   // Debounce history: only push on first keystroke of a field
   const fieldKey = `${i}-${k}`;
   pushHistoryOnce(fieldKey);
-
-  const o = state.offerings[i];
-  if (!o) return;
 
   // Validate and sanitize input based on field type
   let value: string | number = el.value;
@@ -158,6 +158,7 @@ export function onTableClick(e: Event) {
         return;
       }
       pushHistory();
+      for (const body of ['offeringsBody', 'rangesBody', 'marketBody', 'groupRunsBody', 'resourceTagBody']) clearPendingInputs(`${body}:${state.offerings[i].id || i}:`);
       state.offerings.splice(i, 1);
       render();
     }
@@ -173,6 +174,7 @@ export function onTableClick(e: Event) {
 }
 
 export function addOffering() {
+  pushHistory();
   state.offerings.push({
     id: uuid(),
     name: 'Offering ' + (state.offerings.length + 1),

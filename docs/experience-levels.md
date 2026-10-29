@@ -1,12 +1,25 @@
 # Experience Levels
 
-**TL;DR:** Beginner keeps the core simulator visible. Intermediate unlocks the Advisor and deeper analysis; Advanced adds charts and diagnostics.
+**TL;DR:** In the default layout, Beginner keeps the core simulator visible, Intermediate unlocks analysis, and Advanced adds charts and diagnostics. The opt-in workspace preview keeps modeling inputs, specialist tools, comparison, and exports reachable at every level; levels control initial detail.
 
 ProfitPath exposes three experience levels that control which UI features are visible by default and which advanced controls are available in the Settings panel.
 
 These levels are implemented as feature gates in `src/settings/index.ts` (see `FEATURE_GATES`) and applied in the UI by `assets/components/SettingsPanel.ts` (`updateUIForSettings`). Use the Settings panel to change levels; the selection is persisted to `localStorage`.
 
-## Levels and feature mapping (current)
+## Workspace preview
+
+Open `/?layout=workspaces` for the approved Model / Results / Compare flow. The previous layout remains the default while [ROADMAP item 25](../ROADMAP.md) completes release validation.
+
+- **Model:** Business, Offerings, Costs, People & capacity, and Assumptions reuse the existing financial controls. Offerings have a focused editor and an optional dense table.
+- **Results:** Annual net income before tax, revenue, and utilization come first. Expand a question for cost breakdowns, service contributions, growth limits, income tools, customer plans, or assumption exploration.
+- **Compare:** Save a baseline and an alternative, then open the existing two-scenario comparison. This is available at Beginner.
+- **Initial detail:** Advanced opens delivery fields in the offering editor. Specialist tools remain collapsed behind their questions at every level. Debug and performance diagnostics remain Advanced-only in Settings; tooltip preferences remain separate.
+- **Entry:** Optional inline guidance replaces the automatic welcome dialog. Examples preview before replacing a draft.
+- **Share / export:** Review the conclusion and selected case before using an existing format. Snapshot links preserve the workspace and case; comparison links and embeds carry both scenarios for recipients without local saves.
+
+Navigation and incomplete input text stay outside financial state and undo history. Results retain the last valid numeric values; incomplete edits block saving and sharing. The draft-save status reports storage failures. Opening a shared snapshot asks before replacing an existing draft; read-only links remain locked after reload, and **Try a change** creates an editable draft.
+
+## Default layout feature mapping
 
 - Beginner (default)
   - Advanced calculations: OFF

@@ -3,7 +3,7 @@ import { initGroupRunsPanel, renderGroupRunsTable } from './components/GroupRuns
 import { initMembershipPanel, renderMembershipPanel } from './components/MembershipPanel';
 import { errStack } from './utils/helpers';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
-import { bindCsvImport, initScenarioComparison, showScenarioComparisonDiff } from './components/ScenarioComparison';
+import { bindCsvImport, initScenarioComparison, setSharedComparisonScenarios, showScenarioComparisonDiff } from './components/ScenarioComparison';
 import { initAppState, persistState, pushHistory, redo, state, undo } from './state/appState';
 import { bindPanelToggle, initAdvancedChartsPanel, initAdvisorPanel, initAnalysisPanels, initCustomerAnalyticsPanel, initInsightsPanel, initMixOptimizerPanel, initReversePanel, initWhatIfWizard } from './components/AnalysisPanels';
 import { bindControls, render, syncCurrencySelect, updateOutputs } from './components/AppRender';
@@ -30,6 +30,11 @@ import { bindResources, refreshAfterResourceEdit } from './components/ResourcesP
 import { showToast } from './services/modalService';
 import { INDUSTRY_TEMPLATES } from './services/industryTemplates';
 import { promptScenarioBundleImport } from './services/scenarioBundle';
+import { usesWorkspaces } from '../src/ui/workspaceNavigation';
+import { initWorkspaceShell, navigateWorkspace } from './components/WorkspaceShell';
+import { getRangeCase, setRangeCase } from '../src/calculations/rangeCase';
+import { createModal } from './components/Modal';
+import { initPendingInputs } from './state/pendingInputs';
 
 // Make $ and $$ globally available for other modules
 if (typeof window !== 'undefined') {
@@ -69,6 +74,16 @@ if (typeof window !== 'undefined') {
   window.persistState = persistState;
 }
 
+initPendingInputs(input => {
+  const body = input.closest('tbody')?.id;
+  const index = Number(input.dataset.i);
+  const key = input.dataset.k || (body === 'groupRunsBody' ? 'costPerRun' : body === 'resourceTagBody' ? 'resource' : '');
+  if (body && key && Number.isInteger(index)) {
+    const row = body === 'expensesBody' ? state.expenses[index] : body === 'resourcesBody' ? state.resources?.[index] : state.offerings[index];
+    if (row) return `${body}:${row.id || index}:${key}`;
+  }
+  return input.id ? `business:${input.id}` : '';
+});
 bindControls();
 bindRangesMarket();
 bindResources();
@@ -82,18 +97,26 @@ bindOfferingsTable();
 
 bindScenariosAndGlobals();
 
-// Load scenario from URL first (if present), then localStorage
-const loadedFromURL = loadScenarioFromURL();
+// A shared snapshot must not silently overwrite an existing workspace draft.
+const persistedDraft = loadState();
+const urlAtStartup = new URL(window.location.href);
+const deferSharedSnapshot = Boolean(usesWorkspaces() && urlAtStartup.searchParams.has('scenario') &&
+  persistedDraft && sanitizeScenarioState(persistedDraft) && sanitizeScenarioState(decodeScenarioFromURL() as Record<string, unknown>));
+const sharedCase = urlAtStartup.searchParams.get('case');
+if (usesWorkspaces()) setRangeCase(deferSharedSnapshot ? 'base' : sharedCase);
+// Load scenario from URL first (if present), then localStorage.
+const loadedFromURL = !deferSharedSnapshot && loadScenarioFromURL();
 
 // Restore last session's state from localStorage (auto-save read-back)
 if (!loadedFromURL) {
-  const persisted = loadState();
+  const persisted = persistedDraft;
   const sanitizedPersisted = persisted ? sanitizeScenarioState(persisted) : null;
   if (sanitizedPersisted) Object.assign(state, sanitizedPersisted);
 }
 
 // Check for shared comparison link
 const compareStatesParam = new URLSearchParams(window.location.search).get('compareStates');
+let sharedComparisonReady = false;
 if (compareStatesParam) {
   try {
     if (compareStatesParam.length > 20000) throw new Error('Comparison link too large');
@@ -106,12 +129,13 @@ if (compareStatesParam) {
       // Names come from an untrusted share link — coerce to a bounded string.
       // (They are also escaped at render time; this just caps storage size.)
       const safeName = (n: unknown) => (typeof n === 'string' ? n : 'Shared scenario').slice(0, 120);
-      // Create temporary comparison scenarios in localStorage
+      // Keep recipient snapshots in memory for every comparison export action.
       const tempScenarios = [
         { id: 'temp-s1', name: safeName(pair.s1.name), timestamp: new Date().toLocaleString(), state: first },
         { id: 'temp-s2', name: safeName(pair.s2.name), timestamp: new Date().toLocaleString(), state: second }
       ];
-      localStorage.setItem('profitpath-temp-compare', JSON.stringify(tempScenarios));
+      setSharedComparisonScenarios(tempScenarios);
+      sharedComparisonReady = true;
     }
   } catch (e) {
     console.warn('Failed to decode comparison link:', e);
@@ -121,7 +145,7 @@ if (compareStatesParam) {
 wire();
 
 // Read-only mode: lock all inputs when ?readonly=1 is present in the URL
-if (loadedFromURL && isReadOnlyURL()) enterReadOnlyMode(state);
+if (!deferSharedSnapshot && (loadedFromURL || usesWorkspaces()) && isReadOnlyURL()) enterReadOnlyMode(state);
 
 // Restore any scheduled report generation
 restoreScheduling();
@@ -137,24 +161,9 @@ try {
 promptScenarioBundleImport();
 
 // Auto-open comparison if shared link was used
-const tempCompareData = localStorage.getItem('profitpath-temp-compare');
-if (tempCompareData && compareStatesParam) {
-  try {
-    const tempScenarios = JSON.parse(tempCompareData);
-    if (tempScenarios.length === 2) {
-      // Delay to ensure modal is ready
-      setTimeout(() => {
-        window.showScenarioComparisonDiff('temp-s1', 'temp-s2');
-        // Clean up the temp data from localStorage
-        localStorage.removeItem('profitpath-temp-compare');
-        // Remove the compareStates param from the URL
-        const newUrl = window.location.origin + window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
-      }, 100);
-    }
-  } catch (e) {
-    console.warn('Failed to auto-open shared comparison:', e);
-  }
+if (sharedComparisonReady) {
+  // Keep the portable URL so reload can reopen the same conclusion.
+  setTimeout(() => showScenarioComparisonDiff('temp-s1', 'temp-s2', () => {}), 100);
 }
 
 function wire() {
@@ -229,7 +238,7 @@ try {
   initReversePanel();
   initAdvancedChartsPanel();
   initWhatIfWizard();
-  initAnalysisTabs();
+  if (!usesWorkspaces()) initAnalysisTabs();
   initSetupGroups();
 } catch {
   try {
@@ -317,5 +326,29 @@ if (typeof showScenarioComparisonDiff === 'function') window.showScenarioCompari
 // initializeScenarios();
 
 initializeProgressiveDisclosure();
-refreshAnalysisTabs();
+if (!usesWorkspaces()) refreshAnalysisTabs();
+initWorkspaceShell({ shared: loadedFromURL });
+if (deferSharedSnapshot) {
+  createModal({
+    title: 'Open shared snapshot?',
+    content: 'A working draft already exists on this device. Open the shared snapshot in its place, or keep your draft. Named saved scenarios remain unchanged. Undo can restore the draft after opening.',
+    buttons: [
+      { text: 'Keep my draft', action: () => {
+        const url = new URL(location.href);
+        for (const key of ['scenario', 'readonly', 'name']) url.searchParams.delete(key);
+        url.searchParams.set('case', getRangeCase());
+        history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+      } },
+      { text: 'Open snapshot', primary: true, action: () => {
+        pushHistory(); setRangeCase(sharedCase);
+        if (loadScenarioFromURL()) {
+          window.dispatchEvent(new CustomEvent('profitpath:scenario', { detail: { action: 'shared', name: (urlAtStartup.searchParams.get('name') || 'Shared snapshot').slice(0, 120) } }));
+          if (isReadOnlyURL()) enterReadOnlyMode(state);
+          navigateWorkspace({ workspace: 'results', section: 'business' });
+          persistState();
+        }
+      } }
+    ]
+  });
+}
 initTooltips();

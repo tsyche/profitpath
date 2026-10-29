@@ -16,25 +16,33 @@ import * as businessLogic from '../services/businessLogic';
 import { clamp, errMsg, errStack, safeParseNumber } from '../utils/helpers';
 import { fmtInt, fmtPct1 } from '../utils/format';
 import { $, $$ } from '../utils/dom';
-import { persistState, pushHistory, redo, state, undo } from '../state/appState';
+import { persistState, pushHistory, pushHistoryOnce, clearHistoryField, redo, state, undo } from '../state/appState';
+import { clearPendingInputs, isPendingInput, restorePendingInputs, validatePendingInput } from '../state/pendingInputs';
+import { usesWorkspaces } from '../../src/ui/workspaceNavigation';
+import { applyReadOnlyControls } from '../utils/readOnly';
+import { createModal } from './Modal';
 
 /** Main render pass: inputs, offerings table, KPI outputs and the panels that follow them. */
+
+function inputValue(id: keyof AppState): string {
+  return isPendingInput(`business:${id}`) ? String(state[id]) : $('#' + id)!.value;
+}
 
 export function setStateFromInputs() {
   state.mode = $('#modeSelect')!.value as AppState['mode'];
 
   // Validate and sanitize inputs for full-time and part-time employees
-  state.fullTimeEmployees = Math.max(0, Math.floor(safeParseNumber($('#fullTimeEmployees')!.value, 1)));
-  state.partTimeEmployees = Math.max(0, Math.floor(safeParseNumber($('#partTimeEmployees')!.value, 0)));
-  state.fullTimeEmployeePay = Math.max(0, safeParseNumber($('#fullTimeEmployeePay')!.value, 0));
-  state.partTimeEmployeePay = Math.max(0, safeParseNumber($('#partTimeEmployeePay')!.value, 0));
+  state.fullTimeEmployees = Math.max(0, Math.floor(safeParseNumber(inputValue('fullTimeEmployees'), 1)));
+  state.partTimeEmployees = Math.max(0, Math.floor(safeParseNumber(inputValue('partTimeEmployees'), 0)));
+  state.fullTimeEmployeePay = Math.max(0, safeParseNumber(inputValue('fullTimeEmployeePay'), 0));
+  state.partTimeEmployeePay = Math.max(0, safeParseNumber(inputValue('partTimeEmployeePay'), 0));
 
-  state.monthlyCosts = Math.max(0, safeParseNumber($('#monthlyCosts')!.value, 0));
-  state.processingFeePct = clamp(safeParseNumber($('#processingFeePct')!.value, 0), 0, 20);
-  state.processingFeePerTransaction = Math.max(0, safeParseNumber($('#processingFeePerTransaction')!.value, 0));
-  state.transactionsPerMonth = Math.max(0, safeParseNumber($('#transactionsPerMonth')!.value, 0));
-  state.productiveUtilizationPct = clamp(safeParseNumber($('#productiveUtilizationPct')!.value, 80), 0, 100);
-  state.targetUtilizationPct = clamp(safeParseNumber($('#targetUtilizationPct')!.value, 75), 0, 150);
+  state.monthlyCosts = Math.max(0, safeParseNumber(inputValue('monthlyCosts'), 0));
+  state.processingFeePct = clamp(safeParseNumber(inputValue('processingFeePct'), 0), 0, 20);
+  state.processingFeePerTransaction = Math.max(0, safeParseNumber(inputValue('processingFeePerTransaction'), 0));
+  state.transactionsPerMonth = Math.max(0, safeParseNumber(inputValue('transactionsPerMonth'), 0));
+  state.productiveUtilizationPct = clamp(safeParseNumber(inputValue('productiveUtilizationPct'), 80), 0, 100);
+  state.targetUtilizationPct = clamp(safeParseNumber(inputValue('targetUtilizationPct'), 75), 0, 150);
   state.lockMix = Boolean($('#lockMix')?.checked);
 }
 
@@ -44,6 +52,13 @@ export function syncCurrencySelect() {
 }
 
 function resetDefaults() {
+  if (usesWorkspaces()) {
+    createModal({ title: 'Reset the working model?', content: 'Replace the draft with the default example inputs? Named saved scenarios stay unchanged. Undo can restore this draft.',
+      buttons: [{ text: 'Cancel' }, { text: 'Reset defaults', primary: true, action: () => { pushHistory(); clearPendingInputs(); applyDefaults(); } }] });
+  } else applyDefaults();
+}
+
+function applyDefaults() {
   state.offerings = businessLogic.defaultOfferings();
   state.fullTimeEmployees = 1;
   state.partTimeEmployees = 0;
@@ -88,6 +103,8 @@ function updateTemplateBadge() {
 
 export function render() {
   syncCurrencySelect();
+  const notes = $('#scenarioNotes');
+  if (notes && notes.value !== state.notes) notes.value = state.notes || '';
   captureTableFocus('offeringsTable');
 
   let metrics: CalcResult;
@@ -135,6 +152,7 @@ export function render() {
       if (label) label.textContent = isForecastMode ? 'Forecast' : 'Current';
       badge.classList.toggle('is-current', !isForecastMode);
       badge.setAttribute('aria-pressed', isForecastMode ? 'false' : 'true');
+      badge.setAttribute('aria-label', isForecastMode ? 'Forecast mode, switch to Current' : 'Current mode, switch to Forecast');
       badge.dataset.tooltip = isForecastMode
         ? 'Forecast mode — tap to switch to Current'
         : 'Current mode — tap to switch to Forecast';
@@ -335,6 +353,9 @@ export function render() {
 
   // Update template source badge
   updateTemplateBadge();
+  restorePendingInputs();
+  if (usesWorkspaces()) applyReadOnlyControls();
+  window.dispatchEvent(new CustomEvent('profitpath:rendered'));
 }
 
 // Build an inline SVG progress ring for the utilization KPI card
@@ -507,6 +528,7 @@ export function updateOutputs(metrics: CalcResult) {
     if (dbg && $('#debugBody') && !$('#debugBody')!.classList.contains('collapsed')) {
       dbg.textContent = JSON.stringify(metrics, null, 2);
     }
+    window.dispatchEvent(new CustomEvent('profitpath:outputs', { detail: metrics }));
   } catch (e) {
     console.warn('updateOutputs error:', e);
   }
@@ -552,11 +574,14 @@ function updateKeyMetrics() {
 export function bindControls(): void {
   $$('#controls input').forEach((el) => {
     el.addEventListener('input', () => {
-      pushHistory();
+      if (!validatePendingInput(el)) return;
+      if (usesWorkspaces()) pushHistoryOnce(`business:${el.id}`);
+      else pushHistory();
       setStateFromInputs();
       persistState();
       render();
     });
+    el.addEventListener('blur', clearHistoryField);
   });
   $$('#controls select').forEach((el) => {
     el.addEventListener('change', () => {
@@ -582,9 +607,11 @@ export function bindControls(): void {
   if (notesEl) {
     // Value is filled in wire(), after URL/localStorage state is applied
     notesEl.addEventListener('input', () => {
+      if (usesWorkspaces()) pushHistoryOnce('notes');
       state.notes = notesEl.value.slice(0, 2000);
       persistState();
     });
+    notesEl.addEventListener('blur', clearHistoryField);
   }
   // Mobile undo/redo buttons
   const mobileUndoBtn = $('#mobileUndoBtn');

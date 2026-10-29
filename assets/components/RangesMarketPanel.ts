@@ -15,6 +15,7 @@ import { getSpreads, initRangeCase, initSpreadInputs, renderRangeCase, syncConfi
 import { clearHistoryField, persistState, pushHistory, pushHistoryOnce, state } from '../state/appState';
 import { render } from '../state/hooks';
 import { $ } from '../utils/dom';
+import { validatePendingInput } from '../state/pendingInputs';
 
 /** Offering ranking, range band, ranges table and market table. */
 
@@ -112,13 +113,14 @@ export function renderMarketTable(metrics: CalcResult) {
     '<td data-label="Badge" class="market-badge">' + marketBadgeHtml(o, metrics?.offeringMetrics?.[idx]) + '</td></tr>').join('');
 }
 
-function onMarketInput(e: Event) {
+export function onMarketInput(e: Event) {
   const el = e.target;
   if (!(el instanceof HTMLInputElement)) return;
   const k = el.dataset.k;
   const idx = Number(el.dataset.i);
   const o = state.offerings[idx] as unknown as Bag;
   if (!k || !o) return;
+  if (!validatePendingInput(el, true)) return;
   const fieldKey = `mkt-${idx}-${k}`;
   pushHistoryOnce(fieldKey);
   const clean = sanitizeOfferingMarket({ [k]: el.value }) as unknown as Bag;
@@ -133,12 +135,13 @@ function onMarketInput(e: Event) {
   }
 }
 
-function onRangeInput(e: Event) {
+export function onRangeInput(e: Event) {
   const el = e.target;
   if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement)) return;
   const k = el.dataset.k;
   const o = state.offerings[Number(el.dataset.i)] as unknown as Bag;
   if (!k || !o) return;
+  if (!validatePendingInput(el, k !== 'salesLossPct')) return;
   const fieldKey = `rng-${el.dataset.i}-${k}`;
   pushHistoryOnce(fieldKey);
   // The shared sanitizer is the single source of truth; blank or junk clears the bound

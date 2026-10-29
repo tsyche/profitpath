@@ -13,8 +13,9 @@ import { deflateSync, inflateSync, strToU8, strFromU8 } from 'fflate';
 import { clamp, errMsg } from '../utils/helpers';
 import { buildXLSX } from '../utils/xlsx';
 import { buildReportSections, buildWorkbookSheets, reportPreamble, type ReportCell } from './reportSections';
-import { normalizeOfferingType } from '../../src/calculations/index';
-import { rangeCaseTag } from '../../src/calculations/rangeCase';
+import { calc as calculate, normalizeOfferingType } from '../../src/calculations/index';
+import { getRangeCase, rangeCaseTag } from '../../src/calculations/rangeCase';
+import { usesWorkspaces } from '../../src/ui/workspaceNavigation';
 import { sanitizeOfferingRange } from '../../src/calculations/ranges';
 import { sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
 import { sanitizeSalesLossBounds, sanitizeSalesLossPct } from '../../src/calculations/salesLoss';
@@ -26,6 +27,7 @@ import { sanitizePlans, sanitizeProfiles, pruneMembership } from '../../src/calc
 import { fmtMoney0, normalizeCurrency, taxBasisNote } from '../../src/calculations/currency';
 import { showToast } from './modalService';
 import { createModal } from '../components/Modal';
+import { ensureValidInputs } from '../state/pendingInputs';
 import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizations, updateBreakEvenAnalysis } from './visualizationService';
 
 // Utility functions for export functionality
@@ -173,6 +175,7 @@ function copyToClipboardFallback(text: string) {
 }
 
 export function shareScenario() {
+  if (!ensureValidInputs()) return;
   const editUrl = encodeScenarioToURL(window.state);
   const viewUrl = encodeScenarioToURL(window.state, { readonly: true });
   if (!editUrl || !viewUrl) {
@@ -263,6 +266,7 @@ export function buildCSV(st: AppState, results: CalcResult) {
 }
 
 export function exportAsCSV() {
+  if (!ensureValidInputs()) return;
   let results: CalcResult;
   try {
     if (typeof calc === 'function') {
@@ -341,15 +345,31 @@ function base64UrlToBytes(b64: string): Uint8Array {
 }
 
 export function encodeScenarioToURL(state: import('../../src/types').CalcState, { readonly = false } = {}): string | null {
+  if (state === window.state && !ensureValidInputs()) return null;
   try {
     const serialized = JSON.stringify(state);
     let url = getShareBase() + '?scenario=' + SCENARIO_V2_PREFIX + bytesToBase64Url(deflateSync(strToU8(serialized), { level: 9 }));
     if (readonly) url += '&readonly=1';
+    if (usesWorkspaces()) {
+      const snapshot = new URL(snapshotContextURL(url));
+      const name = document.querySelector<HTMLInputElement>('#workspaceName')?.value;
+      if (name) snapshot.searchParams.set('name', name.slice(0, 120));
+      return snapshot.toString();
+    }
     return url;
   } catch (e) {
     console.error('Failed to encode scenario:', e);
     return null;
   }
+}
+
+/** Navigation/case metadata is independent of the backward-compatible scenario payload. */
+export function snapshotContextURL(url: string): string {
+  if (!usesWorkspaces()) return url;
+  const snapshot = new URL(url);
+  snapshot.searchParams.set('layout', 'workspaces');
+  snapshot.searchParams.set('case', getRangeCase());
+  return snapshot.toString();
 }
 
 export function isReadOnlyURL() {
@@ -665,6 +685,9 @@ export function loadScenarioFromURL() {
     // old state
     Object.assign(window.state, sanitized);
     if (typeof window.render === 'function') window.render();
+    // Retain the imported model before dropping its only copy from the URL.
+    // A quota failure must keep the snapshot URL recoverable on reload.
+    if (typeof window.persistState === 'function' && window.persistState() === false) return true;
     // Roadmap 35: drop the scenario payload from the address bar so a reload
     // re-reads persisted state instead of re-applying the (possibly stale) link.
     // Keep readonly=1 so a shared read-only view stays locked.
@@ -777,6 +800,7 @@ export function loadIndustryTemplate(templateId: string) {
 }
 
 export function exportAsExcel() {
+  if (!ensureValidInputs()) return;
   const st: AppState = state;
   let results: CalcResult;
   try {
@@ -798,6 +822,7 @@ export function exportAsExcel() {
 }
 
 export function exportAsPDF() {
+  if (!ensureValidInputs()) return;
   // Create a printable HTML version and open print dialog
   const state = window.state;
   const fmtPct = (n: number) => n.toFixed(1) + '%';
@@ -849,8 +874,8 @@ export function exportAsPDF() {
       
       <div class="section">
         <h2>Business Overview</h2>
-        <p><span class="label">Employees:</span> ${state.employees}</p>
-        <p><span class="label">Employee Pay:</span> ${fmtMoney0(state.employeePay)}</p>
+        <p><span class="label">Employees:</span> ${state.fullTimeEmployees + state.partTimeEmployees}</p>
+        <p><span class="label">Annual Payroll:</span> ${fmtMoney0(calculate(state).annualPayroll)}</p>
         <p><span class="label">Monthly Costs:</span> ${fmtMoney0(totalMonthlyOverhead(state))}</p>
         <p><span class="label">Productive Utilization:</span> ${fmtPct(state.productiveUtilizationPct)}</p>
         <p><span class="label">Target Utilization:</span> ${fmtPct(state.targetUtilizationPct)}</p>
@@ -891,6 +916,7 @@ export function exportAsPDF() {
 }
 
 export function exportAsHTML() {
+  if (!ensureValidInputs()) return;
   const state = window.state;
   const fmtPct = (n: number) => n.toFixed(1) + '%';
 
@@ -931,8 +957,8 @@ export function exportAsHTML() {
   
   <div class="section">
     <h2>Business Overview</h2>
-    <div class="metric"><span class="label">Employees:</span> <span class="value">${state.employees}</span></div>
-    <div class="metric"><span class="label">Employee Pay:</span> <span class="value">${fmtMoney0(state.employeePay)}</span></div>
+    <div class="metric"><span class="label">Employees:</span> <span class="value">${state.fullTimeEmployees + state.partTimeEmployees}</span></div>
+    <div class="metric"><span class="label">Annual Payroll:</span> <span class="value">${fmtMoney0(calculate(state).annualPayroll)}</span></div>
     <div class="metric"><span class="label">Monthly Costs:</span> <span class="value">${fmtMoney0(totalMonthlyOverhead(state))}</span></div>
     <div class="metric"><span class="label">Productive Utilization:</span> <span class="value">${fmtPct(state.productiveUtilizationPct)}</span></div>
     <div class="metric"><span class="label">Target Utilization:</span> <span class="value">${fmtPct(state.targetUtilizationPct)}</span></div>
@@ -970,6 +996,7 @@ export function exportAsHTML() {
 }
 
 export function exportAsFinancialReport() {
+  if (!ensureValidInputs()) return;
   const state = window.state;
   const metrics = window.lastMetrics || (window.calc ? window.calc(state) : null);
 
@@ -1146,6 +1173,7 @@ export function exportAsFinancialReport() {
 }
 
 export function shareViaEmail() {
+  if (!ensureValidInputs()) return;
   const state = window.state;
   const fmtPct = (n: number) => n.toFixed(1) + '%';
 
@@ -1157,8 +1185,8 @@ export function shareViaEmail() {
   const body = encodeURIComponent(
     `Check out my ProfitPath analysis:\n\n` +
     `Business Overview:\n` +
-    `- Employees: ${state.employees}\n` +
-    `- Employee Pay: ${fmtMoney0(state.employeePay)}\n` +
+    `- Employees: ${state.fullTimeEmployees + state.partTimeEmployees}\n` +
+    `- Annual Payroll: ${fmtMoney0(calculate(state).annualPayroll)}\n` +
     `- Monthly Costs: ${fmtMoney0(totalMonthlyOverhead(state))}\n` +
     `- Productive Utilization: ${fmtPct(state.productiveUtilizationPct)}\n` +
     `- Target Utilization: ${fmtPct(state.targetUtilizationPct)}\n\n` +
@@ -1174,6 +1202,7 @@ export function shareViaEmail() {
 }
 
 export function showEmbedCode() {
+  if (!ensureValidInputs()) return;
   const embedCode = `<iframe src="${encodeScenarioToURL(window.state) || getShareBase()}" width="100%" height="600" frameborder="0"></iframe>`;
 
   createModal({
@@ -1188,6 +1217,7 @@ export function showEmbedCode() {
 }
 
 export function showScheduleDialog() {
+  if (!ensureValidInputs()) return;
   createModal({
     title: 'Schedule Reports',
     content: `

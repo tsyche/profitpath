@@ -4,6 +4,22 @@
 // popping back on the next keystroke.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { hybridFixture } from '../../assets/prototypes/fixtures';
+import { calc } from '../calculations/index';
+import { validateBusinessLogic } from '../../assets/services/businessLogic';
+
+describe('Offering duration validation', () => {
+  it.each(['forecast', 'current'] as const)('accepts zero-hour one-time sales in %s while rejecting zero-hour services', mode => {
+    const model = hybridFixture();
+    model.mode = mode;
+    model.offerings[0].hoursPerSession = 0;
+    global.state = model;
+    global.calc = () => calc(model);
+    const { issues } = validateBusinessLogic();
+    expect(issues.filter(issue => issue.field.endsWith('-hoursPerSession')).map(issue => issue.field))
+      .toEqual(['offering-0-hoursPerSession']);
+  });
+});
 
 // Re-imported fresh per test so the module-level "dismissed" set doesn't leak
 // between cases (in the real app that set is intentionally session-persistent).

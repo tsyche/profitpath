@@ -5,8 +5,9 @@ import { sanitizeSalesLossPct } from './salesLoss';
  * Optimistic / base / conservative lens over the low/high bounds. calc() applies the
  * active case itself, so every consumer (KPIs, charts, exports, insights, comparisons)
  * follows it with no per-call-site wiring. Range maths that needs the true base runs
- * calc() with `ignoreCase`. Session-only on purpose: it is never persisted, so a reload
- * or a shared link always opens on the base case.
+ * calc() with `ignoreCase`. The lens is never stored in financial scenario state.
+ * Workspace URLs carry an allowlisted case so shared conclusions and reloads match.
+ * Legacy URLs without that metadata open on Base.
  */
 export type RangeCase = 'conservative' | 'base' | 'optimistic';
 

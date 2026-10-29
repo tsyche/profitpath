@@ -121,7 +121,7 @@ export function validateBusinessLogic() {
       });
     }
 
-    if (offering.hoursPerSession <= 0) {
+    if (offering.type !== 'one-time' && offering.hoursPerSession <= 0) {
       issues.push({
         severity: 'error',
         message: '"' + (offering.name || 'Unnamed offering') + '" has invalid hours per session',
@@ -261,7 +261,7 @@ export function validateBusinessLogic() {
         state.offerings.forEach((o, idx) => {
           if (!o.name) offeringIssues.push('Offering ' + (idx + 1) + ' has no name');
           if (!o.sessionsPerYear) offeringIssues.push('Offering ' + (idx + 1) + ' has no sessions');
-          if (!o.hoursPerSession) offeringIssues.push('Offering ' + (idx + 1) + ' has no session length');
+          if (o.type !== 'one-time' && !o.hoursPerSession) offeringIssues.push('Offering ' + (idx + 1) + ' has no session length');
           if (typeof o.currentClients === 'undefined' || o.currentClients === null) offeringIssues.push('Offering ' + (idx + 1) + ' has no client count');
         });
       }

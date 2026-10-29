@@ -15,6 +15,7 @@ import { showToast } from '../services/modalService';
 import { fmtPct1 } from '../utils/format';
 import { resetSliders } from './SensitivityPanel';
 import { getExperienceLevel } from '../../src/settings/index';
+import { usesWorkspaces } from '../../src/ui/workspaceNavigation';
 
 /** Collapsible analysis panels: customer analytics, mix optimizer, insights, reverse calculator, what-if wizard, advanced charts. */
 
@@ -61,7 +62,7 @@ export function renderAdvisorPanel() {
     ['advancedChartsToggle', 'Charts', 'Explore price, utilization, and capacity together.']
   ];
   summary.innerHTML = items.filter(([target]) => {
-    if (target === 'advancedChartsToggle' && getExperienceLevel() !== 'advanced') return false;
+    if (target === 'advancedChartsToggle' && !usesWorkspaces() && getExperienceLevel() !== 'advanced') return false;
     const panel = document.getElementById(target)?.closest<HTMLElement>('.advanced-feature, .expert-feature');
     return panel && getComputedStyle(panel).display !== 'none';
   }).map(([target, label, detail]) =>
@@ -82,6 +83,13 @@ export function initAdvisorPanel() {
     if (!button) return;
     const target = document.getElementById(button.dataset.advisorTarget || '');
     if (!target) return;
+    if (usesWorkspaces()) {
+      let parent = target.parentElement;
+      while (parent) {
+        if (parent instanceof HTMLDetailsElement) parent.open = true;
+        parent = parent.parentElement;
+      }
+    }
     if (target.getAttribute('aria-expanded') !== 'true') target.click();
     target.scrollIntoView({ block: 'start' });
     target.focus();

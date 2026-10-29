@@ -1,6 +1,6 @@
 # ProfitPath Agent Development Guide
 
-This document provides comprehensive information for AI agents and developers working on the ProfitPath project. It contains technical architecture details, business logic understanding, development workflows, and integration points.
+**TL;DR:** ProfitPath is a client-side service-business simulator. Preserve calculation and scenario compatibility, use `just` for checks, and keep unfinished work in `ROADMAP.md`.
 
 ## Project Overview
 
@@ -20,7 +20,7 @@ This document provides comprehensive information for AI agents and developers wo
 
 ### Frontend Architecture
 - **Build System**: Vite v8.3.5 with JSX support
-- **Testing**: Vitest v4.0.18 with jsdom environment
+- **Testing**: Vitest v4.1.12 with jsdom environment
 - **Code Quality**: ESLint with comprehensive rules
 - **Language**: TypeScript (`strict: true`; see Build Process > TypeScript Support)
 - **State Management**: Single global state object with localStorage persistence
@@ -31,24 +31,24 @@ This document provides comprehensive information for AI agents and developers wo
 assets/
 ├── app.ts               # Entry point: boot order, window globals, URL/localStorage load, wire()
 ├── styles.css           # Styling and responsive design
-├── accessibility.js     # Accessibility enhancements
+├── accessibility.ts     # Accessibility enhancements
 ├── components/          # UI panels, each with a bind/init entry called from app.ts (AppRender.ts = render()/updateOutputs, OfferingsTable, ExpensesPanel, ResourcesPanel, RangesMarketPanel, SettingsPanel, AppMenus, AnalysisPanels, AnalysisTabs, SetupGroups, ...)
 ├── state/              # appState.ts (state, persistState, undo/redo history) and hooks.ts (render/updateOutputs callbacks for handlers)
-├── hooks/              # Custom hooks (useTableFocus.js)
+├── hooks/              # Custom hooks (useTableFocus.ts)
 ├── services/           # Business logic modules
-│   ├── businessLogic.js    # Core business rules and validation
-│   ├── miscService.js      # Utility functions, exports, scenario URL sharing
-│   ├── modalService.js     # Modal and toast handling
+│   ├── businessLogic.ts    # Core business rules and validation
+│   ├── miscService.ts      # Utility functions, exports, scenario URL sharing
+│   ├── modalService.ts     # Modal and toast handling
 │   ├── industryTemplates.ts # INDUSTRY_TEMPLATES presets (Templates menu)
-│   ├── scenarioService.js  # Scenario management
-│   ├── stateManager.js     # State persistence helpers
-│   ├── visualizationService.js # Chart and visualization logic (gauge, waterfall)
-│   └── advancedChartsService.js # Heat map, radar scorecard, client funnel
+│   ├── scenarioService.ts  # Scenario management
+│   ├── stateManager.ts     # State persistence helpers
+│   ├── visualizationService.ts # Chart and visualization logic (gauge, waterfall)
+│   └── advancedChartsService.ts # Heat map, radar scorecard, client funnel
 └── utils/              # Helper utilities
-    ├── chartUtils.js       # Chart configuration and rendering
-    ├── helpers.js          # General utility functions
-    ├── progressiveDisclosure.js # Feature gating logic
-    └── tooltipManager.js   # Tooltip system
+    ├── chartUtils.ts       # Chart configuration and rendering
+    ├── helpers.ts          # General utility functions
+    ├── progressiveDisclosure.ts # Feature gating logic
+    └── tooltipManager.ts   # Tooltip system
 
 src/
 ├── analytics/          # Analytics, feedback, and dashboard modules
@@ -59,7 +59,7 @@ src/
 │   ├── marketPosition.ts # Optional market low/avg/high per offering and the green/yellow/red price badge; display only
 │   ├── currency.ts       # Scenario currency allowlist + shared fmtMoney0 (display only)
 │   ├── offeringMeta.ts   # Per-offering confidence tag (verified/estimated/guess) and note sanitizers; display only
-│   ├── rangeCase.ts      # Conservative / base / optimistic lens: calc() applies the active case's bounds itself (`ignoreCase` opts out), so every output, chart and export follows it; session-only, never persisted; panel in assets/components/RangeCasePanel.ts
+│   ├── rangeCase.ts      # Conservative / base / optimistic lens: calc() applies the active case's bounds itself (`ignoreCase` opts out); never stored in financial state, carried in workspace URLs; panel in assets/components/RangeCasePanel.ts
 │   ├── ranges.ts         # Optional low/high bounds (fill %, current clients, sessions per year; one `RANGE_BOUND_KEYS` list in rangeCase.ts): calcRange min/base/max band (always from the true base), bound sanitizers, suggestRanges (confidence-tag presets, user-set spreads), calcRangeDrivers (profit swing per offering)
 │   ├── resources.ts      # Optional extra capacity pools (booth, room): sanitizer and annual hours; optional `staffFree` flag (tagged offerings draw no staff hours); calc() caps forecast clients per pool and reports poolUtilization + bottleneck
 │   ├── groupRuns.ts      # Group offerings: costPerRun sanitizer and breakEvenSeats; calc() charges the run cost per cohort (Current) or per filled seat (Forecast); table in assets/components/GroupRunsPanel.ts
@@ -71,7 +71,7 @@ src/
 │   ├── mixOptimizer.ts     # Suggests optimal offering mix for profit/utilization
 │   └── whatIfWizard.ts     # Guided "What If?" wizard: 9 scenarios as state patches, previewed through calc()
 ├── settings/          # Experience levels and feature gating
-│   └── index.js          # Settings management and feature gates
+│   └── index.ts          # Settings management and feature gates
 └── test/             # Vitest unit/integration tests (incl. fuzz tests)
 
 index.html           # Main HTML structure
@@ -85,6 +85,10 @@ manifest.json        # PWA configuration
 - `AnalysisTabs.ts` keeps Outputs Overview visible and places existing gated advanced panels in persisted Analyze and Customers tabs.
 - `SetupGroups.ts` persists native Setup disclosure state; invalid native fields reopen their owning group.
 - The sticky Setup summary shows Revenue, Net Income, and Utilization below the fixed app bar.
+- The approved workspace preview is `/?layout=workspaces`; the previous layout remains the default pending item 25 acceptance. `WorkspaceShell.ts` owns Model/Results/Compare navigation and scenario context; `OfferingEditor.ts`, `WorkspaceEntry.ts`, `WorkspaceResults.ts`, and `WorkspaceShare.ts` compose the existing controls and tools. Scoped styles live in `assets/workspaces.css`.
+- `src/ui/workspaceNavigation.ts` parses allowlisted views. Navigation preferences and `assets/state/pendingInputs.ts` invalid text stay outside financial state/undo. Incomplete numeric edits retain last-valid results and block save/share. `persistState()` returns success and publishes draft status; shared payloads stay in the URL if storage fails.
+- Workspace scenario URLs carry the active case independently of financial state. Read-only snapshots keep native control locks across render/reload; Try a change leaves read-only mode. Comparison links/embeds carry both sanitized snapshots, retained in memory for recipient exports without adding saved scenarios.
+- Preview experience levels control initial detail; core inputs, specialist tools, Compare, and exports remain reachable at every level. Advanced diagnostics remain in Settings. See [experience levels](docs/experience-levels.md).
 
 #### 1. Calculation Engine (`src/calculations/index.ts`)
 - **Purpose**: Handles all business logic calculations with caching and debugging support
@@ -96,7 +100,7 @@ manifest.json        # PWA configuration
 - **Constants**: `HOURS_PER_YEAR = 2080` (standard paid hours per employee per year)
 - **Cache Management**: LRU eviction (delete + re-insert on hit) when max size exceeded
 
-#### 2. Business Logic (`assets/services/businessLogic.js`)
+#### 2. Business Logic (`assets/services/businessLogic.ts`)
 - **Purpose**: Core business rules, validation, and offering management
 - **Key Functions**:
   - `validateBusinessLogic()` - Comprehensive input validation with suggestions
@@ -104,7 +108,7 @@ manifest.json        # PWA configuration
   - `defaultOfferings()` - Default service configurations
   - `updateValidationDisplay()` - Real-time validation feedback
 
-#### 3. Settings & Feature Gating (`src/settings/index.js`)
+#### 3. Settings & Feature Gating (`src/settings/index.ts`)
 - **Purpose**: Manages user preferences and progressive disclosure
 - **Experience Levels**:
   - **Beginner**: Basic features only (core calculations, scenario management)
@@ -172,7 +176,7 @@ Each template includes appropriate pricing, frequency, and cost structures.
 
 ### Git Workflow
 
-`origin` pushes to both GitHub and GitLab (`git remote get-url --all --push origin`) — one `git push` updates both.
+`origin` pushes to GitHub. The `Mirror to GitLab` workflow copies main and tags to GitLab; Cloudflare deploys from that mirror. Verify push destinations with `git remote get-url --all --push origin`.
 
 CI is designed to auto-bump the patch version on every push to `main` (commits back with `[skip ci]`), which normally means the remote is 1 commit ahead by the time you're ready to push. Actions stopped triggering on push from 2026-07-23 (flagged GitHub account) and was working again by 2026-09-12, so the bump commits land again. Always rebase before committing or pushing:
 
@@ -216,12 +220,13 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (744 unit tests across 65 files — 743 passing, 1 skipped — plus 474 Playwright e2e tests across 40 files, chromium + firefox)
+#### Test Coverage (812 unit tests across 72 files — 811 passing, 1 existing skip — plus 570 Playwright e2e cases across 47 files, Chromium + Firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)
 - **Business Logic Tests**: Comprehensive calculation validation
-- **E2E Tests**: Playwright suites in `tests/e2e/` (chromium + firefox, dedicated port 3121)
+- **E2E Tests**: Playwright suites in `tests/e2e/` (Chromium + Firefox, dedicated port 3121), including 56 workspace journey/axe cases. Use `just test-e2e-container` when native browser startup is sandbox-blocked; see [testing guide](tests/e2e/README.md).
+- **Design review**: Separate baseline/prototype tests in `tests/design/` (30 cases across Chromium + Firefox, port 3122). Run `just test-e2e-container --config tests/design/playwright.config.ts`; the development-only prototype is `docs/plans/prototypes/product-flow.html`.
 
 #### Test Files
 - `src/calculations/calculations.test.ts` - Core calculation tests
@@ -280,7 +285,7 @@ The application supports multiple export formats:
 
 ### Analytics System
 Two separate, unrelated systems — don't conflate them:
-- **In-app feature analytics** (`src/analytics/`): admin-only, opt-in via the settings panel toggle, stored in `localStorage` only. Never transmitted anywhere — see `sanitizeData()` in `src/analytics/analytics.js`, which also strips any accidental PII-shaped fields before storing an event.
+- **In-app feature analytics** (`src/analytics/`): admin-only, opt-in via the settings panel toggle, stored in `localStorage` only. Never transmitted anywhere — see `sanitizeData()` in `src/analytics/analytics.ts`, which also strips any accidental PII-shaped fields before storing an event.
 - **Site traffic counter** (GoatCounter, `index.html`): a third-party script that logs anonymous page-load counts (path, referrer, browser/OS, screen size) to `tsyche.goatcounter.com`. No cookies, no fingerprinting, honors the browser's Do Not Track header automatically, and never sees anything entered into the app — scenarios, prices, and calculations still never leave the device. Fires from both the web deploy and the Capacitor-wrapped APK, tagged `/web` vs `/apk` respectively so usage can be told apart; skipped automatically on `localhost`/`127.0.0.1` dev servers. See `docs/privacy-policy.md`.
 
 ### Scenario Management

@@ -5,6 +5,7 @@ import { uuid } from '../utils/helpers';
 import { clearHistoryField, persistState, pushHistory, pushHistoryOnce, state } from '../state/appState';
 import { render, updateOutputs, updateValidationDisplay } from '../state/hooks';
 import { $ } from '../utils/dom';
+import { validatePendingInput } from '../state/pendingInputs';
 
 /** Extra capacity pools (booth, room): table, offering tags and handlers. */
 
@@ -59,6 +60,7 @@ function onResourceInput(e: Event) {
   const k = el.dataset.k;
   const row = (state.resources || [])[Number(el.dataset.i)] as unknown as Record<string, unknown>;
   if (!k || !row) return;
+  if (!validatePendingInput(el)) return;
   const fieldKey = `res-${el.dataset.i}-${k}`;
   pushHistoryOnce(fieldKey);
   // Per-row sanitizer is the single source of truth for clamping and fallbacks
@@ -68,7 +70,7 @@ function onResourceInput(e: Event) {
   refreshAfterResourceEdit();
 }
 
-function onResourceTagChange(e: Event) {
+export function onResourceTagChange(e: Event) {
   const el = e.target;
   if (!(el instanceof HTMLSelectElement)) return;
   const o = state.offerings[Number(el.dataset.i)];

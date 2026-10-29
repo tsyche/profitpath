@@ -1,6 +1,9 @@
-import type { AppOffering, AppState } from '../../src/types';
+import type { AppOffering, AppState, Scenario } from '../../src/types';
 import * as misc from '../services/miscService';
-import { escapeHtml, getAllScenarios, getShareBase } from '../services/miscService';
+import { escapeHtml, getAllScenarios, getShareBase, snapshotContextURL } from '../services/miscService';
+import { setRangeCase } from '../../src/calculations/rangeCase';
+import { usesWorkspaces } from '../../src/ui/workspaceNavigation';
+import { clearPendingInputs } from '../state/pendingInputs';
 import { calc } from '../../src/calculations/index';
 import { fmtMoney0 } from '../../src/calculations/currency';
 import { fmtInt, fmtPct1 } from '../utils/format';
@@ -17,6 +20,25 @@ interface ComparisonDeps {
 }
 
 let deps: ComparisonDeps | null = null;
+type ComparisonScenario = Pick<Scenario, 'id' | 'name' | 'timestamp' | 'state' | 'data'>;
+let sharedScenarios: ComparisonScenario[] = [];
+
+/** Shared snapshots belong to this page session, never the recipient's saved library. */
+export function setSharedComparisonScenarios(scenarios: ComparisonScenario[]) {
+  sharedScenarios = scenarios;
+}
+
+function comparisonScenarios(): ComparisonScenario[] {
+  return [...sharedScenarios, ...getAllScenarios()];
+}
+
+function comparisonSnapshotURL(first: ComparisonScenario, second: ComparisonScenario): string {
+  const snapshot = (scenario: ComparisonScenario) => ({ name: scenario.name, state: scenario.data || scenario.state });
+  const json = JSON.stringify({ s1: snapshot(first), s2: snapshot(second) });
+  const payload = btoa(encodeURIComponent(json).replace(/%([0-9A-F]{2})/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16))));
+  if (payload.length > 20000) throw new Error('Comparison link too large');
+  return snapshotContextURL(getShareBase() + '?compareStates=' + encodeURIComponent(payload));
+}
 
 export function initScenarioComparison(d: ComparisonDeps): void {
   deps = d;
@@ -88,6 +110,11 @@ export function handleCSVImport(file: File) {
     }
 
     const { settings, offerings, expenses, resources, membershipPlans, memberProfiles } = result.data!;
+    clearPendingInputs();
+    if (usesWorkspaces()) {
+      const reportCase = /^Range case:\s*(Conservative|Optimistic) case\s*$/m.exec(String(e.target!.result));
+      setRangeCase(reportCase ? reportCase[1].toLowerCase() : 'base');
+    }
 
     const state = deps!.getState();
     // Apply imported settings to state
@@ -144,19 +171,8 @@ export function handleComparison() {
 }
 
 // Show full-width side-by-side scenario comparison diff
-export function showScenarioComparisonDiff(id1: string, id2: string) {
-  // Check for temp comparison scenarios first (from shared links), then use saved scenarios
-  let tempScenarios = [];
-  const tempData = localStorage.getItem('profitpath-temp-compare');
-  if (tempData) {
-    try {
-      tempScenarios = JSON.parse(tempData);
-    } catch (e) {
-      console.warn('Failed to parse temp comparison data:', e);
-    }
-  }
-
-  const allScenarios = [...tempScenarios, ...getAllScenarios()];
+export function showScenarioComparisonDiff(id1: string, id2: string, onClose: (() => void) | null = null) {
+  const allScenarios = comparisonScenarios();
   const scenario1 = allScenarios.find((s) => s.id === id1);
   const scenario2 = allScenarios.find((s) => s.id === id2);
 
@@ -287,13 +303,13 @@ export function showScenarioComparisonDiff(id1: string, id2: string) {
     title: 'Scenario Comparison: ' + escapeHtml(scenario1.name) + ' vs ' + escapeHtml(scenario2.name),
     content: contentHtml,
     size: 'full',
-    onClose: () => openScenarioModal()
+    onClose: onClose || (() => openScenarioModal())
   });
 }
 
 // Export comparison as CSV
 window.exportComparisonAsCSV = function (id1: string, id2: string) {
-  const scenarios = getAllScenarios();
+  const scenarios = comparisonScenarios();
   const scenario1 = scenarios.find((s) => s.id === id1);
   const scenario2 = scenarios.find((s) => s.id === id2);
 
@@ -344,7 +360,7 @@ window.exportComparisonAsCSV = function (id1: string, id2: string) {
 
 // Share comparison link with full scenario state encoded in URL
 window.shareComparison = function (id1: string, id2: string) {
-  const scenarios = getAllScenarios();
+  const scenarios = comparisonScenarios();
   const scenario1 = scenarios.find((s) => s.id === id1);
   const scenario2 = scenarios.find((s) => s.id === id2);
 
@@ -355,13 +371,7 @@ window.shareComparison = function (id1: string, id2: string) {
 
   let shareUrl;
   try {
-    // unicode-safe base64: encodeURIComponent handles multi-byte chars
-    const json = JSON.stringify({
-      s1: { name: scenario1.name, state: scenario1.state },
-      s2: { name: scenario2.name, state: scenario2.state }
-    });
-    const statePayload = btoa(encodeURIComponent(json).replace(/%([0-9A-F]{2})/gi, (_, p) => String.fromCharCode(parseInt(p, 16))));
-    shareUrl = getShareBase() + '?compareStates=' + encodeURIComponent(statePayload);
+    shareUrl = comparisonSnapshotURL(scenario1, scenario2);
   } catch {
     showToast('Unable to generate share link', 'error');
     return;
@@ -387,7 +397,7 @@ window.shareComparison = function (id1: string, id2: string) {
 
 // Export comparison as PDF
 window.exportComparisonAsPDF = function (id1: string, id2: string) {
-  const scenarios = getAllScenarios();
+  const scenarios = comparisonScenarios();
   const scenario1 = scenarios.find((s) => s.id === id1);
   const scenario2 = scenarios.find((s) => s.id === id2);
 
@@ -457,7 +467,7 @@ window.exportComparisonAsPDF = function (id1: string, id2: string) {
 
 // Get embed code for comparison
 window.getComparisonEmbedCode = function (id1: string, id2: string) {
-  const scenarios = getAllScenarios();
+  const scenarios = comparisonScenarios();
   const scenario1 = scenarios.find((s) => s.id === id1);
   const scenario2 = scenarios.find((s) => s.id === id2);
 
@@ -466,15 +476,23 @@ window.getComparisonEmbedCode = function (id1: string, id2: string) {
     return;
   }
 
-  const embedUrl = getShareBase() + '?compare=' + id1 + ',' + id2 + '&embed=true';
-  const embedCode = `<iframe src="${embedUrl}" width="800" height="600" frameborder="0"></iframe>`;
+  let embedUrl: string;
+  try {
+    const url = new URL(comparisonSnapshotURL(scenario1, scenario2));
+    url.searchParams.set('embed', 'true');
+    embedUrl = url.toString();
+  } catch {
+    showToast('Unable to generate embed code', 'error');
+    return;
+  }
+  const embedCode = `<iframe title="ProfitPath scenario comparison" src="${escapeHtml(embedUrl)}" width="800" height="600" frameborder="0"></iframe>`;
 
   // createModal already appends to body and wires close-on-scrim + ESC
   createModal({
     title: '📋 Embed Comparison',
     content: `
       <p style="color:var(--text);margin-bottom:8px;">Embed code for this comparison:</p>
-      <textarea readonly class="copy-on-click" style="width:100%;height:100px;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;">${embedCode}</textarea>
+      <textarea readonly class="copy-on-click" style="width:100%;height:100px;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);color:var(--text);font-family:var(--mono);font-size:12px;box-sizing:border-box;">${escapeHtml(embedCode)}</textarea>
       <p class="copy-field-hint">Click the field to copy</p>
       <p style="margin-top:6px;font-size:12px;color:var(--muted);">Preview: <a href="${embedUrl}" target="_blank" style="color:var(--accent);">Open in new tab</a></p>
     `,

@@ -1,5 +1,30 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { loadIndustryTemplate } from '../../assets/services/miscService';
+import { loadIndustryTemplate, shareViaEmail } from '../../assets/services/miscService';
+import { hybridFixture } from '../../assets/prototypes/fixtures';
+
+describe('Email report staffing', () => {
+  afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
+
+  it('hands the mail app current headcount and annual payroll instead of retired fields', () => {
+    vi.useFakeTimers();
+    const location = { origin: 'https://example.test', pathname: '/', search: '', href: '' };
+    vi.stubGlobal('window', {
+      location,
+      state: {
+        ...hybridFixture(), fullTimeEmployees: 2, partTimeEmployees: 1,
+        fullTimeEmployeePay: 60000, partTimeEmployeePay: 20000,
+        employees: 99, employeePay: 1
+      }
+    });
+    shareViaEmail();
+    expect(location.href).toMatch(/^mailto:/);
+    const body = new URLSearchParams(location.href.split('?')[1]).get('body');
+    expect(body).toContain('Employees: 3');
+    expect(body).toContain('Annual Payroll: $140,000');
+    expect(body).not.toContain('undefined');
+    expect(body).not.toContain('NaN');
+  });
+});
 
 describe('loadIndustryTemplate persistence', () => {
   beforeEach(() => {

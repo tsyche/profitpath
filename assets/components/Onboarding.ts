@@ -6,6 +6,8 @@ import { uuid } from '../utils/helpers';
 import { updateSetting } from '../services/miscService';
 import { setTooltipsEnabled } from '../utils/tooltipManager';
 import { createModal } from './Modal';
+import { usesWorkspaces } from '../../src/ui/workspaceNavigation';
+import { applyReadOnlyControls } from '../utils/readOnly';
 
 /** Welcome dialog, industry picker, guided tour, help menu and contextual tooltips. */
 
@@ -26,7 +28,7 @@ const _initializeOnboarding = () => {
   addOnboardingHelpButton();
 
   // Show welcome message for new users who haven't completed onboarding
-  if (!onboardingCompleted) {
+  if (!onboardingCompleted && !usesWorkspaces()) {
     setTimeout(() => {
       showWelcomeDialog();
     }, 1000);
@@ -134,6 +136,7 @@ export function enterReadOnlyMode(state: { notes?: string }): void {
   const redoBtn = document.getElementById('redoBtn') as HTMLButtonElement | null;
   if (undoBtn) undoBtn.disabled = true;
   if (redoBtn) redoBtn.disabled = true;
+  if (usesWorkspaces()) applyReadOnlyControls();
 }
 
 function showWelcomeDialog() {

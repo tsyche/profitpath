@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>ProfitPath · Product flow review</title>
+  <link rel="stylesheet" href="../../../assets/prototypes/productFlow.css" />
+</head>
+<body>
+  <a class="skip" href="#workspace">Skip to workspace</a>
+  <div class="review-bar">Design prototype · Synthetic examples · Your saved scenarios stay separate</div>
+  <header class="app-header">
+    <a class="brand" href="#entry"><span class="brand-mark" aria-hidden="true">P</span>ProfitPath<span class="beta">flow preview</span></a>
+    <div class="header-actions">
+      <label class="sr-only" for="detail">Initial detail</label>
+      <select id="detail"><option value="beginner">Beginner</option><option value="advanced">Advanced</option></select>
+      <button id="theme" type="button" aria-label="Switch color theme">Light / dark</button>
+    </div>
+  </header>
+  <div id="app"></div>
+  <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
+  <dialog id="optionDialog" aria-labelledby="optionTitle">
+    <form id="optionForm">
+      <p class="eyebrow">Keep the baseline</p>
+      <h2 id="optionTitle">Try a change</h2>
+      <p id="optionDescription"></p>
+      <label for="optionName">Alternative name</label>
+      <input id="optionName" required maxlength="80" autocomplete="off" />
+      <div class="dialog-actions"><button type="button" data-close>Cancel</button><button class="primary" type="submit">Create alternative</button></div>
+    </form>
+  </dialog>
+  <dialog id="shareDialog" aria-labelledby="shareTitle">
+    <h2 id="shareTitle">Review your conclusion</h2>
+    <div id="shareContent"></div>
+    <p class="hint">Prototype preview only. Production export formats and snapshot links remain in the current app. Active-case sharing requires a fix before release.</p>
+    <button type="button" data-close>Back to workspace</button>
+  </dialog>
+  <script type="module" src="../../../assets/prototypes/productFlow.ts"></script>
+</body>
+</html>

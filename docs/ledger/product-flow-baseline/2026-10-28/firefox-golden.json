@@ -1,0 +1,158 @@
+[
+  {
+    "mode": "forecast",
+    "activeCase": "base",
+    "revenue": 93480,
+    "income": 28045.677236526724,
+    "capacityPct": 62.637362637362635,
+    "takeHome": 22937,
+    "poolUtilization": [
+      {
+        "id": "staff",
+        "name": "Staff",
+        "pct": 62.637362637362635
+      },
+      {
+        "id": "studio",
+        "name": "Recording room",
+        "pct": 10
+      },
+      {
+        "id": "booth",
+        "name": "Practice booth",
+        "pct": 15
+      }
+    ],
+    "yearOneCashFlow": 24602.86168677696
+  },
+  {
+    "mode": "forecast",
+    "activeCase": "conservative",
+    "revenue": 62400,
+    "income": -50.33609680660993,
+    "capacityPct": 52.083333333333336,
+    "takeHome": 0,
+    "poolUtilization": [
+      {
+        "id": "staff",
+        "name": "Staff",
+        "pct": 52.083333333333336
+      },
+      {
+        "id": "studio",
+        "name": "Recording room",
+        "pct": 7.222222222222221
+      },
+      {
+        "id": "booth",
+        "name": "Practice booth",
+        "pct": 10.833333333333334
+      }
+    ],
+    "yearOneCashFlow": -3493.1516465563727
+  },
+  {
+    "mode": "forecast",
+    "activeCase": "optimistic",
+    "revenue": 249120,
+    "income": 174490.2653846749,
+    "capacityPct": 78.7037037037037,
+    "takeHome": 121378,
+    "poolUtilization": [
+      {
+        "id": "staff",
+        "name": "Staff",
+        "pct": 78.7037037037037
+      },
+      {
+        "id": "studio",
+        "name": "Recording room",
+        "pct": 11.11111111111111
+      },
+      {
+        "id": "booth",
+        "name": "Practice booth",
+        "pct": 16.666666666666664
+      }
+    ],
+    "yearOneCashFlow": 171047.44983492512
+  },
+  {
+    "mode": "current",
+    "activeCase": "base",
+    "revenue": 342840,
+    "income": 245901.2372365267,
+    "capacityPct": 233.65384615384616,
+    "takeHome": 171105,
+    "poolUtilization": [
+      {
+        "id": "staff",
+        "name": "Staff",
+        "pct": 233.65384615384616
+      },
+      {
+        "id": "studio",
+        "name": "Recording room",
+        "pct": 36.666666666666664
+      },
+      {
+        "id": "booth",
+        "name": "Practice booth",
+        "pct": 55.00000000000001
+      }
+    ],
+    "yearOneCashFlow": 242458.42168677694
+  },
+  {
+    "mode": "current",
+    "activeCase": "conservative",
+    "revenue": 187200,
+    "income": 107139.79723652673,
+    "capacityPct": 156.25,
+    "takeHome": 78255,
+    "poolUtilization": [
+      {
+        "id": "staff",
+        "name": "Staff",
+        "pct": 156.25
+      },
+      {
+        "id": "studio",
+        "name": "Recording room",
+        "pct": 21.666666666666668
+      },
+      {
+        "id": "booth",
+        "name": "Practice booth",
+        "pct": 32.5
+      }
+    ],
+    "yearOneCashFlow": 103696.98168677697
+  },
+  {
+    "mode": "current",
+    "activeCase": "optimistic",
+    "revenue": 498960,
+    "income": 403138.7572365267,
+    "capacityPct": 158.65384615384613,
+    "takeHome": 270620,
+    "poolUtilization": [
+      {
+        "id": "staff",
+        "name": "Staff",
+        "pct": 158.65384615384613
+      },
+      {
+        "id": "studio",
+        "name": "Recording room",
+        "pct": 22.22222222222222
+      },
+      {
+        "id": "booth",
+        "name": "Practice booth",
+        "pct": 33.33333333333333
+      }
+    ],
+    "yearOneCashFlow": 399695.94168677693
+  }
+]

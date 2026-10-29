@@ -5,6 +5,7 @@ export interface ModalButton {
   danger?: boolean;
   action?: () => void | Promise<void>;
 }
+let nextModalTitle = 0;
 
 export function createModal({
   title,
@@ -40,7 +41,13 @@ export function createModal({
 
   // Create modal content
   const modal = document.createElement('div');
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const titleId = `modal-title-${++nextModalTitle}`;
   modal.className = 'modal-content modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', titleId);
+  modal.tabIndex = -1;
   if (id) modal.id = id;
 
   modal.style.cssText = `
@@ -72,11 +79,11 @@ export function createModal({
   // Modal HTML structure (colors come from theme tokens so it matches dark/light)
   modal.innerHTML = `
     <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <h3 style="margin: 0; color: var(--text); font-size: 20px;">${title}</h3>
-      <button class="modal-close" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">&times;</button>
+      <h3 id="${titleId}" style="margin: 0; color: var(--text); font-size: 20px;">${title}</h3>
+      <button class="modal-close" aria-label="Close dialog" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); padding: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
     <div class="modal-body" style="color: var(--text); line-height: 1.5;">
-      ${content}
+      ${typeof content === 'string' ? content : ''}
     </div>
     ${buttons.length > 0 ? `
       <div class="modal-footer" style="margin-top: 24px; display: flex; gap: 8px; justify-content: flex-end;">
@@ -86,10 +93,12 @@ export function createModal({
       </div>
     ` : ''}
   `;
+  if (content instanceof HTMLElement) modal.querySelector('.modal-body')!.appendChild(content);
 
   // Add to overlay
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
+  modal.focus({ preventScroll: true });
 
   // Lock background scroll while modal is open
   window.acquireScrollLock?.();
@@ -99,6 +108,7 @@ export function createModal({
     overlay.remove();
     window.releaseScrollLock?.();
     document.removeEventListener('keydown', handleEsc);
+    if (opener?.isConnected) opener.focus({ preventScroll: true });
     if (typeof onClose === 'function') onClose();
   };
 
@@ -128,8 +138,20 @@ export function createModal({
 
   // ESC key to close — only respond when this is the topmost overlay
   const handleEsc = (e: KeyboardEvent) => {
+    const overlays = document.querySelectorAll('.modal-overlay');
+    if (overlays[overlays.length - 1] !== overlay) return;
+    if (e.key === 'Tab') {
+      const controls = [...modal.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')]
+        .filter(element => element.getClientRects().length > 0);
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === modal)) {
+        e.preventDefault(); last?.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || document.activeElement === modal)) {
+        e.preventDefault(); first?.focus();
+      }
+    }
     if (e.key === 'Escape') {
-      const overlays = document.querySelectorAll('.modal-overlay');
       if (overlays[overlays.length - 1] === overlay) {
         closeModal();
         document.removeEventListener('keydown', handleEsc);

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForPageReady } from './helpers';
 
 // Regression tests for a batch of UI fixes:
 //  - app-bar hamburger toggles the drawer (second tap closes it)
@@ -39,10 +40,12 @@ test.describe('UI fixes', () => {
       } catch { /* */ }
     });
     await page.goto('/');
+    await waitForPageReady(page);
+    await page.getByRole('tab', { name: 'Customers', exact: true }).click();
     await page.waitForSelector('#customerAnalyticsToggle');
 
     await expect(page.locator('#customerAnalyticsBody')).toHaveClass(/collapsed/);
-    await page.evaluate(() => document.getElementById('customerAnalyticsToggle')!.click());
+    await page.locator('#customerAnalyticsToggle').click();
     await expect(page.locator('#customerAnalyticsBody')).not.toHaveClass(/collapsed/);
     // The panel should now contain the rendered dashboard, not be empty.
     const len = await page.evaluate(() => document.getElementById('customerAnalyticsPanel')!.innerHTML.length);

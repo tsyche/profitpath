@@ -1,5 +1,7 @@
 # ProfitPath
 
+**TL;DR:** Model service-business profitability and capacity in your browser. Business inputs stay on your device; save scenarios, compare alternatives, and export results.
+
 [![Tests](https://github.com/tsyche/profitpath/actions/workflows/test.yml/badge.svg)](https://github.com/tsyche/profitpath/actions/workflows/test.yml)
 [![Build APK](https://github.com/tsyche/profitpath/actions/workflows/build-apk.yml/badge.svg)](https://github.com/tsyche/profitpath/actions/workflows/build-apk.yml)
 [![Deploy](https://github.com/tsyche/profitpath/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/tsyche/profitpath/actions/workflows/deploy-pages.yml)
@@ -12,7 +14,7 @@ Client-side profitability and capacity simulator for recurring service businesse
 
 ## What's included
 
-- `index.html`, `assets/app.ts`, `assets/styles.css` — main app code (vanilla JS with Vite build system)
+- `index.html`, `assets/app.ts`, `assets/styles.css` — main app code (TypeScript with Vite)
 - `src/calculations/` — modular calculation engine with caching and debug capabilities
 - `src/settings/` — experience level management and feature gating
 - `ROADMAP.md` — consolidated roadmap with completed features and planned improvements (single source of truth)
@@ -23,7 +25,7 @@ Client-side profitability and capacity simulator for recurring service businesse
 - **Experience Levels**: Beginner, Intermediate, and Advanced modes with appropriate feature sets
 - **Core Features**: Forecast/current mode simulation, revenue composition charts with interactive hover tooltips, scenario management with localStorage persistence
 - **Business Intelligence**: Break-even analysis with visual indicators, contribution margin calculations, profitability insights, rich dashboard visualizations
-- **Advanced Export**: Multi-format reporting (PDF with charts, Excel with formulas, HTML pages, automated scheduling), email sharing functionality
+- **Advanced Export**: Multi-format reporting (printable PDF, Excel with formulas, HTML pages), email sharing, and portable scenario/comparison links. Scheduled delivery requires a server and is unavailable.
 - **Data Validation**: Comprehensive input validation with contextual error messages and business logic checks
 - **Collaboration**: Shareable URLs for sharing scenarios with stakeholders, automatic URL loading on page load
 - **Templates**: Industry-specific templates for consulting, cleaning, landscaping, handyman, fitness, and photography services
@@ -31,7 +33,7 @@ Client-side profitability and capacity simulator for recurring service businesse
 - **Guided "What if?" wizard** (all experience levels): preview hiring, pricing, client, cost and take-home-goal scenarios against your numbers, then apply one with undo
 - **Advanced Analytics**: Client mix optimizer (suggests optimal offering mix for profit/utilization), rules-based insights with what-if estimates, a "What would it take?" reverse calculator for a target take-home, advanced charts (sensitivity heat map, balanced scorecard radar, client capacity funnel)
 - **Privacy-Respecting Site Analytics**: Anonymous GoatCounter visit counting (web + APK) — no cookies, no business data ever leaves the device; see [docs/privacy-policy.md](docs/privacy-policy.md)
-- **Test Coverage**: 427 unit tests (including fuzz tests, 40 files) and 264 Playwright e2e tests across chromium and firefox (14 files) — both run in CI on every push
+- **Testing**: Unit, integration, seeded fuzz, and Playwright journey/accessibility tests across Chromium and Firefox. See [the testing guide](tests/e2e/README.md).
 
 ## Quick Start
 
@@ -43,6 +45,8 @@ just dev
 ```
 
 2. Open http://localhost:3120 in your browser.
+
+The approved product-flow redesign is available at [the workspace preview](http://localhost:3120/?layout=workspaces). It separates Model, Results, and Compare while preserving the existing calculations. The previous layout remains the default until release validation and a human walkthrough are complete. See [experience levels](docs/experience-levels.md#workspace-preview) for the preview's navigation and detail behavior.
 
 ## Development
 

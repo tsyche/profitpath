@@ -1,68 +1,48 @@
 # Playwright E2E Testing for ProfitPath
 
-This directory contains end-to-end tests for the ProfitPath application using Playwright.
+**TL;DR:** Run `just test-e2e-container` for the complete Chromium/Firefox suite in a disposable container. Native browser runs use `just test-e2e`; both start a dedicated Vite server on port 3121.
 
-## Setup
+## Running tests
 
-Tests are already configured with:
-- Playwright with Chromium and Firefox browsers
-- Automatic dev server startup
-- HTML reporting with screenshots/videos on failure
-- Mobile viewport testing
-
-## Running Tests
+Install dependencies with `just setup`. Container runs require Docker and use the Playwright image matching the lockfile, including uncommitted source without changing host dependencies.
 
 ```bash
-# Run all E2E tests
-npm run test:e2e
-
-# Run tests with UI (interactive mode)
-npm run test:e2e:ui
-
-# Run tests in headed mode (show browser window)
-npm run test:e2e:headed
-
-# Run specific test file
-npx playwright test tests/e2e/basic.spec.js
-
-# Run tests in specific browser
-npx playwright test --project=chromium
-npx playwright test --project=firefox
+just test-e2e-container
+just test-e2e-container workspace-shell.spec.ts workspace-model.spec.ts workspace-results.spec.ts workspace-accessibility.spec.ts
+just test-e2e-container --project=chromium
+just test-e2e
+just test-e2e-headed
 ```
 
-## Test Structure
+The container runner forwards Playwright arguments. Avoid shell metacharacters in recipe arguments; use a simple regular expression such as `--grep shared.comparison` for a focused test.
 
-- `basic.spec.js` - Core application smoke checks
-- `app.spec.ts` / `app.spec.js` - App load, controls/outputs sections, settings modal
-- `scenarios.spec.js` - Scenario management, persistence, mode switching
-- `export.spec.js` - Export menu (drawer) and all formats
-- `regression_fixes.spec.js` - Targeted regression fixes (payroll, share, import)
-- `header_redesign.spec.js` - App-bar redesign: modal theming, mode toggle, mobile drawer/bottom bar
-- `mobile_layout.spec.js` - Mobile viewport: header/content gap, Feedback & Help bottom-sheet docking + theming, Scenarios modal close affordance
-- `help_onboarding.spec.js` - Help center, contextual KPI help, guided tour
-- `ui-fixes.spec.js` - UI fix regressions (compare/share, dark mode legibility, copy-on-click)
-- `security.spec.js` - Security regression tests (XSS, CSV injection)
-- `palette.spec.js` - Color palette switcher (drawer swatches, light/dark toggle, persistence)
-- `scroll-lock.spec.js` - Background scroll lock across modals/dialogs
-- `visual-polish.spec.js` - KPI/section-header gradient polish and legibility
-- `helpers.js` - Shared helpers (page-ready waits, onboarding dismissal)
+## Coverage and layout selection
 
-## Adding New Tests
+The default layout remains covered by the existing calculation, scenario, export, mobile, accessibility, security, offline, and tool journeys. Tests use `.spec.ts` files and shared TypeScript helpers.
 
-1. Create a new `.spec.js` file in `tests/e2e/`
-2. Use the test structure from existing files
-3. Run tests to verify they work
+The opt-in `?layout=workspaces` preview has four suites:
 
-## Debugging
+- `workspace-shell.spec.ts`: navigation, URL/history/reload, keyboard focus, undo separation, and saved-scenario entry.
+- `workspace-model.spec.ts`: optional entry, last-valid numeric input, save/undo, and 12-offering Forecast/Current editing on desktop and mobile.
+- `workspace-results.spec.ts`: tool destinations, first-screen mobile figures, case-preserving CSV/share, read-only copying, quota recovery, and portable comparison embeds/recipient exports.
+- `workspace-accessibility.spec.ts`: keyboard workspace focus and axe scans across all experience levels, light/dark themes, desktop/mobile, and the expanded offering editor.
 
-- Use `npm run test:e2e:ui` for interactive debugging
-- Use `npm run test:e2e:headed` to watch tests run in browser
-- Check `test-results` directory for HTML reports after runs
+The separate development prototype and baseline captures use port 3122:
 
-## CI/CD
+```bash
+just test-e2e-container --config tests/design/playwright.config.ts
+```
 
-The configuration is ready for CI with:
-- Parallel test execution
-- Retry on failure
-- Screenshot/video capture on failure
-- HTML reporting
+These design tests do not replace real-application regression tests or the required human device/screen-reader walkthrough before cutover.
+
+## Results and debugging
+
+- Container logs, exit status, screenshots, and retained failure videos are under `e2e-results/container/`.
+- Native runs write artifacts under `test-results/`.
+- The list reporter runs locally; CI also writes `e2e-results/report.json`.
+- Container runs use four workers and zero retries. Native CI allows one retry and reports a retried pass as flaky.
+- Use `npm run test:e2e:ui` for interactive native debugging when browser startup is permitted.
+
+## Adding coverage
+
+Add `.spec.ts` tests that exercise real user behavior with the existing helpers. Cover confirmed bugs with a failing regression test before changing the implementation, then verify it passes. Mock external system boundaries only. Keep navigation preferences separate from financial state in fixtures and assertions.

@@ -7,6 +7,7 @@ import { fmtPct1 } from '../utils/format';
 import { clearHistoryField, persistState, pushHistory, pushHistoryOnce, state } from '../state/appState';
 import { render, updateOutputs, updateValidationDisplay } from '../state/hooks';
 import { $ } from '../utils/dom';
+import { validatePendingInput } from '../state/pendingInputs';
 
 /** Expense line items: table, cost breakdown and handlers. */
 
@@ -52,6 +53,7 @@ function onExpenseInput(e: Event) {
   const i = Number(el.dataset.i);
   const row = state.expenses[i];
   if (!k || !row) return;
+  if (!validatePendingInput(el)) return;
   // Debounce history like offerings: one undo step per field, not per keystroke
   const fieldKey = `exp-${i}-${k}`;
   pushHistoryOnce(fieldKey);

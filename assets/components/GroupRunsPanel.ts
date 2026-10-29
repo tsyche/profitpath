@@ -1,6 +1,7 @@
 import { calc } from '../../src/calculations/index';
 import { sanitizeCostPerRun } from '../../src/calculations/groupRuns';
 import { escapeHtml } from '../services/miscService';
+import { validatePendingInput } from '../state/pendingInputs';
 
 /**
  * Group runs table (ROADMAP 24b). One row per group offering: the fixed cost of one run and the
@@ -25,16 +26,17 @@ export function initGroupRunsPanel(d: RunsDeps): void {
   deps = d;
   const body = $('#groupRunsBody');
   if (!body) return;
-  body.addEventListener('input', onInput);
+  body.addEventListener('input', onGroupRunInput);
   body.addEventListener('blur', () => { lastHistoryField = null; }, true);
 }
 
-function onInput(e: Event): void {
+export function onGroupRunInput(e: Event): void {
   const el = e.target;
   if (!deps || !(el instanceof HTMLInputElement)) return;
   const idx = Number(el.dataset.i);
   const o = deps.getState().offerings[idx];
   if (!o) return;
+  if (!validatePendingInput(el)) return;
   const fieldKey = `run-${idx}`;
   if (fieldKey !== lastHistoryField) {
     deps.pushHistory();

@@ -2,7 +2,7 @@
 
 **TL;DR:** Replace the long Inputs/Outputs page with Model, Results, and Compare workspaces inside one scenario context. Keep live feedback while editing, make each offering manageable on its own, and reveal specialist tools when they help answer a question.
 
-**Status:** Draft — workspace direction accepted by Tim on 2026-10-28; detailed design and implementation gates remain open.
+**Status:** Building — Tim approved continuation with feature parity on 2026-10-28. The Phase 2 shell and substantial Phase 3–4 implementation are available behind `?layout=workspaces`; remaining validation and cutover gates are open.
 
 **Last updated:** 2026-10-28
 
@@ -62,6 +62,8 @@ At 375px, the sampled document width was 375px: the historical overflow was **no
 **Limits:** This was a focused planning walkthrough, not a completed usability audit. No timed participant study, 12-offering rerun, stable Advanced-state verification, screen-reader test, full keyboard journey, or export round trip was completed. Mobile emulation is not a physical-device test. The deployed version shown in Settings was `0.8.58-beta`; record the tested build again at Phase 0.
 
 Phase 0 must capture screenshots, interaction steps, fixtures, and measurements together in the existing [live-evidence record](../ledger/UI_UX_PHASE0_LIVE_EVIDENCE.md), as a dated addition. This supersedes the contradictory baseline for implementation without rewriting history.
+
+**Phase 0 completed, 2026-10-28:** the [reproducible baseline](../ledger/UI_UX_PHASE0_LIVE_EVIDENCE.md#product-flow-baseline--2026-10-28) now records both browsers, desktop/mobile, Beginner/Fitness and Advanced/12-offering fixtures, screenshots, six calculation goldens, current failures, and task paths. The dense mobile model places Costs around 15,600px and net income around 17,800px down. Sampled horizontal page overflow and the historical 19-control count were not reproduced. Partial price entry persists zero, onboarding returns after Explore/reload, and non-Base shares reopen on Base.
 
 ## Recommended information architecture
 
@@ -233,6 +235,61 @@ Avoid duplicate DOM IDs and bindings when moving panels. Hidden views must not r
 
 The focused editor may keep transient invalid text locally, but must not fork the persisted business model. Reuse the existing sanitizers and history grouping. All calculation semantics remain owned by `src/calculations/`.
 
+### Feature destinations and approved detail matrix
+
+Tim approved this matrix for the workspace implementation on 2026-10-28. It applies to the opt-in workspace preview; the default layout keeps its existing feature gates. An in-use modeled value always has a summary and a direct edit route.
+
+| Existing capability | Canonical destination | Beginner initial presentation | Advanced initial presentation |
+|---|---|---|---|
+| Mode, currency, notes | Model / Business; scenario context carries mode/currency | Visible; mode explained by its question | Same |
+| Saved scenarios, templates, duplicate, undo/redo | Scenario context; examples under New | Always reachable; distinguish retained draft from explicit save | Same |
+| Offering name/type/price/frequency/time, mix or clients | Model / Offerings / focused editor | Core fields visible; search and type filter | Same plus optional retained table |
+| Variable cost, contractor labor, resource assignment, group seats/fill/run cost | Offering editor / Delivery and costs | Relevant fields available; collapsed summary says “in use” when populated | Delivery group initially open; irrelevant type fields stay hidden |
+| Overhead, processing fees, expense rows, purchases/loans | Model / Costs | Editable; explain profit versus Year 1 cash flow | Same; no duplicate editable payroll |
+| Staffing, pay, productive/target utilization, rooms/equipment, staff-free pools | Model / People & capacity | Core fields visible; resources discoverable and shown when in use | Same |
+| Discounts and sales-loss assumptions | Offering editor / Pricing assumptions | Available through “Try a price change”; in-use summary | Same |
+| Confidence, notes, low/high bounds, market comparison | Offering editor / Uncertainty and context | Collapsed, with in-use values summarized | Collapsed; detail preference never expands everything |
+| Estimate/source review | Model / Assumptions | Read-only review with source links | Same |
+| Net income, revenue, capacity, break-even, active case | Results; compact live figures in Model | Visible with period, units, mode, and case | Same |
+| Payroll/fixed/variable cost breakdown, take-home, cash flow, waterfall | Results / Where does the money go? | Question-led expansion | Same, with detail preference |
+| Offering ranking, price floor, per-offering output | Results / Which services contribute most? | Question-led expansion; source links | Same |
+| Capacity pools, gauge/funnel | Results / What limits growth? | Question-led expansion; equivalent text/table | Same |
+| Reverse calculator, What If, Insights, Advisor, mix optimizer, sensitivity | Relevant Results question (“income target” or “limits growth”) | Explicit opt-in route; never a locked or blank destination | Suggested contextual links; tools remain collapsed |
+| Membership/profile calculator, customer analytics | Results / Customer economics question | Opt-in; show “in use” membership summary | Same |
+| Heat map/radar and specialist charts | Results / Explore assumptions | Optional opt-in; text/table alternative | Available, initially collapsed |
+| Two-scenario comparison | Compare | Always available with useful empty state | Same; item 38 owns richer comparison |
+| CSV, Excel, PDF, HTML, financial report, email, embed, schedule; CSV import and bundle links | Scenario context; Share/export at Results/Compare conclusion | All existing formats available; import validation preserved | Same |
+| Debug, performance, help, tooltips, theme | Settings/help | Diagnostics secondary; tooltip preference separate | Diagnostics available in Settings, never mixed into results |
+
+The approved implementation makes Compare and essential resource/group inputs available at Beginner. This changes discovery and detail presentation without changing calculation semantics.
+
+### Clickable prototype and review gate
+
+Run `just dev`, then open [the local prototype](http://localhost:3120/docs/plans/prototypes/product-flow.html). The [source entry](prototypes/product-flow.html) is served by Vite for development and excluded from the production build. It uses the existing calculator and price-conversion helpers with synthetic fixtures; its draft and saved options live under the separate `profitpath-design-prototype-v1` **sessionStorage** key.
+
+Implemented prototype paths: template preview or blank entry; five Model destinations; offering search/filter/list/detail; type-specific fields; price plus sales-loss editing; last-valid-value feedback; undo; browser Back; tab reload; live annual summary; Results hierarchy/case selection; saving a baseline and named alternative; two-option Compare; return to editing; and a share-inclusion preview. Beginner/Advanced changes initial detail without locking core inputs or Compare.
+
+| Screen | Desktop | 375px mobile |
+|---|---|---|
+| Entry | [Screenshot](prototypes/desktop-entry.png) | [Screenshot](prototypes/mobile-entry.png) |
+| Offering editor | [Screenshot](prototypes/desktop-offering-editor.png) | [Screenshot](prototypes/mobile-offering-editor.png) |
+| Results | [Screenshot](prototypes/desktop-results.png) | [Screenshot](prototypes/mobile-results.png) |
+| Compare | [Screenshot](prototypes/desktop-compare.png) | [Screenshot](prototypes/mobile-compare.png) |
+
+Prototype limits are explicit in the interface: expense/resource rows are read-only fixture examples; reverse/analysis tool panels show intended placement; Share previews included content without exporting or creating links. It is not the workspace-shell implementation. No production storage or scenario format changed.
+
+Review these tasks on desktop and at 375px:
+
+1. Use Fitness, find the first offering, change its price, and visit Results. Check whether the live summary preserves the edit-and-see loop.
+2. Try a change, name the alternative, edit its price and expected sales loss, save, and compare. Check whether draft versus saved-option status is clear.
+3. Open the hybrid example, search “practice,” and inspect its staff-free resource. Clear its price, navigate away/back, correct it, and undo.
+4. Review group delivery fields and assumptions at Beginner and Advanced. Approve or revise the matrix above.
+5. Review Results wording: net income before tax, take-home, and cash flow are distinct. Share is visibly a snapshot preview.
+
+Automated proof is in [prototype.spec.ts](../../tests/design/prototype.spec.ts): Chromium/Firefox, desktop/375px, Forecast/Current dense editing, baseline preservation, invalid input, undo, history/reload, keyboard focus, and light/dark axe scans. These checks do not substitute for Tim's screen review or participant comprehension testing.
+
+**Verification, 2026-10-28:** 12 baseline captures and 18 prototype browser cases pass without retries. Lint, strict typecheck, production build, and 790 unit tests pass; one existing unit test remains skipped. Six of those unit tests pin the captured calculations. A stale visualization test used fractional utilization and fabricated chart data; it now exercises the real calculator and renderer with percentage inputs. Prototype keyboard tests caught same-destination focus loss before its fix and passed afterward. The production build retains the same application JS/CSS bundle hashes; the complete release E2E suite is deferred until application changes/cutover.
+
 ## Delivery phases
 
 Effort ranges are rough engineering estimates, not delivery commitments; they exclude participant scheduling and assume existing component reuse.
@@ -245,6 +302,30 @@ Effort ranges are rough engineering estimates, not delivery commitments; they ex
 | 3. Rebuild model flow | Offering list/detail, consolidated costs, capacity context, optional onboarding | Template and 12-offering journeys pass in both modes, including invalid input and undo | 2–4 days |
 | 4. Rebuild result flow | Outcome hierarchy, contextual tools, existing comparison, share/export entry | Result-to-edit return loop, export/share parity, and approved gating matrix pass | 1.5–3 days |
 | 5. Validate and finalize | Human walkthrough, accessibility/mobile review, regression fixes, official docs | All acceptance gates pass; re-score against the recorded baseline; no critical journey blocked | 1–2 days |
+
+**Delivery record, 2026-10-28:** Phase 0 complete and Phase 1 direction approved. The Phase 2 shell passed its initial Chromium/Firefox gates. Phase 3–4 implementation is present behind the temporary layout switch. The checkpoint below records automated proof and the remaining human acceptance gates.
+
+### Implementation checkpoint — 2026-10-28
+
+The application preview is `http://localhost:3120/?layout=workspaces` through `just dev`; the default remains the previous layout. The standalone prototype is a separate review artifact. Default cutover remains gated by the acceptance items below.
+
+- **Implemented:** workspace/history/focus controller and scenario context; consolidated Costs and People & capacity using existing controls; offering search/filter/focused editor sharing existing mutation handlers; optional original-table editing; transient invalid text with last-valid financial state; undo/redo; inline template previews and blank entry; question-led Results using existing tools; existing two-option comparison; share/export review; case metadata in workspace links and CSV reimport; confirmation before replacing a local draft with a shared snapshot.
+- **Owners:** `WorkspaceShell.ts`, `OfferingEditor.ts`, `WorkspaceEntry.ts`, `WorkspaceResults.ts`, and `WorkspaceShare.ts` under `assets/components/`; `assets/workspaces.css`; `assets/state/pendingInputs.ts`; `assets/utils/readOnly.ts`; `src/ui/workspaceNavigation.ts`. Calculation formulas and financial scenario schemas remain unchanged.
+- **Regression proof:** zero-hour one-time offerings are accepted in Forecast and Current while zero-hour services still fail validation. Browser counterexamples caught the mobile primary block ending around 972px, device-local comparison embeds, recipient exports losing temporary snapshots, a nameless mobile mode button, insufficient dark case-selector contrast, Chromium dense-table page overflow, and reports reading retired staffing fields. Each has a regression check and a local fix.
+- **Browser verification:** the complete 570-case release run passed 554, failed 12, and skipped four existing Firefox cases. All 56 workspace cases passed, including the dense-table fix and all 12 axe cases across light/dark themes, every level, desktop/mobile workspaces, and expanded offering editors. The failures were old tests bypassing collapsed Notes/Resources sections or the Customers tab. After correcting those user paths, a 58-case follow-up passed 56 and exposed an invalid resource fixture: a 39-hour target pool could not fit a 52-hour weekly client. Giving that fixture enough capacity made the final 10-case Resources run pass. Across the full run and focused reruns, **566 cases pass, four existing platform-specific cases skip, and no retries were used**. No production code changed after the full run.
+- **Static/unit/build:** final lint, strict typecheck, production build, and **811 unit tests across 72 files** pass; one existing unit test remains skipped. The email handoff regression verifies current headcount/annual payroll at the mail-app boundary. The reviewed export journey also checks CSV, Excel, HTML, both print reports, snapshot links, embeds, and the scheduling-unavailable message.
+- **Persistence/share:** shared state survives reload before URL payload cleanup; quota failures retain the recoverable URL and show draft-save failure. Read-only reload/copy and explicit comparison labels pass in both browsers. Comparison links/embeds use the same portable payload, recipient snapshots stay in page memory for export, and closing a shared comparison leaves no scenario-library modal or saved-scenario pollution.
+- **Official docs:** architecture notes, experience-level behavior, feature overview, README preview entry, and the E2E testing guide describe the opt-in implementation. The previous layout remains the default.
+
+Remaining work stays owned by ROADMAP item 25:
+
+| Gate | State / exact action |
+|---|---|
+| Human walkthrough | Required before default cutover: desktop/375px model-edit-result-compare-share tasks, screen-reader announcements/navigation, physical-device software-keyboard behavior, 200% zoom/reflow, and actual print/mail-app handoff. Browser viewport tests and axe scans do not prove these. |
+| Measured acceptance | Record participant task times/comprehension and re-score against the baseline. Styling remains refinable; no further design approval is required. |
+| Cutover/finalization | Complete format-content parity review (including selected-case labels in comparison CSV/PDF); after human acceptance, verify offline/service-worker behavior for the final shell, switch the default, retire obsolete markup/switch, fold remaining durable details into official docs, and archive this plan. Do not claim full parity or archive it before those gates close. |
+
+Use `just test-e2e-container` for browser verification in this managed environment. Native Chromium hits macOS sandbox Mach-port restrictions; browser caches under `~/Library` are protected.
 
 **Ballpark:** 7–14 engineering days for the complete redesign, refined after Phase 1. The cheaper coherent release keeps the existing two-option comparison and existing table as the dense editing option; it still delivers Model/Results separation and a focused mobile editor. Item 38/39 enhancements remain separately estimated.
 
@@ -285,9 +366,10 @@ Rollback restores the previous shell/assets without transforming scenario data. 
 |---|---|
 | Confirmed by Tim, 2026-10-28 | Favor Model / Results / Compare with optional first-time guidance |
 | Planning constraint | Preserve current calculations, client-side storage, saved scenarios, and share/import compatibility |
-| Proposed for prototype | Focused offering editor, compact live summary, three primary Results figures |
-| Proposed for Phase 1 approval | Experience levels become detail preferences; core modeled inputs and Compare remain discoverable at every level |
-| Pending prototype review | Exact navigation placement, result wording, and offering-editor grouping on desktop/mobile |
-| Pending validation | Full current baseline, participant availability, task targets, and active-case export/share behavior |
+| Implemented for review | Focused offering editor, compact live summary, three primary Results figures; real calculator, isolated synthetic draft |
+| Approved and implemented in preview | Experience levels become initial-detail preferences; the matrix above keeps core modeled inputs and Compare discoverable at every level |
+| Approved by Tim, 2026-10-28 | Prototype direction and continuation after review; preserve feature parity and refine styling during implementation |
+| Recorded in Phase 0 | Full current baseline and active-case share reset; six golden calculations retained for compatibility |
+| Pending release validation | Participant availability/task targets, human screen-reader/device walkthrough, full export/share parity, and Phases 2–5 acceptance gates |
 
-Next step: complete Phase 0 and produce the Phase 1 clickable prototype for review. This document authorizes no application implementation by itself; the current request is the redesign plan.
+Next step: resolve and verify the implementation checkpoint above, then complete Phase 5 acceptance and cutover.

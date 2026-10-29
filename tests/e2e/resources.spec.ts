@@ -10,6 +10,7 @@ async function open(page: Page, experienceLevel: string) {
   }, experienceLevel);
   await page.goto('/');
   await waitForPageReady(page);
+  if (experienceLevel !== 'beginner') await page.locator('#resourcesSection > summary').click();
 }
 
 const rows = (page: Page) => page.locator('#resourcesBody tr');
@@ -49,7 +50,8 @@ test.describe('Capacity resources', () => {
     await page.locator('#addResourceBtn').click();
     await expect(rows(page)).toHaveCount(1);
     await rows(page).first().locator('input[data-k="name"]').fill('Booth');
-    await rows(page).first().locator('input[data-k="hoursPerWeek"]').fill('1');
+    // At 75% target, 2 h/week leaves 78 annual hours: at least one 52-hour weekly client fits.
+    await rows(page).first().locator('input[data-k="hoursPerWeek"]').fill('2');
     // An active but untagged resource sits at 0%, so staff is still the bottleneck
     await expect(page.locator('#bottleneckLine')).toBeVisible();
 

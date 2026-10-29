@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { calc, clearCalculationCache } from '../calculations/index';
+import { updateRichVisualizations } from '../../assets/services/visualizationService';
 
 // Helper function to create proper state objects for tests
 function createTestState(overrides = {}) {
@@ -35,36 +36,24 @@ describe('Visual Regression Tests - Charts and Reports', () => {
   });
 
   describe('Chart Data Structure Validation', () => {
-    it('should maintain consistent chart data structure', () => {
-      const inputs = createTestState({ employees: 5, employeePay: 80, productiveUtilizationPct: 0.85 });
-
+    it('renders calculator utilization as a percentage without multiplying it again', () => {
+      const inputs = createTestState({
+        fullTimeEmployees: 5, partTimeEmployees: 0,
+        fullTimeEmployeePay: 60000, partTimeEmployeePay: 0,
+        productiveUtilizationPct: 85, targetUtilizationPct: 80
+      });
       const results = calc(inputs);
-
-      // Validate chart data structure
-      const chartData = {
-        revenue: {
-          labels: ['Revenue', 'Variable Costs', 'Income'],
-          values: [results.revenue, results.variableCosts, results.income],
-          colors: ['#10b981', '#ef4444', '#22c55e']
-        },
-        utilization: {
-          percentage: results.capacityPct * 100,
-          capacity: results.annualServiceHours,
-          used: results.clients
-        },
-        breakdown: {
-          clients: results.clients,
-          revenue: results.revenue,
-          variableCosts: results.variableCosts,
-          income: results.income,
-          contributionMargin: results.contributionMarginPerClient
-        }
-      };
-
-      expect(chartData.revenue.labels).toEqual(['Revenue', 'Variable Costs', 'Income']);
-      expect(chartData.revenue.values).toHaveLength(3);
-      expect(chartData.utilization.percentage).toBe(80);
-      expect(chartData.breakdown.clients).toBe(results.clients);
+      const container = document.createElement('div');
+      container.id = 'richVisualizations';
+      document.body.appendChild(container);
+      try {
+        updateRichVisualizations(results);
+        expect(results.serviceHours).toBeGreaterThan(0);
+        expect(container.querySelector('.gauge-value')?.textContent).toBe('80.0%');
+        expect(container.querySelector('.profit-waterfall')).not.toBeNull();
+      } finally {
+        container.remove();
+      }
     });
 
     it('should handle edge cases in chart data', () => {
