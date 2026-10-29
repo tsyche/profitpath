@@ -20,12 +20,13 @@ The container runner forwards Playwright arguments. Avoid shell metacharacters i
 
 The default layout remains covered by the existing calculation, scenario, export, mobile, accessibility, security, and tool journeys. Tests use `.spec.ts` files and shared TypeScript helpers.
 
-The opt-in `?layout=workspaces` preview has four suites:
+The opt-in `?layout=workspaces` preview has five suites:
 
 - `workspace-shell.spec.ts`: navigation, URL/history/reload, keyboard focus, undo separation, saved-scenario entry, and the remembered Classic/Workspaces choice, including case/read-only preservation and blocked switching for incomplete edits or draft-save failures.
 - `workspace-model.spec.ts`: optional entry, last-valid numeric input, save/undo, and 12-offering Forecast/Current editing on desktop and mobile.
-- `workspace-results.spec.ts`: tool destinations, first-screen mobile figures, case-preserving CSV/share, read-only copying, quota recovery, portable comparison embeds/recipient exports, and comparison CSV/PDF labels and financial values across all cases.
+- `workspace-results.spec.ts`: tool destinations, first-screen mobile figures, case-preserving CSV/share in both layouts, read-only copying, quota recovery, portable comparison embeds/recipient exports, comparison CSV/PDF financial values across all cases, and report conclusions/notes/price units.
 - `workspace-accessibility.spec.ts`: keyboard workspace focus and axe scans across all experience levels, light/dark themes, desktop/mobile, and the expanded offering editor.
+- `workspace-keyboard.spec.ts`: a complete keyboard-only template → baseline → alternative → edit/correct → Results → Compare → share journey at desktop and 375px in both browsers.
 
 The separate development prototype and baseline captures use port 3122:
 
@@ -42,6 +43,14 @@ just test-e2e-container --config tests/offline/playwright.config.ts
 ```
 
 These build the actual production bundle, warm its service-worker cache, disconnect the browser, and verify reloads, model editing, and switching between both layouts. Loopback `127.0.0.2` exercises production worker registration; localhost development deliberately unregisters the worker.
+
+Production browser acceptance uses port 3124:
+
+```bash
+just test-e2e-container --config tests/acceptance/playwright.config.ts
+```
+
+Two Chromium cases use a temporary extension's `chrome.tabs.setZoom(2)` to prove actual 200% browser zoom: the zoom factor and pixel ratio double while the CSS viewport halves. Light/dark assertions, visible-control bounds, axe scans, and native-window screenshots cover reflow and layout switching. A third case renders the reviewed report to an actual PDF artifact. These prove browser behavior; physical-device keyboard use, human screen-reader usability, and native print/mail-app handoff remain separate gates.
 
 ## Results and debugging
 

@@ -23,9 +23,10 @@ for (const theme of ['light', 'dark'] as const) {
         localStorage.setItem('profitpath-state', JSON.stringify(model));
         localStorage.setItem('profitpath-settings', JSON.stringify({ experienceLevel: level }));
         localStorage.setItem('profitpath-onboarding-completed', 'true');
-        localStorage.setItem('theme', theme);
+        localStorage.setItem('profitpath-theme', theme);
       }, { model: hybridFixture(), theme, level });
       await page.goto('/?layout=workspaces');
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
       const nav = page.getByRole('navigation', { name: 'Workspaces' });
       await expect(nav).toBeVisible();
       for (const width of [1440, 375]) {

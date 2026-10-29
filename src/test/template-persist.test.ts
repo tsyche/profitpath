@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { loadIndustryTemplate, shareViaEmail } from '../../assets/services/miscService';
 import { hybridFixture } from '../../assets/prototypes/fixtures';
+import { calc } from '../calculations/index';
+import { fmtMoney0 } from '../calculations/currency';
+import { setRangeCase } from '../calculations/rangeCase';
 
 describe('Email report staffing', () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
@@ -23,6 +26,26 @@ describe('Email report staffing', () => {
     expect(body).toContain('Annual Payroll: $140,000');
     expect(body).not.toContain('undefined');
     expect(body).not.toContain('NaN');
+  });
+
+  it.each(['USD', 'EUR'])('includes the selected annual conclusion, price units and tax basis for %s', currency => {
+    vi.useFakeTimers();
+    const model = { ...hybridFixture(), currency };
+    setRangeCase('conservative');
+    const location = { origin: 'https://example.test', pathname: '/', search: '', href: '' };
+    vi.stubGlobal('window', { location, state: model });
+    shareViaEmail();
+    const params = new URLSearchParams(location.href.split('?')[1]);
+    expect(params.get('subject')).toContain('Conservative case');
+    const body = params.get('body');
+    expect(body).toContain('Net income before tax: ' + fmtMoney0(calc(model).income));
+    expect(body).toContain('Annual revenue: ' + fmtMoney0(calc(model).revenue));
+    expect(body).toContain(`Voice coaching: ${fmtMoney0(60)}/session`);
+    expect(body).toContain(`Starter kit: ${fmtMoney0(120)}/sale`);
+    expect(body).toContain(`Studio membership: ${fmtMoney0(180)}/month`);
+    expect(body).toContain(model.notes);
+    expect(body).toContain('&case=conservative');
+    if (currency === 'EUR') expect(body).toContain('US tax rules applied to EUR amounts, not a EUR tax estimate');
   });
 });
 

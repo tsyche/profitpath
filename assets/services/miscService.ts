@@ -8,13 +8,14 @@ export function getShareBase() {
   if (o === 'http://localhost' || o === 'capacitor://localhost') return PRODUCTION_URL + '/';
   return o + window.location.pathname;
 }
-import type { AppState, CalcResult, ExperienceLevel, Offering, Scenario } from '../../src/types';
+import type { AppOffering, AppState, CalcResult, ExperienceLevel, Offering, Scenario } from '../../src/types';
 import { deflateSync, inflateSync, strToU8, strFromU8 } from 'fflate';
 import { clamp, errMsg } from '../utils/helpers';
 import { buildXLSX } from '../utils/xlsx';
 import { buildReportSections, buildWorkbookSheets, reportPreamble, type ReportCell } from './reportSections';
 import { calc as calculate, normalizeOfferingType } from '../../src/calculations/index';
-import { getRangeCase, rangeCaseTag } from '../../src/calculations/rangeCase';
+import { getRangeCase, RANGE_CASE_LABELS, rangeCaseTag } from '../../src/calculations/rangeCase';
+import { displayPrice, isOneTime, isPerSession } from '../../src/calculations/offeringPrice';
 import { usesWorkspaces } from '../../src/ui/workspaceNavigation';
 import { sanitizeOfferingRange } from '../../src/calculations/ranges';
 import { sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
@@ -239,6 +240,50 @@ function caseSuffix() {
   return t ? ' (' + t + ')' : '';
 }
 
+function reportPrice(offering: AppOffering): string {
+  const unit = isOneTime(offering) ? 'sale' : isPerSession(offering) ? 'session' : 'month';
+  return `${fmtMoney0(displayPrice(offering))}/${unit}`;
+}
+
+function reportResultRows(metrics: CalcResult): [string, string][] {
+  return [
+    ['Annual revenue', fmtMoney0(metrics.revenue)],
+    ['Net income before tax', fmtMoney0(metrics.income)],
+    ['Utilization', metrics.capacityPct.toFixed(1) + '%'],
+    ['Estimated take-home after tax', fmtMoney0(metrics.takeHome)],
+    ['Year 1 cash flow before tax', fmtMoney0(metrics.yearOneCashFlow)]
+  ];
+}
+
+function reportScenarioName(): string {
+  return document.querySelector<HTMLInputElement>('#workspaceName')?.value.trim() || 'Working model';
+}
+
+function reportContextHTML(state: AppState): string {
+  const name = reportScenarioName();
+  const basis = taxBasisNote(state.currency);
+  const mode = state.mode === 'forecast' ? 'Forecast · capacity-supported customers' : 'Current · entered customers';
+  const caveat = state.mode === 'forecast'
+    ? 'Forecast models capacity-supported customers. It does not predict demand or promise sales.'
+    : 'Current results use the entered customer counts and service assumptions.';
+  return `<p><strong>Scenario:</strong> ${escapeHtml(name)}</p>
+    <p>${RANGE_CASE_LABELS[getRangeCase()]} case · ${mode} · ${escapeHtml(normalizeCurrency(state.currency))}</p>
+    <p>${caveat} Take-home uses estimated tax; Year 1 cash flow includes purchases and loan principal.</p>
+    ${basis ? `<p>${escapeHtml(basis)}.</p>` : ''}
+    ${state.loadedTemplate ? '<p>Example assumptions: replace them with your business inputs before making a decision.</p>' : ''}
+    ${state.notes?.trim() ? `<p><strong>Scenario notes:</strong> ${escapeHtml(state.notes).replace(/\r?\n/g, '<br>')}</p>` : ''}`;
+}
+
+function reportConclusionHTML(state: AppState, metrics: CalcResult): string {
+  return `<section class="section">
+    <h2>Annual results</h2>
+    ${reportContextHTML(state)}
+    <table><thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead><tbody>
+      ${reportResultRows(metrics).map(([label, value]) => `<tr><th scope="row">${label}</th><td>${escapeHtml(value)}</td></tr>`).join('')}
+    </tbody></table>
+  </section>`;
+}
+
 export function csvCell(value: unknown) {
   let s = String(value == null ? '' : value);
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
@@ -350,6 +395,7 @@ export function encodeScenarioToURL(state: import('../../src/types').CalcState, 
     const serialized = JSON.stringify(state);
     let url = getShareBase() + '?scenario=' + SCENARIO_V2_PREFIX + bytesToBase64Url(deflateSync(strToU8(serialized), { level: 9 }));
     if (readonly) url += '&readonly=1';
+    url += '&case=' + getRangeCase();
     if (usesWorkspaces()) {
       const snapshot = new URL(snapshotContextURL(url));
       const name = document.querySelector<HTMLInputElement>('#workspaceName')?.value;
@@ -825,6 +871,7 @@ export function exportAsPDF() {
   if (!ensureValidInputs()) return;
   // Create a printable HTML version and open print dialog
   const state = window.state;
+  const metrics = calculate(state);
   const fmtPct = (n: number) => n.toFixed(1) + '%';
 
   // Capacitor WebView blocks window.open — fall through to HTML export instead
@@ -843,7 +890,7 @@ export function exportAsPDF() {
   const offeringsHtml = state.offerings.map(o => `
     <tr>
       <td>${escapeHtml(o.name)}</td>
-      <td>${fmtMoney0(o.priceMonthly)}</td>
+      <td>${reportPrice(o)}</td>
       <td>${o.sessionsPerYear}</td>
       <td>${o.hoursPerSession}</td>
       <td>${fmtMoney0(o.variableCostPerSession)}</td>
@@ -855,8 +902,9 @@ export function exportAsPDF() {
 
   printWindow.document.write(`
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+      <meta charset="UTF-8">
       <title>ProfitPath Analysis Report${caseSuffix()}</title>
       <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
@@ -871,11 +919,12 @@ export function exportAsPDF() {
     <body>
       <h1>ProfitPath Analysis Report${caseSuffix()}</h1>
       <p>Generated: ${new Date().toLocaleString()}</p>
+      ${reportConclusionHTML(state, metrics)}
       
       <div class="section">
         <h2>Business Overview</h2>
         <p><span class="label">Employees:</span> ${state.fullTimeEmployees + state.partTimeEmployees}</p>
-        <p><span class="label">Annual Payroll:</span> ${fmtMoney0(calculate(state).annualPayroll)}</p>
+        <p><span class="label">Annual Payroll:</span> ${fmtMoney0(metrics.annualPayroll)}</p>
         <p><span class="label">Monthly Costs:</span> ${fmtMoney0(totalMonthlyOverhead(state))}</p>
         <p><span class="label">Productive Utilization:</span> ${fmtPct(state.productiveUtilizationPct)}</p>
         <p><span class="label">Target Utilization:</span> ${fmtPct(state.targetUtilizationPct)}</p>
@@ -887,7 +936,7 @@ export function exportAsPDF() {
           <thead>
             <tr>
               <th>Service Name</th>
-              <th>Monthly Price</th>
+              <th>Price and unit</th>
               <th>Sessions/Year</th>
               <th>Hours/Session</th>
               <th>Variable Cost</th>
@@ -918,12 +967,13 @@ export function exportAsPDF() {
 export function exportAsHTML() {
   if (!ensureValidInputs()) return;
   const state = window.state;
+  const metrics = calculate(state);
   const fmtPct = (n: number) => n.toFixed(1) + '%';
 
   const offeringsHtml = state.offerings.map(o => `
     <tr>
       <td>${escapeHtml(o.name)}</td>
-      <td>${fmtMoney0(o.priceMonthly)}</td>
+      <td>${reportPrice(o)}</td>
       <td>${o.sessionsPerYear}</td>
       <td>${o.hoursPerSession}</td>
       <td>${fmtMoney0(o.variableCostPerSession)}</td>
@@ -934,8 +984,10 @@ export function exportAsHTML() {
   `).join('');
 
   const htmlContent = `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ProfitPath Analysis Report${caseSuffix()}</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
@@ -954,11 +1006,12 @@ export function exportAsHTML() {
 <body>
   <h1>ProfitPath Analysis Report${caseSuffix()}</h1>
   <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+  ${reportConclusionHTML(state, metrics)}
   
   <div class="section">
     <h2>Business Overview</h2>
     <div class="metric"><span class="label">Employees:</span> <span class="value">${state.fullTimeEmployees + state.partTimeEmployees}</span></div>
-    <div class="metric"><span class="label">Annual Payroll:</span> <span class="value">${fmtMoney0(calculate(state).annualPayroll)}</span></div>
+    <div class="metric"><span class="label">Annual Payroll:</span> <span class="value">${fmtMoney0(metrics.annualPayroll)}</span></div>
     <div class="metric"><span class="label">Monthly Costs:</span> <span class="value">${fmtMoney0(totalMonthlyOverhead(state))}</span></div>
     <div class="metric"><span class="label">Productive Utilization:</span> <span class="value">${fmtPct(state.productiveUtilizationPct)}</span></div>
     <div class="metric"><span class="label">Target Utilization:</span> <span class="value">${fmtPct(state.targetUtilizationPct)}</span></div>
@@ -970,7 +1023,7 @@ export function exportAsHTML() {
       <thead>
         <tr>
           <th>Service Name</th>
-          <th>Monthly Price</th>
+          <th>Price and unit</th>
           <th>Sessions/Year</th>
           <th>Hours/Session</th>
           <th>Variable Cost</th>
@@ -1074,7 +1127,8 @@ export function exportAsFinancialReport() {
 </head>
 <body>
   <h1>ProfitPath Financial Report${caseSuffix()}</h1>
-  <p class="meta">Generated ${dateStr} &nbsp;|&nbsp; Mode: ${metrics.mode === 'forecast' ? 'Forecast' : 'Current'} &nbsp;|&nbsp; ${Math.round(metrics.clients || 0)} clients</p>
+  <p class="meta">Generated ${dateStr} &nbsp;|&nbsp; ${Math.round(metrics.clients || 0)} clients</p>
+  ${reportContextHTML(state)}
 
   <h2>Business Performance Summary</h2>
   <div class="kpi-grid">
@@ -1157,6 +1211,7 @@ export function exportAsFinancialReport() {
     <tr><td>Annual Payroll</td><td>${fmt(metrics.annualPayroll || 0)}</td></tr>
     <tr><td>Annual Overhead</td><td>${fmt(metrics.annualFixedCosts || 0)}</td></tr>
     <tr><td>Owner Pre-Tax Income</td><td>${fmt(metrics.income)}</td></tr>
+    <tr><td>Year 1 Cash Flow (Before Tax)</td><td>${fmt(metrics.yearOneCashFlow)}</td></tr>
   </table>
 
   <div class="footer">Generated by ProfitPath &nbsp;|&nbsp; All figures are projections based on inputs provided. Not financial advice.</div>
@@ -1175,27 +1230,37 @@ export function exportAsFinancialReport() {
 export function shareViaEmail() {
   if (!ensureValidInputs()) return;
   const state = window.state;
+  const metrics = calculate(state);
   const fmtPct = (n: number) => n.toFixed(1) + '%';
+  const basis = taxBasisNote(state.currency);
 
   const offeringsText = state.offerings.map(o =>
-    `- ${o.name}: ${fmtMoney0(o.priceMonthly)}/month, ${o.sessionsPerYear} sessions/year, ${fmtPct(o.mixPct)} mix`
+    `- ${o.name}: ${reportPrice(o)}, ${isOneTime(o) ? 'one-time sale' : `${o.sessionsPerYear} sessions/year`}, ` +
+    (state.mode === 'current' ? `${o.currentClients} current clients` : `${fmtPct(o.mixPct)} mix`)
   ).join('\n');
 
-  const subject = encodeURIComponent('ProfitPath Analysis Report' + caseSuffix());
+  const subject = encodeURIComponent('ProfitPath Analysis Report' + caseSuffix() + ' — ' + reportScenarioName());
   const body = encodeURIComponent(
     `Check out my ProfitPath analysis:\n\n` +
+    `Scenario: ${reportScenarioName()}\n` +
+    `Annual Results — ${RANGE_CASE_LABELS[getRangeCase()]} case:\n` +
+    `Mode: ${state.mode === 'forecast' ? 'Forecast (capacity-supported customers)' : 'Current (entered customers)'}\n` +
+    `Currency: ${normalizeCurrency(state.currency)}\n` +
+    reportResultRows(metrics).map(([label, value]) => `- ${label}: ${value}`).join('\n') + '\n\n' +
+    (basis ? basis + '.\n\n' : '') +
     `Business Overview:\n` +
     `- Employees: ${state.fullTimeEmployees + state.partTimeEmployees}\n` +
-    `- Annual Payroll: ${fmtMoney0(calculate(state).annualPayroll)}\n` +
+    `- Annual Payroll: ${fmtMoney0(metrics.annualPayroll)}\n` +
     `- Monthly Costs: ${fmtMoney0(totalMonthlyOverhead(state))}\n` +
     `- Productive Utilization: ${fmtPct(state.productiveUtilizationPct)}\n` +
     `- Target Utilization: ${fmtPct(state.targetUtilizationPct)}\n\n` +
     `Service Offerings:\n${offeringsText}\n\n` +
+    (state.notes?.trim() ? `Scenario notes:\n${state.notes}\n\n` : '') +
     `View full analysis at: ${encodeScenarioToURL(state) || getShareBase()}`
   );
 
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
-  showNotification('Email client opened!', 'success');
+  showNotification('Opening your email app…', 'info');
 
   // Track email export
   trackEvent('export', { format: 'email' });

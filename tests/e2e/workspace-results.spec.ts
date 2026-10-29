@@ -29,6 +29,29 @@ test('a shared case preserves the conclusion and raw assumptions', async ({ page
   await context.close();
 });
 
+test('a Classic snapshot keeps the selected case and read-only lock for a fresh recipient', async ({ page, browser }) => {
+  await open(page);
+  await page.goto('/?layout=legacy&case=conservative');
+  await page.waitForFunction(() => Boolean(window.lastMetrics));
+  const expected = await page.evaluate(() => ({
+    income: window.calc(window.state).income,
+    inputs: JSON.stringify(window.state.offerings),
+    url: window.encodeScenarioToURL(window.state, { readonly: true })
+  }));
+  expect(new URL(expected.url!).searchParams.get('case')).toBe('conservative');
+  const context = await browser.newContext();
+  const recipient = await context.newPage();
+  await recipient.addInitScript(() => localStorage.setItem('profitpath-onboarding-completed', 'true'));
+  await recipient.goto(expected.url!);
+  await expect(recipient.locator('#modeSelect')).toBeDisabled();
+  expect(await recipient.evaluate(() => window.calc(window.state).income)).toBeCloseTo(expected.income, 8);
+  expect(await recipient.evaluate(() => JSON.stringify(window.state.offerings))).toBe(expected.inputs);
+  await recipient.reload();
+  await expect(recipient.locator('#modeSelect')).toBeDisabled();
+  expect(await recipient.evaluate(() => window.calc(window.state).income)).toBeCloseTo(expected.income, 8);
+  await context.close();
+});
+
 test('opening a shared snapshot asks before replacing a local draft', async ({ page }) => {
   await open(page);
   const url = await page.evaluate(() => window.encodeScenarioToURL({ ...window.state, monthlyCosts: 999 }));
@@ -247,6 +270,11 @@ test('reviewed downloads and print reports use the active case and current staff
   };
   await review();
   await expect(page.getByRole('button', { name: 'Email report', exact: true })).toBeVisible();
+  const expected = await page.evaluate(() => ({
+    income: document.querySelector('#kpiIncome')!.textContent!.trim(),
+    revenue: document.querySelector('#kpiRevenue')!.textContent!.trim(),
+    notes: window.state.notes
+  }));
   const [html] = await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'HTML page', exact: true }).click()
@@ -255,6 +283,12 @@ test('reviewed downloads and print reports use the active case and current staff
   expect(report).toContain('Conservative case');
   expect(report).not.toContain('undefined');
   expect(report).toContain('Annual Payroll:');
+  expect(report).toContain('Net income before tax');
+  expect(report).toContain(expected.income);
+  expect(report).toContain(expected.revenue);
+  expect(report).toContain(expected.notes);
+  expect(report).toContain('$60/session');
+  expect(report).toContain('$120/sale');
   await review();
   const [excel] = await Promise.all([
     page.waitForEvent('download'),
@@ -270,6 +304,9 @@ test('reviewed downloads and print reports use the active case and current staff
     ]);
     await expect(popup.locator('body')).toContainText('Conservative case');
     await expect(popup.locator('body')).not.toContainText('undefined');
+    await expect(popup.locator('body')).toContainText(expected.income);
+    await expect(popup.locator('body')).toContainText(expected.revenue);
+    await expect(popup.locator('body')).toContainText(expected.notes);
     await popup.close();
   }
   await review();

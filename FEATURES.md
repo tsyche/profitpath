@@ -38,8 +38,9 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 ## Advanced Features
 
 ### Export & Reporting
-- **Multiple Formats**: Professional CSV with detailed headers and units, Excel (with formulas), PDF (with charts), HTML pages
-- **Email Sharing**: Open a report draft in your mail application
+- **Multiple Formats**: CSV with detailed headers and units, Excel workbooks, printable PDF reports, and standalone HTML pages
+- **Report Conclusions**: PDF, HTML, and email include the selected case, annual results, scenario context and notes. Readable reports use per-month, per-session, or per-sale prices; CSV/Excel keep canonical monthly prices for model compatibility.
+- **Email Sharing**: Open a report draft in your mail application, including a case-preserving snapshot link
 - **Scheduling Information**: Explains that automated delivery requires a server and is unavailable in this version
 
 ### Testing Infrastructure

@@ -220,13 +220,14 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (819 unit tests across 72 files — 818 passing, 1 existing skip — plus 580 Playwright e2e cases across 47 files, Chromium + Firefox)
+#### Test Coverage (821 unit tests across 72 files — 820 passing, 1 existing skip — plus 586 Playwright e2e cases across 48 files, Chromium + Firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)
 - **Business Logic Tests**: Comprehensive calculation validation
-- **E2E Tests**: Playwright suites in `tests/e2e/` (Chromium + Firefox, dedicated port 3121), including 66 workspace journey/axe cases. Use `just test-e2e-container` when native browser startup is sandbox-blocked; see [testing guide](tests/e2e/README.md).
+- **E2E Tests**: Playwright suites in `tests/e2e/` (Chromium + Firefox, dedicated port 3121), including 72 workspace journey/axe cases and complete keyboard-only flows. Use `just test-e2e-container` when native browser startup is sandbox-blocked; see [testing guide](tests/e2e/README.md).
 - **Production offline checks**: Four Chromium/Firefox cases in `tests/offline/` build the production bundle and verify reloads, editing, and switching both layouts with a warmed service-worker cache. Run `just test-e2e-container --config tests/offline/playwright.config.ts` (port 3123).
+- **Production browser acceptance**: `just test-e2e-container --config tests/acceptance/playwright.config.ts` (port 3124) covers actual Chromium 200% zoom in both themes and rendering the reviewed report to a real PDF. Zoom uses a disposable extension and asserts its factor, pixel ratio, CSS viewport, and visible-control bounds. Human screen-reader/device use and native print/mail-app handoff remain separate.
 - **Design review**: Separate baseline/prototype tests in `tests/design/` (30 cases across Chromium + Firefox, port 3122). Run `just test-e2e-container --config tests/design/playwright.config.ts`; the development-only prototype is `docs/plans/prototypes/product-flow.html`.
 
 #### Test Files
@@ -282,7 +283,9 @@ The application supports multiple export formats:
 - **HTML**: Standalone web pages
 - **Email**: Direct sharing via email client
 - **Embed**: iframe codes for website integration
-- **Schedule**: Set up recurring report generation
+- **Schedule**: Explains that automated report delivery requires a server and is unavailable
+
+PDF/HTML/email summaries use the active case, annual results, notes, and the offering's displayed per-month/per-session/per-sale price. Non-USD take-home summaries retain the US-tax-basis note. CSV/Excel model sheets keep canonical `priceMonthly` for import compatibility; scenario URLs carry the case in either layout.
 
 ### Analytics System
 Two separate, unrelated systems — don't conflate them:

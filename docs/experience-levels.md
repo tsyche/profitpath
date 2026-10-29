@@ -17,7 +17,7 @@ Explicit `?layout=workspaces` and `?layout=legacy` links override the remembered
 - **Compare:** Save a baseline and an alternative, then open the existing two-scenario comparison. This is available at Beginner.
 - **Initial detail:** Advanced opens delivery fields in the offering editor. Specialist tools remain collapsed behind their questions at every level. Debug and performance diagnostics remain Advanced-only in Settings; tooltip preferences remain separate.
 - **Entry:** Optional inline guidance replaces the automatic welcome dialog. Examples preview before replacing a draft.
-- **Share / export:** Review the conclusion and selected case before using an existing format. Snapshot links preserve the workspace and case; comparison links and embeds carry both scenarios for recipients without local saves.
+- **Share / export:** Review the conclusion and selected case before using an existing format. PDF/HTML/email include annual results, notes, case, and the actual offering price units; CSV/Excel retain canonical monthly prices for model compatibility. Snapshot links preserve the selected case in both layouts; comparison links and embeds carry both scenarios for recipients without local saves.
 
 Navigation and incomplete input text stay outside financial state and undo history. Results retain the last valid numeric values; incomplete edits block saving and sharing. The draft-save status reports storage failures. Opening a shared snapshot asks before replacing an existing draft; read-only links remain locked after reload, and **Try a change** creates an editable draft.
 
