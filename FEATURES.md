@@ -64,7 +64,7 @@ Plan value-order warnings compare the same entered member profile under every pl
 
 ### User Experience
 
-Choose **Settings → Layout** to switch between Classic and the approved [workspace preview](docs/experience-levels.md#workspace-preview). The choice is remembered on this device; both layouts use the same model. Model groups business setup and focused offering editing; Results leads with annual figures and question-led tools; Compare uses saved baseline/alternative scenarios. Classic remains the default for new devices pending the human walkthrough and release gates in [ROADMAP item 25](ROADMAP.md).
+Choose **Settings → Layout** to switch between Classic and the approved [workspace preview](docs/experience-levels.md#workspace-preview). The choice is remembered on this device; both layouts use the same model. Model groups business setup and focused offering editing; Results leads with annual figures and question-led tools; Compare uses saved baseline/alternative scenarios. Classic remains the default for new devices pending the human walkthrough and release gates in [ROADMAP item 40](ROADMAP.md).
 
 Click the model title or pencil to rename it; an unnamed draft prompts **Name your model**. Enter finishes a rename and Escape cancels it. **Save scenario** stores a named snapshot for comparison. **Create alternative** keeps the saved baseline unchanged and starts a separately named draft to edit and save. It also creates an editable copy of a read-only snapshot.
 

@@ -8,7 +8,7 @@ These levels are implemented as feature gates in `src/settings/index.ts` (see `F
 
 ## Workspace preview
 
-Choose **Settings → Layout → Workspaces** for the approved Model / Results / Compare flow; choose **Classic** to return to the original single page. Both layouts remain available during the transition. The choice is remembered on this device, outside financial state and undo. Classic remains the default for new devices while [ROADMAP item 25](../ROADMAP.md) completes release validation.
+Choose **Settings → Layout → Workspaces** for the approved Model / Results / Compare flow; choose **Classic** to return to the original single page. Both layouts remain available during the transition. The choice is remembered on this device, outside financial state and undo. Classic remains the default for new devices while [ROADMAP item 40](../ROADMAP.md) completes device/human acceptance.
 
 Explicit `?layout=workspaces` and `?layout=legacy` links override the remembered choice without replacing it. Switching reloads the view and starts a new undo history while preserving the model, selected case, named saves, and read-only status. Incomplete edits and draft-save failures block switching so a reload cannot discard unsaved input.
 

@@ -1,16 +1,18 @@
 # ProfitPath product-flow redesign
 
+**Archived:** 2026-10-29; folded into [FEATURES.md](../../../FEATURES.md), [experience levels](../../experience-levels.md), and [architecture notes](../../../AGENTS.md). Remaining acceptance work is in [ROADMAP item 40](../../../ROADMAP.md).
+
 **TL;DR:** Introduce Model, Results, and Compare workspaces inside one scenario context, with a remembered Settings choice between the original Classic layout and Workspaces during the transition. Keep live feedback while editing, make each offering manageable on its own, and reveal specialist tools when they help answer a question.
 
-**Status:** Building — Tim approved continuation with feature parity on 2026-10-28 and requested a user-visible layout choice on 2026-10-29. The Phase 2 shell and substantial Phase 3–4 implementation are available through Settings → Layout or `?layout=workspaces`; remaining validation and cutover gates are open.
+**Status:** Shipped implementation — closeout approved by Tim on 2026-10-29. Unverified device/human acceptance and default cutover are transferred to [ROADMAP item 40](../../../ROADMAP.md).
 
 **Last updated:** 2026-10-29
 
-**Scope:** [ROADMAP recommended priority #1 / item 25](../../ROADMAP.md): navigation, onboarding, model editing, results hierarchy, contextual disclosure, accessibility, and mobile flow.
+**Scope:** [Shipped implementation item 25](../../ledger/ROADMAP_SHIPPED.md): navigation, onboarding, model editing, results hierarchy, contextual disclosure, accessibility, and mobile flow.
 
-**Fold into:** [FEATURES.md](../../FEATURES.md), [experience-levels.md](../experience-levels.md), and architecture notes in [AGENTS.md](../../AGENTS.md).
+**Fold into:** [FEATURES.md](../../../FEATURES.md), [experience-levels.md](../../experience-levels.md), and architecture notes in [AGENTS.md](../../../AGENTS.md).
 
-**Related:** [Previous containment pass](archive/ui-ux-pass.md), [heuristic audit](../usability-audit-heuristics-profitpath.md), [historical live evidence](../ledger/UI_UX_PHASE0_LIVE_EVIDENCE.md), [decision workbench](decision-workbench.md).
+**Related:** [Previous containment pass](ui-ux-pass.md), [heuristic audit](../../usability-audit-heuristics-profitpath.md), [historical live evidence](../../ledger/UI_UX_PHASE0_LIVE_EVIDENCE.md), [decision workbench](decision-workbench.md).
 
 ## Contents
 
@@ -61,9 +63,9 @@ At 375px, the sampled document width was 375px: the historical overflow was **no
 
 **Limits:** This was a focused planning walkthrough, not a completed usability audit. No timed participant study, 12-offering rerun, stable Advanced-state verification, screen-reader test, full keyboard journey, or export round trip was completed. Mobile emulation is not a physical-device test. The deployed version shown in Settings was `0.8.58-beta`; record the tested build again at Phase 0.
 
-Phase 0 must capture screenshots, interaction steps, fixtures, and measurements together in the existing [live-evidence record](../ledger/UI_UX_PHASE0_LIVE_EVIDENCE.md), as a dated addition. This supersedes the contradictory baseline for implementation without rewriting history.
+Phase 0 must capture screenshots, interaction steps, fixtures, and measurements together in the existing [live-evidence record](../../ledger/UI_UX_PHASE0_LIVE_EVIDENCE.md), as a dated addition. This supersedes the contradictory baseline for implementation without rewriting history.
 
-**Phase 0 completed, 2026-10-28:** the [reproducible baseline](../ledger/UI_UX_PHASE0_LIVE_EVIDENCE.md#product-flow-baseline--2026-10-28) now records both browsers, desktop/mobile, Beginner/Fitness and Advanced/12-offering fixtures, screenshots, six calculation goldens, current failures, and task paths. The dense mobile model places Costs around 15,600px and net income around 17,800px down. Sampled horizontal page overflow and the historical 19-control count were not reproduced. Partial price entry persists zero, onboarding returns after Explore/reload, and non-Base shares reopen on Base.
+**Phase 0 completed, 2026-10-28:** the [reproducible baseline](../../ledger/UI_UX_PHASE0_LIVE_EVIDENCE.md#product-flow-baseline--2026-10-28) now records both browsers, desktop/mobile, Beginner/Fitness and Advanced/12-offering fixtures, screenshots, six calculation goldens, current failures, and task paths. The dense mobile model places Costs around 15,600px and net income around 17,800px down. Sampled horizontal page overflow and the historical 19-control count were not reproduced. Partial price entry persists zero, onboarding returns after Explore/reload, and non-Base shares reopen on Base.
 
 ## Recommended information architecture
 
@@ -265,16 +267,16 @@ The approved implementation makes Compare and essential resource/group inputs av
 
 ### Clickable prototype and review gate
 
-Run `just dev`, then open [the local prototype](http://localhost:3120/docs/plans/prototypes/product-flow.html). The [source entry](prototypes/product-flow.html) is served by Vite for development and excluded from the production build. It uses the existing calculator and price-conversion helpers with synthetic fixtures; its draft and saved options live under the separate `profitpath-design-prototype-v1` **sessionStorage** key.
+Run `just dev`, then open [the local prototype](http://localhost:3120/docs/plans/prototypes/product-flow.html). The [source entry](../prototypes/product-flow.html) is served by Vite for development and excluded from the production build. It uses the existing calculator and price-conversion helpers with synthetic fixtures; its draft and saved options live under the separate `profitpath-design-prototype-v1` **sessionStorage** key.
 
 Implemented prototype paths: template preview or blank entry; five Model destinations; offering search/filter/list/detail; type-specific fields; price plus sales-loss editing; last-valid-value feedback; undo; browser Back; tab reload; live annual summary; Results hierarchy/case selection; saving a baseline and named alternative; two-option Compare; return to editing; and a share-inclusion preview. Beginner/Advanced changes initial detail without locking core inputs or Compare.
 
 | Screen | Desktop | 375px mobile |
 |---|---|---|
-| Entry | [Screenshot](prototypes/desktop-entry.png) | [Screenshot](prototypes/mobile-entry.png) |
-| Offering editor | [Screenshot](prototypes/desktop-offering-editor.png) | [Screenshot](prototypes/mobile-offering-editor.png) |
-| Results | [Screenshot](prototypes/desktop-results.png) | [Screenshot](prototypes/mobile-results.png) |
-| Compare | [Screenshot](prototypes/desktop-compare.png) | [Screenshot](prototypes/mobile-compare.png) |
+| Entry | [Screenshot](../prototypes/desktop-entry.png) | [Screenshot](../prototypes/mobile-entry.png) |
+| Offering editor | [Screenshot](../prototypes/desktop-offering-editor.png) | [Screenshot](../prototypes/mobile-offering-editor.png) |
+| Results | [Screenshot](../prototypes/desktop-results.png) | [Screenshot](../prototypes/mobile-results.png) |
+| Compare | [Screenshot](../prototypes/desktop-compare.png) | [Screenshot](../prototypes/mobile-compare.png) |
 
 Prototype limits are explicit in the interface: expense/resource rows are read-only fixture examples; reverse/analysis tool panels show intended placement; Share previews included content without exporting or creating links. It is not the workspace-shell implementation. No production storage or scenario format changed.
 
@@ -286,7 +288,7 @@ Review these tasks on desktop and at 375px:
 4. Review group delivery fields and assumptions at Beginner and Advanced. Approve or revise the matrix above.
 5. Review Results wording: net income before tax, take-home, and cash flow are distinct. Share is visibly a snapshot preview.
 
-Automated proof is in [prototype.spec.ts](../../tests/design/prototype.spec.ts): Chromium/Firefox, desktop/375px, Forecast/Current dense editing, baseline preservation, invalid input, undo, history/reload, keyboard focus, and light/dark axe scans. These checks do not substitute for Tim's screen review or participant comprehension testing.
+Automated proof is in [prototype.spec.ts](../../../tests/design/prototype.spec.ts): Chromium/Firefox, desktop/375px, Forecast/Current dense editing, baseline preservation, invalid input, undo, history/reload, keyboard focus, and light/dark axe scans. These checks do not substitute for Tim's screen review or participant comprehension testing.
 
 **Verification, 2026-10-28:** 12 baseline captures and 18 prototype browser cases pass without retries. Lint, strict typecheck, production build, and 790 unit tests pass; one existing unit test remains skipped. Six of those unit tests pin the captured calculations. A stale visualization test used fractional utilization and fabricated chart data; it now exercises the real calculator and renderer with percentage inputs. Prototype keyboard tests caught same-destination focus loss before its fix and passed afterward. The production build retains the same application JS/CSS bundle hashes; the complete release E2E suite is deferred until application changes/cutover.
 
@@ -337,7 +339,7 @@ The application preview is `http://localhost:3120/?layout=workspaces` through `j
 - **Device/app limits:** ADB listed no attached devices. Desktop-app control tools were unavailable. Physical software-keyboard behavior, human screen-reader usability and native mail/print handoff therefore remain open, along with participant task times/comprehension.
 - **Final report-follow-up verification:** **820 unit tests** pass with one existing skip. The complete **586-case** release run passes **582** with four existing Firefox skips, including all **72 workspace cases**. All **three production zoom/PDF cases** and **four production offline cases** pass. No retries were used. Lint, strict typecheck and production build pass. The report fixes shipped in `be65e21`; [Tests run 40929476667](https://github.com/tsyche/profitpath/actions/runs/40929476667) passed, as did APK, Pages and GitLab mirror. The CI version bump is `d008140` (v0.8.62-beta).
 
-Remaining work stays owned by ROADMAP item 25:
+Closeout approved 2026-10-29: implementation item 25 is closed. Every unperformed device/human/cutover check is transferred to [ROADMAP item 40](../../../ROADMAP.md); none is recorded as passed by this archive.
 
 **UI feedback, 2026-10-29:** Tim requested spacing/mobile refinements, equal tabs, click-to-rename titles, clearer scenario actions, proper overflow dismissal, roomier Scenarios controls, and a clearer mode indicator.
 
@@ -351,7 +353,7 @@ Remaining work stays owned by ROADMAP item 25:
 | CI mobile Results | Closed by local fail-before/pass-after proof and successful remote Tests run 40906316951; retain the 754px threshold. |
 | Human walkthrough | Keyboard-only journeys, actual Chromium 200% zoom and browser PDF rendering have automated proof. Still required before default cutover: human screen-reader announcements/navigation, physical-device software-keyboard behavior, and native print/mail-app handoff. Browser tests do not prove those. |
 | Measured acceptance | Record participant task times/comprehension and re-score against the baseline. Styling remains refinable; no further design approval is required. |
-| Cutover/finalization | Comparison CSV/PDF case/content checks and warmed-cache offline tests pass. After human acceptance, repeat release gates if the shell changes, decide the new-device default, fold durable details into official docs, and archive this plan. Retain the user-visible layout choice and original layout during the transition; their later retirement is a separate decision. Do not claim full parity or archive the plan before the acceptance gates close. |
+| Cutover/finalization | Comparison CSV/PDF case/content checks and warmed-cache offline tests pass. After human acceptance, repeat release gates if the shell changes, decide the new-device default, fold durable details into official docs, and archive this plan. Retain the user-visible layout choice and original layout during the transition; their later retirement is a separate decision. Implementation closeout was approved by Tim; these unperformed acceptance gates now remain active in ROADMAP item 40. |
 
 Use `just test-e2e-container` for browser verification in this managed environment. Native Chromium hits macOS sandbox Mach-port restrictions; browser caches under `~/Library` are protected.
 
@@ -399,6 +401,6 @@ Rollback restores the previous shell/assets without transforming scenario data. 
 | Approved by Tim, 2026-10-28 | Prototype direction and continuation after review; preserve feature parity and refine styling during implementation |
 | Requested by Tim, 2026-10-29 | Keep Classic and Workspaces available through a remembered Settings layout choice during the transition; defer retirement |
 | Recorded in Phase 0 | Full current baseline and active-case share reset; six golden calculations retained for compatibility |
-| Pending release validation | Participant availability/task targets, human screen-reader/device walkthrough, full export/share parity, and Phases 2–5 acceptance gates |
+| Transferred follow-ups | Device/human acceptance and the default-layout decision transferred to ROADMAP item 40; automated export/share and release proof is recorded above |
 
-Next step: resolve and verify the implementation checkpoint above, then complete Phase 5 acceptance and cutover.
+Next step: complete the device/human acceptance and layout-default work tracked in ROADMAP item 40. This archived plan is historical implementation evidence.

@@ -3,7 +3,7 @@
 **TL;DR:** Phase 0 evidence is complete. This proposed IA map keeps the edit-and-see loop visible, groups Setup by decision, and moves advanced Outputs into Analyze and Customers tabs. Tim must approve the map before implementation.
 
 **Status:** Shipped
-**Fold into:** [experience-levels.md](../experience-levels.md) (gating and section locations) and the "Key Files Structure" / UI notes in [AGENTS.md](../../AGENTS.md) and [CLAUDE.md](../../CLAUDE.md).
+**Fold into:** [experience-levels.md](../../experience-levels.md) (gating and section locations) and the "Key Files Structure" / UI notes in [AGENTS.md](../../../AGENTS.md) and [CLAUDE.md](../../../CLAUDE.md).
 
 **Archived:** 2026-10-27, folded into `docs/experience-levels.md`, `AGENTS.md`, `CLAUDE.md`, and `docs/ledger/ROADMAP_SHIPPED.md`.
 
@@ -17,14 +17,14 @@
 ## Scope
 
 - **In:** Setup and Outputs layout, level gating review, mobile (≤768px, bottom-nav fit), analysis panels.
-- **Out:** onboarding / first-run flow (separate plan), new features, visual rebrand, `app.jsx` split (done; see [typescript-migration.md](archive/typescript-migration.md)).
+- **Out:** onboarding / first-run flow (separate plan), new features, visual rebrand, `app.jsx` split (done; see [typescript-migration.md](typescript-migration.md)).
 
 ## Phases
 
 ### Phase 0: Evidence (no code changes)
 
-- ✅ [Live audit evidence](../ledger/UI_UX_PHASE0_LIVE_EVIDENCE.md): dev server, template loading, 12-offering scenario, 375px mobile, Beginner and Advanced levels.
-- ✅ [Heuristic audit](../usability-audit-heuristics-profitpath.md): Nielsen sweep plus a cognitive walkthrough of "first scenario from a template".
+- ✅ [Live audit evidence](../../ledger/UI_UX_PHASE0_LIVE_EVIDENCE.md): dev server, template loading, 12-offering scenario, 375px mobile, Beginner and Advanced levels.
+- ✅ [Heuristic audit](../../usability-audit-heuristics-profitpath.md): Nielsen sweep plus a cognitive walkthrough of "first scenario from a template".
 - 2026-10-26: light-theme `color-contrast` is skipped in `tests/e2e/a11y.spec.ts` (palette misses AA); tracked as ROADMAP 34; drop the skip when it lands.
 - Skip `/audit-tests`; unrelated to UI/UX, run separately.
 - **Gate:** ranked findings list (severity, affects beginner path y/n, suspected code location) saved under `docs/ledger/`.

@@ -1,9 +1,11 @@
 # Decision workbench (ROADMAP items 36-39)
 
+**Archived:** 2026-10-29; folded into [FEATURES.md](../../../FEATURES.md) and [architecture notes](../../../AGENTS.md).
+
 **TL;DR:** Turn scenario planning into a decision tool: build options as saved scenarios, compare them in one plain-language view under conservative assumptions, and share the whole set with one link. Most building blocks already exist; this plan connects them.
 
-**Status:** Building — Phases 1–2 shipped; Phases 3–4 implemented and locally validated. Plan closeout approval and commit/push review are pending.
-**Fold into:** [FEATURES.md](../../FEATURES.md) (scenario and comparison features) and the "Key Files Structure" notes in [AGENTS.md](../../AGENTS.md) and [CLAUDE.md](../../CLAUDE.md).
+**Status:** Shipped — all four phases implemented; closeout approved by Tim on 2026-10-29. Phases 3–4 shipped in `bf0e840`.
+**Fold into:** [FEATURES.md](../../../FEATURES.md) (scenario and comparison features) and the "Key Files Structure" notes in [AGENTS.md](../../../AGENTS.md) and [CLAUDE.md](../../../CLAUDE.md).
 
 ## Problem
 
@@ -48,12 +50,12 @@ Each phase ships on its own. Phase 1 unblocks the TSS owner review today; 3 depe
 - Focused Chromium/Firefox journeys pass in both layouts at desktop and 375px, including three-scenario bundle import, two/four options, CSV/print content, recipient reloads, hostile names and live membership floor updates. Visual review exposed the global offering-card styles hiding scenario headers; the new visible/aligned-header regression failed before reusing the existing flat-table styles.
 - The shared bundle decoder now supplies a bounded output buffer before decompression. The allocation regression failed before the fix and passes after it.
 - Final local verification: **832 unit tests pass** with one existing skip across 75 files. The **610-case release suite passes 606**, with four existing Firefox skips; all 82 workspace cases and 14 decision cases pass. **Four production zoom/PDF cases and four offline cases pass**, including the decision view. No retries were used. Lint, strict typecheck and production build pass. The decision report renders as a readable six-page landscape PDF with the selected case, goal, options and notes.
-- Durable behavior is folded into FEATURES and the architecture notes. Finalization/archival approval is pending, followed by commit/push review. The product-flow redesign's human/device gates remain separately owned by [ROADMAP item 25](../../ROADMAP.md); both layouts and the existing default remain available.
+- Durable behavior is folded into FEATURES and the architecture notes. Tim approved plan closeout on 2026-10-29. The cross-product device/human/default-layout follow-ups remain separately owned by [ROADMAP item 40](../../../ROADMAP.md); both layouts and the existing default remain available.
 
 ## Design notes
 
 - **Client-side only.** Bundles are point-in-time snapshots, the same as share links (12o). Live team sharing stays in item 14.
-- **No backend dependency.** Phase 1 shares the selected scenarios inside one compressed link. Server-hosted short links remain deferred in [ROADMAP.md item 12o](../../ROADMAP.md).
+- **No backend dependency.** Phase 1 shares the selected scenarios inside one compressed link. Server-hosted short links remain deferred in [ROADMAP.md item 12o](../../../ROADMAP.md).
 - **Untrusted input.** Every imported state runs through `sanitizeScenarioState`, names are escaped and deduped, and payload size stays capped.
 - **Plain language first.** The verdict leads ("B earns $X more a month and still beats today if raised services lose 15% of sales"); tables back it up.
 - **Assumptions stay visible.** The decision view shows the share of revenue that rests on `guess`-tagged rows, so a confident-looking total built on guesses is obvious.

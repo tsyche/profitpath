@@ -105,4 +105,7 @@ No page exceptions occurred in the fixture captures. This is not a network/secur
 | Share/export | Drawer → Share or Export → chosen format; case behavior varies by surface | Results/Compare → review included options, case, units, notes, and snapshot behavior |
 | Returning use | Auto-saved state restores, but Explore-only onboarding reappears | Resume draft and destination; optional guidance stays out of the way |
 
-The complete feature-to-destination and proposed level matrix is in the [redesign plan](../plans/product-flow-redesign.md#feature-destinations-and-proposed-detail-matrix). Participant task times, screen-reader behavior, physical keyboards/devices, and a full export-format round trip remain unmeasured; item 25 retains those gates.
+The complete feature-to-destination and proposed level matrix is in the [redesign plan](../plans/archive/product-flow-redesign.md#feature-destinations-and-approved-detail-matrix). Participant task times, screen-reader behavior, physical keyboards/devices, and a full export-format round trip remain unmeasured; item 25 retains those gates.
+
+
+**Closeout, 2026-10-29:** implementation item 25 is shipped and its plan is archived. The current owner of unperformed device/human/default-layout checks is [ROADMAP item 40](../../ROADMAP.md). This baseline remains point-in-time evidence.
