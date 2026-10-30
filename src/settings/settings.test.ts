@@ -1,3 +1,4 @@
+import { required } from '../test/test-utils';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   loadSettings,
@@ -11,7 +12,7 @@ import {
 } from './index'
 
 describe('Settings System', () => {
-  let mockStore = {};
+  let mockStore: Record<string, string> = {};
 
   beforeEach(() => {
     // Clear mock store
@@ -19,9 +20,9 @@ describe('Settings System', () => {
 
     // Mock localStorage to use our mock store
     const localStorageMock = {
-      getItem: (key) => mockStore[key] || null,
-      setItem: (key, value) => { mockStore[key] = value; },
-      removeItem: (key) => { delete mockStore[key]; },
+      getItem: (key: string) => mockStore[key] || null,
+      setItem: (key: string, value: string) => { mockStore[key] = value; },
+      removeItem: (key: string) => { delete mockStore[key]; },
       clear: () => { mockStore = {}; }
     };
 
@@ -68,7 +69,7 @@ describe('Settings System', () => {
 
   describe('saveSettings', () => {
     it('should save settings to localStorage', () => {
-      const testSettings = { experienceLevel: 'advanced', compactMode: true }
+      const testSettings = { ...DEFAULT_SETTINGS, experienceLevel: 'advanced' as const, compactMode: true }
 
       saveSettings(testSettings)
 
@@ -92,10 +93,10 @@ describe('Settings System', () => {
     it('should set experience level and apply feature gates', () => {
       const result = setExperienceLevel('intermediate')
 
-      expect(result.experienceLevel).toBe('intermediate')
-      expect(result.showAdvancedCalculations).toBe(true) // From FEATURE_GATES.intermediate
-      expect(result.showComparisonTools).toBe(true)
-      expect(result.showExportOptions).toBe(false) // Not enabled for intermediate
+      expect(required(result).experienceLevel).toBe('intermediate')
+      expect(required(result).showAdvancedCalculations).toBe(true) // From FEATURE_GATES.intermediate
+      expect(required(result).showComparisonTools).toBe(true)
+      expect(required(result).showExportOptions).toBe(false) // Not enabled for intermediate
     })
 
     it('should warn for invalid experience level', () => {

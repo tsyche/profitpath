@@ -1,3 +1,4 @@
+import { required } from './test-utils';
 // Tests for remote feedback delivery (Web3Forms POST) and the offline retry queue.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -6,12 +7,12 @@ import { FeedbackCollector } from '../../src/analytics/feedback';
 const validFeedback = { rating: 5, category: 'general', comment: 'Great app', allowContact: false };
 
 describe('FeedbackCollector — remote delivery', () => {
-  let collector;
+  let collector: FeedbackCollector;
 
   beforeEach(() => {
     localStorage.clear();
     collector = new FeedbackCollector();
-    global.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ success: true }) }));
+    global.fetch = vi.fn<typeof fetch>(async () => Response.json({ success: true }));
   });
 
   afterEach(() => {
@@ -31,9 +32,11 @@ describe('FeedbackCollector — remote delivery', () => {
     await collector.sendToRemote(fb); // deterministic await
 
     expect(global.fetch).toHaveBeenCalled();
-    const [url, opts] = global.fetch.mock.calls[0];
+    const [url, opts] = vi.mocked(global.fetch).mock.calls[0];
     expect(url).toBe('https://api.web3forms.com/submit');
-    const body = JSON.parse(opts.body);
+    const rawBody = required(opts).body;
+    if (typeof rawBody !== 'string') throw new Error('Expected JSON request body');
+    const body = JSON.parse(rawBody);
     expect(body.access_key).toBe('test-key');
     // The payload reflects the stored (sanitized) values.
     expect(body.rating).toBe(fb.rating);
@@ -46,18 +49,18 @@ describe('FeedbackCollector — remote delivery', () => {
     const fb = collector.submitFeedback({ ...validFeedback });
     await collector.sendToRemote(fb);
     const stored = collector.getAllFeedback().find((f) => f.id === fb.id);
-    expect(stored.synced).toBe(true);
+    expect(required(stored).synced).toBe(true);
   });
 
   it('leaves the item unsynced when the endpoint fails, and retries on flush', async () => {
     collector.remoteAccessKey = 'test-key';
-    global.fetch = vi.fn(async () => ({ ok: false, json: async () => ({ success: false, message: 'nope' }) }));
+    global.fetch = vi.fn<typeof fetch>(async () => Response.json({ success: false, message: 'nope' }, { status: 400 }));
     const fb = collector.submitFeedback({ ...validFeedback });
     await collector.sendToRemote(fb);
-    expect(collector.getAllFeedback().find((f) => f.id === fb.id).synced).toBe(false);
+    expect(required(collector.getAllFeedback().find((f) => f.id === fb.id)).synced).toBe(false);
 
     // Endpoint recovers; flush should re-deliver the queued item.
-    global.fetch = vi.fn(async () => ({ ok: true, json: async () => ({ success: true }) }));
+    global.fetch = vi.fn<typeof fetch>(async () => Response.json({ success: true }));
     collector.flushUnsyncedFeedback();
     await Promise.resolve();
     await Promise.resolve();

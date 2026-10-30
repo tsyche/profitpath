@@ -4,7 +4,7 @@ import { rankOfferings } from './offeringRanking'
 
 // Roadmap 24d: contribution per staff hour and the deepest discount an offering survives.
 const base = {
-  mode: 'current',
+  mode: 'current' as const,
   employees: 2,
   employeePay: 50000,
   monthlyCosts: 1000,
@@ -38,8 +38,8 @@ describe('marginPerHour and maxDiscountPct', () => {
   })
 
   it('group: under-filled class spreads the same hours over fewer seats', () => {
-    const full = metric({ type: 'group', seats: 8, fillPct: 100 })
-    const half = metric({ type: 'group', seats: 8, fillPct: 50 })
+    const full = metric({ type: 'group' as const, seats: 8, fillPct: 100 })
+    const half = metric({ type: 'group' as const, seats: 8, fillPct: 50 })
     expect(half.marginPerHour).toBeCloseTo(full.marginPerHour / 2)
   })
 
@@ -60,7 +60,7 @@ describe('one-time offerings in the ranking', () => {
   beforeEach(() => clearCalculationCache())
 
   it('flags hour-free rows and ranks them after rows with staff hours, even negative ones', () => {
-    const oneTime = { name: 'Ebook', type: 'one-time', priceMonthly: 20, variableCostPerSession: 2, mixPct: 0, currentClients: 5 }
+    const oneTime = { name: 'Ebook', type: 'one-time' as const, priceMonthly: 20, variableCostPerSession: 2, mixPct: 0, currentClients: 5 }
     const losing = { ...sub, name: 'Loss', priceMonthly: 10, variableCostPerSession: 50 }
     const rows = rankOfferings(calc({ ...base, offerings: [oneTime, losing] } as any).offeringMetrics as any)
     expect(rows.map(r => r.name)).toEqual(['Loss', 'Ebook'])

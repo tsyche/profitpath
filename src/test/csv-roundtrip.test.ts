@@ -1,8 +1,9 @@
+import { appStateFixture, calcResultFixture } from './test-utils';
 import { describe, it, expect } from 'vitest';
 import { buildCSV, importFromCSV, splitCsvLine } from '../../assets/services/miscService';
 
 const state = {
-  mode: 'forecast',
+  mode: 'forecast' as const,
   fullTimeEmployees: 3,
   partTimeEmployees: 1,
   fullTimeEmployeePay: 60000,
@@ -11,7 +12,7 @@ const state = {
   productiveUtilizationPct: 80,
   targetUtilizationPct: 75,
   offerings: [
-    { id: 'o1', name: 'Coaching, "premium"', priceMonthly: 1000, sessionsPerYear: 12, hoursPerSession: 2, variableCostPerSession: 10, mixPct: 100, currentClients: 4, laborPctOfPrice: 0, type: 'subscription', seats: 1, fillPct: 100, salesLossPct: 20, salesLossPctLow: 5, salesLossPctHigh: 40 },
+    { id: 'o1', name: 'Coaching, "premium"', priceMonthly: 1000, sessionsPerYear: 12, hoursPerSession: 2, variableCostPerSession: 10, mixPct: 100, currentClients: 4, laborPctOfPrice: 0, type: 'subscription' as const, seats: 1, fillPct: 100, salesLossPct: 20, salesLossPctLow: 5, salesLossPctHigh: 40 },
   ],
   expenses: [
     { id: 'e1', name: 'Rent, main office', category: 'Rent/Lease', amount: 1200, frequency: 'monthly' },
@@ -22,7 +23,7 @@ const state = {
 const results = { revenue: 1234567, variableCosts: 1000, income: 99999, capacityPct: 50 };
 
 describe('CSV export -> import round trip', () => {
-  const r: any = importFromCSV(buildCSV(state, results));
+  const r: any = importFromCSV(buildCSV(appStateFixture(state), calcResultFixture(results)));
 
   it('succeeds on its own export', () => {
     expect(r.success).toBe(true);
@@ -69,7 +70,7 @@ describe('importFromCSV expenses section', () => {
 
   it('round-trips a scenario with zero expenses to an empty list', () => {
     const st = { ...state, expenses: [] };
-    expect((importFromCSV(buildCSV(st, results)) as any).data.expenses).toEqual([]);
+    expect((importFromCSV(buildCSV(appStateFixture(st), calcResultFixture(results))) as any).data.expenses).toEqual([]);
   });
 
   it('works for the "# Fixed Expenses" template header', () => {

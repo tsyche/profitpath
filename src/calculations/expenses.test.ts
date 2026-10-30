@@ -1,3 +1,4 @@
+import { required, appStateFixture } from '../test/test-utils';
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calc, clearCalculationCache } from './index'
 import { annualizeExpense, costBreakdown, loanYearOne, monthlyCategorySpend, sanitizeExpenses, scaleOverhead, totalMonthlyOverhead, EXPENSE_CATEGORIES } from './expenses'
@@ -5,7 +6,7 @@ import { buildCSV, importFromCSV, sanitizeScenarioState } from '../../assets/ser
 
 // Roadmap 27: structured expense line items. monthlyCosts stays as "other overhead".
 const base = {
-  mode: 'current',
+  mode: 'current' as const,
   fullTimeEmployees: 1,
   partTimeEmployees: 0,
   fullTimeEmployeePay: 50000,
@@ -220,7 +221,7 @@ describe('one-time expenses', () => {
     })
     expect(st?.expenses?.[0]).toMatchObject({ frequency: 'one-time', lifeYears: 5 })
     expect(st).toMatchObject({ processingFeePerTransaction: 0.3, transactionsPerMonth: 100 })
-    const parsed: any = importFromCSV(buildCSV(st, calc(base as any)))
+    const parsed: any = importFromCSV(buildCSV(appStateFixture(required(st)), calc(base as any)))
     expect(parsed.data.expenses[0]).toMatchObject({ amount: 3000, frequency: 'one-time', lifeYears: 5 })
     expect(parsed.data.expenses[1]).toMatchObject({ amount: 10000, category: 'Loan Payments', lifeYears: 10, loanAprPct: 12 })
     expect(parsed.data.settings).toMatchObject({ processingFeePerTransaction: 0.3, transactionsPerMonth: 100 })

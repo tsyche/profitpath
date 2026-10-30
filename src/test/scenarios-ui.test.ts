@@ -4,6 +4,16 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { AppState } from '../types';
+import { appStateFixture } from './test-utils';
+
+interface ScenarioFixture {
+  id: string;
+  name: string;
+  timestamp: string;
+  state?: AppState;
+  data?: AppState;
+}
 
 describe('Scenario Save and Load - UI Integration', () => {
   beforeEach(() => {
@@ -15,7 +25,7 @@ describe('Scenario Save and Load - UI Integration', () => {
     localStorage.clear();
 
     // Mock localStorage with fresh storage for each test
-    const storage = new Map();
+    const storage = new Map<string, string>();
     localStorage.setItem = vi.fn((key, value) => storage.set(key, value));
     localStorage.getItem = vi.fn((key) => storage.get(key) || null);
     localStorage.clear = vi.fn(() => {
@@ -45,7 +55,8 @@ describe('Scenario Save and Load - UI Integration', () => {
 
     // Mock global state
     window.state = {
-      mode: 'forecast',
+      ...appStateFixture({ employees: 5, employeePay: 75000, offerings: [{}] }),
+      mode: 'forecast' as const,
       employees: 5,
       employeePay: 75000,
       monthlyCosts: 500,
@@ -71,11 +82,11 @@ describe('Scenario Save and Load - UI Integration', () => {
 
     // Mock uuid
     let uuidCounter = 0;
-    window.uuid = vi.fn(() => `test-uuid-${++uuidCounter}`);
+    const uuid = vi.fn(() => `test-uuid-${++uuidCounter}`);
 
     // Mock renderScenariosList
     window.renderScenariosList = vi.fn(() => {
-      const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+      const scenarios: ScenarioFixture[] = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
       const list = document.getElementById('scenariosList');
       if (!list) return;
       if (scenarios.length === 0) {
@@ -94,17 +105,17 @@ describe('Scenario Save and Load - UI Integration', () => {
     });
 
     // Set up mocked functions BEFORE any event listeners are attached
-    window.saveScenario = vi.fn((name) => {
+    window.saveScenario = vi.fn((name: string) => {
       if (!name || !name.trim()) {
         window.showNotification('Please enter a scenario name', 'error');
         return;
       }
 
-      const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+      const scenarios: ScenarioFixture[] = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
       const timestamp = new Date().toLocaleString();
       const currentState = window.state;
       const scenario = {
-        id: window.uuid(),
+        id: uuid(),
         name: name.trim(),
         timestamp,
         state: JSON.parse(JSON.stringify(currentState)),
@@ -114,7 +125,7 @@ describe('Scenario Save and Load - UI Integration', () => {
       localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
 
       // Clear input and re-render list
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
       if (input) input.value = '';
       window.renderScenariosList();
 
@@ -124,7 +135,7 @@ describe('Scenario Save and Load - UI Integration', () => {
 
     // Mock loadScenario
     window.loadScenario = vi.fn((scenarioId) => {
-      const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+      const scenarios: ScenarioFixture[] = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
       const scenario = scenarios.find((s) => s.id === scenarioId);
       if (!scenario) return;
 
@@ -158,7 +169,7 @@ describe('Scenario Save and Load - UI Integration', () => {
 
     // Mock deleteScenario
     window.deleteScenario = vi.fn((scenarioId) => {
-      const scenarios = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
+      const scenarios: ScenarioFixture[] = JSON.parse(localStorage.getItem('profitpath-scenarios') || '[]');
       const initialLength = scenarios.length;
       const filteredScenarios = scenarios.filter((s) => s.id !== scenarioId);
 
@@ -183,7 +194,7 @@ describe('Scenario Save and Load - UI Integration', () => {
   describe('Save Functionality', () => {
     it('should save scenario and update UI when clicking save button', () => {
       const scenarioName = 'Test Scenario';
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
       const scenariosList = document.getElementById('scenariosList');
 
       // Ensure DOM elements exist
@@ -224,7 +235,7 @@ describe('Scenario Save and Load - UI Integration', () => {
     });
 
     it('should show error notification when saving empty scenario name', () => {
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
       const scenariosList = document.getElementById('scenariosList');
 
       // Ensure DOM elements exist
@@ -256,7 +267,7 @@ describe('Scenario Save and Load - UI Integration', () => {
     it('should load scenario and restore calculation state', () => {
       // First, save a scenario
       const scenarioName = 'Test Scenario';
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
 
       // Ensure DOM elements exist
       if (!input) {
@@ -292,7 +303,7 @@ describe('Scenario Save and Load - UI Integration', () => {
   describe('Delete Functionality', () => {
     it('should delete scenario and update UI when clicking delete button', () => {
       const scenarioName = 'Test Scenario to Delete';
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
       const scenariosList = document.getElementById('scenariosList');
 
       // Ensure DOM elements exist
@@ -365,7 +376,7 @@ describe('Scenario Save and Load - UI Integration', () => {
     it('should handle delete scenario workflow end-to-end', () => {
       const scenarioName1 = 'Scenario One';
       const scenarioName2 = 'Scenario Two';
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
       const scenariosList = document.getElementById('scenariosList');
 
       // Ensure DOM elements exist

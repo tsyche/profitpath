@@ -51,7 +51,7 @@ describe('sanitizeResources', () => {
 describe('capacity pools, forecast mode', () => {
   beforeEach(() => clearCalculationCache())
   const forecast = (offerings: object[], resources: object[] = [booth]) =>
-    calc({ ...base, mode: 'forecast', offerings, resources } as any, { enableCache: false })
+    calc({ ...base, mode: 'forecast' as const, offerings, resources } as any, { enableCache: false })
 
   it('a tagged booth caps clients below the staff cap and becomes the bottleneck', () => {
     const staffOnly = forecast([offering()], [])
@@ -81,12 +81,12 @@ describe('capacity pools, forecast mode', () => {
   })
 
   it('target utilization scales the resource cap', () => {
-    const r = calc({ ...base, targetUtilizationPct: 50, mode: 'forecast', offerings: [offering({ resource: 'booth' })], resources: [booth] } as any, { enableCache: false })
+    const r = calc({ ...base, targetUtilizationPct: 50, mode: 'forecast' as const, offerings: [offering({ resource: 'booth' })], resources: [booth] } as any, { enableCache: false })
     expect(r.clients).toBe(21) // floor(260 / 12)
   })
 
   it('a group offering loads the resource by filled seats, not enrollment', () => {
-    const g = offering({ type: 'group', seats: 4, fillPct: 100, resource: 'booth' })
+    const g = offering({ type: 'group' as const, seats: 4, fillPct: 100, resource: 'booth' })
     const r = forecast([g])
     expect(r.clients).toBe(173) // 12 h per run / 4 seats = 3 h per client: floor(520 / 3)
   })
@@ -95,7 +95,7 @@ describe('capacity pools, forecast mode', () => {
 describe('capacity pools, current mode', () => {
   beforeEach(() => clearCalculationCache())
   const current = (offerings: object[], resources: object[] = [booth]) =>
-    calc({ ...base, mode: 'current', offerings, resources } as any, { enableCache: false })
+    calc({ ...base, mode: 'current' as const, offerings, resources } as any, { enableCache: false })
 
   it('reports each pool and flags the busier one', () => {
     const r = current([offering({ resource: 'booth', currentClients: 20 })])
@@ -112,7 +112,7 @@ describe('capacity pools, current mode', () => {
   })
 
   it('a group needs whole cohorts of the resource', () => {
-    const g = offering({ type: 'group', seats: 8, resource: 'booth', currentClients: 9 })
+    const g = offering({ type: 'group' as const, seats: 8, resource: 'booth', currentClients: 9 })
     expect(current([g]).poolUtilization[1].pct).toBeCloseTo((24 / 520) * 100, 6) // 2 cohorts x 12 h
   })
 })
@@ -121,8 +121,8 @@ describe('capacity pools, backward compatibility', () => {
   beforeEach(() => clearCalculationCache())
   const scenarios = [
     [offering()],
-    [offering({ type: 'group', seats: 6, fillPct: 70 })],
-    [offering({ type: 'one-time' }), offering({ name: 'B', mixPct: 0 })],
+    [offering({ type: 'group' as const, seats: 6, fillPct: 70 })],
+    [offering({ type: 'one-time' as const }), offering({ name: 'B', mixPct: 0 })],
     [offering({ mixPct: 60 }), offering({ name: 'B', mixPct: 40, hoursPerSession: 2 })],
   ]
 
@@ -144,9 +144,9 @@ describe('capacity pools, backward compatibility', () => {
   })
 
   it('a tag naming an unknown or unset resource behaves as untagged', () => {
-    const plain = calc({ ...base, mode: 'forecast', offerings: [offering()] } as any, { enableCache: false })
-    const ghost = calc({ ...base, mode: 'forecast', offerings: [offering({ resource: 'nope' })], resources: [booth] } as any, { enableCache: false })
-    const unset = calc({ ...base, mode: 'forecast', offerings: [offering({ resource: 'booth' })], resources: [{ ...booth, hoursPerWeek: 0 }] } as any, { enableCache: false })
+    const plain = calc({ ...base, mode: 'forecast' as const, offerings: [offering()] } as any, { enableCache: false })
+    const ghost = calc({ ...base, mode: 'forecast' as const, offerings: [offering({ resource: 'nope' })], resources: [booth] } as any, { enableCache: false })
+    const unset = calc({ ...base, mode: 'forecast' as const, offerings: [offering({ resource: 'booth' })], resources: [{ ...booth, hoursPerWeek: 0 }] } as any, { enableCache: false })
     expect(ghost.clients).toBe(plain.clients)
     expect(unset.clients).toBe(plain.clients)
     expect(ghost.offerings[0].resource).toBeUndefined()
@@ -162,7 +162,7 @@ describe('capacity pools, backward compatibility', () => {
   })
 
   it('the cache key sees resource changes', () => {
-    const args = { ...base, mode: 'forecast', offerings: [offering({ resource: 'booth' })] } as any
+    const args = { ...base, mode: 'forecast' as const, offerings: [offering({ resource: 'booth' })] } as any
     const a = calc({ ...args, resources: [booth] })
     const b = calc({ ...args, resources: [{ ...booth, hoursPerWeek: 20 }] })
     expect(b.clients).toBeGreaterThan(a.clients)
@@ -173,9 +173,9 @@ describe('staff-free resources', () => {
   beforeEach(() => clearCalculationCache())
   const free = { ...booth, staffFree: true }
   const forecast = (offerings: object[], resources: object[]) =>
-    calc({ ...base, mode: 'forecast', offerings, resources } as any, { enableCache: false })
+    calc({ ...base, mode: 'forecast' as const, offerings, resources } as any, { enableCache: false })
   const current = (offerings: object[], resources: object[]) =>
-    calc({ ...base, mode: 'current', offerings, resources } as any, { enableCache: false })
+    calc({ ...base, mode: 'current' as const, offerings, resources } as any, { enableCache: false })
 
   it('sanitizer keeps staffFree only when true', () => {
     expect(sanitizeResources([{ id: 'a', staffFree: true }])[0].staffFree).toBe(true)
@@ -215,7 +215,7 @@ describe('staff-free resources', () => {
   })
 
   it('toggling staffFree is not served from the calc cache', () => {
-    const run = (r: object) => calc({ ...base, mode: 'current', offerings: [offering({ resource: 'booth', currentClients: 20 })], resources: [r] } as any)
+    const run = (r: object) => calc({ ...base, mode: 'current' as const, offerings: [offering({ resource: 'booth', currentClients: 20 })], resources: [r] } as any)
     expect(run(booth).serviceHours).toBe(240)
     expect(run(free).serviceHours).toBe(0)
   })

@@ -1,14 +1,15 @@
+import { required } from '../test/test-utils';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MixOptimizer, optimizeMix } from './mixOptimizer';
 import { calc } from '../calculations/index';
 
 describe('Client Mix Optimizer', () => {
-  let mockState;
-  let mockMetrics;
+  let mockState: import('../types').CalcState & { offerings: import('../types').Offering[] };
+  let mockMetrics: import('../types').CalcResult;
 
   beforeEach(() => {
     mockState = {
-      mode: 'forecast',
+      mode: 'forecast' as const,
       fullTimeEmployees: 2,
       fullTimeEmployeePay: 50000,
       partTimeEmployees: 0,
@@ -47,25 +48,25 @@ describe('Client Mix Optimizer', () => {
       const result = optimizer.optimize('profit');
 
       expect(result).toBeTruthy();
-      expect(result.objective).toBe('profit');
-      expect(result.suggestedMix).toHaveLength(2);
-      expect(result.projectedIncome).toBeGreaterThanOrEqual(result.currentIncome);
-      expect(result.improved).toBe(true);
+      expect(required(result).objective).toBe('profit');
+      expect(required(result).suggestedMix).toHaveLength(2);
+      expect(required(result).projectedIncome).toBeGreaterThanOrEqual(required(result).currentIncome);
+      expect(required(result).improved).toBe(true);
     });
 
     it('shifts mix toward the higher-margin offering', () => {
       const optimizer = new MixOptimizer(mockState, mockMetrics);
       const result = optimizer.optimize('profit');
 
-      const highMargin = result.suggestedMix.find((o) => o.name === 'High Margin');
-      expect(highMargin.mixPct).toBeGreaterThan(10);
+      const highMargin = required(result).suggestedMix.find((o) => o.name === 'High Margin');
+      expect(required(highMargin).mixPct).toBeGreaterThan(10);
     });
 
     it('leaves mix percentages summing to 100', () => {
       const optimizer = new MixOptimizer(mockState, mockMetrics);
       const result = optimizer.optimize('profit');
 
-      const sum = result.suggestedMix.reduce((acc, o) => acc + o.mixPct, 0);
+      const sum = required(result).suggestedMix.reduce((acc, o) => acc + o.mixPct, 0);
       expect(sum).toBeCloseTo(100, 0);
     });
   });
@@ -75,9 +76,9 @@ describe('Client Mix Optimizer', () => {
       const optimizer = new MixOptimizer(mockState, mockMetrics);
       const result = optimizer.optimize('utilization');
 
-      expect(result.objective).toBe('utilization');
-      expect(typeof result.projectedCapacityPct).toBe('number');
-      expect(typeof result.currentCapacityPct).toBe('number');
+      expect(required(result).objective).toBe('utilization');
+      expect(typeof required(result).projectedCapacityPct).toBe('number');
+      expect(typeof required(result).currentCapacityPct).toBe('number');
     });
   });
 
@@ -110,24 +111,24 @@ describe('Client Mix Optimizer', () => {
 
       const result = optimizer.optimize('profit');
       expect(result).toBeTruthy();
-      expect(result.suggestedMix).toHaveLength(8);
+      expect(required(result).suggestedMix).toHaveLength(8);
     });
   });
 
   describe('one-time offerings', () => {
-    const withOneTime = (state) => ({
+    const withOneTime = (state: typeof mockState) => ({
       ...state,
       offerings: [
         { ...state.offerings[0], mixPct: 35 },
         { ...state.offerings[1], mixPct: 35 },
-        { name: 'Ebook', type: 'one-time', priceMonthly: 20, sessionsPerYear: 1, hoursPerSession: 0, variableCostPerSession: 2, mixPct: 30, currentClients: 10 }
+        { name: 'Ebook', type: 'one-time' as const, priceMonthly: 20, sessionsPerYear: 1, hoursPerSession: 0, variableCostPerSession: 2, mixPct: 30, currentClients: 10 }
       ]
     });
 
     it('keeps the one-time share fixed instead of piling mix into hour-free sales', () => {
       const state = withOneTime(mockState);
       const result = optimizeMix(state, calc(state, { enableCache: false }), 'profit');
-      const mix = Object.fromEntries(result.suggestedMix.map((o) => [o.name, o.mixPct]));
+      const mix = Object.fromEntries(required(result).suggestedMix.map((o) => [o.name, o.mixPct]));
       expect(mix.Ebook).toBe(30);
       expect(mix['High Margin'] + mix['Low Margin']).toBeCloseTo(70, 5);
     });
@@ -143,12 +144,12 @@ describe('Client Mix Optimizer', () => {
     it('returns the same shape as MixOptimizer.optimize()', () => {
       const result = optimizeMix(mockState, mockMetrics, 'profit');
       expect(result).toBeTruthy();
-      expect(result.objective).toBe('profit');
+      expect(required(result).objective).toBe('profit');
     });
 
     it('defaults to profit objective when none given', () => {
       const result = optimizeMix(mockState, mockMetrics);
-      expect(result.objective).toBe('profit');
+      expect(required(result).objective).toBe('profit');
     });
   });
 });

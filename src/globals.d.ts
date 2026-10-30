@@ -7,7 +7,7 @@ declare global {
   const __APP_VERSION__: string;
 
   // Test runner globals (vitest `globals: true`)
-  var vi: any;
+  var vi: typeof import('vitest').vi;
 
   // DOM helpers defined in assets/utils/dom.ts
   var $: any;

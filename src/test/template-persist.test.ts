@@ -4,6 +4,7 @@ import { hybridFixture } from '../../assets/prototypes/fixtures';
 import { calc } from '../calculations/index';
 import { fmtMoney0 } from '../calculations/currency';
 import { setRangeCase } from '../calculations/rangeCase';
+import { appStateFixture } from './test-utils';
 
 describe('Email report staffing', () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
@@ -52,19 +53,16 @@ describe('Email report staffing', () => {
 describe('loadIndustryTemplate persistence', () => {
   beforeEach(() => {
     localStorage.clear();
-    window.INDUSTRY_TEMPLATES = {
+    vi.stubGlobal('INDUSTRY_TEMPLATES', {
       demo: { config: { offerings: [{ name: 'Consulting', priceMonthly: 100 }] } },
-    };
-    window.state = { offerings: [] };
-    window.render = vi.fn();
-    window.persistState = vi.fn();
+    });
+    vi.stubGlobal('state', { ...appStateFixture({ offerings: [{}] }), offerings: [] });
+    vi.stubGlobal('render', vi.fn());
+    vi.stubGlobal('persistState', vi.fn());
   });
 
   afterEach(() => {
-    delete window.INDUSTRY_TEMPLATES;
-    delete window.state;
-    delete window.render;
-    delete window.persistState;
+    vi.unstubAllGlobals();
     localStorage.clear();
   });
 

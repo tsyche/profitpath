@@ -18,6 +18,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Break-even Analysis**: Visual indicators showing contribution margins and break-even points
 - **Utilization Tracking**: Monitor capacity usage with gauge and percentage indicators
 - **Profit/Loss Waterfall**: Interactive chart showing revenue flow and cost breakdown
+- **Chart Ranges**: Revenue, profit, and utilization charts show input-bound min/base/max bands with a separate viewed-case marker when assumptions vary; these are scenario envelopes, not confidence intervals.
 - **Client Mix Optimizer**: Suggests the offering mix that maximizes projected profit or utilization within current capacity (Intermediate+ experience levels)
 - **Advanced Charts**: Price × utilization sensitivity heat map, balanced scorecard radar (profitability, utilization, growth headroom, cost efficiency, diversification), and client capacity funnel (Advanced experience level)
 - **Advisor**: One entry point for insights, take-home goals, offering mix, and charts; opens each full tool (Intermediate+ experience levels)

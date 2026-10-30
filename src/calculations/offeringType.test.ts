@@ -39,16 +39,16 @@ describe('offering type is behavior-neutral for now', () => {
   it.each(['current', 'forecast'] as const)('%s mode: legacy payload equals explicit subscription', (mode) => {
     const legacy = calc({ ...base, mode, offerings: [offering] } as any)
     clearCalculationCache()
-    const typed = calc({ ...base, mode, offerings: [{ ...offering, type: 'subscription' }] } as any)
+    const typed = calc({ ...base, mode, offerings: [{ ...offering, type: 'subscription' as const }] } as any)
     expect(typed.income).toBe(legacy.income)
     expect(typed.variableCosts).toBe(legacy.variableCosts)
     expect(typed.capacityPct).toBe(legacy.capacityPct)
   })
 
   it('unknown type calc matches subscription', () => {
-    const a = calc({ ...base, mode: 'current', offerings: [offering] } as any)
+    const a = calc({ ...base, mode: 'current' as const, offerings: [offering] } as any)
     clearCalculationCache()
-    const b = calc({ ...base, mode: 'current', offerings: [{ ...offering, type: 'bogus' }] } as any)
+    const b = calc({ ...base, mode: 'current' as const, offerings: [{ ...offering, type: 'bogus' }] } as any)
     expect(b.income).toBe(a.income)
   })
 })

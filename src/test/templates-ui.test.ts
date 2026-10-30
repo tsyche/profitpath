@@ -4,11 +4,62 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { Offering } from '../types';
+
+interface TemplateState {
+  mode: 'forecast' | 'current';
+  employees: number;
+  employeePay: number;
+  monthlyCosts: number;
+  productiveUtilizationPct: number;
+  targetUtilizationPct: number;
+  lockMix: boolean;
+  offerings: Offering[];
+}
+
+interface TemplateFixture {
+  name: string;
+  description: string;
+  config: Partial<TemplateState>;
+  settings?: { experienceLevel: string };
+}
+
+// These tests exercise their legacy template harness, rather than app globals.
+interface TemplateWindow {
+  __TEST_MODE__: boolean;
+  state: TemplateState;
+  INDUSTRY_TEMPLATES: Record<string, TemplateFixture>;
+  showAlert: (message: string, title: string) => void;
+  render: () => void;
+  persistState: () => void;
+  uuid: () => string;
+  loadIndustryTemplate: (name: string) => void;
+  loadOnboardingIndustryTemplate: (industryId: string) => void;
+}
+
+function createTemplateWindow(): TemplateWindow {
+  return {
+    __TEST_MODE__: true,
+    state: {
+      mode: 'forecast', employees: 5, employeePay: 75000, monthlyCosts: 500,
+      productiveUtilizationPct: 85, targetUtilizationPct: 80, lockMix: false, offerings: []
+    },
+    INDUSTRY_TEMPLATES: {},
+    showAlert: vi.fn(),
+    render: vi.fn(),
+    persistState: vi.fn(),
+    uuid: vi.fn(() => 'test-uuid-123'),
+    loadIndustryTemplate: vi.fn(),
+    loadOnboardingIndustryTemplate: vi.fn()
+  };
+}
 
 describe('Template Loading - Industry Templates', () => {
-  let mockState;
+  let mockState: TemplateState;
+  let window: TemplateWindow;
 
   beforeEach(() => {
+    window = createTemplateWindow();
     // Enable test mode to bypass confirmation dialogs
     globalThis.__TEST_MODE__ = true;
     window.__TEST_MODE__ = true;
@@ -17,7 +68,7 @@ describe('Template Loading - Industry Templates', () => {
     localStorage.clear();
 
     // Mock localStorage
-    const storage = new Map();
+    const storage = new Map<string, string>();
     localStorage.setItem = vi.fn((key, value) => storage.set(key, value));
     localStorage.getItem = vi.fn((key) => storage.get(key) || null);
     localStorage.clear = vi.fn(() => storage.clear());
@@ -27,7 +78,7 @@ describe('Template Loading - Industry Templates', () => {
 
     // Mock global state
     mockState = {
-      mode: 'forecast',
+      mode: 'forecast' as const,
       employees: 5,
       employeePay: 75000,
       monthlyCosts: 500,
@@ -174,7 +225,7 @@ describe('Template Loading - Industry Templates', () => {
     };
 
     // Mock loadIndustryTemplate function
-    window.loadIndustryTemplate = (name) => {
+    window.loadIndustryTemplate = (name: string) => {
       const template = window.INDUSTRY_TEMPLATES[name];
       if (!template) {
         window.showAlert('Template not found', 'Error');
@@ -422,9 +473,11 @@ describe('Template Loading - Industry Templates', () => {
 });
 
 describe('Template Loading - Onboarding Industry Templates', () => {
-  let mockState;
+  let mockState: TemplateState;
+  let window: TemplateWindow;
 
   beforeEach(() => {
+    window = createTemplateWindow();
     // Enable test mode
     globalThis.__TEST_MODE__ = true;
     window.__TEST_MODE__ = true;
@@ -433,14 +486,14 @@ describe('Template Loading - Onboarding Industry Templates', () => {
     localStorage.clear();
 
     // Mock localStorage
-    const storage = new Map();
+    const storage = new Map<string, string>();
     localStorage.setItem = vi.fn((key, value) => storage.set(key, value));
     localStorage.getItem = vi.fn((key) => storage.get(key) || null);
     localStorage.clear = vi.fn(() => storage.clear());
 
     // Mock global state
     mockState = {
-      mode: 'forecast',
+      mode: 'forecast' as const,
       employees: 5,
       employeePay: 75000,
       monthlyCosts: 500,
@@ -457,8 +510,8 @@ describe('Template Loading - Onboarding Industry Templates', () => {
     window.uuid = vi.fn(() => 'test-uuid-123');
 
     // Mock loadOnboardingIndustryTemplate function
-    window.loadOnboardingIndustryTemplate = vi.fn((industryId) => {
-      const templates = {
+    window.loadOnboardingIndustryTemplate = vi.fn((industryId: string) => {
+      const templates: Record<string, { offerings: Offering[] }> = {
         consulting: {
           offerings: [{
             name: 'Strategy Consulting',

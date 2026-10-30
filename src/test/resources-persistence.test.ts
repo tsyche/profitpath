@@ -1,3 +1,4 @@
+import { required, calcResultFixture } from './test-utils';
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   buildCSV, importFromCSV, sanitizeScenarioState, encodeScenarioToURL, decodeScenarioFromURL
@@ -5,12 +6,12 @@ import {
 
 const offering = (name: string, resource?: string) => ({
   id: name, name, priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0,
-  mixPct: 50, currentClients: 2, laborPctOfPrice: 0, type: 'subscription', seats: 1, fillPct: 100,
+  mixPct: 50, currentClients: 2, laborPctOfPrice: 0, type: 'subscription' as const, seats: 1, fillPct: 100,
   ...(resource ? { resource } : {})
 });
 
 const state: any = {
-  mode: 'forecast',
+  mode: 'forecast' as const,
   fullTimeEmployees: 2,
   partTimeEmployees: 0,
   fullTimeEmployeePay: 60000,
@@ -35,7 +36,7 @@ describe('resources: sanitizeScenarioState', () => {
   it('CSV import preserves zero-hour rows and fractional session cadences', () => {
     const csv = 'Offerings\nName,Price,Sessions,Hours,Var,Mix,Clients\nMembership,100,0.5,0,0,100,0\n';
     const result = importFromCSV(csv);
-    expect(result.data.offerings[0]).toMatchObject({ sessionsPerYear: 0.5, hoursPerSession: 0 });
+    expect(required(required(result).data).offerings[0]).toMatchObject({ sessionsPerYear: 0.5, hoursPerSession: 0 });
   });
 
   it('keeps resources and valid tags', () => {
@@ -68,7 +69,7 @@ describe('resources: share URL round trip', () => {
 });
 
 describe('resources: CSV round trip', () => {
-  const r: any = importFromCSV(buildCSV(state, results));
+  const r: any = importFromCSV(buildCSV(state, calcResultFixture(results)));
 
   it('restores resources with hostile characters in the name', () => {
     expect(r.success).toBe(true);
@@ -96,7 +97,7 @@ describe('resources: staffFree persistence', () => {
   const freeState: any = { ...state, resources: [{ ...state.resources[0], staffFree: true }] };
 
   it('survives the CSV round-trip and a legacy 3-column section reads as false', () => {
-    const csv = buildCSV(freeState, results);
+    const csv = buildCSV(freeState, calcResultFixture(results));
     expect(csv).toContain('Name,Hours/week,Weeks/year,Staff-free');
     expect((importFromCSV(csv) as any).data.resources[0].staffFree).toBe(true);
     const legacy: any = importFromCSV('Resources\nName,Hours/week,Weeks/year\nBooth,40,50\nOfferings\nName,P,S,H,V,M,C\nA,100,12,1,0,100,0\n');

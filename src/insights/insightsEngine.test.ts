@@ -39,7 +39,10 @@ describe('Insights Engine', () => {
       const thin = [{ ...healthy[0], priceMonthly: 120, variableCostPerSession: 60 }, healthy[1]];
       const rec = insightsFor(makeState(mode, thin)).filter((i: any) => i.category === 'pricing');
       expect(rec.map((i: any) => i.offering)).toEqual(['Coaching']);
-      expect(rec[0].recommendation.suggested).toBeGreaterThan(rec[0].recommendation.current);
+      const recommendation = rec[0].recommendation;
+      if (!recommendation || typeof recommendation !== 'object' ||
+          !('suggested' in recommendation) || !('current' in recommendation)) throw new Error('Missing pricing recommendation');
+      expect(Number(recommendation.suggested)).toBeGreaterThan(Number(recommendation.current));
     });
   });
 

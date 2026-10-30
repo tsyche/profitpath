@@ -19,7 +19,7 @@ describe('Toast queue cap', () => {
     let created = 0;
     const realAppend = document.body.appendChild.bind(document.body);
     const spy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => {
-      if (node && node.classList && node.classList.contains('toast')) created++;
+      if (node instanceof Element && node.classList.contains('toast')) created++;
       return realAppend(node);
     });
 

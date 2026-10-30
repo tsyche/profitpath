@@ -17,7 +17,7 @@ import { calc as calculate, normalizeOfferingType } from '../../src/calculations
 import { getRangeCase, RANGE_CASE_LABELS, rangeCaseTag } from '../../src/calculations/rangeCase';
 import { displayPrice, isOneTime, isPerSession } from '../../src/calculations/offeringPrice';
 import { usesWorkspaces } from '../../src/ui/workspaceNavigation';
-import { sanitizeOfferingRange } from '../../src/calculations/ranges';
+import { sanitizeOfferingRange, type RangeResult } from '../../src/calculations/ranges';
 import { sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
 import { sanitizeSalesLossBounds, sanitizeSalesLossPct } from '../../src/calculations/salesLoss';
 import { sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
@@ -30,29 +30,9 @@ import { showToast } from './modalService';
 import { createModal } from '../components/Modal';
 import { ensureValidInputs } from '../state/pendingInputs';
 import { renderSimpleChart, updateRichVisualizations as vizUpdateRichVisualizations, updateBreakEvenAnalysis } from './visualizationService';
+import { downloadOrShare, isAndroidApp, openPrintTarget } from './reportDelivery';
 
 // Utility functions for export functionality
-
-// Capacitor WebView blocks <a download> — use Web Share API for files when available
-async function downloadOrShare(blob: Blob, filename: string) {
-  if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: blob.type })] })) {
-    try {
-      await navigator.share({ files: [new File([blob], filename, { type: blob.type })], title: filename });
-      return;
-    } catch (e) {
-      if (e instanceof Error && e.name === 'AbortError') return; // user cancelled share sheet
-    }
-  }
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.style.display = 'none';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-}
 
 function loadScript(src: string) {
   return new Promise<void>((resolve, reject) => {
@@ -310,7 +290,7 @@ export function buildCSV(st: AppState, results: CalcResult) {
   return parts.join('\n\n');
 }
 
-export function exportAsCSV() {
+export async function exportAsCSV() {
   if (!ensureValidInputs()) return;
   let results: CalcResult;
   try {
@@ -327,7 +307,7 @@ export function exportAsCSV() {
 
   const csv = buildCSV(state, results);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  downloadOrShare(blob, 'profitpath-' + new Date().toISOString().split('T')[0] + '.csv');
+  if (!await downloadOrShare(blob, 'profitpath-' + new Date().toISOString().split('T')[0] + '.csv')) return;
   trackEvent('export', { format: 'csv' });
 }
 
@@ -845,7 +825,7 @@ export function loadIndustryTemplate(templateId: string) {
   return false;
 }
 
-export function exportAsExcel() {
+export async function exportAsExcel() {
   if (!ensureValidInputs()) return;
   const st: AppState = state;
   let results: CalcResult;
@@ -860,8 +840,8 @@ export function exportAsExcel() {
   const bytes = buildXLSX(buildWorkbookSheets(st, results));
   // fresh Uint8Array: fflate's bytes are ArrayBufferLike, Blob wants ArrayBuffer-backed
   const blob = new Blob([new Uint8Array(bytes)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  downloadOrShare(blob, 'profitpath-export-' + new Date().toISOString().split('T')[0] + '.xlsx');
-  showNotification('Excel workbook downloaded!', 'success');
+  if (!await downloadOrShare(blob, 'profitpath-export-' + new Date().toISOString().split('T')[0] + '.xlsx')) return;
+  showNotification(isAndroidApp() ? 'Excel export options opened.' : 'Excel workbook downloaded!', 'success');
 
   // Track Excel export
   trackEvent('export', { format: 'excel' });
@@ -874,14 +854,14 @@ export function exportAsPDF() {
   const metrics = calculate(state);
   const fmtPct = (n: number) => n.toFixed(1) + '%';
 
-  // Capacitor WebView blocks window.open — fall through to HTML export instead
+  // iOS printing remains unavailable until the native platform upgrade.
   const isCapacitor = window.location.origin === 'http://localhost' || window.location.origin === 'capacitor://localhost';
-  if (isCapacitor) {
+  if (isCapacitor && !isAndroidApp()) {
     showNotification('PDF printing unavailable in the app — use HTML export instead', 'info');
     return;
   }
 
-  const printWindow = window.open('', '_blank');
+  const printWindow = openPrintTarget('ProfitPath report');
   if (!printWindow) {
     showNotification('Please allow popups to print PDF', 'error');
     return;
@@ -956,15 +936,15 @@ export function exportAsPDF() {
 
   printWindow.document.close();
   printWindow.focus();
-  setTimeout(() => {
-    printWindow.print();
+  setTimeout(async () => {
+    if (!await printWindow.print()) return;
+    showNotification('PDF print dialog opened!', 'success');
     // Track PDF export
     trackEvent('export', { format: 'pdf' });
   }, 500);
-  showNotification('PDF print dialog opened!', 'success');
 }
 
-export function exportAsHTML() {
+export async function exportAsHTML() {
   if (!ensureValidInputs()) return;
   const state = window.state;
   const metrics = calculate(state);
@@ -1041,8 +1021,8 @@ export function exportAsHTML() {
 </html>`;
 
   const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
-  downloadOrShare(blob, 'profitpath-report-' + new Date().toISOString().split('T')[0] + '.html');
-  showNotification('HTML report downloaded!', 'success');
+  if (!await downloadOrShare(blob, 'profitpath-report-' + new Date().toISOString().split('T')[0] + '.html')) return;
+  showNotification(isAndroidApp() ? 'HTML export options opened.' : 'HTML report downloaded!', 'success');
 
   // Track HTML export
   trackEvent('export', { format: 'html' });
@@ -1054,7 +1034,7 @@ export function exportAsFinancialReport() {
   const metrics = window.lastMetrics || (window.calc ? window.calc(state) : null);
 
   const isCapacitor = window.location.origin === 'http://localhost' || window.location.origin === 'capacitor://localhost';
-  if (isCapacitor) {
+  if (isCapacitor && !isAndroidApp()) {
     showNotification('Financial report printing unavailable in the app — use HTML export instead', 'info');
     return;
   }
@@ -1091,7 +1071,7 @@ export function exportAsFinancialReport() {
       <td>${fmt(metrics.quarterlyEst || 0)}</td>
     </tr>`).join('');
 
-  const printWindow = window.open('', '_blank');
+  const printWindow = openPrintTarget('ProfitPath financial report');
   if (!printWindow) {
     showNotification('Please allow popups to print the financial report', 'error');
     return;
@@ -1220,11 +1200,11 @@ export function exportAsFinancialReport() {
 
   printWindow.document.close();
   printWindow.focus();
-  setTimeout(() => {
-    printWindow.print();
+  setTimeout(async () => {
+    if (!await printWindow.print()) return;
+    showNotification('Financial report print dialog opened!', 'success');
     trackEvent('export', { format: 'financial-report' });
   }, 500);
-  showNotification('Financial report print dialog opened!', 'success');
 }
 
 export function shareViaEmail() {
@@ -1296,20 +1276,20 @@ export function showScheduleDialog() {
 export function updateValidationDisplay() {
 }
 
-export function lazyLoadChart(metrics: CalcResult) {
+export function lazyLoadChart(metrics: CalcResult, ranges: RangeResult | null = null) {
   try {
     if (renderSimpleChart) {
-      renderSimpleChart(metrics);
+      renderSimpleChart(metrics, ranges);
     }
   } catch (e) {
     console.warn('lazyLoadChart error:', e);
   }
 }
 
-export function updateRichVisualizations(metrics: CalcResult) {
+export function updateRichVisualizations(metrics: CalcResult, ranges: RangeResult | null = null) {
   try {
     if (typeof vizUpdateRichVisualizations === 'function') {
-      vizUpdateRichVisualizations(metrics);
+      vizUpdateRichVisualizations(metrics, ranges);
     }
     if (typeof updateBreakEvenAnalysis === 'function') {
       updateBreakEvenAnalysis(metrics);

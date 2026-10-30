@@ -1,73 +1,21 @@
+import { required } from './test-utils';
 /**
  * Tests for Scenario Save and Load Functionality - Real Implementation Tests
  * These tests verify that scenarios actually save and load the calculation state
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { saveScenario, loadScenario, deleteScenario } from '../../assets/services/scenarioService';
-import { calc } from '../../src/calculations/index';
 import { setTestMode, clearGlobalState, clearVitestState, ensureElementRemove } from './test-utils';
 
-// Mock DOM elements
-const mockElements = {};
-
 beforeEach(() => {
-  // Mock document.getElementById
-  global.document = {
-    getElementById: vi.fn((id) => mockElements[id] || null),
-    createElement: vi.fn(() => ({
-      style: {},
-      appendChild: vi.fn(),
-      remove: vi.fn(),
-      classList: {
-        add: vi.fn(),
-        remove: vi.fn(),
-        contains: vi.fn()
-      },
-      querySelector: vi.fn(() => null),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn()
-    })),
-    body: {
-      appendChild: vi.fn(),
-      removeChild: vi.fn()
-    }
-  };
-
-  // Mock localStorage
-  const localStorageMock = {
-    data: {},
-    getItem: vi.fn((key) => localStorageMock.data[key] || null),
-    setItem: vi.fn((key, value) => { localStorageMock.data[key] = value; }),
-    removeItem: vi.fn((key) => { delete localStorageMock.data[key]; }),
-    clear: vi.fn(() => { localStorageMock.data = {}; })
-  };
-  global.localStorage = localStorageMock;
-
-  // Mock window
-  global.window = {
-    location: { origin: 'http://localhost:3000', pathname: '/' },
-    open: vi.fn(),
-    alert: vi.fn()
-  };
-
-  // Mock navigator
-  global.navigator = {
-    clipboard: {
-      writeText: vi.fn().mockResolvedValue()
-    }
-  };
-
-  // Create mock elements
-  mockElements.scenarioNameInput = {
-    value: '',
-    focus: vi.fn(),
-    select: vi.fn()
-  };
+  // Use jsdom's real document; only the app callbacks are stubs.
+  window.render = vi.fn();
+  window.persistState = vi.fn();
 });
 
 afterEach(() => {
   vi.clearAllMocks();
+  vi.unstubAllGlobals();
 });
 
 // Mock modalService to prevent toast DOM manipulation
@@ -98,8 +46,8 @@ describe('Scenario Save and Load - Real Implementation', () => {
       <div id="scenariosList"></div>
     `;
 
-    // Mock window.state
-    window.state = {
+    // Deliberately exercise an old saved-state shape before load normalizes it.
+    vi.stubGlobal('state', {
       employees: 5,
       employeePay: 50000,
       monthlyCosts: 0,
@@ -113,7 +61,7 @@ describe('Scenario Save and Load - Real Implementation', () => {
           hoursPerClient: 10
         }
       ]
-    };
+    });
   });
 
   afterEach(() => {
@@ -122,7 +70,9 @@ describe('Scenario Save and Load - Real Implementation', () => {
   });
 
   // Import after mocking
-  let saveScenario, loadScenario, deleteScenario;
+  let saveScenario: typeof import('../../assets/services/scenarioService').saveScenario;
+  let loadScenario: typeof import('../../assets/services/scenarioService').loadScenario;
+  let deleteScenario: typeof import('../../assets/services/scenarioService').deleteScenario;
 
   beforeEach(async () => {
     const scenarioService = await import('../../assets/services/scenarioService');
@@ -138,8 +88,8 @@ describe('Scenario Save and Load - Real Implementation', () => {
   describe('Save Functionality', () => {
     it('should save the current calculation state when clicking save button', async () => {
       const scenarioName = 'Test Scenario';
-      const input = document.getElementById('scenarioNameInput');
-      input.value = scenarioName;
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
+      required(input).value = scenarioName;
 
       // Call saveScenario
       saveScenario(scenarioName);
@@ -178,8 +128,8 @@ describe('Scenario Save and Load - Real Implementation', () => {
     it('should load and restore the calculation state from a saved scenario', async () => {
       // First, save a scenario with specific state
       const scenarioName = 'Test Scenario';
-      const input = document.getElementById('scenarioNameInput');
-      input.value = scenarioName;
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
+      required(input).value = scenarioName;
 
       // Modify state to specific values
       window.state.employees = 10;

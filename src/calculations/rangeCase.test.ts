@@ -15,7 +15,7 @@ const offering = (extra: Record<string, unknown> = {}) => ({
   ...extra
 })
 const state = (extra: Record<string, unknown> = {}) => ({
-  mode: 'current',
+  mode: 'current' as const,
   employees: 1,
   employeePay: 40000,
   monthlyCosts: 500,

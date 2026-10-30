@@ -1,3 +1,4 @@
+import { required } from './test-utils';
 // Test file for modal bug fixes
 // This file will help ensure all modal issues are properly addressed
 
@@ -15,7 +16,7 @@ vi.mock('../../assets/components/UIHelpers', () => ({
 }));
 
 describe('Modal Bug Fixes', () => {
-    let originalBodyOverflow;
+    let originalBodyOverflow: string;
 
     beforeEach(() => {
         // Save original body overflow
@@ -53,9 +54,9 @@ describe('Modal Bug Fixes', () => {
             expect(overlay.className).toBe('modal-overlay');
 
             // The modal content should be properly sized and positioned
-            const modalContent = modal.querySelector('.modal-content');
+            const modalContent = modal.querySelector<HTMLElement>('.modal-content');
             expect(modalContent).toBeTruthy();
-            expect(modalContent.style.maxWidth).toBe('500px'); // medium size
+            expect(required(modalContent).style.maxWidth).toBe('500px'); // medium size
 
             modal.remove();
         });
@@ -70,10 +71,10 @@ describe('Modal Bug Fixes', () => {
             });
 
             const overlay = modal.querySelector('.modal-overlay');
-            const modalContent = modal.querySelector('.modal-content');
+            const modalContent = modal.querySelector<HTMLElement>('.modal-content');
 
             // Modal content should be centered and not show any background box
-            expect(modalContent.style.position).toBe('');
+            expect(required(modalContent).style.position).toBe('');
 
             modal.remove();
         });
@@ -89,8 +90,8 @@ describe('Modal Bug Fixes', () => {
                 size: 'small'
             });
 
-            const modalContent = modal.querySelector('.modal-content');
-            expect(modalContent.style.maxWidth).toBe('400px'); // small size
+            const modalContent = modal.querySelector<HTMLElement>('.modal-content');
+            expect(required(modalContent).style.maxWidth).toBe('400px'); // small size
 
             modal.remove();
         });
@@ -104,8 +105,8 @@ describe('Modal Bug Fixes', () => {
                 size: 'small'
             });
 
-            const modalContent = modal.querySelector('.modal-content');
-            expect(modalContent.style.maxWidth).toBe('400px'); // small size
+            const modalContent = modal.querySelector<HTMLElement>('.modal-content');
+            expect(required(modalContent).style.maxWidth).toBe('400px'); // small size
 
             modal.remove();
         });
@@ -119,8 +120,8 @@ describe('Modal Bug Fixes', () => {
                 size: 'medium'
             });
 
-            const modalContent = modal.querySelector('.modal-content');
-            expect(modalContent.style.maxWidth).toBe('500px'); // medium size
+            const modalContent = modal.querySelector<HTMLElement>('.modal-content');
+            expect(required(modalContent).style.maxWidth).toBe('500px'); // medium size
 
             modal.remove();
         });
@@ -137,8 +138,8 @@ describe('Modal Bug Fixes', () => {
             });
 
             // Click close button
-            const closeBtn = modal.querySelector('.modal-close');
-            closeBtn.click();
+            const closeBtn = modal.querySelector<HTMLElement>('.modal-close');
+            required(closeBtn).click();
 
             // Modal should be removed
             expect(document.body.contains(modal)).toBe(false);

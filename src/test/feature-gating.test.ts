@@ -1,12 +1,13 @@
+import { required } from './test-utils';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mock localStorage
 const localStorageMock = (() => {
-  let store = {};
+  let store: Record<string, string> = {};
   return {
-    getItem: (key) => store[key] || null,
-    setItem: (key, value) => { store[key] = value; },
-    removeItem: (key) => { delete store[key]; },
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => { store[key] = value; },
+    removeItem: (key: string) => { delete store[key]; },
     clear: () => { store = {}; }
   };
 })();
@@ -72,24 +73,24 @@ describe('Progressive Disclosure - Feature Gating', () => {
     });
 
     it('should hide advanced features at beginner level', async () => {
-      const advancedFeature = document.querySelector('.advanced-feature:not(.export-option)');
-      expect(advancedFeature.style.display).toBe('none');
+      const advancedFeature = document.querySelector<HTMLElement>('.advanced-feature:not(.export-option)');
+      expect(required(advancedFeature).style.display).toBe('none');
     });
 
     it('should hide expert features at beginner level', async () => {
-      const expertFeature = document.querySelector('.expert-feature:not(.export-option)');
-      expect(expertFeature.style.display).toBe('none');
+      const expertFeature = document.querySelector<HTMLElement>('.expert-feature:not(.export-option)');
+      expect(required(expertFeature).style.display).toBe('none');
     });
 
     it('should always show export options', async () => {
-      const exportOptions = document.querySelectorAll('.export-option');
+      const exportOptions = document.querySelectorAll<HTMLElement>('.export-option');
       exportOptions.forEach(option => {
         expect(option.style.display).toBe('block');
       });
     });
 
     it('should not show debug panel', async () => {
-      const debugWrapper = document.querySelector('.debug-wrapper.expert-feature');
+      const debugWrapper = document.querySelector<HTMLElement>('.debug-wrapper.expert-feature');
       // Debug panel is hidden for beginner level (it's an expert-feature)
       if (debugWrapper) {
         expect(debugWrapper.style.display).toBe('none');
@@ -105,24 +106,24 @@ describe('Progressive Disclosure - Feature Gating', () => {
     });
 
     it('should show advanced features at intermediate level', async () => {
-      const advancedFeature = document.querySelector('.advanced-feature:not(.export-option)');
-      expect(advancedFeature.style.display).not.toBe('none');
+      const advancedFeature = document.querySelector<HTMLElement>('.advanced-feature:not(.export-option)');
+      expect(required(advancedFeature).style.display).not.toBe('none');
     });
 
     it('should hide expert features at intermediate level', async () => {
-      const expertFeature = document.querySelector('.expert-feature:not(.export-option)');
-      expect(expertFeature.style.display).toBe('none');
+      const expertFeature = document.querySelector<HTMLElement>('.expert-feature:not(.export-option)');
+      expect(required(expertFeature).style.display).toBe('none');
     });
 
     it('should always show export options', async () => {
-      const exportOptions = document.querySelectorAll('.export-option');
+      const exportOptions = document.querySelectorAll<HTMLElement>('.export-option');
       exportOptions.forEach(option => {
         expect(option.style.display).toBe('block');
       });
     });
 
     it('should not show debug panel unless explicitly enabled', async () => {
-      const debugWrapper = document.querySelector('.debug-wrapper.expert-feature');
+      const debugWrapper = document.querySelector<HTMLElement>('.debug-wrapper.expert-feature');
       // Debug panel is hidden for intermediate level (it's an expert-feature)
       if (debugWrapper) {
         expect(debugWrapper.style.display).toBe('none');
@@ -130,9 +131,9 @@ describe('Progressive Disclosure - Feature Gating', () => {
     });
 
     it('should show comparison tools', async () => {
-      const comparisonTools = document.querySelector('#comparisonTools');
+      const comparisonTools = document.querySelector<HTMLElement>('#comparisonTools');
       expect(comparisonTools).toBeTruthy();
-      expect(comparisonTools.style.display).not.toBe('none');
+      expect(required(comparisonTools).style.display).not.toBe('none');
     });
   });
 
@@ -144,25 +145,25 @@ describe('Progressive Disclosure - Feature Gating', () => {
     });
 
     it('should show advanced features at advanced level', async () => {
-      const advancedFeature = document.querySelector('.advanced-feature:not(.export-option)');
-      expect(advancedFeature.style.display).not.toBe('none');
+      const advancedFeature = document.querySelector<HTMLElement>('.advanced-feature:not(.export-option)');
+      expect(required(advancedFeature).style.display).not.toBe('none');
     });
 
     it('should show expert features at advanced level', async () => {
-      const expertFeature = document.querySelector('.expert-feature:not(.export-option)');
-      expect(expertFeature.style.display).not.toBe('none');
+      const expertFeature = document.querySelector<HTMLElement>('.expert-feature:not(.export-option)');
+      expect(required(expertFeature).style.display).not.toBe('none');
     });
 
     it('should always show export options', async () => {
-      const exportOptions = document.querySelectorAll('.export-option');
+      const exportOptions = document.querySelectorAll<HTMLElement>('.export-option');
       exportOptions.forEach(option => {
         expect(option.style.display).toBe('block');
       });
     });
 
     it('should show debug panel by default', async () => {
-      const debugWrapper = document.querySelector('.debug-wrapper');
-      expect(debugWrapper.style.display).not.toBe('none');
+      const debugWrapper = document.querySelector<HTMLElement>('.debug-wrapper');
+      expect(required(debugWrapper).style.display).not.toBe('none');
     });
   });
 
@@ -182,7 +183,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
       const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
 
-      const debugWrapper = document.querySelector('.debug-wrapper.expert-feature');
+      const debugWrapper = document.querySelector<HTMLElement>('.debug-wrapper.expert-feature');
       if (debugWrapper) {
         expect(debugWrapper.style.display).toBe('block');
       }
@@ -203,9 +204,9 @@ describe('Progressive Disclosure - Feature Gating', () => {
       initializeProgressiveDisclosure();
 
       // For beginner with showDebugPanel=false, panel should be hidden
-      const debugWrapper = document.querySelector('.debug-wrapper');
+      const debugWrapper = document.querySelector<HTMLElement>('.debug-wrapper');
       expect(debugWrapper).toBeTruthy();
-      expect(debugWrapper.style.display).toBe('none');
+      expect(required(debugWrapper).style.display).toBe('none');
     });
   });
 
@@ -226,8 +227,8 @@ describe('Progressive Disclosure - Feature Gating', () => {
       localStorageMock.setItem('profitpath-settings', JSON.stringify({ experienceLevel: 'beginner' }));
       initializeProgressiveDisclosure();
 
-      let advancedFeature = document.querySelector('.advanced-feature:not(.export-option)');
-      expect(advancedFeature.style.display).toBe('none');
+      let advancedFeature = document.querySelector<HTMLElement>('.advanced-feature:not(.export-option)');
+      expect(required(advancedFeature).style.display).toBe('none');
 
       // Test intermediate level with fresh DOM
       document.body.innerHTML = `
@@ -239,9 +240,9 @@ describe('Progressive Disclosure - Feature Gating', () => {
       initializeProgressiveDisclosure();
 
       advancedFeature = document.querySelector('.advanced-feature:not(.export-option)');
-      let expertFeature = document.querySelector('.expert-feature:not(.export-option)');
-      expect(advancedFeature.style.display).not.toBe('none');
-      expect(expertFeature.style.display).toBe('none');
+      let expertFeature = document.querySelector<HTMLElement>('.expert-feature:not(.export-option)');
+      expect(required(advancedFeature).style.display).not.toBe('none');
+      expect(required(expertFeature).style.display).toBe('none');
 
       // Test advanced level with fresh DOM
       document.body.innerHTML = `
@@ -254,8 +255,8 @@ describe('Progressive Disclosure - Feature Gating', () => {
 
       advancedFeature = document.querySelector('.advanced-feature:not(.export-option)');
       expertFeature = document.querySelector('.expert-feature:not(.export-option)');
-      expect(advancedFeature.style.display).not.toBe('none');
-      expect(expertFeature.style.display).not.toBe('none');
+      expect(required(advancedFeature).style.display).not.toBe('none');
+      expect(required(expertFeature).style.display).not.toBe('none');
     });
   });
 
@@ -268,7 +269,7 @@ describe('Progressive Disclosure - Feature Gating', () => {
         localStorageMock.setItem('profitpath-settings', JSON.stringify({ experienceLevel: level }));
         initializeProgressiveDisclosure();
 
-        const exportOptions = document.querySelectorAll('.export-option');
+        const exportOptions = document.querySelectorAll<HTMLElement>('.export-option');
         exportOptions.forEach(option => {
           expect(option.style.display).toBe('block');
         });
@@ -291,9 +292,9 @@ describe('Progressive Disclosure - Feature Gating', () => {
       const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
 
-      const mobileBtn = document.querySelector('.mobile-submenu-btn.expert-feature');
+      const mobileBtn = document.querySelector<HTMLElement>('.mobile-submenu-btn.expert-feature');
       // Mobile buttons are always shown based on progressive disclosure code
-      expect(mobileBtn.style.display).toBe('block');
+      expect(required(mobileBtn).style.display).toBe('block');
     });
 
     it('should always show mobile menu buttons (they are treated as export options)', async () => {
@@ -301,9 +302,9 @@ describe('Progressive Disclosure - Feature Gating', () => {
       const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
       initializeProgressiveDisclosure();
 
-      const mobileBtn = document.querySelector('.mobile-submenu-btn.expert-feature');
+      const mobileBtn = document.querySelector<HTMLElement>('.mobile-submenu-btn.expert-feature');
       // Mobile submenu buttons are always shown (see progressive disclosure logic)
-      expect(mobileBtn.style.display).toBe('block');
+      expect(required(mobileBtn).style.display).toBe('block');
     });
   });
 
@@ -329,28 +330,28 @@ describe('Progressive Disclosure - Feature Gating', () => {
         initializeProgressiveDisclosure();
 
         // All levels should always show export options
-        const exportOptions = document.querySelectorAll('.export-option');
+        const exportOptions = document.querySelectorAll<HTMLElement>('.export-option');
         exportOptions.forEach(opt => {
-          expect(opt.style.display).toBe('block', `${level} - export options should always be visible`);
+          expect(opt.style.display, `${level} - export options should always be visible`).toBe('block');
         });
 
         // Verify features are hidden appropriately per level
-        const advancedFeature = document.querySelector('.advanced-feature:not(.export-option)');
-        const expertFeature = document.querySelector('.expert-feature:not(.export-option)');
+        const advancedFeature = document.querySelector<HTMLElement>('.advanced-feature:not(.export-option)');
+        const expertFeature = document.querySelector<HTMLElement>('.expert-feature:not(.export-option)');
 
         if (level === 'beginner') {
-          expect(advancedFeature.style.display).toBe('none', `${level} - advanced should be hidden`);
-          expect(expertFeature.style.display).toBe('none', `${level} - expert should be hidden`);
+          expect(required(advancedFeature).style.display, `${level} - advanced should be hidden`).toBe('none');
+          expect(required(expertFeature).style.display, `${level} - expert should be hidden`).toBe('none');
         }
 
         if (level === 'intermediate') {
-          expect(expertFeature.style.display).toBe('none', `${level} - expert should be hidden`);
+          expect(required(expertFeature).style.display, `${level} - expert should be hidden`).toBe('none');
         }
 
         if (level === 'advanced') {
           // Advanced doesn't explicitly hide anything, so elements stay visible
-          expect(advancedFeature.style.display).not.toBe('none', `${level} - advanced should be visible`);
-          expect(expertFeature.style.display).not.toBe('none', `${level} - expert should be visible`);
+          expect(required(advancedFeature).style.display, `${level} - advanced should be visible`).not.toBe('none');
+          expect(required(expertFeature).style.display, `${level} - expert should be visible`).not.toBe('none');
         }
       }
     });
@@ -365,8 +366,8 @@ describe('Progressive Disclosure - Feature Gating', () => {
       initializeProgressiveDisclosure();
 
       // Unknown level will show all features (because it's not 'beginner' or 'intermediate')
-      const advancedFeature = document.querySelector('.advanced-feature:not(.export-option)');
-      expect(advancedFeature.style.display).toBe('block');
+      const advancedFeature = document.querySelector<HTMLElement>('.advanced-feature:not(.export-option)');
+      expect(required(advancedFeature).style.display).toBe('block');
     });
 
     it('should default to beginner when level is not set', async () => {
@@ -375,8 +376,8 @@ describe('Progressive Disclosure - Feature Gating', () => {
       initializeProgressiveDisclosure();
 
       // Missing settings defaults to 'beginner'
-      const advancedFeature = document.querySelector('.advanced-feature:not(.export-option)');
-      expect(advancedFeature.style.display).toBe('none');
+      const advancedFeature = document.querySelector<HTMLElement>('.advanced-feature:not(.export-option)');
+      expect(required(advancedFeature).style.display).toBe('none');
     });
   });
 });

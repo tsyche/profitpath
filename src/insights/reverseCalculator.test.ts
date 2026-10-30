@@ -82,7 +82,7 @@ describe('Reverse Calculator - "What Would It Take?"', () => {
     it('rejects blank or non-positive targets', () => {
       expect(calculator.calculateRequiredPricing(0)).toBeNull();
       expect(calculator.calculateRequiredClients(-5)).toBeNull();
-      expect(calculator.calculateRequiredUtilization(undefined)).toBeNull();
+      expect(Reflect.apply(calculator.calculateRequiredUtilization, calculator, [undefined])).toBeNull();
       expect(calculator.calculateRequiredCostReduction(NaN)).toBeNull();
     });
   });

@@ -1,3 +1,4 @@
+import { calcResultFixture } from './test-utils';
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   buildCSV, importFromCSV, sanitizeScenarioState, encodeScenarioToURL, decodeScenarioFromURL
@@ -6,7 +7,7 @@ import { pruneMembership } from '../calculations/membership';
 
 const offering = (name: string) => ({
   id: name, name, priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0,
-  mixPct: 50, currentClients: 2, laborPctOfPrice: 0, type: 'per-session', seats: 1, fillPct: 100
+  mixPct: 50, currentClients: 2, laborPctOfPrice: 0, type: 'per-session' as const, seats: 1, fillPct: 100
 });
 
 const plans = [
@@ -16,7 +17,7 @@ const plans = [
 const profiles = [{ id: 'pr1', name: 'Regular', visits: { 'Studio, "A"': 2, Mixing: 1.5 } }];
 
 const state: any = {
-  mode: 'forecast',
+  mode: 'forecast' as const,
   fullTimeEmployees: 2,
   partTimeEmployees: 0,
   fullTimeEmployeePay: 60000,
@@ -78,7 +79,7 @@ describe('membership: share URL round trip', () => {
 });
 
 describe('membership: CSV round trip', () => {
-  const r: any = importFromCSV(buildCSV(state, results));
+  const r: any = importFromCSV(buildCSV(state, calcResultFixture(results)));
   const idOf = (name: string) => r.data.offerings.find((o: any) => o.name === name).id;
 
   it('restores plans with hostile names, fields and flags', () => {
@@ -133,7 +134,7 @@ describe('membership: visit bounds round trip', () => {
   });
 
   it('CSV round-trips the bounds by offering name', () => {
-    const r: any = importFromCSV(buildCSV({ ...state, memberProfiles: ranged }, results));
+    const r: any = importFromCSV(buildCSV({ ...state, memberProfiles: ranged }, calcResultFixture(results)));
     const p = r.data.memberProfiles[0];
     const idOf = (n: string) => r.data.offerings.find((o: any) => o.name === n).id;
     expect(p.visitsLow).toEqual({ [idOf('Studio, "A"')]: 0.5 });
@@ -141,7 +142,7 @@ describe('membership: visit bounds round trip', () => {
   });
 
   it('a legacy two-column profile row imports with no bounds', () => {
-    const csv = buildCSV({ ...state, memberProfiles: profiles }, results).replace(',Visits Low,Visits High', '');
+    const csv = buildCSV({ ...state, memberProfiles: profiles }, calcResultFixture(results)).replace(',Visits Low,Visits High', '');
     const p = (importFromCSV(csv) as any).data.memberProfiles[0];
     expect(Object.keys(p)).not.toContain('visitsLow');
     expect(Object.keys(p.visits)).toHaveLength(2);

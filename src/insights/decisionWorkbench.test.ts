@@ -5,9 +5,9 @@ import { setRangeCase } from '../calculations/rangeCase';
 import type { CalcState } from '../types';
 
 const base: CalcState = {
-  mode: 'current', currency: 'USD', fullTimeEmployees: 1, productiveUtilizationPct: 100,
+  mode: 'current' as const, currency: 'USD', fullTimeEmployees: 1, productiveUtilizationPct: 100,
   fullTimeEmployeePay: 0, monthlyCosts: 100,
-  offerings: [{ id: 'a', name: 'Studio', type: 'per-session', priceMonthly: 60, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 10, currentClients: 100, mixPct: 100, confidence: 'verified' }]
+  offerings: [{ id: 'a', name: 'Studio', type: 'per-session' as const, priceMonthly: 60, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 10, currentClients: 100, mixPct: 100, confidence: 'verified' }]
 };
 const option: CalcState = { ...base, offerings: [{ ...base.offerings![0], priceMonthly: 75, salesLossPct: 10, salesLossPctHigh: 30, confidence: 'guess' }] };
 

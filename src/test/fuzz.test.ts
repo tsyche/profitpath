@@ -1,3 +1,4 @@
+import { required } from './test-utils';
 /**
  * Fuzz tests for the calculation engine and untrusted-input sanitizers.
  *
@@ -9,9 +10,10 @@ import { calc, clearCalculationCache } from '../calculations/index';
 import { sanitizeScenarioState, escapeHtml } from '../../assets/services/miscService';
 import { RANGE_BOUND_KEYS } from '../calculations/rangeCase';
 import { calcRange } from '../calculations/ranges';
+import type { CalcOptions, CalcResult, CalcState } from '../types';
 
 // Mulberry32 seeded PRNG — deterministic across runs
-function mulberry32(seed) {
+function mulberry32(seed: number) {
   return function () {
     let t = (seed += 0x6D2B79F5);
     t = Math.imul(t ^ (t >>> 15), t | 1);
@@ -24,24 +26,24 @@ const SEED = 1337;
 const ITERATIONS = 300;
 
 // Pool of adversarial values mixed into otherwise-normal states
-const HOSTILE_VALUES = [
+const HOSTILE_VALUES: readonly unknown[] = [
   NaN, Infinity, -Infinity, -1, -1e9, 1e308, 0, -0,
   '', 'abc', '1e500', '-42', '  7  ', null, undefined,
   {}, [], true, false, '<script>alert(1)</script>', '__proto__',
   Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER, 0.1, 1e-300
 ];
 
-function pick(rand, arr) {
+function pick<T>(rand: () => number, arr: readonly T[]): T {
   return arr[Math.floor(rand() * arr.length)];
 }
 
 // 50/50: a plausible number in range, or a hostile value
-function fuzzNumber(rand, min, max) {
+function fuzzNumber(rand: () => number, min: number, max: number) {
   if (rand() < 0.5) return min + rand() * (max - min);
   return pick(rand, HOSTILE_VALUES);
 }
 
-function fuzzOffering(rand) {
+function fuzzOffering(rand: () => number): unknown {
   if (rand() < 0.05) return pick(rand, [null, undefined, 42, 'junk', []]);
   return {
     name: rand() < 0.7 ? `Offer ${Math.floor(rand() * 100)}` : pick(rand, HOSTILE_VALUES),
@@ -59,9 +61,9 @@ function fuzzOffering(rand) {
   };
 }
 
-function fuzzState(rand) {
+function fuzzState(rand: () => number): Record<string, unknown> {
   const offeringCount = Math.floor(rand() * 6);
-  const state = {
+  const state: Record<string, unknown> = {
     mode: pick(rand, ['forecast', 'current', 'garbage', null, undefined, 7]),
     offerings: rand() < 0.08
       ? pick(rand, [null, undefined, 'nope', 42, {}])
@@ -132,7 +134,12 @@ const FINITE_RESULT_FIELDS = [
   'serviceHours', 'capacityPct', 'annualPaidHours', 'annualServiceHours',
   'annualFixedCosts', 'annualPayroll', 'totalFixedCosts',
   'contributionMarginPerClient', 'contributionMarginRatio'
-];
+] as const satisfies readonly (keyof CalcResult)[];
+
+// Deliberately send malformed runtime input through the real calculation boundary.
+function calcHostile(state: Record<string, unknown>, options: CalcOptions) {
+  return calc(state as unknown as CalcState, options);
+}
 
 describe('Fuzz: calculation engine', () => {
   it('never throws and never produces NaN for arbitrary inputs', () => {
@@ -142,9 +149,10 @@ describe('Fuzz: calculation engine', () => {
       const state = fuzzState(rand);
       let result;
       try {
-        result = calc(state, { enableCache: false });
+        result = calcHostile(state, { enableCache: false });
       } catch (e) {
-        throw new Error(`calc threw on seed=${SEED} iteration=${i}: ${e.message}\nstate=${JSON.stringify(state)}`);
+        const message = e instanceof Error ? e.message : String(e);
+        throw new Error(`calc threw on seed=${SEED} iteration=${i}: ${message}\nstate=${JSON.stringify(state)}`);
       }
 
       for (const field of FINITE_RESULT_FIELDS) {
@@ -173,9 +181,9 @@ describe('Fuzz: calculation engine', () => {
 
     for (let i = 0; i < 50; i++) {
       const state = fuzzState(rand);
-      const uncached = calc(state, { enableCache: false });
-      const cachedFirst = calc(state, { enableCache: true });
-      const cachedSecond = calc(state, { enableCache: true });
+      const uncached = calcHostile(state, { enableCache: false });
+      const cachedFirst = calcHostile(state, { enableCache: true });
+      const cachedSecond = calcHostile(state, { enableCache: true });
 
       expect(cachedFirst.income).toBe(uncached.income);
       expect(cachedSecond.revenue).toBe(uncached.revenue);
@@ -191,10 +199,10 @@ describe('Fuzz: range bounds', () => {
       const state = fuzzState(rand);
       if (Array.isArray(state.offerings)) {
         for (const o of state.offerings) {
-          if (o && typeof o === 'object') for (const k of RANGE_BOUND_KEYS) if (rand() < 0.5) o[k] = fuzzNumber(rand, 0, 400);
+          if (o && typeof o === 'object') for (const k of RANGE_BOUND_KEYS) if (rand() < 0.5) Reflect.set(o, k, fuzzNumber(rand, 0, 400));
         }
       }
-      const band = calcRange(state);
+      const band = calcRange(state as unknown as CalcState);
       if (!band) continue;
       for (const [m, b] of Object.entries(band)) {
         expect(Number.isNaN(b.min) || Number.isNaN(b.max), `${m} NaN at iteration=${i}\nstate=${JSON.stringify(state)}`).toBe(false);
@@ -219,7 +227,8 @@ describe('Fuzz: sanitizeScenarioState', () => {
     ];
 
     for (const input of garbageInputs) {
-      const result = sanitizeScenarioState(input);
+      // Malformed top-level values must reach the sanitizer unchanged.
+      const result = sanitizeScenarioState(input as Record<string, unknown>);
       expect(result === null || typeof result === 'object').toBe(true);
     }
 
@@ -298,7 +307,7 @@ describe('Fuzz: sanitizeScenarioState', () => {
 
     // No prototype pollution from any of the inputs
     expect(Object.getOwnPropertyNames(Object.prototype).sort().join(',')).toBe(protoSnapshot);
-    expect({}.polluted).toBeUndefined();
+    expect(Reflect.get({}, 'polluted')).toBeUndefined();
   });
 
   it('maps legacy employees/employeePay fields onto fullTime fields', () => {
@@ -307,9 +316,9 @@ describe('Fuzz: sanitizeScenarioState', () => {
       employeePay: 85000,
       offerings: [{ name: 'Svc', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 100, currentClients: 0 }]
     });
-    expect(result.fullTimeEmployees).toBe(7);
-    expect(result.fullTimeEmployeePay).toBe(85000);
-    expect(result.partTimeEmployees).toBe(0);
+    expect(required(result).fullTimeEmployees).toBe(7);
+    expect(required(result).fullTimeEmployeePay).toBe(85000);
+    expect(required(result).partTimeEmployees).toBe(0);
   });
 });
 

@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 // never saw the updated values and the UI required a manual reload.
 
 const INITIAL_STATE = {
-  mode: 'forecast',
+  mode: 'forecast' as const,
   fullTimeEmployees: 1,
   partTimeEmployees: 0,
   fullTimeEmployeePay: 60000,
@@ -18,7 +18,7 @@ const INITIAL_STATE = {
   loadedTemplate: null,
 };
 
-function applyReset(state) {
+function applyReset(state: import('../types').CalcState) {
   // Mirror the exact property names set in resetDefaults()
   state.fullTimeEmployees = 1;
   state.partTimeEmployees = 0;
@@ -33,11 +33,11 @@ function applyReset(state) {
 }
 
 describe('resetDefaults — correct property names', () => {
-  let state;
+  let state: import('../types').CalcState;
 
   beforeEach(() => {
     state = {
-      mode: 'current',
+      mode: 'current' as const,
       fullTimeEmployees: 5,
       partTimeEmployees: 2,
       fullTimeEmployeePay: 120000,

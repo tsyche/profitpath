@@ -1,3 +1,4 @@
+import { appStateFixture, calcResultFixture } from '../test/test-utils';
 import { describe, it, expect } from 'vitest'
 import { normalizeConfidence, sanitizeNote, sanitizeOfferingMeta, MAX_NOTE_LENGTH } from './offeringMeta'
 import { sanitizeScenarioState, importFromCSV, buildCSV } from '../../assets/services/miscService'
@@ -35,8 +36,8 @@ describe('confidence and note persistence', () => {
   })
 
   it('CSV round-trips tag and a note with commas and quotes', () => {
-    const st = { ...base, mode: 'current', offerings: [tagged, { ...off, name: 'Plain' }], expenses: [] }
-    const o = (importFromCSV(buildCSV(st, { revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 })) as any).data.offerings
+    const st = { ...base, mode: 'current' as const, offerings: [tagged, { ...off, name: 'Plain' }], expenses: [] }
+    const o = (importFromCSV(buildCSV(appStateFixture(st), calcResultFixture({ revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 }))) as any).data.offerings
     expect(o[0]).toMatchObject({ confidence: 'estimated', note: tagged.note })
     expect(Object.keys(o[1])).not.toContain('confidence')
   })

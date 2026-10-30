@@ -6,6 +6,7 @@ import { displayPrice } from '../../src/calculations/offeringPrice';
 import { csvCell, escapeHtml, getAllScenarios } from '../services/miscService';
 import { decodeScenarioBundle, encodeScenarioBundle } from '../services/scenarioBundle';
 import { showToast } from '../services/modalService';
+import { downloadOrShare, openPrintTarget } from '../services/reportDelivery';
 import { createModal } from './Modal';
 import '../decision-workbench.css';
 
@@ -106,12 +107,10 @@ export function showDecisionWorkbench(options: DecisionOption[], selectedCase: R
       ? [offering.name, ordered[i].name, v.revenue, v.revenue - (offering.values[0]?.revenue || 0), v.clients, v.margin, v.margin - (offering.values[0]?.margin || 0), offeringPrice(offering.inputs[i]!, decision.currency), offering.inputs[i]!.salesLossPct || 0]
       : [offering.name, ordered[i].name, 'Not offered'])));
     decision.results.forEach(r => { if (r.state.notes) rows.push(['Notes', r.name, r.state.notes]); });
-    const url = URL.createObjectURL(new Blob([rows.map(row => row.map(csvCell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url; link.download = 'profitpath-decision.csv'; link.click(); URL.revokeObjectURL(url);
+    void downloadOrShare(new Blob([rows.map(row => row.map(csvCell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }), 'profitpath-decision.csv');
   });
   q('#decisionPrint').addEventListener('click', () => {
-    const report = window.open('', '_blank');
+    const report = openPrintTarget('ProfitPath decision');
     if (!report) { showToast('Print window unavailable. Export CSV or share the decision instead.', 'info'); return; }
     report.opener = null;
     report.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>ProfitPath decision</title><style>body{font:14px Arial;margin:24px;color:#111}table{border-collapse:collapse;width:100%;margin:12px 0}th,td{border:1px solid #999;padding:6px;text-align:left}tr{break-inside:avoid}h2,h3{break-after:avoid}.decision-table{overflow:visible}h3{margin-bottom:0}@page{size:landscape}</style></head><body><h1>Decision workbench</h1>${decisionContent(current(), 2).html}</body></html>`);

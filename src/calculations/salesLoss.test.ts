@@ -29,8 +29,8 @@ describe('sales lost after a price change', () => {
   afterEach(() => setRangeCase('base'));
 
   it('reduces current-mode volume, revenue, costs, and utilization', () => {
-    const before = calc({ ...base, mode: 'current', offerings: [offering] } as any);
-    const after = calc({ ...base, mode: 'current', offerings: [{ ...offering, salesLossPct: 30 }] } as any);
+    const before = calc({ ...base, mode: 'current' as const, offerings: [offering] } as any);
+    const after = calc({ ...base, mode: 'current' as const, offerings: [{ ...offering, salesLossPct: 30 }] } as any);
 
     expect(after.clients).toBe(7);
     expect(after.revenue).toBe(before.revenue * 0.7);
@@ -39,8 +39,8 @@ describe('sales lost after a price change', () => {
   });
 
   it('reduces forecast demand instead of renormalizing the lost mix away', () => {
-    const before = calc({ ...base, mode: 'forecast', offerings: [offering] } as any);
-    const after = calc({ ...base, mode: 'forecast', offerings: [{ ...offering, salesLossPct: 25 }] } as any);
+    const before = calc({ ...base, mode: 'forecast' as const, offerings: [offering] } as any);
+    const after = calc({ ...base, mode: 'forecast' as const, offerings: [{ ...offering, salesLossPct: 25 }] } as any);
 
     expect(after.clients).toBe(Math.floor(before.clients * 0.75));
     expect(after.revenue).toBe(after.clients * 200 * 12);
@@ -50,7 +50,7 @@ describe('sales lost after a price change', () => {
   it('uses the larger loss in the conservative case and smaller loss in the optimistic case', () => {
     const state = {
       ...base,
-      mode: 'current',
+      mode: 'current' as const,
       offerings: [{ ...offering, salesLossPct: 20, salesLossPctLow: 5, salesLossPctHigh: 40 }]
     } as any;
 
@@ -71,8 +71,8 @@ describe('sales lost after a price change', () => {
 
   it('round-trips assumptions through CSV exports', () => {
     const csv = buildCSV(
-      { ...base, mode: 'forecast', offerings: [{ ...offering, salesLossPct: 20, salesLossPctLow: 5, salesLossPctHigh: 40 }] } as any,
-      calc({ ...base, mode: 'forecast', offerings: [offering] } as any)
+      { ...base, mode: 'forecast' as const, offerings: [{ ...offering, salesLossPct: 20, salesLossPctLow: 5, salesLossPctHigh: 40 }] } as any,
+      calc({ ...base, mode: 'forecast' as const, offerings: [offering] } as any)
     );
 
     expect((importFromCSV(csv) as any).data.offerings[0]).toMatchObject({

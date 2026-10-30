@@ -124,7 +124,7 @@
 .workspace-layout .workspace-question > summary { padding: 18px 22px; cursor: pointer; font-size: 16px; font-weight: 600; min-height: 44px; }
 .workspace-layout .workspace-question-content { padding: 0 22px 22px; min-width: 0; }
 .workspace-layout .workspace-question-content > .kpi { margin: 12px 0; }
-.workspace-layout #workspaceAnswer-money .viz-item:first-child { display: none; }
+.workspace-layout #workspaceAnswer-money .viz-item:first-child:not(:has(.chart-range)) { display: none; }
 .workspace-layout .workspace-share-option { padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
 .workspace-layout .workspace-share-option h4 { margin: 0; }
 .workspace-layout .workspace-share-option p { overflow-wrap: anywhere; }

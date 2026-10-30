@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { calc, clearCalculationCache, getCacheStats } from '../calculations/index';
+import type { CalcState } from '../types';
 
 // Helper function to create proper state objects for tests
-function createTestState(overrides = {}) {
+function createTestState(overrides: CalcState = {}) {
   // Handle both old format (employees) and new format (fullTimeEmployees) for backwards compatibility
-  const normalizedOverrides = {};
+  const normalizedOverrides: CalcState = {};
   if ('employees' in overrides) {
     normalizedOverrides.fullTimeEmployees = overrides.employees;
     delete overrides.employees;
@@ -15,7 +16,7 @@ function createTestState(overrides = {}) {
   }
 
   return {
-    mode: 'forecast',
+    mode: 'forecast' as const,
     fullTimeEmployees: 5,
     partTimeEmployees: 0,
     fullTimeEmployeePay: 80,
@@ -56,7 +57,7 @@ describe('Performance Tests - Calculation Engine', () => {
       calc(inputs);
 
       const iterations = 100;
-      const times = [];
+      const times: number[] = [];
 
       for (let i = 0; i < iterations; i++) {
         const startTime = performance.now();
@@ -80,7 +81,7 @@ describe('Performance Tests - Calculation Engine', () => {
       });
 
       const iterations = 100;
-      const times = [];
+      const times: number[] = [];
 
       for (let i = 0; i < iterations; i++) {
         const startTime = performance.now();
@@ -137,7 +138,7 @@ describe('Performance Tests - Calculation Engine', () => {
         createTestState({ employees: 5000 })
       ];
 
-      const times = [];
+      const times: number[] = [];
 
       largeInputs.forEach((inputs) => {
         const startTime = performance.now();
@@ -258,14 +259,15 @@ describe('Performance Tests - Calculation Engine', () => {
       const inputs = createTestState({ employees: 50 });
 
       const iterations = 100;
-      const initialMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+      const browserPerformance: Performance & { memory?: { usedJSHeapSize: number } } = performance;
+      const initialMemory = browserPerformance.memory?.usedJSHeapSize ?? 0;
 
       // Perform multiple calculations
       for (let i = 0; i < iterations; i++) {
         calc(inputs);
       }
 
-      const finalMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+      const finalMemory = browserPerformance.memory?.usedJSHeapSize ?? 0;
       const memoryIncrease = finalMemory - initialMemory;
 
       // Memory increase should be reasonable (< 1MB for 100 calculations)

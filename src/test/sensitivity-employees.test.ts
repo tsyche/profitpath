@@ -5,7 +5,7 @@ describe('Sensitivity Analysis - Employee Count Impact', () => {
   it('should calculate different results when employee count changes', () => {
     // Base state for testing - must include all required fields
     const baseState = {
-      mode: 'forecast',
+      mode: 'forecast' as const,
       employees: 1,
       employeePay: 50000,
       hoursPerWeek: 40,
@@ -48,7 +48,7 @@ describe('Sensitivity Analysis - Employee Count Impact', () => {
 
   it('should show capacity changes with employee count', () => {
     const baseState = {
-      mode: 'forecast',
+      mode: 'forecast' as const,
       employees: 2,
       fullTimeEmployees: 2,
       fullTimeEmployeePay: 60000,

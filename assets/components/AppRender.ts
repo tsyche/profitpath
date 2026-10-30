@@ -2,6 +2,7 @@ import type { AppState, CalcResult } from '../../src/types';
 import { calc } from '../../src/calculations/index';
 import { displayPrice, isOneTime, isPerSession } from '../../src/calculations/offeringPrice';
 import { getRangeCase } from '../../src/calculations/rangeCase';
+import { calcRange } from '../../src/calculations/ranges';
 import { fmtMoney0, normalizeCurrency, taxBasisNote } from '../../src/calculations/currency';
 import { confidenceBadgeHtml } from './RangeCasePanel';
 import { renderGroupRunResults, renderGroupRunsTable } from './GroupRunsPanel';
@@ -517,11 +518,12 @@ export function updateOutputs(metrics: CalcResult) {
     }
 
     // Lazy load simple revenue composition chart when visible
-    if (typeof lazyLoadChart === 'function') lazyLoadChart(metrics);
+    const chartRanges = calcRange(state);
+    if (typeof lazyLoadChart === 'function') lazyLoadChart(metrics, chartRanges);
 
     // Update break-even and visualizations if available
     // if (typeof updateBreakEvenAnalysis === 'function') updateBreakEvenAnalysis(metrics);
-    if (typeof updateRichVisualizations === 'function') updateRichVisualizations(metrics);
+    if (typeof updateRichVisualizations === 'function') updateRichVisualizations(metrics, chartRanges);
 
     // Update debug panel if present
     const dbg = $('#debugPanel');

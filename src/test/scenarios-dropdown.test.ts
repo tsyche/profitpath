@@ -1,3 +1,4 @@
+import { required } from './test-utils';
 /**
  * Tests for Scenarios Modal Dropdown Population
  * Tests that comparison dropdowns are populated correctly
@@ -9,8 +10,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 
 describe('Scenarios Modal Dropdown Population', () => {
-  let dom;
-  let populateComparisonDropdowns;
+  let dom: JSDOM;
+  let populateComparisonDropdowns: typeof import('../../assets/services/miscService').populateComparisonDropdowns;
 
   beforeEach(() => {
     // Set up DOM environment
@@ -30,8 +31,8 @@ describe('Scenarios Modal Dropdown Population', () => {
       </html>
     `);
     
-    global.document = dom.window.document;
-    global.window = dom.window;
+    vi.stubGlobal('document', dom.window.document);
+    vi.stubGlobal('window', dom.window);
     
     // Clear localStorage
     localStorage.clear();
@@ -56,6 +57,8 @@ describe('Scenarios Modal Dropdown Population', () => {
 
   afterEach(() => {
     localStorage.clear();
+    dom.window.close();
+    vi.unstubAllGlobals();
   });
 
   it('should populate comparison dropdowns with scenarios', async () => {
@@ -67,19 +70,19 @@ describe('Scenarios Modal Dropdown Population', () => {
     populateComparisonDropdowns();
     
     // Check that dropdowns are populated
-    const dropdown1 = document.getElementById('compareScenario1');
-    const dropdown2 = document.getElementById('compareScenario2');
+    const dropdown1 = document.querySelector<HTMLSelectElement>("#compareScenario1");
+    const dropdown2 = document.querySelector<HTMLSelectElement>("#compareScenario2");
     
     expect(dropdown1).toBeTruthy();
     expect(dropdown2).toBeTruthy();
     
     // Should have placeholder + 2 scenarios = 3 options
-    expect(dropdown1.options.length).toBe(3);
-    expect(dropdown2.options.length).toBe(3);
+    expect(required(dropdown1).options.length).toBe(3);
+    expect(required(dropdown2).options.length).toBe(3);
     
     // Check scenario names are in dropdowns
-    const optionTexts1 = Array.from(dropdown1.options).map(opt => opt.textContent);
-    const optionTexts2 = Array.from(dropdown2.options).map(opt => opt.textContent);
+    const optionTexts1 = Array.from(required(dropdown1).options).map(opt => opt.textContent);
+    const optionTexts2 = Array.from(required(dropdown2).options).map(opt => opt.textContent);
     
     expect(optionTexts1).toContain('Test Scenario 1');
     expect(optionTexts1).toContain('Test Scenario 2');
@@ -99,21 +102,21 @@ describe('Scenarios Modal Dropdown Population', () => {
     populateComparisonDropdowns();
     
     // Should only have placeholder option
-    const dropdown1 = document.getElementById('compareScenario1');
-    const dropdown2 = document.getElementById('compareScenario2');
+    const dropdown1 = document.querySelector<HTMLSelectElement>("#compareScenario1");
+    const dropdown2 = document.querySelector<HTMLSelectElement>("#compareScenario2");
     
-    expect(dropdown1.options.length).toBe(1);
-    expect(dropdown2.options.length).toBe(1);
-    expect(dropdown1.options[0].textContent).toBe('Select first scenario...');
-    expect(dropdown2.options[0].textContent).toBe('Select second scenario...');
+    expect(required(dropdown1).options.length).toBe(1);
+    expect(required(dropdown2).options.length).toBe(1);
+    expect(required(dropdown1).options[0].textContent).toBe('Select first scenario...');
+    expect(required(dropdown2).options[0].textContent).toBe('Select second scenario...');
   });
 
   it('should find dropdowns when not initially in DOM', async () => {
     // Remove dropdowns from DOM
     const dropdown1 = document.getElementById('compareScenario1');
     const dropdown2 = document.getElementById('compareScenario2');
-    dropdown1.remove();
-    dropdown2.remove();
+    required(dropdown1).remove();
+    required(dropdown2).remove();
     
     // Import the function to test
     const miscService = await import('../../assets/services/miscService');

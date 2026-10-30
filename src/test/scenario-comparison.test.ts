@@ -1,27 +1,29 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { CalcResult } from '../types';
 import { calc } from '../calculations/index';
 
 describe('Scenario Comparison Feature', () => {
-  const fmtInt = (n) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
-  const fmtMoney0 = (n) => Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-  const fmtPct1 = (n) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
+  const fmtInt = (n: number) => Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
+  const fmtMoney0 = (n: number) => Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+  const fmtPct1 = (n: number) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
 
   // Mock createModal function
-  const mockCreateModal = (config) => {
+  const mockCreateModal = (config: { title: string; content: string; size: string }) => {
     return config;
   };
 
   // Mock global window functions for export and sharing
-  global.window = {
+  beforeEach(() => vi.stubGlobal('window', {
     exportAsCSV: () => console.log('CSV export called'),
     shareScenario: () => console.log('Share scenario called'),
     exportAsPDF: () => console.log('PDF export called'),
     showEmbedCode: () => console.log('Embed code called')
-  };
+  }));
+  afterEach(() => vi.unstubAllGlobals());
 
   it('should calculate metrics for scenario comparison', () => {
     const scenario1 = {
-      mode: 'forecast',
+      mode: 'forecast' as const,
       fullTimeEmployees: 2,
       partTimeEmployees: 0,
       fullTimeEmployeePay: 60000,
@@ -44,7 +46,7 @@ describe('Scenario Comparison Feature', () => {
     };
 
     const scenario2 = {
-      mode: 'forecast',
+      mode: 'forecast' as const,
       fullTimeEmployees: 2,
       partTimeEmployees: 1,
       fullTimeEmployeePay: 60000,
@@ -94,8 +96,16 @@ describe('Scenario Comparison Feature', () => {
       timestamp: '1/15/2025, 2:00 PM'
     };
 
-    const metrics1 = { clients: 10, revenue: 100000, income: 50000, capacityPct: 75 };
-    const metrics2 = { clients: 15, revenue: 150000, income: 75000, capacityPct: 85 };
+    type ComparisonMetrics = Pick<CalcResult, 'clients' | 'revenue' | 'income' | 'capacityPct' |
+      'totalFixedCosts' | 'variableCosts' | 'breakEvenClients' | 'contributionMarginPerClient'>;
+    const metrics1: ComparisonMetrics = {
+      clients: 10, revenue: 100000, income: 50000, capacityPct: 75,
+      totalFixedCosts: 30000, variableCosts: 20000, breakEvenClients: 8, contributionMarginPerClient: 8000
+    };
+    const metrics2: ComparisonMetrics = {
+      clients: 15, revenue: 150000, income: 75000, capacityPct: 85,
+      totalFixedCosts: 25000, variableCosts: 15000, breakEvenClients: 6, contributionMarginPerClient: 9000
+    };
 
     // Simulate building the modal content like showScenarioComparisonDiff does
     let contentHtml = '<div class="scenario-diff-wrap">';
@@ -118,7 +128,9 @@ describe('Scenario Comparison Feature', () => {
     contentHtml += '</div>';
 
     // Add some metrics
-    const metricsToCompare = [
+    const metricsToCompare: {
+      label: string; key: keyof ComparisonMetrics; format: (n: number) => string; betterIsHigher: boolean
+    }[] = [
       { label: 'Clients', key: 'clients', format: fmtInt, betterIsHigher: true },
       { label: 'Revenue', key: 'revenue', format: fmtMoney0, betterIsHigher: true },
       { label: 'Net Income', key: 'income', format: fmtMoney0, betterIsHigher: true },

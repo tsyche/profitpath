@@ -1,3 +1,4 @@
+import { required } from './test-utils';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
@@ -120,13 +121,13 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
 
       expect(modal.parentNode).toBeTruthy();
 
-      const closeBtn = modal.querySelector('.btn-close');
-      closeBtn.onclick = () => {
+      const closeBtn = modal.querySelector<HTMLElement>('.btn-close');
+      required(closeBtn).onclick = () => {
         modal.remove();
       };
 
       // Simulate click
-      closeBtn.click();
+      required(closeBtn).click();
 
       // Element should be removed from DOM
       expect(modal.parentNode).toBeNull();
@@ -137,17 +138,17 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
       modal.innerHTML = '<button class="btn-close">×</button>';
       document.body.appendChild(modal);
 
-      const closeBtn = modal.querySelector('.btn-close');
+      const closeBtn = modal.querySelector<HTMLElement>('.btn-close');
       let clickCount = 0;
 
       // Using onclick for immediate response (not addEventListener)
-      closeBtn.onclick = () => {
+      required(closeBtn).onclick = () => {
         clickCount++;
         modal.remove();
       };
 
       // First click should remove
-      closeBtn.click();
+      required(closeBtn).click();
       expect(clickCount).toBe(1);
       expect(document.body.contains(modal)).toBe(false);
     });
@@ -250,9 +251,9 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
       expect(modal.parentNode).toBeTruthy();
 
       // Closing modal shouldn't affect tooltip
-      const closeBtn = modal.querySelector('.btn-close');
-      closeBtn.onclick = () => modal.remove();
-      closeBtn.click();
+      const closeBtn = modal.querySelector<HTMLElement>('.btn-close');
+      required(closeBtn).onclick = () => modal.remove();
+      required(closeBtn).click();
 
       // Modal should be removed
       expect(modal.parentNode).toBeNull();
@@ -277,7 +278,7 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
       const selectElement = document.getElementById('mobileMode');
 
       // Should have proper positioning for dropdowns to overflow container
-      expect(selectElement.parentElement.classList.contains('mobile-menu-content')).toBe(true);
+      expect(required(required(selectElement).parentElement).classList.contains('mobile-menu-content')).toBe(true);
 
       // Clean up
       document.body.removeChild(menu);
@@ -298,11 +299,11 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
       container.appendChild(select);
       document.body.appendChild(container);
 
-      const selectElement = document.querySelector('.mobile-menu-content select');
+      const selectElement = document.querySelector<HTMLElement>('.mobile-menu-content select');
 
       // Select should be able to overflow its container with proper z-index
-      expect(selectElement.style.position).toBe('relative');
-      expect(parseInt(selectElement.style.zIndex)).toBe(1001);
+      expect(required(selectElement).style.position).toBe('relative');
+      expect(parseInt(required(selectElement).style.zIndex)).toBe(1001);
 
       // Clean up
       document.body.removeChild(container);
@@ -325,8 +326,8 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
       document.body.appendChild(backdrop);
       document.body.appendChild(mobileMenu);
 
-      const selectZIndex = parseInt(window.getComputedStyle(document.getElementById('mobileSelect')).zIndex || '1001');
-      const backdropZIndex = parseInt(window.getComputedStyle(document.getElementById('backdrop')).zIndex);
+      const selectZIndex = parseInt(window.getComputedStyle(required(document.getElementById('mobileSelect'))).zIndex || '1001');
+      const backdropZIndex = parseInt(window.getComputedStyle(required(document.getElementById('backdrop'))).zIndex);
 
       // Select should have higher z-index than backdrop to be clickable
       expect(selectZIndex).toBeGreaterThan(backdropZIndex);
@@ -352,7 +353,7 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
         </div>
       `;
 
-      const sections = document.querySelectorAll('.mobile-settings-section');
+      const sections = document.querySelectorAll<HTMLElement>('.mobile-settings-section');
 
       // Both sections should exist and be hidden initially
       expect(sections.length).toBe(2);
@@ -374,13 +375,13 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
         <button id="otherBtn">Other</button>
       `;
 
-      const sections = document.querySelectorAll('.mobile-settings-section');
+      const sections = document.querySelectorAll<HTMLElement>('.mobile-settings-section');
       const otherBtn = document.getElementById('otherBtn');
 
       // Get initial DOM order
-      const initialOrder = [];
+      const initialOrder: string[] = [];
       document.body.childNodes.forEach((node, index) => {
-        if (node.nodeType === 1) { // Element nodes only
+        if (node instanceof Element) { // Element nodes only
           if (node.classList.contains('mobile-settings-section')) {
             initialOrder.push('section');
           } else if (node.id === 'otherBtn') {
@@ -395,9 +396,9 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
       });
 
       // Get DOM order after toggle
-      const afterToggleOrder = [];
+      const afterToggleOrder: string[] = [];
       document.body.childNodes.forEach((node, index) => {
-        if (node.nodeType === 1) { // Element nodes only
+        if (node instanceof Element) { // Element nodes only
           if (node.classList.contains('mobile-settings-section')) {
             afterToggleOrder.push('section');
           } else if (node.id === 'otherBtn') {
@@ -423,7 +424,7 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
         </div>
       `;
 
-      const sections = document.querySelectorAll('.mobile-settings-section');
+      const sections = document.querySelectorAll<HTMLElement>('.mobile-settings-section');
       const section1 = sections[0];
       const section2 = sections[1];
 
@@ -435,7 +436,7 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
         });
 
         // Check that DOM order is preserved after each toggle
-        const actualSections = document.querySelectorAll('.mobile-settings-section');
+        const actualSections = document.querySelectorAll<HTMLElement>('.mobile-settings-section');
         expect(actualSections.length).toBe(2);
         expect(actualSections[0]).toBe(section1);
         expect(actualSections[1]).toBe(section2);
@@ -464,7 +465,7 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
         showTooltips: true
       };
 
-      const sections = document.querySelectorAll('.mobile-settings-section');
+      const sections = document.querySelectorAll<HTMLElement>('.mobile-settings-section');
       const isCurrentlyHidden = sections[0].style.display === 'none';
 
       // Toggle to show
@@ -475,12 +476,12 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
       // When opening (transitioning from hidden to visible), initialize the controls
       if (isCurrentlyHidden) {
         // We were hidden and now showing, so initialize
-        const experienceRadios = sections[0].querySelectorAll('input[name="mobileExperienceLevel"]');
+        const experienceRadios = sections[0].querySelectorAll<HTMLInputElement>('input[name="mobileExperienceLevel"]');
         experienceRadios.forEach(radio => {
           radio.checked = radio.value === mockSettings.experienceLevel;
         });
 
-        const preferencesCheckboxes = sections[1].querySelectorAll('input[type="checkbox"]');
+        const preferencesCheckboxes = sections[1].querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
         preferencesCheckboxes.forEach(checkbox => {
           if (checkbox.id === 'mobileShowTooltips') {
             checkbox.checked = mockSettings.showTooltips;
@@ -489,11 +490,11 @@ describe('Bug Fixes - Tooltip Positioning and Analytics Modal', () => {
       }
 
       // Verify settings are initialized correctly
-      const intermediateRadio = document.getElementById('rad-intermediate');
-      const tooltipCheckbox = document.getElementById('mobileShowTooltips');
+      const intermediateRadio = document.querySelector<HTMLInputElement>("#rad-intermediate");
+      const tooltipCheckbox = document.querySelector<HTMLInputElement>("#mobileShowTooltips");
 
-      expect(intermediateRadio.checked).toBe(true);
-      expect(tooltipCheckbox.checked).toBe(true);
+      expect(required(intermediateRadio).checked).toBe(true);
+      expect(required(tooltipCheckbox).checked).toBe(true);
     });
   });
 });

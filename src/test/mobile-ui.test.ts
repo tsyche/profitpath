@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { required } from './test-utils';
+import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 
 // Mock DOM environment
@@ -8,29 +9,18 @@ const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
   resources: 'usable'
 });
 
-global.window = dom.window;
-global.document = dom.window.document;
-global.navigator = dom.window.navigator;
+const mobileWindow = Object.assign(dom.window, {
+  startTour: (): { started: boolean } => ({ started: false })
+});
+vi.stubGlobal('window', mobileWindow);
+vi.stubGlobal('document', dom.window.document);
+vi.stubGlobal('navigator', dom.window.navigator);
+vi.stubGlobal('localStorage', dom.window.localStorage);
 
-// Mock localStorage properly for JSDOM
-global.localStorage = {
-  getItem: function (key) {
-    return this[key] || null;
-  },
-  setItem: function (key, value) {
-    this[key] = value;
-  },
-  removeItem: function (key) {
-    delete this[key];
-  },
-  clear: function () {
-    Object.keys(this).forEach(key => {
-      if (key !== 'getItem' && key !== 'setItem' && key !== 'removeItem' && key !== 'clear') {
-        delete this[key];
-      }
-    });
-  }
-};
+afterAll(() => {
+  vi.unstubAllGlobals();
+  dom.window.close();
+});
 
 describe('Mobile UI Issues - COMPLETED FIXES', () => {
   beforeEach(() => {
@@ -83,8 +73,8 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
       expect(mobileMenu).toBeTruthy();
 
       //  FIXED: Icons are now INSIDE the mobile menu
-      expect(mobileMenu.contains(settingsIcon)).toBe(true);
-      expect(mobileMenu.contains(helpIcon)).toBe(true);
+      expect(required(mobileMenu).contains(settingsIcon)).toBe(true);
+      expect(required(mobileMenu).contains(helpIcon)).toBe(true);
     });
 
     it('should allow scrolling when menu items expand beyond screen height - COMPLETED', () => {
@@ -112,13 +102,13 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
         </header>
       `;
 
-      const mobileMenu = document.querySelector('.mobile-menu');
+      const mobileMenu = document.querySelector<HTMLElement>('.mobile-menu');
 
       //  FIXED: Menu now has scroll capability as implemented
-      expect(mobileMenu.style.overflowY).toBe('auto');
+      expect(required(mobileMenu).style.overflowY).toBe('auto');
 
       // Test that menu has content that would require scrolling
-      const menuItems = mobileMenu.querySelectorAll('.menu-item');
+      const menuItems = required(mobileMenu).querySelectorAll('.menu-item');
       expect(menuItems.length).toBe(15); // More items than would fit in 70vh
     });
   });
@@ -131,19 +121,19 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
         </header>
       `;
 
-      const helpButton = document.querySelector('#helpBtn');
+      const helpButton = document.querySelector<HTMLElement>('#helpBtn');
 
       //  FIXED: Help button exists and is in DOM
       expect(helpButton).toBeTruthy();
-      expect(helpButton.id).toBe('helpBtn');
+      expect(required(helpButton).id).toBe('helpBtn');
 
       // Simulate the event listener being added (as implemented in app.jsx)
       let helpClicked = false;
-      helpButton.addEventListener('click', () => {
+      required(helpButton).addEventListener('click', () => {
         helpClicked = true;
       });
 
-      helpButton.click();
+      required(helpButton).click();
       expect(helpClicked).toBe(true);
     });
 
@@ -161,19 +151,19 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
         </header>
       `;
 
-      const helpButton = document.querySelector('#helpBtn');
+      const helpButton = document.querySelector<HTMLElement>('#helpBtn');
 
       //  FIXED: Help button exists and is in DOM
       expect(helpButton).toBeTruthy();
-      expect(helpButton.id).toBe('helpBtn');
+      expect(required(helpButton).id).toBe('helpBtn');
 
       // Simulate the event listener being added (as implemented in app.jsx)
       let helpClicked = false;
-      helpButton.addEventListener('click', () => {
+      required(helpButton).addEventListener('click', () => {
         helpClicked = true;
       });
 
-      helpButton.click();
+      required(helpButton).click();
       expect(helpClicked).toBe(true);
     });
 
@@ -184,7 +174,7 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
 
       // Mock tour function
       let tourStarted = false;
-      window.startTour = () => {
+      mobileWindow.startTour = () => {
         tourStarted = true;
         return { started: true };
       };
@@ -197,13 +187,13 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
       const tourCompleted = localStorage.getItem('tourCompleted');
       if (!tourCompleted || tourCompleted === 'false') {
         // Simulate immediate tour start (no setTimeout in test)
-        if (typeof window.startTour === 'function') {
-          window.startTour();
+        if (typeof mobileWindow.startTour === 'function') {
+          mobileWindow.startTour();
         }
       }
 
       //  FIXED: Tour should start automatically on first run
-      expect(window.startTour).toBeTruthy();
+      expect(mobileWindow.startTour).toBeTruthy();
       expect(tourStarted).toBe(true);
     });
   });
@@ -220,7 +210,7 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
         </div>
       `;
 
-      const feedbackButton = document.querySelector('#mobileFeedbackBtn');
+      const feedbackButton = document.querySelector<HTMLElement>('#mobileFeedbackBtn');
       const feedbackModal = document.getElementById('feedbackModal');
 
       //  FIXED: Feedback button exists and modal exists
@@ -228,9 +218,9 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
       expect(feedbackModal).toBeTruthy();
 
       // Simulate click to open modal
-      feedbackButton.click();
-      feedbackModal.style.display = 'block';
-      expect(feedbackModal.style.display).toBe('block');
+      required(feedbackButton).click();
+      required(feedbackModal).style.display = 'block';
+      expect(required(feedbackModal).style.display).toBe('block');
     });
 
     it('should have feedback option in desktop view - COMPLETED', () => {
@@ -251,7 +241,7 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
 
       //  FIXED: Feedback link now exists in desktop view
       expect(feedbackLink).toBeTruthy();
-      expect(feedbackLink.id).toBe('desktopFeedbackBtn');
+      expect(required(feedbackLink).id).toBe('desktopFeedbackBtn');
     });
 
     it('should have functional feedback modal with submission - COMPLETED', () => {
@@ -264,7 +254,7 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
       `;
 
       const modal = document.getElementById('feedbackModal');
-      const textArea = document.getElementById('feedbackText');
+      const textArea = document.querySelector<HTMLInputElement>("#feedbackText");
       const submitButton = document.getElementById('submitFeedback');
       const cancelButton = document.getElementById('cancelFeedback');
 
@@ -275,17 +265,17 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
       expect(cancelButton).toBeTruthy();
 
       // Test submission
-      textArea.value = 'Test feedback';
+      required(textArea).value = 'Test feedback';
 
       let submitted = false;
-      submitButton.addEventListener('click', () => {
+      required(submitButton).addEventListener('click', () => {
         submitted = true;
-        modal.style.display = 'none';
+        required(modal).style.display = 'none';
       });
 
-      submitButton.click();
+      required(submitButton).click();
       expect(submitted).toBe(true);
-      expect(modal.style.display).toBe('none');
+      expect(required(modal).style.display).toBe('none');
     });
   });
 
@@ -301,11 +291,11 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
       `;
 
       const modal = document.getElementById('scenarios-modal');
-      const modalContent = modal.querySelector('.modal-content');
+      const modalContent = required(modal).querySelector<HTMLElement>('.modal-content');
 
       //  FIXED: Modal content should not be blurred
-      expect(modalContent.style.filter).not.toBe('blur(5px)');
-      expect(modalContent.style.backdropFilter).not.toBe('blur(5px)');
+      expect(required(modalContent).style.filter).not.toBe('blur(5px)');
+      expect(required(modalContent).style.backdropFilter).not.toBe('blur(5px)');
     });
 
     it('should allow templates menu to work multiple times - COMPLETED', () => {
@@ -322,22 +312,22 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
 
       // Simulate toggle functionality
       let clickCount = 0;
-      templatesButton.addEventListener('click', () => {
+      required(templatesButton).addEventListener('click', () => {
         clickCount++;
-        templatesMenu.style.display = clickCount % 2 === 1 ? 'block' : 'none';
+        required(templatesMenu).style.display = clickCount % 2 === 1 ? 'block' : 'none';
       });
 
       // First click should open menu
-      templatesButton.click();
-      expect(templatesMenu.style.display).toBe('block');
+      required(templatesButton).click();
+      expect(required(templatesMenu).style.display).toBe('block');
 
       // Second click should close menu
-      templatesButton.click();
-      expect(templatesMenu.style.display).toBe('none');
+      required(templatesButton).click();
+      expect(required(templatesMenu).style.display).toBe('none');
 
       //  FIXED: Third click should open menu again
-      templatesButton.click();
-      expect(templatesMenu.style.display).toBe('block');
+      required(templatesButton).click();
+      expect(required(templatesMenu).style.display).toBe('block');
     });
 
     it('should allow export menu to work multiple times - COMPLETED', () => {
@@ -355,22 +345,22 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
 
       // Simulate toggle functionality
       let clickCount = 0;
-      exportButton.addEventListener('click', () => {
+      required(exportButton).addEventListener('click', () => {
         clickCount++;
-        exportMenu.style.display = clickCount % 2 === 1 ? 'block' : 'none';
+        required(exportMenu).style.display = clickCount % 2 === 1 ? 'block' : 'none';
       });
 
       // First click should open menu
-      exportButton.click();
-      expect(exportMenu.style.display).toBe('block');
+      required(exportButton).click();
+      expect(required(exportMenu).style.display).toBe('block');
 
       // Second click should close menu
-      exportButton.click();
-      expect(exportMenu.style.display).toBe('none');
+      required(exportButton).click();
+      expect(required(exportMenu).style.display).toBe('none');
 
       //  FIXED: Third click should open menu again
-      exportButton.click();
-      expect(exportMenu.style.display).toBe('block');
+      required(exportButton).click();
+      expect(required(exportMenu).style.display).toBe('block');
     });
   });
 
@@ -392,14 +382,14 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
       `;
 
       const analyticsLink = document.querySelector('.analytics-link');
-      const analyticsToggle = document.getElementById('analytics-enabled');
+      const analyticsToggle = document.querySelector<HTMLInputElement>("#analytics-enabled");
 
       //  FIXED: Analytics should not be user-facing
       expect(analyticsLink).toBeFalsy();
 
       //  FIXED: Analytics should be admin-only toggle in settings
       expect(analyticsToggle).toBeTruthy();
-      expect(analyticsToggle.checked).toBe(true);
+      expect(required(analyticsToggle).checked).toBe(true);
     });
 
     it('should have analytics enabled by default with opt-out option - COMPLETED', () => {
@@ -419,15 +409,15 @@ describe('Mobile UI Issues - COMPLETED FIXES', () => {
         </div>
       `;
 
-      const analyticsToggle = document.getElementById('analytics-enabled');
+      const analyticsToggle = document.querySelector<HTMLInputElement>("#analytics-enabled");
 
       //  FIXED: Analytics should be enabled by default
       expect(analyticsToggle).toBeTruthy();
-      expect(analyticsToggle.checked).toBe(true);
+      expect(required(analyticsToggle).checked).toBe(true);
 
       // Test opt-out functionality
-      analyticsToggle.checked = false;
-      expect(analyticsToggle.checked).toBe(false);
+      required(analyticsToggle).checked = false;
+      expect(required(analyticsToggle).checked).toBe(false);
 
       // Test that localStorage can be updated
       localStorage.setItem('analyticsEnabled', 'false');

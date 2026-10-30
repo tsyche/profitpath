@@ -1,3 +1,4 @@
+import { appStateFixture, calcResultFixture, required } from './test-utils';
 // Regression tests for dismissible validation banners.
 // Banners can be dismissed via the X button, and a dismissed message stays gone
 // across re-renders (validation re-runs on every input change) rather than
@@ -23,7 +24,7 @@ describe('Offering duration validation', () => {
 
 // Re-imported fresh per test so the module-level "dismissed" set doesn't leak
 // between cases (in the real app that set is intentionally session-persistent).
-let updateValidationDisplay;
+let updateValidationDisplay: typeof import('../../assets/services/businessLogic').updateValidationDisplay;
 
 function mountContainer() {
   document.body.innerHTML = '<div id="validationContainer" style="display:none;"></div>';
@@ -34,7 +35,7 @@ function mountContainer() {
 // forecast mode triggers a "Mix percentages sum to..." warning).
 function warningState() {
   return {
-    mode: 'forecast',
+    mode: 'forecast' as const,
     fullTimeEmployees: 1,
     partTimeEmployees: 0,
     fullTimeEmployeePay: 60000,
@@ -52,9 +53,9 @@ function warningState() {
 
 describe('Dismissible validation banners', () => {
   beforeEach(async () => {
-    global.state = warningState();
+    global.state = appStateFixture(warningState());
     // Healthy metrics so the only warning is the mix-percentage one we set up.
-    global.calc = () => ({ capacityPct: 80, clients: 10, income: 5000, revenue: 12000, serviceHours: 100 });
+    global.calc = () => calcResultFixture({ capacityPct: 80, clients: 10, income: 5000, revenue: 12000, serviceHours: 100 });
     vi.resetModules();
     ({ updateValidationDisplay } = await import('../../assets/services/businessLogic'));
   });
@@ -63,25 +64,25 @@ describe('Dismissible validation banners', () => {
     const container = mountContainer();
     updateValidationDisplay();
 
-    const items = container.querySelectorAll('.validation-item');
+    const items = required(container).querySelectorAll<HTMLElement>('.validation-item');
     expect(items.length).toBeGreaterThan(0);
     items.forEach(item => {
       expect(item.querySelector('.validation-dismiss')).not.toBeNull();
       expect(item.dataset.vkey).toBeTruthy();
     });
-    expect(container.style.display).toBe('block');
+    expect(required(container).style.display).toBe('block');
   });
 
   it('removes a banner when its dismiss button is clicked', () => {
     const container = mountContainer();
     updateValidationDisplay();
 
-    const before = container.querySelectorAll('.validation-item').length;
-    const firstKey = container.querySelector('.validation-item').dataset.vkey;
+    const before = required(container).querySelectorAll<HTMLElement>('.validation-item').length;
+    const firstKey = required(required(container).querySelector<HTMLElement>('.validation-item')).dataset.vkey;
 
-    container.querySelector('.validation-dismiss').click();
+    required(required(container).querySelector<HTMLElement>('.validation-dismiss')).click();
 
-    const remaining = [...container.querySelectorAll('.validation-item')].map(i => i.dataset.vkey);
+    const remaining = [...required(container).querySelectorAll<HTMLElement>('.validation-item')].map(i => i.dataset.vkey);
     expect(remaining).not.toContain(firstKey);
     expect(remaining.length).toBe(before - 1);
   });
@@ -90,12 +91,12 @@ describe('Dismissible validation banners', () => {
     const container = mountContainer();
     updateValidationDisplay();
 
-    const firstKey = container.querySelector('.validation-item').dataset.vkey;
-    container.querySelector('.validation-dismiss').click();
+    const firstKey = required(required(container).querySelector<HTMLElement>('.validation-item')).dataset.vkey;
+    required(required(container).querySelector<HTMLElement>('.validation-dismiss')).click();
 
     // Re-render (as would happen on the next input change) — dismissed stays gone.
     updateValidationDisplay();
-    const keys = [...container.querySelectorAll('.validation-item')].map(i => i.dataset.vkey);
+    const keys = [...required(container).querySelectorAll<HTMLElement>('.validation-item')].map(i => i.dataset.vkey);
     expect(keys).not.toContain(firstKey);
   });
 });

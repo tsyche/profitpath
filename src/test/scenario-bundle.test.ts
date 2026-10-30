@@ -1,3 +1,4 @@
+import { required } from './test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as compression from 'fflate';
 import { decodeScenarioBundle, encodeScenarioBundle, importScenarioBundle } from '../../assets/services/scenarioBundle';
@@ -11,7 +12,7 @@ const sample = (name: string): Scenario => ({
   timestamp: 'now',
   createdAt: '2026-10-27T00:00:00Z',
   state: {
-    mode: 'current',
+    mode: 'current' as const,
     offerings: [{ id: 'studio', name: 'Studio', priceMonthly: 60, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 10, mixPct: 100, currentClients: 2 }],
     fullTimeEmployees: 1,
     partTimeEmployees: 0,
@@ -28,12 +29,12 @@ describe('scenario bundle links', () => {
 
   it('round trips selected scenarios and sanitizes their states', () => {
     const first = sample('Today');
-    first.state.offerings[0].priceMonthly = -100;
+    required(required(first).state.offerings)[0].priceMonthly = -100;
     const url = encodeScenarioBundle([first, sample('Raise prices')]);
     expect(url).toContain('?bundle=v1.');
     const entries = decodeScenarioBundle(url!.split('?bundle=')[1]);
     expect(entries?.map(entry => entry.name)).toEqual(['Today', 'Raise prices']);
-    expect(entries?.[0].state.offerings[0].priceMonthly).toBe(0);
+    expect(required(required(entries)?.[0].state.offerings)[0].priceMonthly).toBe(0);
   });
 
   it('imports without overwriting an existing scenario name', () => {

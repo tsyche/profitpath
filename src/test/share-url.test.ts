@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { encodeScenarioToURL, decodeScenarioFromURL } from '../../assets/services/miscService';
 
 const state: any = {
-  mode: 'forecast',
+  mode: 'forecast' as const,
   offerings: Array.from({ length: 12 }, (_, i) => ({ name: `Offering ${i} "quoted" & ünïcode ✓`, priceMonthly: 100 + i, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 5, mixPct: 8, currentClients: 3 })),
   notes: 'Notes with / + = and emoji 🎉',
 };

@@ -1,62 +1,45 @@
+import { required } from './test-utils';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { AnalyticsCollector } from '../analytics/analytics';
+import { FeedbackCollector } from '../analytics/feedback';
+import type { AnalyticsSummary } from '../analytics/types';
+
+const emptySummary = (): AnalyticsSummary => ({
+  totalEvents: 0, totalSessions: 0, dateRange: { start: null, end: null },
+  featureUsage: {}, exportStats: { total: 0, byFormat: {} },
+  scenarioStats: { total: 0, byAction: {} }, templateStats: {}
+});
+const feedbackSummary = (total = 0, averageRating = 0): ReturnType<FeedbackCollector['getFeedbackAnalytics']> => ({
+  total, averageRating, ratingDistribution: {}, categoryBreakdown: {}, recentTrend: [], topIssues: []
+});
 
 // Mock localStorage
 const localStorageMock = (() => {
-  let store = {};
+  let store: Record<string, string> = {};
   return {
-    getItem: (key) => store[key] || null,
-    setItem: (key, value) => { store[key] = value; },
-    removeItem: (key) => { delete store[key]; },
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => { store[key] = value; },
+    removeItem: (key: string) => { delete store[key]; },
     clear: () => { store = {}; }
   };
 })();
 
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-// Mock DOM elements
-const mockElement = {
-  className: '',
-  innerHTML: '',
-  textContent: '',
-  style: {},
-  addEventListener: vi.fn(),
-  appendChild: vi.fn(),
-  removeChild: vi.fn(),
-  setAttribute: vi.fn(),
-  querySelector: vi.fn(() => mockElement),
-  querySelectorAll: vi.fn(() => [mockElement]),
-  classList: { toggle: vi.fn() },
-  dataset: { view: 'overview' }
-};
-
-// Mock document if not already defined by JSDOM
-if (!window.document || !window.document.createElement) {
-  Object.defineProperty(window, 'document', {
-    value: {
-      createElement: vi.fn(() => mockElement),
-      body: { appendChild: vi.fn(), removeChild: vi.fn() },
-      getElementById: vi.fn(() => mockElement),
-      querySelector: vi.fn(() => mockElement),
-      querySelectorAll: vi.fn(() => [mockElement]),
-      addEventListener: vi.fn()
-    }
-  });
-}
-
-// Mock Blob and augment global URL for export functionality
-global.Blob = vi.fn(function () { return {}; });
-if (typeof global.URL === 'undefined') {
-  global.URL = function () { };
-}
-global.URL.createObjectURL = vi.fn(function () { return 'mock-url'; });
+// Mock only browser export APIs; DOM elements and collectors remain real.
+const NativeBlob = global.Blob;
+const blobMock = vi.fn(function (parts?: BlobPart[], options?: BlobPropertyBag) {
+  return new NativeBlob(parts, options);
+});
+vi.stubGlobal('Blob', blobMock);
+global.URL.createObjectURL = vi.fn(() => 'mock-url');
 global.URL.revokeObjectURL = vi.fn();
-global.URL.toString = vi.fn(function () { return '[object URL]'; });
 
 // NOTE: Do not import other test files here — they may overwrite globals/mocks.
 
 describe('AdvancedAnalyticsDashboard', () => {
-  let AdvancedAnalyticsDashboard;
-  let dashboard;
+  let AdvancedAnalyticsDashboard: typeof import('../analytics/advanced-dashboard').AdvancedAnalyticsDashboard;
+  let dashboard: import('../analytics/advanced-dashboard').AdvancedAnalyticsDashboard;
 
   beforeEach(async () => {
     // Reset mocks
@@ -65,14 +48,15 @@ describe('AdvancedAnalyticsDashboard', () => {
 
     // Import the module
     const module = await import('../../src/analytics/advanced-dashboard');
-    AdvancedAnalyticsDashboard = module.default || module.AdvancedAnalyticsDashboard;
+    AdvancedAnalyticsDashboard = module.AdvancedAnalyticsDashboard;
 
     // Create new instance
     dashboard = new AdvancedAnalyticsDashboard();
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
+    document.body.innerHTML = '';
   });
 
   describe('Initialization', () => {
@@ -199,9 +183,9 @@ describe('AdvancedAnalyticsDashboard', () => {
   describe('Data Processing', () => {
     it('should group events by date correctly', () => {
       const events = [
-        { timestamp: '2024-01-15T10:00:00Z' },
-        { timestamp: '2024-01-15T14:00:00Z' },
-        { timestamp: '2024-01-16T09:00:00Z' }
+        { id: 'one', sessionId: 'session', event: 'test', data: {}, timestamp: Date.parse('2024-01-15T10:00:00Z') },
+        { id: 'two', sessionId: 'session', event: 'test', data: {}, timestamp: Date.parse('2024-01-15T14:00:00Z') },
+        { id: 'three', sessionId: 'session', event: 'test', data: {}, timestamp: Date.parse('2024-01-16T09:00:00Z') }
       ];
 
       dashboard.dateRange = '7d';
@@ -221,6 +205,7 @@ describe('AdvancedAnalyticsDashboard', () => {
   describe('Insights Generation', () => {
     it('should generate insights with data', () => {
       const summary = {
+        ...emptySummary(),
         totalSessions: 100,
         exportStats: {
           total: 50,
@@ -228,14 +213,12 @@ describe('AdvancedAnalyticsDashboard', () => {
         }
       };
 
-      const feedbackAnalytics = {
-        total: 25,
-        averageRating: 4.2
-      };
+      const feedbackAnalytics = feedbackSummary(25, 4.2);
 
       // Mock DOM element
-      const mockElement = { innerHTML: '' };
-      document.getElementById = vi.fn(() => mockElement);
+      const mockElement = document.createElement('div');
+      mockElement.id = 'keyInsights';
+      document.body.appendChild(mockElement);
 
       dashboard.generateKeyInsights(summary, feedbackAnalytics);
 
@@ -243,11 +226,12 @@ describe('AdvancedAnalyticsDashboard', () => {
     });
 
     it('should handle empty analytics data', () => {
-      const summary = { totalSessions: 0 };
-      const feedbackAnalytics = { total: 0 };
+      const summary = emptySummary();
+      const feedbackAnalytics = feedbackSummary();
 
-      const mockElement = { innerHTML: '' };
-      document.getElementById = vi.fn(() => mockElement);
+      const mockElement = document.createElement('div');
+      mockElement.id = 'keyInsights';
+      document.body.appendChild(mockElement);
 
       dashboard.generateKeyInsights(summary, feedbackAnalytics);
 
@@ -257,30 +241,24 @@ describe('AdvancedAnalyticsDashboard', () => {
 
   describe('Export Functionality', () => {
     it('should export dashboard report', () => {
-      const mockLink = {
-        href: '',
-        download: '',
-        click: vi.fn()
-      };
-
-      global.document.createElement = vi.fn(() => mockLink);
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
 
       dashboard.exportDashboardReport();
 
-      expect(global.Blob).toHaveBeenCalled();
+      expect(blobMock).toHaveBeenCalled();
       expect(global.URL.createObjectURL).toHaveBeenCalled();
     });
 
     it('puts the collector summary in the report when analytics is active', () => {
-      global.document.createElement = vi.fn(() => ({ href: '', download: '', click: vi.fn() }));
-      dashboard.analyticsCollector = {
-        getAnalyticsSummary: vi.fn(() => ({ totalSessions: 3, exportStats: { total: 0 } }))
-      };
-      vi.mocked(global.Blob).mockClear();
+      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+      dashboard.analyticsCollector = new AnalyticsCollector();
+      vi.spyOn(dashboard.analyticsCollector, 'getAnalyticsSummary').mockReturnValue({ ...emptySummary(), totalSessions: 3 });
+      blobMock.mockClear();
 
       dashboard.exportDashboardReport();
 
-      const json = vi.mocked(global.Blob).mock.calls[0][0][0];
+      const json = required(required(blobMock.mock.calls[0][0])[0]);
+      if (typeof json !== 'string') throw new Error('Expected JSON report text');
       expect(JSON.parse(json).analytics).toMatchObject({ totalSessions: 3 });
     });
   });
@@ -289,13 +267,7 @@ describe('AdvancedAnalyticsDashboard', () => {
     it('should switch views', () => {
       const refreshCurrentViewSpy = vi.spyOn(dashboard, 'refreshCurrentView');
 
-      // Mock nav button with dataset
-      const mockNavBtn = {
-        dataset: { view: 'usage' },
-        classList: { toggle: vi.fn() }
-      };
-
-      document.querySelectorAll = vi.fn(() => [mockNavBtn]);
+      document.body.innerHTML = '<button class="nav-btn" data-view="usage"></button>';
 
       dashboard.switchView('usage');
 
@@ -331,7 +303,7 @@ describe('AdvancedAnalyticsDashboard', () => {
     });
 
     it('should handle missing DOM elements gracefully', () => {
-      document.getElementById = vi.fn(() => null);
+      vi.spyOn(document, 'getElementById').mockReturnValue(null);
 
       expect(() => {
         dashboard.refreshOverview();
@@ -341,16 +313,16 @@ describe('AdvancedAnalyticsDashboard', () => {
 
   describe('Chart Drawing', () => {
     it('should handle chart drawing with mocked context', () => {
-      const mockCtx = {
-        clearRect: vi.fn(),
-        beginPath: vi.fn(),
-        moveTo: vi.fn(),
-        lineTo: vi.fn(),
-        stroke: vi.fn(),
-        fillRect: vi.fn(),
-        save: vi.fn(),
-        restore: vi.fn(),
-        canvas: { width: 800, height: 400 }
+      const mockCtx: Partial<CanvasRenderingContext2D> = {
+        clearRect: vi.fn<CanvasRenderingContext2D['clearRect']>(),
+        beginPath: vi.fn<CanvasRenderingContext2D['beginPath']>(),
+        moveTo: vi.fn<CanvasRenderingContext2D['moveTo']>(),
+        lineTo: vi.fn<CanvasRenderingContext2D['lineTo']>(),
+        stroke: vi.fn<(...args: unknown[]) => void>(),
+        fillRect: vi.fn<CanvasRenderingContext2D['fillRect']>(),
+        save: vi.fn<CanvasRenderingContext2D['save']>(),
+        restore: vi.fn<CanvasRenderingContext2D['restore']>(),
+        canvas: Object.assign(document.createElement('canvas'), { width: 800, height: 400 })
       };
 
       const data = {
@@ -360,24 +332,24 @@ describe('AdvancedAnalyticsDashboard', () => {
       };
 
       expect(() => {
-        dashboard.drawLineChart(mockCtx, data);
+        dashboard.drawLineChart(mockCtx as CanvasRenderingContext2D, data);
       }).not.toThrow();
 
       expect(mockCtx.clearRect).toHaveBeenCalled();
     });
 
     it('should handle pie chart drawing with mocked context', () => {
-      const mockCtx = {
-        clearRect: vi.fn(),
-        beginPath: vi.fn(),
-        moveTo: vi.fn(),
-        arc: vi.fn(),
-        closePath: vi.fn(),
-        fill: vi.fn(),
-        fillText: vi.fn(),
-        save: vi.fn(),
-        restore: vi.fn(),
-        canvas: { width: 400, height: 400 }
+      const mockCtx: Partial<CanvasRenderingContext2D> = {
+        clearRect: vi.fn<CanvasRenderingContext2D['clearRect']>(),
+        beginPath: vi.fn<CanvasRenderingContext2D['beginPath']>(),
+        moveTo: vi.fn<CanvasRenderingContext2D['moveTo']>(),
+        arc: vi.fn<CanvasRenderingContext2D['arc']>(),
+        closePath: vi.fn<CanvasRenderingContext2D['closePath']>(),
+        fill: vi.fn<(...args: unknown[]) => void>(),
+        fillText: vi.fn<CanvasRenderingContext2D['fillText']>(),
+        save: vi.fn<CanvasRenderingContext2D['save']>(),
+        restore: vi.fn<CanvasRenderingContext2D['restore']>(),
+        canvas: Object.assign(document.createElement('canvas'), { width: 400, height: 400 })
       };
 
       const data = {
@@ -387,7 +359,7 @@ describe('AdvancedAnalyticsDashboard', () => {
       };
 
       expect(() => {
-        dashboard.drawPieChart(mockCtx, data);
+        dashboard.drawPieChart(mockCtx as CanvasRenderingContext2D, data);
       }).not.toThrow();
 
       expect(mockCtx.clearRect).toHaveBeenCalled();
@@ -396,16 +368,14 @@ describe('AdvancedAnalyticsDashboard', () => {
 
   describe('Event Listeners', () => {
     it('should attach event listeners to dashboard', () => {
-      const mockDashboard = {
-        querySelector: vi.fn(() => mockElement),
-        querySelectorAll: vi.fn(() => [mockElement])
-      };
+      const mockDashboard = dashboard.createDashboard();
+      const querySpy = vi.spyOn(mockDashboard, 'querySelectorAll');
 
       expect(() => {
         dashboard.attachDashboardEventListeners(mockDashboard);
       }).not.toThrow();
 
-      expect(mockDashboard.querySelectorAll).toHaveBeenCalledWith('.nav-btn');
+      expect(querySpy).toHaveBeenCalledWith('.nav-btn');
     });
   });
 
@@ -421,21 +391,12 @@ describe('AdvancedAnalyticsDashboard', () => {
 
   describe('Integration with Analytics', () => {
     it('should generate insights report with analytics data', () => {
-      // Mock analytics collector
-      dashboard.analyticsCollector = {
-        getAnalyticsSummary: vi.fn(() => ({
-          totalSessions: 100,
-          exportStats: { total: 50 }
-        }))
-      };
-
-      // Mock feedback collector
-      dashboard.feedbackCollector = {
-        getFeedbackAnalytics: vi.fn(() => ({
-          total: 25,
-          averageRating: 4.2
-        }))
-      };
+      dashboard.analyticsCollector = new AnalyticsCollector();
+      vi.spyOn(dashboard.analyticsCollector, 'getAnalyticsSummary').mockReturnValue({
+        ...emptySummary(), totalSessions: 100, exportStats: { total: 50, byFormat: {} }
+      });
+      dashboard.feedbackCollector = new FeedbackCollector();
+      vi.spyOn(dashboard.feedbackCollector, 'getFeedbackAnalytics').mockReturnValue(feedbackSummary(25, 4.2));
 
       const insights = dashboard.generateInsightsReport();
 

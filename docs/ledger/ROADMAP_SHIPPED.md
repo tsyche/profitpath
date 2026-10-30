@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-10-30 — 24f. Chart uncertainty bands
 - [x] 2026-10-29 — 25. Product-flow redesign, layout choice and UI refinements
 - [x] 2026-10-29 — 38–39. Decision workbench and membership floor/value checks
 - [x] 2026-10-27 — 37. Sales loss after a price change (decision workbench Phase 2)
@@ -68,6 +69,20 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-10-30 — 24f. Chart uncertainty bands
+
+Revenue composition, utilization gauge, and profit waterfall show the existing `calcRange()` min/base/max envelope alongside the viewed-case marker. Bands retain the true base when switching cases, support losses and zero revenue, and disappear when bounds are cleared or collapse. Both layouts expose the ranges; these are input-bound envelopes, not statistical intervals.
+
+Validation: four real-calculator integration tests and four Chromium/Firefox journey cases, plus the existing 26 ranged-input browser cases. The conditional membership integration remains in [ROADMAP.md item 24f](../../ROADMAP.md).
+
+Original entry (the remaining conditional work is owned by the active roadmap):
+
+24f. **Deferred follow-ups from shipped 24c / 24e / 32** *(new, 2026-10-26)*
+    - Chart ranges (24c): remains open; related layout work shipped in [the 25–26 ledger entry](#2026-10-27--2526-uiux-pass).
+    - Membership headroom now subtracts modeled scenario load, and the target-margin optimizer suggests fee, credits or discount separately. The remaining conditional follow-up is to feed members into `calc()` only if real use shows the display-only panel is insufficient.
+    - Excel parity shipped as item 33. Per-service entitlements shipped as item 24g.
+    - Effort: ~1-2 hours for chart ranges; membership integration stays conditional.
 
 ### 2026-10-25 — TypeScript migration
 

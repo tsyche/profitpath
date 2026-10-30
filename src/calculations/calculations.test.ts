@@ -1,3 +1,4 @@
+import { required } from '../test/test-utils';
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calc, normalizeMix, clearCalculationCache, getCacheStats } from './index.js'
 
@@ -52,7 +53,7 @@ describe('Calculation Engine', () => {
   describe('calc - Basic functionality', () => {
     it('should calculate basic profitability for forecast mode', () => {
       const state = {
-        mode: 'forecast',
+        mode: 'forecast' as const,
         employees: 2,
         employeePay: 50000,
         monthlyCosts: 1000,
@@ -82,7 +83,7 @@ describe('Calculation Engine', () => {
 
     it('should calculate for current operations mode', () => {
       const state = {
-        mode: 'current',
+        mode: 'current' as const,
         employees: 2,
         employeePay: 50000,
         monthlyCosts: 1000,
@@ -111,7 +112,7 @@ describe('Calculation Engine', () => {
 
     it('should handle no offerings gracefully', () => {
       const state = {
-        mode: 'forecast',
+        mode: 'forecast' as const,
         employees: 1,
         employeePay: 0,
         monthlyCosts: 1000,
@@ -129,7 +130,7 @@ describe('Calculation Engine', () => {
 
     it('should return the same keys with and without offerings (tax fields included)', () => {
       const base = {
-        mode: 'forecast',
+        mode: 'forecast' as const,
         employees: 1,
         employeePay: 0,
         monthlyCosts: 1000,
@@ -140,7 +141,7 @@ describe('Calculation Engine', () => {
       const full = calc({ ...base, offerings: [{ name: 'A', priceMonthly: 100, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 100, currentClients: 1 }] }, { enableCache: false })
 
       expect(Object.keys(empty).sort()).toEqual(Object.keys(full).filter(k => k !== 'serviceHoursPerClient').sort())
-      for (const k of ['seTax', 'federalTax', 'quarterlyEst', 'takeHome', 'effectiveRate']) {
+      for (const k of ['seTax', 'federalTax', 'quarterlyEst', 'takeHome', 'effectiveRate'] as const) {
         expect(empty[k]).toBe(0)
       }
     })
@@ -149,7 +150,7 @@ describe('Calculation Engine', () => {
   describe('calc - Caching', () => {
     it('should cache calculation results', () => {
       const state = {
-        mode: 'forecast',
+        mode: 'forecast' as const,
         employees: 1,
         employeePay: 50000,
         monthlyCosts: 1000,
@@ -182,7 +183,7 @@ describe('Calculation Engine', () => {
 
     it('should clear cache when requested', () => {
       const state = {
-        mode: 'forecast',
+        mode: 'forecast' as const,
         employees: 1,
         employeePay: 50000,
         monthlyCosts: 1000,
@@ -202,7 +203,7 @@ describe('Calculation Engine', () => {
   describe('calc - Debug mode', () => {
     it('should include intermediate results in debug mode', () => {
       const state = {
-        mode: 'forecast',
+        mode: 'forecast' as const,
         employees: 1,
         employeePay: 0,
         monthlyCosts: 1000,
@@ -224,19 +225,19 @@ describe('Calculation Engine', () => {
       const result = calc(state, { debug: true })
 
       expect(result._intermediate).toBeDefined()
-      expect(result._intermediate.inputs).toBeDefined()
-      expect(result._intermediate.sanitization).toBeDefined()
-      expect(result._intermediate.capacity).toBeDefined()
-      expect(result._intermediate.costs).toBeDefined()
-      expect(result._intermediate.modeResults).toBeDefined()
-      expect(result._intermediate.breakEven).toBeDefined()
+      expect(required(required(result)._intermediate).inputs).toBeDefined()
+      expect(required(required(result)._intermediate).sanitization).toBeDefined()
+      expect(required(required(result)._intermediate).capacity).toBeDefined()
+      expect(required(required(result)._intermediate).costs).toBeDefined()
+      expect(required(required(result)._intermediate).modeResults).toBeDefined()
+      expect(required(required(result)._intermediate).breakEven).toBeDefined()
     })
   })
 
   describe('calc - Validation', () => {
     it('should sanitize input values', () => {
       const state = {
-        mode: 'forecast',
+        mode: 'forecast' as const,
         employees: -5, // Invalid
         employeePay: -1000, // Invalid
         monthlyCosts: -500, // Invalid
@@ -266,7 +267,7 @@ describe('Calculation Engine', () => {
   describe('calc - Payroll Logic', () => {
     it('should include all employees in annual payroll (no -1 owner exclusion)', () => {
       const state = {
-        mode: 'forecast',
+        mode: 'forecast' as const,
         employees: 1,
         employeePay: 60000,
         monthlyCosts: 0,
@@ -283,7 +284,7 @@ describe('Calculation Engine', () => {
 
     it('should calculate payroll correctly for multiple employees', () => {
       const state = {
-        mode: 'forecast',
+        mode: 'forecast' as const,
         employees: 3,
         employeePay: 50000,
         monthlyCosts: 0,

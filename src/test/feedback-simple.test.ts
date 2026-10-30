@@ -1,13 +1,14 @@
+import { required } from './test-utils';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setTestMode, clearGlobalState, resetLocalStorage, clearVitestState, ensureElementRemove } from './test-utils';
 
 // Mock localStorage
 const localStorageMock = (() => {
-  let store = {};
+  let store: Record<string, string> = {};
   return {
-    getItem: (key) => store[key] || null,
-    setItem: (key, value) => { store[key] = value; },
-    removeItem: (key) => { delete store[key]; },
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => { store[key] = value; },
+    removeItem: (key: string) => { delete store[key]; },
     clear: () => { store = {}; }
   };
 })();
@@ -20,8 +21,8 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 describe('FeedbackCollector', () => {
-  let FeedbackCollector;
-  let feedbackCollector;
+  let FeedbackCollector: typeof import('../analytics/feedback').FeedbackCollector;
+  let feedbackCollector: import('../analytics/feedback').FeedbackCollector;
 
   beforeEach(async () => {
     // Set up test environment
@@ -297,7 +298,7 @@ describe('FeedbackCollector', () => {
 
       const bugSuggestion = suggestions.find(s => s.message.includes('bug reports'));
       expect(bugSuggestion).toBeDefined();
-      expect(bugSuggestion.priority).toBe('high');
+      expect(required(bugSuggestion).priority).toBe('high');
     });
 
     it('should provide suggestions for feature requests', () => {
@@ -310,7 +311,7 @@ describe('FeedbackCollector', () => {
 
       const featureSuggestion = suggestions.find(s => s.message.includes('features'));
       expect(featureSuggestion).toBeDefined();
-      expect(featureSuggestion.priority).toBe('medium');
+      expect(required(featureSuggestion).priority).toBe('medium');
     });
   });
 

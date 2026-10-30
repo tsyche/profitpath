@@ -1,3 +1,4 @@
+import { required } from './test-utils';
 /**
  * Tests for Scenarios Comparison Functionality
  * Tests that scenario comparison works correctly
@@ -9,8 +10,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 
 describe('Scenarios Comparison Functionality', () => {
-  let dom;
-  let performComparison;
+  let dom: JSDOM;
+  let performComparison: typeof import('../../assets/components/UIHelpers').performComparison;
 
   beforeEach(() => {
     // Set up DOM environment
@@ -41,8 +42,8 @@ describe('Scenarios Comparison Functionality', () => {
       </html>
     `);
     
-    global.document = dom.window.document;
-    global.window = dom.window;
+    vi.stubGlobal('document', dom.window.document);
+    vi.stubGlobal('window', dom.window);
     
     // Clear localStorage
     localStorage.clear();
@@ -89,6 +90,8 @@ describe('Scenarios Comparison Functionality', () => {
 
   afterEach(() => {
     localStorage.clear();
+    dom.window.close();
+    vi.unstubAllGlobals();
   });
 
   it('should perform comparison between two scenarios', async () => {
@@ -101,14 +104,14 @@ describe('Scenarios Comparison Functionality', () => {
     
     // Check that comparison results are displayed
     const resultsDiv = document.getElementById('comparisonResults');
-    expect(resultsDiv.style.display).toBe('block');
+    expect(required(resultsDiv).style.display).toBe('block');
     
     // Check that comparison table has content
-    const tbody = document.querySelector('.comparison-table tbody');
-    expect(tbody.children.length).toBeGreaterThan(0);
+    const tbody = document.querySelector<HTMLTableSectionElement>('.comparison-table tbody');
+    expect(required(tbody).children.length).toBeGreaterThan(0);
     
     // Check that key metrics are compared
-    const rows = Array.from(tbody.children);
+    const rows = Array.from(required(tbody).rows);
     const metricNames = rows.map(row => row.cells[0].textContent);
     
     expect(metricNames).toContain('Employees');
@@ -125,17 +128,17 @@ describe('Scenarios Comparison Functionality', () => {
     performComparison('scenario1', 'scenario2');
     
     // Get comparison rows
-    const tbody = document.querySelector('.comparison-table tbody');
-    const rows = Array.from(tbody.children);
+    const tbody = document.querySelector<HTMLTableSectionElement>('.comparison-table tbody');
+    const rows = Array.from(required(tbody).rows);
     
     // Find employees row
     const employeesRow = rows.find(row => row.cells[0].textContent === 'Employees');
     expect(employeesRow).toBeTruthy();
     
     // Scenario 1 has 5, Scenario 2 has 10, difference should be +5
-    expect(employeesRow.cells[1].textContent).toBe('5');
-    expect(employeesRow.cells[2].textContent).toBe('10');
-    expect(employeesRow.cells[3].textContent).toContain('+5');
+    expect(required(employeesRow).cells[1].textContent).toBe('5');
+    expect(required(employeesRow).cells[2].textContent).toBe('10');
+    expect(required(employeesRow).cells[3].textContent).toContain('+5');
   });
 
   it('should handle comparison with non-existent scenario', async () => {
@@ -154,12 +157,12 @@ describe('Scenarios Comparison Functionality', () => {
     
     // Initially hidden
     const resultsDiv = document.getElementById('comparisonResults');
-    expect(resultsDiv.style.display).toBe('none');
+    expect(required(resultsDiv).style.display).toBe('none');
     
     // Call with empty scenario IDs
     performComparison('', '');
     
     // Should remain hidden
-    expect(resultsDiv.style.display).toBe('none');
+    expect(required(resultsDiv).style.display).toBe('none');
   });
 });

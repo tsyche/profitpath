@@ -1,13 +1,14 @@
+import { required } from './test-utils';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setTestMode, clearGlobalState, resetLocalStorage, clearVitestState, ensureElementRemove } from './test-utils';
 
 // Mock localStorage
 const localStorageMock = (() => {
-  let store = {};
+  let store: Record<string, string> = {};
   return {
-    getItem: (key) => store[key] || null,
-    setItem: (key, value) => { store[key] = value; },
-    removeItem: (key) => { delete store[key]; },
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => { store[key] = value; },
+    removeItem: (key: string) => { delete store[key]; },
     clear: () => { store = {}; }
   };
 })();
@@ -65,7 +66,7 @@ describe('Debug Panel Toggle', () => {
     initializeProgressiveDisclosure();
 
     // Expert features should be hidden for beginner
-    const expertFeature = document.querySelector('.expert-feature:not(.export-option)');
+    const expertFeature = document.querySelector<HTMLElement>('.expert-feature:not(.export-option)');
     if (expertFeature) {
       expect(expertFeature.style.display).toBe('none');
     }
@@ -83,9 +84,9 @@ describe('Debug Panel Toggle', () => {
     const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
     initializeProgressiveDisclosure();
 
-    const debugPanel = document.querySelector('.debug-wrapper.expert-feature');
+    const debugPanel = document.querySelector<HTMLElement>('.debug-wrapper.expert-feature');
     expect(debugPanel).toBeTruthy();
-    expect(debugPanel.style.display).toBe('block');
+    expect(required(debugPanel).style.display).toBe('block');
   });
 
   it('should keep debug panel hidden for a beginner when showDebugPanel is disabled', async () => {
@@ -97,9 +98,9 @@ describe('Debug Panel Toggle', () => {
     const { initializeProgressiveDisclosure } = await import('../../assets/utils/progressiveDisclosure');
     initializeProgressiveDisclosure();
 
-    const debugPanel = document.querySelector('.debug-wrapper.expert-feature');
+    const debugPanel = document.querySelector<HTMLElement>('.debug-wrapper.expert-feature');
     expect(debugPanel).toBeTruthy();
-    expect(debugPanel.style.display).toBe('none');
+    expect(required(debugPanel).style.display).toBe('none');
   });
 
 });

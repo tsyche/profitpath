@@ -9,8 +9,8 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 ## Recommended Next 3
 
 1. **Device/human acceptance and layout default** (item 40): test the shipped redesign and workbench on Android, finish human/native handoffs, and decide the new-device default while retaining both layouts.
-2. **Chart ranges** (item 24f): carry existing uncertainty bands into charts.
-3. **Typecheck unit tests** (item 12x): include `**/*.test.ts` in `tsconfig.json` and retire accepted casts. Low priority; do opportunistically.
+2. **Typecheck unit tests** (item 12x): include `**/*.test.ts` in [tsconfig.json](tsconfig.json) and retire accepted casts. In progress.
+3. **Seasonal & Market Adjustments** (item 11): monthly/quarterly demand and geographic pricing variations.
 
 Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing trustworthy data, not on code. Shipped work is indexed in the [ledger](docs/ledger/ROADMAP_SHIPPED.md).
 
@@ -43,11 +43,10 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
 
 **Business Model Fidelity** *(new category — found trialing a real hybrid subscription+hourly business, The Sound Stage, a voice/acting/recording studio)*
 
-24f. **Deferred follow-ups from shipped 24c / 24e / 32** *(new, 2026-10-26)*
-    - Chart ranges (24c): remains open; related layout work shipped in [the 25–26 ledger entry](docs/ledger/ROADMAP_SHIPPED.md#2026-10-27--2526-uiux-pass).
+24f. **Conditional membership integration** *(remaining follow-up from shipped 24e)*
     - Membership headroom now subtracts modeled scenario load, and the target-margin optimizer suggests fee, credits or discount separately. The remaining conditional follow-up is to feed members into `calc()` only if real use shows the display-only panel is insufficient.
-    - Excel parity shipped as item 33. Per-service entitlements shipped as item 24g.
-    - Effort: ~1-2 hours for chart ranges; membership integration stays conditional.
+    - Chart ranges, Excel parity, and per-service entitlements are recorded in the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md).
+    - No integration work until real usage establishes the need.
 
 12x. **Typecheck unit tests (`**/*.test.ts`) and retire the accepted casts** *(new, TS-migration leftover)*
     - `**/*.test.ts` is excluded from `tsconfig.json`; including it gives ~1,158 errors (380 TS7005 implicit `any[]`, 204 TS18047, 186 TS2339) in the `src/test/*` jsdom mock tests. Fix per file (type the mocks), then drop the exclude; do it opportunistically when touching a test file.

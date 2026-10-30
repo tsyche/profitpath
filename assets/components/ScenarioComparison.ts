@@ -10,6 +10,7 @@ import { fmtInt, fmtPct1 } from '../utils/format';
 import { closeScenarioModal, createModal } from './Modal';
 import { showToast } from '../services/modalService';
 import { pruneMembership } from '../../src/calculations/membership';
+import { downloadOrShare, openPrintTarget } from '../services/reportDelivery';
 
 /** Scenario comparison (dropdowns, side-by-side diff view) and CSV import. */
 
@@ -360,14 +361,9 @@ window.exportComparisonAsCSV = function (id1: string, id2: string) {
 
   // Download CSV
   const blob = new Blob([csvContent], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
   // Strip characters that don't belong in a filename (names can be untrusted).
   const safeFileName = (n: unknown) => String(n || 'scenario').replace(/[^a-z0-9 _-]+/gi, '').trim().slice(0, 60) || 'scenario';
-  a.download = `scenario-comparison-${safeFileName(scenario1.name)}-vs-${safeFileName(scenario2.name)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  void downloadOrShare(blob, `scenario-comparison-${safeFileName(scenario1.name)}-vs-${safeFileName(scenario2.name)}.csv`);
 };
 
 // Share comparison link with full scenario state encoded in URL
@@ -419,7 +415,7 @@ window.exportComparisonAsPDF = function (id1: string, id2: string) {
   }
 
   // Create a printable version of the comparison
-  const printWindow = window.open('', '_blank');
+  const printWindow = openPrintTarget('ProfitPath comparison');
   if (!printWindow) return;
   const selectedCase = comparisonCase(scenario1, scenario2);
   const metrics1 = calc(applyRangeCase(scenario1.data || scenario1.state, selectedCase), { ignoreCase: true });

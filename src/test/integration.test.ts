@@ -4,7 +4,7 @@ import { calc, clearCalculationCache } from '../calculations/index';
 // Helper function to create proper state objects for tests
 function createTestState(overrides = {}) {
   return {
-    mode: 'forecast',
+    mode: 'forecast' as const,
     employees: 5,
     employeePay: 80,
     monthlyCosts: 1000,

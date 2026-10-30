@@ -19,9 +19,9 @@ describe('remainingMix', () => {
 
 describe('duplicateOffering', () => {
   it('copies every field, renames, zeroes clients and takes only the unassigned mix', () => {
-    const src = o(50, { type: 'group', seats: 8, fillPct: 70, confidence: 'guess', note: 'n' });
+    const src = o(50, { type: 'group' as const, seats: 8, fillPct: 70, confidence: 'guess', note: 'n' });
     const copy = duplicateOffering(src, [src, o(30)], () => 'new-id');
-    expect(copy).toMatchObject({ id: 'new-id', name: 'Tier (copy)', type: 'group', seats: 8, fillPct: 70, confidence: 'guess', note: 'n', priceMonthly: 100, mixPct: 20, currentClients: 0 });
+    expect(copy).toMatchObject({ id: 'new-id', name: 'Tier (copy)', type: 'group' as const, seats: 8, fillPct: 70, confidence: 'guess', note: 'n', priceMonthly: 100, mixPct: 20, currentClients: 0 });
     expect(src.id).toBe('a');
     expect(src.currentClients).toBe(7);
   });

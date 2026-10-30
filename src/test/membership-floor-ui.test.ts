@@ -8,7 +8,7 @@ afterEach(() => { setRangeCase('base'); document.body.innerHTML = ''; });
 
 it('uses the selected frequency case for both membership ranking and market floor warnings', () => {
   state.offerings = [{
-    id: 'studio', name: 'Studio', type: 'per-session', priceMonthly: 60, sessionsPerYear: 12,
+    id: 'studio', name: 'Studio', type: 'per-session' as const, priceMonthly: 60, sessionsPerYear: 12,
     sessionsPerYearLow: 6, hoursPerSession: 1, variableCostPerSession: 70,
     currentClients: 10, mixPct: 100, marketLow: 50, marketAvg: 60, marketHigh: 70
   }];

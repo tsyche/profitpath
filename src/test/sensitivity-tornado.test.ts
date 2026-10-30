@@ -5,7 +5,7 @@ describe('Sensitivity Analysis - Tornado Chart Impact Calculations', () => {
   it('should calculate impact for individual factor changes', () => {
     // Base state
     const baseState = {
-      mode: 'forecast',
+      mode: 'forecast' as const,
       employees: 3,
       fullTimeEmployees: 3,
       fullTimeEmployeePay: 60000,
@@ -30,7 +30,7 @@ describe('Sensitivity Analysis - Tornado Chart Impact Calculations', () => {
     const baseline = calc(baseState);
 
     // Test price impact (+10%)
-    const priceUp = JSON.parse(JSON.stringify(baseState));
+    const priceUp = structuredClone(baseState);
     priceUp.offerings = priceUp.offerings.map(o => ({ ...o, priceMonthly: o.priceMonthly * 1.1 }));
     const priceMetrics = calc(priceUp);
     const priceImpact = Math.abs(priceMetrics.income - baseline.income);
@@ -59,7 +59,7 @@ describe('Sensitivity Analysis - Tornado Chart Impact Calculations', () => {
 
   it('should calculate utilization impact correctly', () => {
     const baseState = {
-      mode: 'forecast',
+      mode: 'forecast' as const,
       employees: 3,
       fullTimeEmployees: 3,
       fullTimeEmployeePay: 60000,

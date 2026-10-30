@@ -1,4 +1,6 @@
+import { required } from './test-utils';
 import { describe, it, expect } from 'vitest';
+import { calc } from '../calculations/index';
 import {
   computeHeatmapData,
   renderSensitivityHeatmap,
@@ -9,7 +11,7 @@ import {
 } from '../../assets/services/advancedChartsService';
 
 const baseState = {
-  mode: 'forecast',
+  mode: 'forecast' as const,
   fullTimeEmployees: 2,
   fullTimeEmployeePay: 50000,
   partTimeEmployees: 0,
@@ -38,6 +40,8 @@ const baseState = {
     }
   ]
 };
+
+const baseMetrics = calc(baseState);
 
 describe('Sensitivity Heat Map', () => {
   it('computes a 5x5 grid of income values', () => {
@@ -69,14 +73,14 @@ describe('Sensitivity Heat Map', () => {
 
 describe('Balanced Scorecard Radar', () => {
   it('computes five normalized 0-100 scores', () => {
-    const metrics = {
+    const metrics = { ...baseMetrics,
       revenue: 100000,
       income: 20000,
       capacityPct: 75,
       contributionMarginRatio: 0.4,
       offeringMetrics: [
-        { revenue: 60000 },
-        { revenue: 40000 }
+        { ...baseMetrics.offeringMetrics[0], revenue: 60000 },
+        { ...baseMetrics.offeringMetrics[1], revenue: 40000 }
       ]
     };
     const scores = computeScorecardData(metrics);
@@ -90,29 +94,29 @@ describe('Balanced Scorecard Radar', () => {
   });
 
   it('gives diversification score of 0 for a single offering', () => {
-    const metrics = {
+    const metrics = { ...baseMetrics,
       revenue: 100000,
       income: 20000,
       capacityPct: 75,
       contributionMarginRatio: 0.4,
-      offeringMetrics: [{ revenue: 100000 }]
+      offeringMetrics: [{ ...baseMetrics.offeringMetrics[0], revenue: 100000 }]
     };
     expect(computeScorecardData(metrics).diversification).toBe(0);
   });
 
   it('handles zero revenue without throwing or producing NaN', () => {
-    const metrics = { revenue: 0, income: 0, capacityPct: 0, contributionMarginRatio: 0, offeringMetrics: [] };
+    const metrics = { ...baseMetrics, revenue: 0, income: 0, capacityPct: 0, contributionMarginRatio: 0, offeringMetrics: [] };
     const scores = computeScorecardData(metrics);
     Object.values(scores).forEach((v) => expect(Number.isFinite(v)).toBe(true));
   });
 
   it('renders an SVG radar chart with all five axis labels', () => {
-    const metrics = {
+    const metrics = { ...baseMetrics,
       revenue: 100000,
       income: 20000,
       capacityPct: 75,
       contributionMarginRatio: 0.4,
-      offeringMetrics: [{ revenue: 60000 }, { revenue: 40000 }]
+      offeringMetrics: [{ ...baseMetrics.offeringMetrics[0], revenue: 60000 }, { ...baseMetrics.offeringMetrics[1], revenue: 40000 }]
     };
     const html = renderScorecardRadar(metrics);
     expect(html).toContain('<svg');
@@ -126,7 +130,7 @@ describe('Balanced Scorecard Radar', () => {
 
 describe('Client Capacity Funnel', () => {
   it('computes three descending-or-equal stages', () => {
-    const metrics = {
+    const metrics = { ...baseMetrics,
       serviceHoursPerClient: 20,
       annualServiceHours: 2000,
       clients: 50,
@@ -138,7 +142,7 @@ describe('Client Capacity Funnel', () => {
   });
 
   it('handles Infinity break-even clients (unprofitable scenario)', () => {
-    const metrics = {
+    const metrics = { ...baseMetrics,
       serviceHoursPerClient: 20,
       annualServiceHours: 2000,
       clients: 50,
@@ -146,16 +150,16 @@ describe('Client Capacity Funnel', () => {
     };
     const stages = computeFunnelData(metrics);
     const breakEvenStage = stages.find((s) => s.label === 'Break-even Clients');
-    expect(breakEvenStage.value).toBe(0);
+    expect(required(breakEvenStage).value).toBe(0);
   });
 
   it('handles zero service hours per client without dividing by zero', () => {
-    const metrics = { serviceHoursPerClient: 0, annualServiceHours: 2000, clients: 0, breakEvenClients: 0 };
+    const metrics = { ...baseMetrics, serviceHoursPerClient: 0, annualServiceHours: 2000, clients: 0, breakEvenClients: 0 };
     expect(() => computeFunnelData(metrics)).not.toThrow();
   });
 
   it('renders proportionally-scaled bars', () => {
-    const metrics = { serviceHoursPerClient: 20, annualServiceHours: 2000, clients: 50, breakEvenClients: 30 };
+    const metrics = { ...baseMetrics, serviceHoursPerClient: 20, annualServiceHours: 2000, clients: 50, breakEvenClients: 30 };
     const html = renderClientFunnel(metrics);
     expect(html).toContain('client-funnel');
     expect(html).toContain('funnel-bar-fill');

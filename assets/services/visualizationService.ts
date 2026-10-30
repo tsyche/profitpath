@@ -1,6 +1,7 @@
 import type { CalcResult } from '../../src/types';
 import { escapeHtml } from "./miscService";
 import { fmtMoney0, fmtMoneyK } from '../../src/calculations/currency';
+import type { RangeBand, RangeMetric, RangeResult } from '../../src/calculations/ranges';
 
 // Import formatting utilities
 const fmtPct1 = (n: number) => (Number.isFinite(n) ? n : 0).toFixed(1) + '%';
@@ -55,22 +56,40 @@ export function updateBreakEvenAnalysis(metrics: CalcResult) {
 
   }
 
-export function updateRichVisualizations(metrics: CalcResult) {
+export function updateRichVisualizations(metrics: CalcResult, ranges: RangeResult | null = null) {
     const vizEl = $('#richVisualizations');
     if (!vizEl || !metrics) return;
 
     // Create utilization gauge
-    const utilizationGauge = createUtilizationGauge(metrics);
+    const utilizationGauge = createUtilizationGauge(metrics, ranges);
 
     // Create profit/loss waterfall
-    const profitWaterfall = createProfitWaterfall(metrics);
+    const profitWaterfall = createProfitWaterfall(metrics, ranges);
 
     vizEl.innerHTML = '<div class="viz-header"><h4 style="margin:0 0 16px 0;font-size:14px;color:var(--text);font-weight:600;">Simple Visualizations</h4></div><div class="viz-content"><div class="viz-item"><h5 style="margin:0 0 8px 0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;font-weight:600;">Utilization Gauge</h5>' + (utilizationGauge) + '</div><div class="viz-item"><h5 style="margin:0 0 8px 0;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;font-weight:600;">Profit Waterfall</h5>' + (profitWaterfall) + '</div></div>';
 
     vizEl.style.display = 'block';
   }
 
-export function createUtilizationGauge(metrics: CalcResult) {
+/** Same input-bound envelope as the results table, with a separate marker for the viewed case. */
+function rangeChart(metric: RangeMetric, label: string, band: RangeBand | undefined, current: number, fmt: (n: number) => string) {
+  if (!band || band.min === band.max || ![band.min, band.base, band.max, current].every(Number.isFinite)) return '';
+  const lo = Math.min(band.min, current);
+  const hi = Math.max(band.max, current);
+  const x = (value: number) => 12 + (value - lo) / (hi - lo) * 176;
+  return `<figure class="chart-range" data-metric="${metric}" data-min="${band.min}" data-base="${band.base}" data-max="${band.max}" data-current="${current}">
+    <figcaption>${label} range</figcaption>
+    <svg viewBox="0 0 200 24" aria-hidden="true">
+      <line x1="${x(band.min)}" x2="${x(band.max)}" y1="12" y2="12" stroke="var(--muted)" stroke-width="4" opacity=".5"/>
+      ${[band.min, band.base, band.max].map(value => `<line x1="${x(value)}" x2="${x(value)}" y1="5" y2="19" stroke="var(--text)" stroke-width="1.5"/>`).join('')}
+      <circle cx="${x(current)}" cy="12" r="4" fill="var(--text)"/>
+    </svg>
+    <div class="chart-range-values"><span>Min ${fmt(band.min)}</span><span>Base ${fmt(band.base)}</span><span>Max ${fmt(band.max)}</span></div>
+    <p class="smallprint">Viewed case (dot): ${fmt(current)}. Input bounds; not a confidence interval.</p>
+  </figure>`;
+}
+
+export function createUtilizationGauge(metrics: CalcResult, ranges: RangeResult | null = null) {
     const utilization = Math.min(150, Math.max(0, metrics.capacityPct || 0));
 
     // Create a proper speedometer-style gauge
@@ -135,10 +154,11 @@ export function createUtilizationGauge(metrics: CalcResult) {
 
     svg += '</svg>';
 
-    return '<div class="utilization-gauge">' + svg + '<div class="gauge-labels"><div class="gauge-value">' + fmtPct1(utilization) + '</div><div class="gauge-text">Utilization</div></div></div>';
+    return '<div class="utilization-gauge">' + svg + '<div class="gauge-labels"><div class="gauge-value">' + fmtPct1(utilization) + '</div><div class="gauge-text">Utilization</div></div>' +
+      rangeChart('capacityPct', 'Utilization', ranges?.capacityPct, metrics.capacityPct, fmtPct1) + '</div>';
   }
 
-export function createProfitWaterfall(metrics: CalcResult) {
+export function createProfitWaterfall(metrics: CalcResult, ranges: RangeResult | null = null) {
     const items = [
       { label: 'Revenue', value: metrics.revenue, color: 'var(--good)' },
       { label: 'Variable Costs', value: -metrics.variableCosts, color: 'var(--bad)' },
@@ -213,7 +233,8 @@ export function createProfitWaterfall(metrics: CalcResult) {
       }
     });
 
-    const html = '<div class="profit-waterfall"><svg viewBox="0 0 120 100" class="waterfall-svg"><!--Center band background--><rect x="5" y="' + bandTop + '" width="110" height="' + bandHeight + '" fill="rgba(200,200,200,0.12)" rx="1"/>' + (barHTML) + '</svg><div class="waterfall-summary"><div class="summary-item"><span class="summary-label">Net:</span><span class="summary-value" style="color:' + (metrics.income >= 0 ? 'var(--good)' : 'var(--bad)') + ';">' + (fmtMoney0(metrics.income)) + '</span></div></div></div>';
+    const html = '<div class="profit-waterfall"><svg viewBox="0 0 120 100" class="waterfall-svg"><!--Center band background--><rect x="5" y="' + bandTop + '" width="110" height="' + bandHeight + '" fill="rgba(200,200,200,0.12)" rx="1"/>' + (barHTML) + '</svg><div class="waterfall-summary"><div class="summary-item"><span class="summary-label">Net:</span><span class="summary-value" style="color:' + (metrics.income >= 0 ? 'var(--good)' : 'var(--bad)') + ';">' + (fmtMoney0(metrics.income)) + '</span></div></div>' +
+      rangeChart('income', 'Annual net profit', ranges?.income, metrics.income, fmtMoney0) + '</div>';
 
     // Setup waterfall label tooltips after render
     setTimeout(() => {
@@ -319,7 +340,7 @@ function setupWaterfallLabelTooltips() {
   });
 }
 
-export function renderSimpleChart(metrics: CalcResult) {
+export function renderSimpleChart(metrics: CalcResult, ranges: RangeResult | null = null) {
   const el = $('#simpleChart');
   if (!el) return;
 
@@ -349,9 +370,11 @@ export function renderSimpleChart(metrics: CalcResult) {
   const totalRevenue = Number(metrics.revenue) || (Array.isArray(metrics.offeringMetrics) ? metrics.offeringMetrics.reduce((a, m) => a + (Number(m.revenue) || 0), 0) : 0);
   const totalVariable = Number(metrics.variableCosts) || (Array.isArray(metrics.offeringMetrics) ? metrics.offeringMetrics.reduce((a, m) => a + (Number(m.variableCosts) || 0), 0) : 0);
   const totalContribution = Math.max(0, totalRevenue - totalVariable);
+  const revenueRange = rangeChart('revenue', 'Annual revenue', ranges?.revenue, metrics.revenue, fmtMoney0);
+  el.setAttribute('aria-hidden', revenueRange ? 'false' : 'true');
 
   if (totalRevenue <= 0) {
-    el.innerHTML = '<div class="chart-empty">No revenue to display</div>';
+    el.innerHTML = '<div class="chart-empty">No revenue to display</div>' + revenueRange;
     return;
   }
 
@@ -415,7 +438,7 @@ export function renderSimpleChart(metrics: CalcResult) {
   const offeringListHTML = '<div class="offering-list">' + (offeringItems) + '</div>';
 
   // append a tooltip element used for hover
-  el.innerHTML = svgParts.join('') + legend + offeringListHTML + '<div class="chart-tooltip" aria-hidden="true"></div>';
+  el.innerHTML = svgParts.join('') + legend + offeringListHTML + revenueRange + '<div class="chart-tooltip" aria-hidden="true"></div>';
 
   // Set up hover and click event listeners for chart interactivity
   setupChartEventListeners(el);

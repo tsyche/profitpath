@@ -1,3 +1,4 @@
+import { appStateFixture } from './test-utils';
 import { describe, it, expect } from 'vitest';
 import { buildCSV, sanitizeScenarioState } from '../../assets/services/miscService';
 import { buildReportSections, buildWorkbookSheets } from '../../assets/services/reportSections';
@@ -16,7 +17,7 @@ import { calc } from '../../src/calculations/index';
 // A TSS-shaped scenario: group + 1:1 + a staff-free room, expenses in every
 // frequency, ranges, market, confidence, two membership plans and a profile.
 const raw = {
-  mode: 'current',
+  mode: 'current' as const,
   fullTimeEmployees: 2,
   partTimeEmployees: 1,
   fullTimeEmployeePay: 72000,
@@ -40,7 +41,7 @@ const raw = {
       mixPct: 40,
       currentClients: 18,
       laborPctOfPrice: 25,
-      type: 'group',
+      type: 'group' as const,
       seats: 8,
       fillPct: 80,
       fillPctLow: 60,
@@ -69,7 +70,7 @@ const raw = {
       mixPct: 60,
       currentClients: 4,
       laborPctOfPrice: 0,
-      type: 'subscription',
+      type: 'subscription' as const,
       seats: 1,
       fillPct: 100,
       costPerRun: 0,
@@ -114,12 +115,20 @@ const raw = {
 
 const clean = sanitizeScenarioState(raw)!;
 const results = calc(clean);
-const sheets = buildWorkbookSheets(clean, results);
+const sheets = buildWorkbookSheets(appStateFixture(clean), results);
 const bytes = buildXLSX(sheets);
 const cells = readXLSX(bytes)
   .flatMap((s) => s.rows.flat())
   .filter((v) => v !== '' && v !== null && v !== undefined)
-  .map((v) => String(v));
+  .flatMap((v) => {
+    const text = String(v);
+    if (text.startsWith('Mode: ')) return [text, text.slice(6)];
+    try {
+      const parsed: unknown = JSON.parse(text);
+      if (parsed && typeof parsed === 'object') return [text, ...Object.keys(parsed), ...Object.values(parsed).map(String)];
+    } catch { /* Ordinary workbook cells are not JSON. */ }
+    return [text];
+  });
 
 // UI-only toggles: they gate behaviour, they are not business data worth a cell
 const UI_ONLY = new Set(['lockMix', 'loadedTemplate']);
@@ -159,9 +168,16 @@ function collectValues(node: unknown, out: string[]): void {
   }
 }
 
-const expected = [...new Set(collectValues(clean, []))];
+const expectedValues: string[] = [];
+collectValues(clean, expectedValues);
+const expected = [...new Set(expectedValues)];
 
 describe('Excel workbook carries the whole persisted model (roadmap 33)', () => {
+  it('checks a nonempty set of persisted values, including the presentation notes', () => {
+    expect(expected.length).toBeGreaterThan(20);
+    expect(expected).toContain(raw.notes);
+  });
+
   it('is a real zip workbook, not a CSV blob under an .xlsx name', () => {
     expect(String.fromCharCode(bytes[0], bytes[1])).toBe('PK');
     expect(sheets.map((s) => s.name)).toEqual([
@@ -202,8 +218,8 @@ describe('Excel workbook carries the whole persisted model (roadmap 33)', () => 
   });
 
   it('keeps the CSV and the workbook on the same sections', () => {
-    const csv = buildCSV(clean, results);
-    const sections = buildReportSections(clean, results).filter((s) => s.csv !== false);
+    const csv = buildCSV(appStateFixture(clean), results);
+    const sections = buildReportSections(appStateFixture(clean), results).filter((s) => s.csv !== false);
     for (const s of sections) expect(csv).toContain(s.title);
     // Presentation notes are workbook-only: CSV import has nowhere to restore them
     expect(csv).not.toContain('PRESENTATION NOTES');

@@ -1,8 +1,9 @@
+import { appStateFixture } from './test-utils';
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calc } from '../calculations/index'
 
 // Mock the DOM functions that the app uses
-global.$ = (selector) => {
+global.$ = (selector: string) => {
   // Simple mock implementation for testing
   const mockElement = {
     value: '',
@@ -25,13 +26,13 @@ global.$ = (selector) => {
   return mockElement
 }
 
-global.$$ = (selector) => []
+global.$$ = (selector: string) => []
 
 describe('Business Logic Calculations', () => {
   beforeEach(() => {
     // Reset any global state before each test
-    global.state = {
-      mode: 'forecast',
+    global.state = appStateFixture({
+      mode: 'forecast' as const,
       employees: 1,
       employeePay: 50000,
       monthlyCosts: 1000,
@@ -39,6 +40,7 @@ describe('Business Logic Calculations', () => {
       targetUtilizationPct: 85,
       offerings: [
         {
+          id: 'basic',
           name: 'Basic Service',
           priceMonthly: 100,
           sessionsPerYear: 12,
@@ -48,7 +50,7 @@ describe('Business Logic Calculations', () => {
           currentClients: 5
         }
       ]
-    }
+    })
   })
 
   it('should calculate basic profitability', () => {
@@ -100,6 +102,7 @@ describe('Business Logic Calculations', () => {
   it('should handle multiple service offerings', () => {
     global.state.offerings = [
       {
+        id: 'premium',
         name: 'Premium Service',
         priceMonthly: 200,
         sessionsPerYear: 12,
@@ -109,7 +112,8 @@ describe('Business Logic Calculations', () => {
         currentClients: 3
       },
       {
-        name: 'Basic Service',
+        id: 'basic',
+          name: 'Basic Service',
         priceMonthly: 100,
         sessionsPerYear: 12,
         hoursPerSession: 1,

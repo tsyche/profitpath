@@ -4,15 +4,16 @@
 // was never imported), leaving totals like 127%.
 
 import { describe, it, expect } from 'vitest';
+import { appStateFixture } from './test-utils';
 import { rebalanceMix } from '../../assets/services/businessLogic';
 
-function setOfferings(...mixPcts) {
-  global.state = {
+function setOfferings(...mixPcts: number[]) {
+  global.state = appStateFixture({
     offerings: mixPcts.map((m, i) => ({
       id: 'o' + i, name: 'O' + i, priceMonthly: 100, sessionsPerYear: 12,
       hoursPerSession: 1, variableCostPerSession: 0, mixPct: m, currentClients: 0,
     })),
-  };
+  });
 }
 const total = () => global.state.offerings.reduce((s, o) => s + Number(o.mixPct), 0);
 

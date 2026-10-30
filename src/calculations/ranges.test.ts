@@ -1,3 +1,4 @@
+import { appStateFixture, calcResultFixture } from '../test/test-utils';
 import { describe, it, expect, beforeEach } from 'vitest'
 import { clearCalculationCache } from './index'
 import { RANGE_BOUND_KEYS, applyRangeCase, setRangeCase, withBounds } from './rangeCase'
@@ -15,7 +16,7 @@ const base = {
 }
 const group = {
   name: 'Class',
-  type: 'group',
+  type: 'group' as const,
   priceMonthly: 100,
   sessionsPerYear: 50,
   hoursPerSession: 1,
@@ -30,11 +31,11 @@ describe('calcRange', () => {
   beforeEach(() => clearCalculationCache())
 
   it('returns null when no offering has a bound', () => {
-    expect(calcRange({ ...base, mode: 'forecast', offerings: [group] } as any)).toBeNull()
+    expect(calcRange({ ...base, mode: 'forecast' as const, offerings: [group] } as any)).toBeNull()
   })
 
   it('forecast: fill bounds widen the band around base, min <= base <= max', () => {
-    const r = calcRange({ ...base, mode: 'forecast', offerings: [{ ...group, fillPctLow: 50, fillPctHigh: 100 }] } as any)!
+    const r = calcRange({ ...base, mode: 'forecast' as const, offerings: [{ ...group, fillPctLow: 50, fillPctHigh: 100 }] } as any)!
     expect(r.income.min).toBeLessThan(r.income.base)
     expect(r.income.max).toBeGreaterThan(r.income.base)
     for (const b of Object.values(r)) {
@@ -44,30 +45,30 @@ describe('calcRange', () => {
   })
 
   it('current: client bounds move revenue and utilization', () => {
-    const r = calcRange({ ...base, mode: 'current', offerings: [{ ...group, currentClientsLow: 4, currentClientsHigh: 16 }] } as any)!
+    const r = calcRange({ ...base, mode: 'current' as const, offerings: [{ ...group, currentClientsLow: 4, currentClientsHigh: 16 }] } as any)!
     expect(r.revenue).toEqual({ min: 4 * 1200, base: 8 * 1200, max: 16 * 1200 })
     expect(r.clients).toEqual({ min: 4, base: 8, max: 16 })
   })
 
   it('a bound on the wrong side of base never crosses it', () => {
-    const r = calcRange({ ...base, mode: 'current', offerings: [{ ...group, currentClientsLow: 20, currentClientsHigh: 2 }] } as any)!
+    const r = calcRange({ ...base, mode: 'current' as const, offerings: [{ ...group, currentClientsLow: 20, currentClientsHigh: 2 }] } as any)!
     expect(r.clients).toEqual({ min: 8, base: 8, max: 8 })
   })
 
   it('one-sided range collapses the other side to base', () => {
-    const r = calcRange({ ...base, mode: 'current', offerings: [{ ...group, currentClientsHigh: 12 }] } as any)!
+    const r = calcRange({ ...base, mode: 'current' as const, offerings: [{ ...group, currentClientsHigh: 12 }] } as any)!
     expect(r.clients).toEqual({ min: 8, base: 8, max: 12 })
   })
 
   it('shows the real spread when more clients means more loss', () => {
-    const losing = { ...group, type: 'subscription', variableCostPerSession: 100, currentClientsLow: 2, currentClientsHigh: 20 }
-    const r = calcRange({ ...base, mode: 'current', offerings: [losing] } as any)!
+    const losing = { ...group, type: 'subscription' as const, variableCostPerSession: 100, currentClientsLow: 2, currentClientsHigh: 20 }
+    const r = calcRange({ ...base, mode: 'current' as const, offerings: [losing] } as any)!
     expect(r.income.min).toBeLessThan(r.income.base)
     expect(r.income.min).toBeLessThanOrEqual(r.income.max)
   })
 
   it.each([NaN, Infinity, 'abc', null, {}, -5, 1e12])('hostile bound %s never yields NaN', (bad) => {
-    const r = calcRange({ ...base, mode: 'forecast', offerings: [{ ...group, fillPctLow: bad, fillPctHigh: bad, currentClientsLow: bad }] } as any)
+    const r = calcRange({ ...base, mode: 'forecast' as const, offerings: [{ ...group, fillPctLow: bad, fillPctHigh: bad, currentClientsLow: bad }] } as any)
     if (r) for (const b of Object.values(r)) expect([b.min, b.max].every((v) => !Number.isNaN(v))).toBe(true)
   })
 })
@@ -116,8 +117,8 @@ describe('range persistence', () => {
   })
 
   it('CSV round-trips bounds', () => {
-    const st = { ...base, mode: 'forecast', offerings: [ranged, { ...group, name: 'Plain' }], expenses: [] }
-    const r: any = importFromCSV(buildCSV(st, { revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 }))
+    const st = { ...base, mode: 'forecast' as const, offerings: [ranged, { ...group, name: 'Plain' }], expenses: [] }
+    const r: any = importFromCSV(buildCSV(appStateFixture(st), calcResultFixture({ revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 })))
     expect(r.data.offerings[0]).toMatchObject({ fillPctLow: 40, fillPctHigh: 90, currentClientsLow: 4, currentClientsHigh: 12 })
     expect(Object.keys(r.data.offerings[1])).not.toContain('fillPctLow')
   })
@@ -137,8 +138,8 @@ describe('best-case discount persistence (roadmap 24d)', () => {
   })
 
   it('CSV round-trips discountPct as column 16', () => {
-    const st = { ...base, mode: 'forecast', offerings: [{ ...group, discountPct: 30 }, { ...group, name: 'Plain' }], expenses: [] }
-    const csv = buildCSV(st, { revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 })
+    const st = { ...base, mode: 'forecast' as const, offerings: [{ ...group, discountPct: 30 }, { ...group, name: 'Plain' }], expenses: [] }
+    const csv = buildCSV(appStateFixture(st), calcResultFixture({ revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 }))
     expect(csv).toContain('Best Discount %')
     const o = (importFromCSV(csv) as any).data.offerings
     expect(o.map((x: any) => x.discountPct)).toEqual([30, 0])
@@ -168,7 +169,7 @@ describe('suggestRanges (roadmap 22 / 24c)', () => {
   it('leaves verified, untagged and non-group forecast rows alone', () => {
     expect(suggestRanges({ ...group, confidence: 'verified' } as any, 'forecast')).toEqual({})
     expect(suggestRanges({ ...group } as any, 'forecast')).toEqual({})
-    expect(suggestRanges({ ...group, type: 'subscription', confidence: 'guess' } as any, 'forecast')).toEqual({})
+    expect(suggestRanges({ ...group, type: 'subscription' as const, confidence: 'guess' } as any, 'forecast')).toEqual({})
   })
 
   it('never overwrites a typed bound', () => {
@@ -180,13 +181,13 @@ describe('calcRangeDrivers', () => {
   beforeEach(() => clearCalculationCache())
 
   it('is empty without bounds', () => {
-    expect(calcRangeDrivers({ ...base, mode: 'forecast', offerings: [group] } as any)).toEqual([])
+    expect(calcRangeDrivers({ ...base, mode: 'forecast' as const, offerings: [group] } as any)).toEqual([])
   })
 
   it('ranks by profit swing and isolates each offering', () => {
     const small = { ...group, name: 'Small', mixPct: 50, fillPctLow: 70, fillPctHigh: 80, confidence: 'estimated' }
     const big = { ...group, name: 'Big', mixPct: 50, fillPctLow: 20, fillPctHigh: 100, confidence: 'guess' }
-    const state = { ...base, mode: 'forecast', offerings: [small, big] } as any
+    const state = { ...base, mode: 'forecast' as const, offerings: [small, big] } as any
     const d = calcRangeDrivers(state)
     expect(d.map(x => x.name)).toEqual(['Big', 'Small'])
     expect(d[0].confidence).toBe('guess')
@@ -221,7 +222,7 @@ describe('bandMoves', () => {
 // Slice 1 of 24c: optional low/high on sessionsPerYear (frequency).
 describe('frequency bounds (roadmap 24c)', () => {
   beforeEach(() => { clearCalculationCache(); setRangeCase('base') })
-  const sub = { ...group, type: 'subscription', sessionsPerYear: 12, variableCostPerSession: 10, currentClients: 8 }
+  const sub = { ...group, type: 'subscription' as const, sessionsPerYear: 12, variableCostPerSession: 10, currentClients: 8 }
 
   // One sample value per bound key; every key must survive every layer.
   const sample: Record<string, number> = {
@@ -237,8 +238,8 @@ describe('frequency bounds (roadmap 24c)', () => {
     expect(hasRanges([o] as any)).toBe(true)
     expect((sanitizeOfferingRange(o) as any)[key]).toBe(sample[key])
     expect(sanitizeScenarioState({ offerings: [o] })!.offerings[0]).toMatchObject({ [key]: sample[key] })
-    const st = { ...base, mode: 'forecast', offerings: [o], expenses: [] }
-    const r: any = importFromCSV(buildCSV(st, { revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 }))
+    const st = { ...base, mode: 'forecast' as const, offerings: [o], expenses: [] }
+    const r: any = importFromCSV(buildCSV(appStateFixture(st), calcResultFixture({ revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 })))
     expect(r.data.offerings[0]).toMatchObject({ [key]: sample[key] })
     for (const side of ['low', 'high'] as const) {
       expect(Object.keys(withBounds([o] as any, side)[0])).not.toContain(key)
@@ -266,13 +267,13 @@ describe('frequency bounds (roadmap 24c)', () => {
   })
 
   it('a frequency bound never crosses the base value', () => {
-    const r = calcRange({ ...base, mode: 'current', offerings: [{ ...sub, sessionsPerYearLow: 30, sessionsPerYearHigh: 2 }] } as any)!
+    const r = calcRange({ ...base, mode: 'current' as const, offerings: [{ ...sub, sessionsPerYearLow: 30, sessionsPerYearHigh: 2 }] } as any)!
     expect(r.income.min).toBeLessThanOrEqual(r.income.base)
     expect(r.income.max).toBeGreaterThanOrEqual(r.income.base)
   })
 
   it('Conservative uses the busier side, so it differs from Base and costs profit', () => {
-    const s = { ...base, mode: 'current', offerings: [{ ...sub, sessionsPerYearLow: 6, sessionsPerYearHigh: 24 }] } as any
+    const s = { ...base, mode: 'current' as const, offerings: [{ ...sub, sessionsPerYearLow: 6, sessionsPerYearHigh: 24 }] } as any
     const b = calc(s).income
     setRangeCase('conservative')
     const cons = calc(s).income
@@ -284,13 +285,13 @@ describe('frequency bounds (roadmap 24c)', () => {
   })
 
   it('one-time offerings ignore frequency bounds', () => {
-    const once = { ...sub, type: 'one-time', sessionsPerYearLow: 6, sessionsPerYearHigh: 24 }
+    const once = { ...sub, type: 'one-time' as const, sessionsPerYearLow: 6, sessionsPerYearHigh: 24 }
     expect(hasRanges([once] as any)).toBe(false)
-    expect(calcRange({ ...base, mode: 'current', offerings: [once] } as any)).toBeNull()
+    expect(calcRange({ ...base, mode: 'current' as const, offerings: [once] } as any)).toBeNull()
   })
 
   it('drivers report per-offering min and max profit', () => {
-    const d = calcRangeDrivers({ ...base, mode: 'current', offerings: [{ ...sub, sessionsPerYearLow: 6, sessionsPerYearHigh: 24 }] } as any)
+    const d = calcRangeDrivers({ ...base, mode: 'current' as const, offerings: [{ ...sub, sessionsPerYearLow: 6, sessionsPerYearHigh: 24 }] } as any)
     expect(d).toHaveLength(1)
     expect(d[0].max - d[0].min).toBeCloseTo(d[0].swing)
     expect(d[0].min).toBeLessThan(d[0].max)

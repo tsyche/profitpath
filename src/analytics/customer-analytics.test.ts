@@ -25,7 +25,7 @@ describe('calculateLTV on real calc output (roadmap 12h)', () => {
   });
 
   it('works in current mode and for offerings that get zero forecast clients', () => {
-    expect(calculateLTV(calc({ ...base, mode: 'current' } as any) as any).averageLTV).toBeGreaterThan(0);
+    expect(calculateLTV(calc({ ...base, mode: 'current' as const } as any) as any).averageLTV).toBeGreaterThan(0);
     const tiny = calc({ ...base, offerings: [{ ...base.offerings[0], mixPct: 100 }, { ...base.offerings[1], mixPct: 0 }] } as any);
     expect(calculateLTV(tiny as any).byOffering[1].estimatedLTV).toBeGreaterThan(0);
   });
@@ -38,7 +38,7 @@ describe('calculateLTV on real calc output (roadmap 12h)', () => {
 
 describe('summarizeCustomerAcquisition on real calc output', () => {
   it('derives revenue impact and churn from calc() fields (annual revenue, clients)', () => {
-    const m = calc({ ...base, mode: 'current' } as any);
+    const m = calc({ ...base, mode: 'current' as const } as any);
     const s = summarizeCustomerAcquisition(m, { monthlyNewCustomers: 5, monthlyChurnRate: 5 });
     // 10 clients bring in m.revenue/12 a month; 5 new/month at that rate beat 5% churn, so impact is positive
     expect(s.annualRevenueImpact).toBeGreaterThan(0);

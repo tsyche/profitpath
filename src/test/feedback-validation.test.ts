@@ -1,3 +1,4 @@
+import { required } from './test-utils';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 // Regression tests for the feedback form validation bug.
@@ -36,12 +37,12 @@ describe('Feedback form — rating validation', () => {
       </form>
     `;
 
-    const form = document.getElementById('feedbackForm');
-    const formData = new FormData(form);
+    const form = document.querySelector<HTMLFormElement>('#feedbackForm');
+    const formData = new FormData(required(form));
 
-    let rating = parseInt(formData.get('rating'));
+    let rating = parseInt(String(formData.get('rating') ?? ''), 10);
     if (isNaN(rating) || rating < 1) {
-      const activeStars = form.querySelectorAll('.rating-star.active');
+      const activeStars = required(form).querySelectorAll('.rating-star.active');
       rating = activeStars.length || 0;
     }
 
@@ -58,12 +59,12 @@ describe('Feedback form — rating validation', () => {
       </form>
     `;
 
-    const form = document.getElementById('feedbackForm');
-    const formData = new FormData(form);
+    const form = document.querySelector<HTMLFormElement>('#feedbackForm');
+    const formData = new FormData(required(form));
 
-    let rating = parseInt(formData.get('rating'));
+    let rating = parseInt(String(formData.get('rating') ?? ''), 10);
     if (isNaN(rating) || rating < 1) {
-      const activeStars = form.querySelectorAll('.rating-star.active');
+      const activeStars = required(form).querySelectorAll('.rating-star.active');
       rating = activeStars.length || 0;
     }
 
@@ -82,12 +83,12 @@ describe('Feedback form — rating validation', () => {
       </form>
     `;
 
-    const form = document.getElementById('feedbackForm');
-    const formData = new FormData(form);
+    const form = document.querySelector<HTMLFormElement>('#feedbackForm');
+    const formData = new FormData(required(form));
 
-    let rating = parseInt(formData.get('rating'));
+    let rating = parseInt(String(formData.get('rating') ?? ''), 10);
     if (isNaN(rating) || rating < 1) {
-      const activeStars = form.querySelectorAll('.rating-star.active');
+      const activeStars = required(form).querySelectorAll('.rating-star.active');
       rating = activeStars.length || 0;
     }
 
@@ -112,20 +113,20 @@ describe('Feedback form — rating validation', () => {
       </form>
     `;
 
-    const form = document.getElementById('feedbackForm');
+    const form = document.querySelector<HTMLFormElement>('#feedbackForm');
     const rating = 0;
     const category = 'bug';
-    const ratingContainer = form.querySelector('.rating-container');
-    const categorySelect = form.querySelector('#feedbackCategory');
+    const ratingContainer = required(form).querySelector<HTMLElement>('.rating-container');
+    const categorySelect = required(form).querySelector<HTMLElement>('#feedbackCategory');
 
-    if (!rating || rating < 1) ratingContainer.style.outline = '2px solid var(--bad, #ef4444)';
-    else ratingContainer.style.outline = '';
+    if (!rating || rating < 1) required(ratingContainer).style.outline = '2px solid var(--bad, #ef4444)';
+    else required(ratingContainer).style.outline = '';
 
-    if (!category) categorySelect.style.borderColor = 'var(--bad, #ef4444)';
-    else categorySelect.style.borderColor = '';
+    if (!category) required(categorySelect).style.borderColor = 'var(--bad, #ef4444)';
+    else required(categorySelect).style.borderColor = '';
 
-    expect(ratingContainer.style.outline).toBe('2px solid var(--bad, #ef4444)');
-    expect(categorySelect.style.borderColor).toBe('');
+    expect(required(ratingContainer).style.outline).toBe('2px solid var(--bad, #ef4444)');
+    expect(required(categorySelect).style.borderColor).toBe('');
   });
 
   it('inline validation marks category select when category missing', () => {
@@ -136,20 +137,20 @@ describe('Feedback form — rating validation', () => {
       </form>
     `;
 
-    const form = document.getElementById('feedbackForm');
+    const form = document.querySelector<HTMLFormElement>('#feedbackForm');
     const rating = 3;
     const category = '';
-    const ratingContainer = form.querySelector('.rating-container');
-    const categorySelect = form.querySelector('#feedbackCategory');
+    const ratingContainer = required(form).querySelector<HTMLElement>('.rating-container');
+    const categorySelect = required(form).querySelector<HTMLElement>('#feedbackCategory');
 
-    if (!rating || rating < 1) ratingContainer.style.outline = '2px solid var(--bad, #ef4444)';
-    else ratingContainer.style.outline = '';
+    if (!rating || rating < 1) required(ratingContainer).style.outline = '2px solid var(--bad, #ef4444)';
+    else required(ratingContainer).style.outline = '';
 
-    if (!category) categorySelect.style.borderColor = 'var(--bad, #ef4444)';
-    else categorySelect.style.borderColor = '';
+    if (!category) required(categorySelect).style.borderColor = 'var(--bad, #ef4444)';
+    else required(categorySelect).style.borderColor = '';
 
-    expect(ratingContainer.style.outline).toBe('');
-    expect(categorySelect.style.borderColor).toBe('var(--bad, #ef4444)');
+    expect(required(ratingContainer).style.outline).toBe('');
+    expect(required(categorySelect).style.borderColor).toBe('var(--bad, #ef4444)');
   });
 });
 

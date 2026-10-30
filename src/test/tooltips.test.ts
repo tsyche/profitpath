@@ -1,10 +1,11 @@
+import { required } from './test-utils';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 
 describe('Tooltip System - Comprehensive Coverage', () => {
-  let dom;
-  let window;
-  let document;
+  let dom: JSDOM;
+  let window: import('jsdom').DOMWindow;
+  let document: Document;
 
   beforeEach(() => {
     // Create a fresh DOM with tooltip elements
@@ -43,14 +44,14 @@ describe('Tooltip System - Comprehensive Coverage', () => {
 
     // Mock localStorage
     const localStorageMock = {
-      data: {},
-      getItem(key) {
+      data: {} as Record<string, string>,
+      getItem(key: string) {
         return this.data[key] || null;
       },
-      setItem(key, value) {
+      setItem(key: string, value: string) {
         this.data[key] = value.toString();
       },
-      removeItem(key) {
+      removeItem(key: string) {
         delete this.data[key];
       },
       clear() {
@@ -82,25 +83,25 @@ describe('Tooltip System - Comprehensive Coverage', () => {
 
     it('should store tooltip text in data-tooltip attribute', () => {
       const input = document.querySelector('#testInput');
-      expect(input.getAttribute('data-tooltip')).toBe('This is a test tooltip');
+      expect(required(input).getAttribute('data-tooltip')).toBe('This is a test tooltip');
     });
 
     it('should have proper tooltip text for button', () => {
       const button = document.querySelector('#testButton');
-      expect(button.getAttribute('data-tooltip')).toBe('Button help text');
+      expect(required(button).getAttribute('data-tooltip')).toBe('Button help text');
     });
 
     it('should support tooltip setting when enabled', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(settings.showTooltips).toBe(true);
     });
 
     it('should support disabling tooltips via setting', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const updated = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const updated = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(updated.showTooltips).toBe(false);
     });
   });
@@ -113,46 +114,46 @@ describe('Tooltip System - Comprehensive Coverage', () => {
 
     it('should have title on employees input', () => {
       const input = document.querySelector('#employees');
-      expect(input.getAttribute('title')).toBe('Set the number of employees');
+      expect(required(input).getAttribute('title')).toBe('Set the number of employees');
     });
 
     it('should have title on employeePay input', () => {
       const input = document.querySelector('#employeePay');
-      expect(input.getAttribute('title')).toBe('Average annual salary');
+      expect(required(input).getAttribute('title')).toBe('Average annual salary');
     });
 
     it('should have title on settings button', () => {
       const button = document.querySelector('.settings-cog-btn');
-      expect(button.getAttribute('title')).toBe('Customize experience level');
+      expect(required(button).getAttribute('title')).toBe('Customize experience level');
     });
 
     it('should support converting title to data-originalTitle', () => {
-      const input = document.querySelector('#employees');
+      const input = document.querySelector<HTMLElement>('#employees');
       const originalTitle = 'Set the number of employees';
 
       // Simulate what updateTooltipsUIOnly does
-      input.dataset.originalTitle = input.title;
-      input.dataset.tooltipEnabled = 'true';
-      input.title = '';
+      required(input).dataset.originalTitle = required(input).title;
+      required(input).dataset.tooltipEnabled = 'true';
+      required(input).title = '';
 
-      expect(input.dataset.originalTitle).toBe(originalTitle);
-      expect(input.title).toBe('');
-      expect(input.dataset.tooltipEnabled).toBe('true');
+      expect(required(input).dataset.originalTitle).toBe(originalTitle);
+      expect(required(input).title).toBe('');
+      expect(required(input).dataset.tooltipEnabled).toBe('true');
     });
 
     it('should support restoring title from data-originalTitle', () => {
-      const input = document.querySelector('#employees');
+      const input = document.querySelector<HTMLElement>('#employees');
       const originalTitle = 'Set the number of employees';
 
       // Simulate enable -> disable cycle
-      input.dataset.originalTitle = originalTitle;
-      input.title = '';
+      required(input).dataset.originalTitle = originalTitle;
+      required(input).title = '';
 
-      input.title = input.dataset.originalTitle;
-      delete input.dataset.tooltipEnabled;
+      required(input).title = required(required(input).dataset.originalTitle);
+      delete required(input).dataset.tooltipEnabled;
 
-      expect(input.title).toBe(originalTitle);
-      expect(input.dataset.tooltipEnabled).toBeUndefined();
+      expect(required(input).title).toBe(originalTitle);
+      expect(required(input).dataset.tooltipEnabled).toBeUndefined();
     });
   });
 
@@ -166,28 +167,28 @@ describe('Tooltip System - Comprehensive Coverage', () => {
       const rev = Array.from(document.querySelectorAll('.waterfall-label')).find(el =>
         el.textContent === 'REV'
       );
-      expect(rev.getAttribute('data-waterfall-tooltip')).toBe('Total revenue from all offerings');
+      expect(required(rev).getAttribute('data-waterfall-tooltip')).toBe('Total revenue from all offerings');
     });
 
     it('should have proper waterfall tooltip for VAR', () => {
       const vat = Array.from(document.querySelectorAll('.waterfall-label')).find(el =>
         el.textContent === 'VAR'
       );
-      expect(vat.getAttribute('data-waterfall-tooltip')).toBe('Direct costs that scale with volume');
+      expect(required(vat).getAttribute('data-waterfall-tooltip')).toBe('Direct costs that scale with volume');
     });
 
     it('should have proper waterfall tooltip for FIX', () => {
       const fix = Array.from(document.querySelectorAll('.waterfall-label')).find(el =>
         el.textContent === 'FIX'
       );
-      expect(fix.getAttribute('data-waterfall-tooltip')).toBe('Operating expenses and payroll');
+      expect(required(fix).getAttribute('data-waterfall-tooltip')).toBe('Operating expenses and payroll');
     });
 
     it('should have proper waterfall tooltip for NET', () => {
       const net = Array.from(document.querySelectorAll('.waterfall-label')).find(el =>
         el.textContent === 'NET'
       );
-      expect(net.getAttribute('data-waterfall-tooltip')).toBe('Profit after all costs');
+      expect(required(net).getAttribute('data-waterfall-tooltip')).toBe('Profit after all costs');
     });
 
     it('should use distinct data attribute (not data-tooltip)', () => {
@@ -201,58 +202,58 @@ describe('Tooltip System - Comprehensive Coverage', () => {
 
   describe('Tooltip Setting - Enable/Disable', () => {
     it('should default to tooltips enabled', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(settings.showTooltips).toBe(true);
     });
 
     it('should support disabling tooltips', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const updated = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const updated = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(updated.showTooltips).toBe(false);
     });
 
     it('should support re-enabling tooltips', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const updated = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const updated = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(updated.showTooltips).toBe(true);
     });
 
     it('should persist tooltip setting across page reloads', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
       // Simulate page reload by reading from storage
-      const reloaded = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const reloaded = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(reloaded.showTooltips).toBe(false);
     });
 
     it('should track multiple setting changes', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
 
       // Cycle through states
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
-      let current = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      let current = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(current.showTooltips).toBe(false);
 
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
-      current = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      current = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(current.showTooltips).toBe(true);
 
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
-      current = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      current = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(current.showTooltips).toBe(false);
     });
   });
@@ -283,7 +284,7 @@ describe('Tooltip System - Comprehensive Coverage', () => {
     });
 
     it('should allow independent enable/disable per system', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
 
       // Smart tooltips check setting
       const shouldShowSmart = settings.showTooltips !== false;
@@ -303,125 +304,125 @@ describe('Tooltip System - Comprehensive Coverage', () => {
     it('should properly escape tooltip content', () => {
       const maliciousContent = '<script>alert("xss")</script>';
       const input = document.querySelector('#testInput');
-      input.setAttribute('data-tooltip', maliciousContent);
+      required(input).setAttribute('data-tooltip', maliciousContent);
 
       // Content should be stored as-is (sanitization happens at display time)
-      expect(input.getAttribute('data-tooltip')).toBe(maliciousContent);
+      expect(required(input).getAttribute('data-tooltip')).toBe(maliciousContent);
     });
 
     it('should handle special characters in tooltips', () => {
       const specialContent = 'Price with & special < > characters "quoted"';
       const input = document.querySelector('#testInput');
-      input.setAttribute('data-tooltip', specialContent);
+      required(input).setAttribute('data-tooltip', specialContent);
 
-      expect(input.getAttribute('data-tooltip')).toBe(specialContent);
+      expect(required(input).getAttribute('data-tooltip')).toBe(specialContent);
     });
 
     it('should handle long tooltip text', () => {
       const longText = 'A'.repeat(500);
       const input = document.querySelector('#testInput');
-      input.setAttribute('data-tooltip', longText);
+      required(input).setAttribute('data-tooltip', longText);
 
-      expect(input.getAttribute('data-tooltip')).toBe(longText);
-      expect(input.getAttribute('data-tooltip').length).toBe(500);
+      expect(required(input).getAttribute('data-tooltip')).toBe(longText);
+      expect(required(required(input).getAttribute('data-tooltip')).length).toBe(500);
     });
 
     it('should handle empty tooltip gracefully', () => {
       const input = document.querySelector('#testInput');
-      input.setAttribute('data-tooltip', '');
+      required(input).setAttribute('data-tooltip', '');
 
-      expect(input.getAttribute('data-tooltip')).toBe('');
+      expect(required(input).getAttribute('data-tooltip')).toBe('');
     });
   });
 
   describe('Tooltip UI State Tracking', () => {
     it('should track enabled state with data-tooltipEnabled', () => {
-      const input = document.querySelector('#employees');
-      input.dataset.tooltipEnabled = 'true';
+      const input = document.querySelector<HTMLElement>('#employees');
+      required(input).dataset.tooltipEnabled = 'true';
 
-      expect(input.dataset.tooltipEnabled).toBe('true');
+      expect(required(input).dataset.tooltipEnabled).toBe('true');
     });
 
     it('should track original title separately', () => {
-      const input = document.querySelector('#employees');
+      const input = document.querySelector<HTMLElement>('#employees');
       const originalTitle = 'Set the number of employees';
 
-      input.dataset.originalTitle = originalTitle;
-      input.title = '';
+      required(input).dataset.originalTitle = originalTitle;
+      required(input).title = '';
 
-      expect(input.dataset.originalTitle).toBe(originalTitle);
-      expect(input.title).toBe('');
+      expect(required(input).dataset.originalTitle).toBe(originalTitle);
+      expect(required(input).title).toBe('');
     });
 
     it('should clean up state when disabling', () => {
-      const input = document.querySelector('#employees');
-      input.dataset.tooltipEnabled = 'true';
-      input.dataset.originalTitle = 'Test';
+      const input = document.querySelector<HTMLElement>('#employees');
+      required(input).dataset.tooltipEnabled = 'true';
+      required(input).dataset.originalTitle = 'Test';
 
-      delete input.dataset.tooltipEnabled;
-      delete input.dataset.originalTitle;
+      delete required(input).dataset.tooltipEnabled;
+      delete required(input).dataset.originalTitle;
 
-      expect(input.dataset.tooltipEnabled).toBeUndefined();
-      expect(input.dataset.originalTitle).toBeUndefined();
+      expect(required(input).dataset.tooltipEnabled).toBeUndefined();
+      expect(required(input).dataset.originalTitle).toBeUndefined();
     });
 
     it('should not leave stale state after multiple cycles', () => {
-      const input = document.querySelector('#employees');
+      const input = document.querySelector<HTMLElement>('#employees');
 
       // Enable cycle
-      input.dataset.tooltipEnabled = 'true';
-      input.dataset.originalTitle = 'Test';
-      expect(input.dataset.tooltipEnabled).toBe('true');
+      required(input).dataset.tooltipEnabled = 'true';
+      required(input).dataset.originalTitle = 'Test';
+      expect(required(input).dataset.tooltipEnabled).toBe('true');
 
       // Disable cycle
-      delete input.dataset.tooltipEnabled;
-      delete input.dataset.originalTitle;
-      expect(input.dataset.tooltipEnabled).toBeUndefined();
+      delete required(input).dataset.tooltipEnabled;
+      delete required(input).dataset.originalTitle;
+      expect(required(input).dataset.tooltipEnabled).toBeUndefined();
 
       // Re-enable cycle
-      input.dataset.tooltipEnabled = 'true';
-      input.dataset.originalTitle = 'Test';
-      expect(input.dataset.tooltipEnabled).toBe('true');
+      required(input).dataset.tooltipEnabled = 'true';
+      required(input).dataset.originalTitle = 'Test';
+      expect(required(input).dataset.tooltipEnabled).toBe('true');
 
       // Final disable
-      delete input.dataset.tooltipEnabled;
-      delete input.dataset.originalTitle;
-      expect(input.dataset.tooltipEnabled).toBeUndefined();
+      delete required(input).dataset.tooltipEnabled;
+      delete required(input).dataset.originalTitle;
+      expect(required(input).dataset.tooltipEnabled).toBeUndefined();
     });
   });
 
   describe('Tooltip Setting Checkbox', () => {
     it('should have tooltips checkbox in DOM', () => {
-      const checkbox = document.querySelector('#showTooltips');
+      const checkbox = document.querySelector<HTMLInputElement>('#showTooltips');
       expect(checkbox).toBeTruthy();
-      expect(checkbox.type).toBe('checkbox');
+      expect(required(checkbox).type).toBe('checkbox');
     });
 
     it('should sync checkbox with setting state', () => {
-      const checkbox = document.querySelector('#showTooltips');
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const checkbox = document.querySelector<HTMLInputElement>('#showTooltips');
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
 
-      checkbox.checked = settings.showTooltips;
-      expect(checkbox.checked).toBe(settings.showTooltips);
+      required(checkbox).checked = settings.showTooltips;
+      expect(required(checkbox).checked).toBe(settings.showTooltips);
     });
 
     it('should support toggling checkbox', () => {
-      const checkbox = document.querySelector('#showTooltips');
+      const checkbox = document.querySelector<HTMLInputElement>('#showTooltips');
 
-      checkbox.checked = true;
-      expect(checkbox.checked).toBe(true);
+      required(checkbox).checked = true;
+      expect(required(checkbox).checked).toBe(true);
 
-      checkbox.checked = false;
-      expect(checkbox.checked).toBe(false);
+      required(checkbox).checked = false;
+      expect(required(checkbox).checked).toBe(false);
     });
 
     it('should allow independent checkbox state from setting', () => {
-      const checkbox = document.querySelector('#showTooltips');
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const checkbox = document.querySelector<HTMLInputElement>('#showTooltips');
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
 
       // Checkbox can be toggled
-      checkbox.checked = !checkbox.checked;
-      const checkboxState = checkbox.checked;
+      required(checkbox).checked = !required(checkbox).checked;
+      const checkboxState = required(checkbox).checked;
 
       // Setting can be changed
       settings.showTooltips = !settings.showTooltips;
@@ -429,8 +430,8 @@ describe('Tooltip System - Comprehensive Coverage', () => {
       const settingState = settings.showTooltips;
 
       // They can differ temporarily (until sync)
-      checkbox.checked = !checkboxState;
-      expect(checkbox.checked).not.toBe(checkboxState);
+      required(checkbox).checked = !checkboxState;
+      expect(required(checkbox).checked).not.toBe(checkboxState);
     });
   });
 });

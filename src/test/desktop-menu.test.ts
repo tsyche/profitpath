@@ -1,69 +1,26 @@
-// Mock DOM elements
-const mockElement = {
-  className: '',
-  classList: { toggle: vi.fn(), contains: vi.fn(() => false) },
-  dataset: { view: 'overview' },
-  click: vi.fn()
-};
+import { describe, beforeEach, it, expect, vi } from 'vitest';
+import { required } from './test-utils';
 
-// Setup document mock
-if (!window.document || typeof window.document.getElementById !== 'function') {
-  try {
-    Object.defineProperty(window, 'document', {
-      value: {
-        createElement: vi.fn(() => mockElement),
-        body: { appendChild: vi.fn(), removeChild: vi.fn() },
-        getElementById: vi.fn((id) => {
-          if (id === 'analyticsBtn') return { ...mockElement, id: 'analyticsBtn', click: vi.fn(), addEventListener: vi.fn() };
-          if (id === 'desktopFeedbackBtn') return { ...mockElement, id: 'desktopFeedbackBtn', click: vi.fn(), addEventListener: vi.fn() };
-          if (id === 'helpBtn') return { ...mockElement, id: 'helpBtn', click: vi.fn(), addEventListener: vi.fn() };
-          if (id === 'scenariosBtn') return { ...mockElement, id: 'scenariosBtn', click: vi.fn(), addEventListener: vi.fn() };
-          if (id === 'templatesBtn') return { ...mockElement, id: 'templatesBtn', click: vi.fn(), addEventListener: vi.fn() };
-          if (id === 'exportBtn') return { ...mockElement, id: 'exportBtn', click: vi.fn(), addEventListener: vi.fn() };
-          if (id === 'scenariosModal') return { ...mockElement, id: 'scenariosModal', classList: { toggle: vi.fn(), contains: vi.fn(() => false) }, innerHTML: '<div>Test Modal</div>' };
-          if (id === 'scenarioNameInput') return { ...mockElement, id: 'scenarioNameInput', value: '', click: vi.fn(), addEventListener: vi.fn(), focus: vi.fn() };
-          if (id === 'feedbackBtn') return { ...mockElement, id: 'feedbackBtn', click: vi.fn(), addEventListener: vi.fn() };
-          return mockElement;
-        }),
-        querySelector: vi.fn(() => mockElement),
-        querySelectorAll: vi.fn(() => [mockElement]),
-        addEventListener: vi.fn()
-      },
-      configurable: true,
-      writable: true
-    });
-  } catch (e) {
-    // If property already exists, update it instead
-    window.document.getElementById = vi.fn((id) => {
-      if (id === 'analyticsBtn') return { ...mockElement, id: 'analyticsBtn', click: vi.fn(), addEventListener: vi.fn() };
-      if (id === 'desktopFeedbackBtn') return { ...mockElement, id: 'desktopFeedbackBtn', click: vi.fn(), addEventListener: vi.fn() };
-      if (id === 'helpBtn') return { ...mockElement, id: 'helpBtn', click: vi.fn(), addEventListener: vi.fn() };
-      if (id === 'scenariosBtn') return { ...mockElement, id: 'scenariosBtn', click: vi.fn(), addEventListener: vi.fn() };
-      if (id === 'templatesBtn') return { ...mockElement, id: 'templatesBtn', click: vi.fn(), addEventListener: vi.fn() };
-      if (id === 'exportBtn') return { ...mockElement, id: 'exportBtn', click: vi.fn(), addEventListener: vi.fn() };
-      if (id === 'scenariosModal') return { ...mockElement, id: 'scenariosModal', classList: { toggle: vi.fn(), contains: vi.fn(() => false) }, innerHTML: '<div>Test Modal</div>' };
-      if (id === 'scenarioNameInput') return { ...mockElement, id: 'scenarioNameInput', value: '', click: vi.fn(), addEventListener: vi.fn(), focus: vi.fn() };
-      if (id === 'feedbackBtn') return { ...mockElement, id: 'feedbackBtn', click: vi.fn(), addEventListener: vi.fn() };
-      return mockElement;
-    });
-  }
-} else {
-  // Update existing document mock with our element IDs
-  const originalGetElementById = window.document.getElementById;
-  window.document.getElementById = vi.fn((id) => {
-    if (id === 'analyticsBtn') return { ...mockElement, id: 'analyticsBtn', click: vi.fn(), addEventListener: vi.fn() };
-    if (id === 'desktopFeedbackBtn') return { ...mockElement, id: 'desktopFeedbackBtn', click: vi.fn(), addEventListener: vi.fn() };
-    if (id === 'helpBtn') return { ...mockElement, id: 'helpBtn', click: vi.fn(), addEventListener: vi.fn() };
-    if (id === 'scenariosBtn') return { ...mockElement, id: 'scenariosBtn', click: vi.fn(), addEventListener: vi.fn() };
-    if (id === 'templatesBtn') return { ...mockElement, id: 'templatesBtn', click: vi.fn(), addEventListener: vi.fn() };
-    if (id === 'exportBtn') return { ...mockElement, id: 'exportBtn', click: vi.fn(), addEventListener: vi.fn() };
-    if (id === 'scenariosModal') return { ...mockElement, id: 'scenariosModal', classList: { toggle: vi.fn(), contains: vi.fn(() => false) }, innerHTML: '<div>Test Modal</div>' };
-    if (id === 'scenarioNameInput') return { ...mockElement, id: 'scenarioNameInput', value: '', click: vi.fn(), addEventListener: vi.fn(), focus: vi.fn() };
-    if (id === 'feedbackBtn') return { ...mockElement, id: 'feedbackBtn', click: vi.fn(), addEventListener: vi.fn() };
-    if (id === 'mobileSettingsBtn') return { ...mockElement, id: 'mobileSettingsBtn', click: vi.fn(), addEventListener: vi.fn() };
-    if (id === 'settingsCogBtn') return { ...mockElement, id: 'settingsCogBtn', click: vi.fn(), addEventListener: vi.fn() };
-    return mockElement;
-  });
+// This legacy handler harness exercises menu wiring with a real DOM.
+const menuWindow: {
+  profitPathAnalyticsUI?: {
+    showAnalyticsDashboard: () => void;
+    constructor: { prototype: { showAnalyticsDashboard: () => void } };
+  };
+  feedbackUI?: { showFeedbackModal: () => void };
+  analyticsUI?: { showDashboard: () => void };
+  openScenarioModal?: () => void;
+  showHelpMenu?: () => void;
+} = {};
+
+function mountMenu() {
+  document.body.innerHTML = `
+    <button id="analyticsBtn"></button><button id="desktopFeedbackBtn"></button>
+    <button id="helpBtn"></button><button id="scenariosBtn"></button>
+    <button id="templatesBtn"></button><button id="exportBtn"></button>
+    <div id="scenariosModal"><input id="scenarioNameInput"></div>
+    <button id="feedbackBtn"></button><button id="mobileSettingsBtn"></button>
+    <button id="settingsCogBtn"></button>`;
 }
 
 // Mock setupDesktopMenuButtons function
@@ -73,13 +30,13 @@ function setupDesktopMenuButtons() {
     const clickHandler = () => {
       // More robust check for analytics UI
       const checkAnalyticsUI = () => {
-        if (window.profitPathAnalyticsUI) {
+        if (menuWindow.profitPathAnalyticsUI) {
           // Check if method exists on instance or prototype
-          if (typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
-            window.profitPathAnalyticsUI.showAnalyticsDashboard();
-          } else if (typeof window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard === 'function') {
+          if (typeof menuWindow.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
+            menuWindow.profitPathAnalyticsUI.showAnalyticsDashboard();
+          } else if (typeof menuWindow.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard === 'function') {
             // Call via prototype if instance method not available
-            window.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard.call(window.profitPathAnalyticsUI);
+            menuWindow.profitPathAnalyticsUI.constructor.prototype.showAnalyticsDashboard.call(menuWindow.profitPathAnalyticsUI);
           } else {
             console.warn('Analytics UI method not available, retrying...');
             setTimeout(checkAnalyticsUI, 100);
@@ -92,27 +49,24 @@ function setupDesktopMenuButtons() {
       checkAnalyticsUI();
     };
     analyticsBtn.addEventListener('click', clickHandler);
-    // Manually set up the mock call for addEventListener
-    analyticsBtn.addEventListener.mock.calls = [['click', clickHandler]];
   }
 
   const desktopFeedbackBtn = document.getElementById('desktopFeedbackBtn');
   if (desktopFeedbackBtn) {
     const clickHandler = () => {
-      if (window.feedbackUI && typeof window.feedbackUI.showFeedbackModal === 'function') {
-        window.feedbackUI.showFeedbackModal();
+      if (menuWindow.feedbackUI && typeof menuWindow.feedbackUI.showFeedbackModal === 'function') {
+        menuWindow.feedbackUI.showFeedbackModal();
       } else {
         console.warn('Feedback UI not loaded yet');
       }
     };
     desktopFeedbackBtn.addEventListener('click', clickHandler);
-    // Manually set up the mock call for addEventListener
-    desktopFeedbackBtn.addEventListener.mock.calls = [['click', clickHandler]];
   }
 }
 
 describe('Desktop Menu Functionality', () => {
   beforeEach(() => {
+    mountMenu();
     vi.clearAllMocks();
     setupDesktopMenuButtons();
   });
@@ -121,28 +75,28 @@ describe('Desktop Menu Functionality', () => {
     it('should have analytics button element', () => {
       const analyticsBtn = document.getElementById('analyticsBtn');
       expect(analyticsBtn).toBeDefined();
-      expect(analyticsBtn.id).toBe('analyticsBtn');
+      expect(required(analyticsBtn).id).toBe('analyticsBtn');
     });
 
     it('should have feedback button element', () => {
       const feedbackBtn = document.getElementById('desktopFeedbackBtn');
       expect(feedbackBtn).toBeDefined();
-      expect(feedbackBtn.id).toBe('desktopFeedbackBtn');
+      expect(required(feedbackBtn).id).toBe('desktopFeedbackBtn');
     });
 
     it('should have help button element', () => {
       const helpBtn = document.getElementById('helpBtn');
       expect(helpBtn).toBeDefined();
-      expect(helpBtn.id).toBe('helpBtn');
+      expect(required(helpBtn).id).toBe('helpBtn');
     });
 
     it('should have analytics button that works when clicked', () => {
       const analyticsBtn = document.getElementById('analyticsBtn');
       expect(analyticsBtn).toBeDefined();
-      expect(analyticsBtn.click).toBeDefined();
+      expect(required(analyticsBtn).click).toBeDefined();
 
-      // Mock window.profitPathAnalyticsUI as properly loaded
-      window.profitPathAnalyticsUI = {
+      // Mock menuWindow.profitPathAnalyticsUI as properly loaded
+      menuWindow.profitPathAnalyticsUI = {
         showAnalyticsDashboard: vi.fn(),
         constructor: {
           prototype: {
@@ -153,11 +107,11 @@ describe('Desktop Menu Functionality', () => {
 
       // Simulate the click by directly calling the click handler logic
       // This tests the actual functionality that would be triggered by the event listener
-      if (window.profitPathAnalyticsUI && typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
-        window.profitPathAnalyticsUI.showAnalyticsDashboard();
+      if (menuWindow.profitPathAnalyticsUI && typeof menuWindow.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
+        menuWindow.profitPathAnalyticsUI.showAnalyticsDashboard();
       }
 
-      expect(window.profitPathAnalyticsUI.showAnalyticsDashboard).toHaveBeenCalled();
+      expect(required(menuWindow.profitPathAnalyticsUI).showAnalyticsDashboard).toHaveBeenCalled();
     });
 
     it('should show warning when analytics UI is not loaded', () => {
@@ -167,13 +121,13 @@ describe('Desktop Menu Functionality', () => {
       // Mock console.warn to track warnings
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
 
-      // Ensure window.profitPathAnalyticsUI is undefined
-      window.profitPathAnalyticsUI = undefined;
+      // Ensure menuWindow.profitPathAnalyticsUI is undefined
+      Reflect.deleteProperty(menuWindow, 'profitPathAnalyticsUI');
 
       // Simulate the click by directly calling the click handler logic
       // This tests the actual functionality that would be triggered by the event listener
-      if (window.profitPathAnalyticsUI && typeof window.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
-        window.profitPathAnalyticsUI.showAnalyticsDashboard();
+      if (menuWindow.profitPathAnalyticsUI && typeof menuWindow.profitPathAnalyticsUI.showAnalyticsDashboard === 'function') {
+        menuWindow.profitPathAnalyticsUI.showAnalyticsDashboard();
       } else {
         console.warn('Analytics UI not loaded yet');
       }
@@ -189,60 +143,60 @@ describe('Desktop Menu Functionality', () => {
     it('should have scenarios button element', () => {
       const scenariosBtn = document.getElementById('scenariosBtn');
       expect(scenariosBtn).toBeDefined();
-      expect(scenariosBtn.id).toBe('scenariosBtn');
+      expect(required(scenariosBtn).id).toBe('scenariosBtn');
     });
 
     it('should have scenarios button that works when clicked', () => {
       const scenariosBtn = document.getElementById('scenariosBtn');
       expect(scenariosBtn).toBeDefined();
-      expect(scenariosBtn.click).toBeDefined();
+      expect(required(scenariosBtn).click).toBeDefined();
 
-      // Mock window.openScenarioModal as properly loaded
-      window.openScenarioModal = vi.fn();
+      // Mock menuWindow.openScenarioModal as properly loaded
+      menuWindow.openScenarioModal = vi.fn();
 
       // Simulate the click by directly calling the click handler logic
       // This tests the actual functionality that would be triggered by the event listener
-      if (typeof window.openScenarioModal === 'function') {
-        window.openScenarioModal();
+      if (typeof menuWindow.openScenarioModal === 'function') {
+        menuWindow.openScenarioModal();
       }
 
-      expect(window.openScenarioModal).toHaveBeenCalled();
+      expect(menuWindow.openScenarioModal).toHaveBeenCalled();
     });
 
     it('should allow text input in scenarios modal', () => {
       const scenariosBtn = document.getElementById('scenariosBtn');
       const modal = document.getElementById('scenariosModal');
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
 
       // Mock openScenarioModal function
-      window.openScenarioModal = vi.fn();
+      menuWindow.openScenarioModal = vi.fn();
 
       // Open modal
-      scenariosBtn.click();
+      required(scenariosBtn).click();
 
       // Modal should be open
-      expect(modal.classList.contains('hidden')).toBe(false);
+      expect(required(modal).classList.contains('hidden')).toBe(false);
 
       // Should be able to type in input
-      expect(input.value).toBe('');
+      expect(required(input).value).toBe('');
 
       // Focus input and type
-      input.focus();
-      input.value = 'test scenario';
+      required(input).focus();
+      required(input).value = 'test scenario';
 
-      expect(input.value).toBe('test scenario');
+      expect(required(input).value).toBe('test scenario');
     });
 
     it('should have templates button element', () => {
       const templatesBtn = document.getElementById('templatesBtn');
       expect(templatesBtn).toBeDefined();
-      expect(templatesBtn.id).toBe('templatesBtn');
+      expect(required(templatesBtn).id).toBe('templatesBtn');
     });
 
     it('should have export button element', () => {
       const exportBtn = document.getElementById('exportBtn');
       expect(exportBtn).toBeDefined();
-      expect(exportBtn.id).toBe('exportBtn');
+      expect(required(exportBtn).id).toBe('exportBtn');
     });
   });
 
@@ -257,55 +211,55 @@ describe('Desktop Menu Functionality', () => {
     it('should have analytics button that works when clicked', () => {
       const analyticsBtn = document.getElementById('analyticsBtn');
       expect(analyticsBtn).toBeDefined();
-      expect(analyticsBtn.click).toBeDefined();
+      expect(required(analyticsBtn).click).toBeDefined();
 
-      // Mock window.analyticsUI as properly loaded
-      window.analyticsUI = { showDashboard: vi.fn() };
+      // Mock menuWindow.analyticsUI as properly loaded
+      menuWindow.analyticsUI = { showDashboard: vi.fn() };
 
       // Call setupDesktopMenuButtons again to update the event listeners
       setupDesktopMenuButtons();
 
       // Simulate click by directly calling the click handler logic
       // This tests the actual functionality that would be triggered by the event listener
-      if (window.analyticsUI && typeof window.analyticsUI.showDashboard === 'function') {
-        window.analyticsUI.showDashboard();
+      if (menuWindow.analyticsUI && typeof menuWindow.analyticsUI.showDashboard === 'function') {
+        menuWindow.analyticsUI.showDashboard();
       }
 
-      expect(window.analyticsUI.showDashboard).toHaveBeenCalled();
+      expect(required(menuWindow.analyticsUI).showDashboard).toHaveBeenCalled();
     });
 
     it('should have feedback button that works when clicked', () => {
       const feedbackBtn = document.getElementById('desktopFeedbackBtn');
       expect(feedbackBtn).toBeDefined();
-      expect(feedbackBtn.click).toBeDefined();
+      expect(required(feedbackBtn).click).toBeDefined();
 
-      // Mock window.feedbackUI as properly loaded
-      window.feedbackUI = { showFeedbackModal: vi.fn() };
+      // Mock menuWindow.feedbackUI as properly loaded
+      menuWindow.feedbackUI = { showFeedbackModal: vi.fn() };
 
       // Simulate click by directly calling the click handler logic
       // This tests the actual functionality that would be triggered by the event listener
-      if (window.feedbackUI && typeof window.feedbackUI.showFeedbackModal === 'function') {
-        window.feedbackUI.showFeedbackModal();
+      if (menuWindow.feedbackUI && typeof menuWindow.feedbackUI.showFeedbackModal === 'function') {
+        menuWindow.feedbackUI.showFeedbackModal();
       }
 
-      expect(window.feedbackUI.showFeedbackModal).toHaveBeenCalled();
+      expect(required(menuWindow.feedbackUI).showFeedbackModal).toHaveBeenCalled();
     });
 
     it('should have help button that works when clicked', () => {
       const helpBtn = document.getElementById('helpBtn');
       expect(helpBtn).toBeDefined();
-      expect(helpBtn.click).toBeDefined();
+      expect(required(helpBtn).click).toBeDefined();
 
-      // Mock window.showHelpMenu as properly loaded
-      window.showHelpMenu = vi.fn();
+      // Mock menuWindow.showHelpMenu as properly loaded
+      menuWindow.showHelpMenu = vi.fn();
 
       // Simulate the click by directly calling the click handler logic
       // This tests the actual functionality that would be triggered by the event listener
-      if (typeof window.showHelpMenu === 'function') {
-        window.showHelpMenu();
+      if (typeof menuWindow.showHelpMenu === 'function') {
+        menuWindow.showHelpMenu();
       }
 
-      expect(window.showHelpMenu).toHaveBeenCalled();
+      expect(menuWindow.showHelpMenu).toHaveBeenCalled();
     });
   });
 
@@ -320,20 +274,13 @@ describe('Desktop Menu Functionality', () => {
     it('should have mobile settings button that works when clicked', () => {
       const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
       expect(mobileSettingsBtn).toBeDefined();
-      expect(mobileSettingsBtn.click).toBeDefined();
+      expect(required(mobileSettingsBtn).click).toBeDefined();
 
       // Mock the desktop settings button that mobile tries to trigger
-      const mockDesktopSettingsBtn = {
-        click: vi.fn()
-      };
-
-      // Mock getElementById to return our mock desktop settings button
-      const originalGetElementById = document.getElementById;
-      document.getElementById = vi.fn((id) => {
-        if (id === 'settingsCogBtn') return mockDesktopSettingsBtn;
-        if (id === 'mobileSettingsBtn') return mobileSettingsBtn;
-        return originalGetElementById.call(document, id);
-      });
+      const mockDesktopSettingsBtn = document.createElement('button');
+      mockDesktopSettingsBtn.id = 'settingsCogBtn';
+      vi.spyOn(mockDesktopSettingsBtn, 'click').mockImplementation(() => {});
+      document.body.appendChild(mockDesktopSettingsBtn);
 
       // Simulate the mobile settings button click handler logic
       const settingsCogBtn = document.getElementById('settingsCogBtn');

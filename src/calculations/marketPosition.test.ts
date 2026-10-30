@@ -1,3 +1,4 @@
+import { appStateFixture, calcResultFixture } from '../test/test-utils';
 import { describe, it, expect } from 'vitest'
 import { marketBadge, sanitizeOfferingMarket, marketCsvCells } from './marketPosition'
 import { floorStatus } from './offeringRanking'
@@ -82,8 +83,8 @@ describe('market persistence', () => {
   })
 
   it('CSV round-trips market fields as columns 19-22, including a note with commas', () => {
-    const st = { ...base, mode: 'current', offerings: [market, { ...off, name: 'Plain' }], expenses: [] }
-    const o = (importFromCSV(buildCSV(st, { revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 })) as any).data.offerings
+    const st = { ...base, mode: 'current' as const, offerings: [market, { ...off, name: 'Plain' }], expenses: [] }
+    const o = (importFromCSV(buildCSV(appStateFixture(st), calcResultFixture({ revenue: 0, variableCosts: 0, income: 0, capacityPct: 0 }))) as any).data.offerings
     expect(o[0]).toMatchObject({ marketLow: 80, marketHigh: 140, marketAvg: 110, marketNote: 'Studio X, 2026-10' })
     expect(Object.keys(o[1]).some((k) => k.startsWith('market'))).toBe(false)
   })

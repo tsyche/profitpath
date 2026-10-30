@@ -25,6 +25,7 @@
     "@capacitor/core": "^5.7.8",
     "@playwright/test": "^1.59.1",
     "@testing-library/jest-dom": "^6.9.1",
+    "@types/jsdom": "^30.0.0",
     "@vitejs/plugin-legacy": "^8.0.2",
     "@vitest/ui": "^4.1.12",
     "eslint": "^10.1.0",

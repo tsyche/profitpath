@@ -1,10 +1,11 @@
+import { required } from './test-utils';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 
 describe('Settings and Experience Levels', () => {
-  let dom;
-  let window;
-  let document;
+  let dom: JSDOM;
+  let window: import('jsdom').DOMWindow;
+  let document: Document;
 
   beforeEach(() => {
     // Create a fresh DOM for each test
@@ -50,14 +51,14 @@ describe('Settings and Experience Levels', () => {
 
     // Mock localStorage
     const localStorageMock = {
-      data: {},
-      getItem(key) {
+      data: {} as Record<string, string>,
+      getItem(key: string) {
         return this.data[key] || null;
       },
-      setItem(key, value) {
+      setItem(key: string, value: string) {
         this.data[key] = value.toString();
       },
-      removeItem(key) {
+      removeItem(key: string) {
         delete this.data[key];
       },
       clear() {
@@ -94,35 +95,35 @@ describe('Settings and Experience Levels', () => {
 
   describe('Feature Gates', () => {
     it('should have tooltips enabled for beginner level', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(settings.experienceLevel).toBe('beginner');
       expect(settings.showTooltips).toBe(true);
     });
 
     it('should have tooltips enabled for intermediate level', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'intermediate';
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const updated = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const updated = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(updated.experienceLevel).toBe('intermediate');
       expect(updated.showTooltips).toBe(true);
     });
 
     it('should have tooltips disabled for advanced level', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'advanced';
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const updated = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const updated = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(updated.experienceLevel).toBe('advanced');
       expect(updated.showTooltips).toBe(false);
     });
 
     it('should enable advanced features only in advanced mode', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
 
       // Beginner should have limited features
       settings.experienceLevel = 'beginner';
@@ -135,7 +136,7 @@ describe('Settings and Experience Levels', () => {
       settings.showDebugPanel = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const updated = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const updated = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(updated.showExportOptions).toBe(true);
       expect(updated.showDebugPanel).toBe(true);
     });
@@ -143,7 +144,7 @@ describe('Settings and Experience Levels', () => {
 
   describe('Experience Level Switching', () => {
     it('should switch from beginner to intermediate', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(settings.experienceLevel).toBe('beginner');
 
       settings.experienceLevel = 'intermediate';
@@ -152,7 +153,7 @@ describe('Settings and Experience Levels', () => {
       settings.showComparisonTools = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const updated = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const updated = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(updated.experienceLevel).toBe('intermediate');
       expect(updated.showAdvancedCalculations).toBe(true);
       expect(updated.showDetailedBreakdown).toBe(true);
@@ -160,18 +161,18 @@ describe('Settings and Experience Levels', () => {
     });
 
     it('should switch from intermediate to advanced', () => {
-      let settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      let settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'intermediate';
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'advanced';
       settings.showExportOptions = true;
       settings.showDebugPanel = true;
       settings.showTooltips = false; // Advanced disables tooltips
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const updated = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const updated = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(updated.experienceLevel).toBe('advanced');
       expect(updated.showExportOptions).toBe(true);
       expect(updated.showDebugPanel).toBe(true);
@@ -179,12 +180,12 @@ describe('Settings and Experience Levels', () => {
     });
 
     it('should switch from advanced back to beginner', () => {
-      let settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      let settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'advanced';
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(settings.experienceLevel).toBe('advanced');
       expect(settings.showTooltips).toBe(false);
 
@@ -193,7 +194,7 @@ describe('Settings and Experience Levels', () => {
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const updated = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const updated = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(updated.experienceLevel).toBe('beginner');
       expect(updated.showTooltips).toBe(true);
     });
@@ -201,70 +202,70 @@ describe('Settings and Experience Levels', () => {
 
   describe('Tooltip State Changes', () => {
     it('should detect tooltips enabled when switching to beginner from advanced', () => {
-      let settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      let settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'advanced';
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const prevTooltipsState = JSON.parse(window.localStorage.getItem('profitpath-settings')).showTooltips;
+      const prevTooltipsState = JSON.parse(required(window.localStorage.getItem('profitpath-settings'))).showTooltips;
       expect(prevTooltipsState).toBe(false);
 
-      settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'beginner';
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const newTooltipsState = JSON.parse(window.localStorage.getItem('profitpath-settings')).showTooltips;
+      const newTooltipsState = JSON.parse(required(window.localStorage.getItem('profitpath-settings'))).showTooltips;
       expect(newTooltipsState).toBe(true);
       expect(prevTooltipsState).not.toBe(newTooltipsState);
     });
 
     it('should detect tooltips disabled when switching to advanced from intermediate', () => {
-      let settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      let settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'intermediate';
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const prevTooltipsState = JSON.parse(window.localStorage.getItem('profitpath-settings')).showTooltips;
+      const prevTooltipsState = JSON.parse(required(window.localStorage.getItem('profitpath-settings'))).showTooltips;
       expect(prevTooltipsState).toBe(true);
 
-      settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'advanced';
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const newTooltipsState = JSON.parse(window.localStorage.getItem('profitpath-settings')).showTooltips;
+      const newTooltipsState = JSON.parse(required(window.localStorage.getItem('profitpath-settings'))).showTooltips;
       expect(newTooltipsState).toBe(false);
       expect(prevTooltipsState).not.toBe(newTooltipsState);
     });
 
     it('should not show tooltip change when switching between beginner and intermediate', () => {
-      let settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      let settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'beginner';
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const prevTooltipsState = JSON.parse(window.localStorage.getItem('profitpath-settings')).showTooltips;
+      const prevTooltipsState = JSON.parse(required(window.localStorage.getItem('profitpath-settings'))).showTooltips;
 
-      settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'intermediate';
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const newTooltipsState = JSON.parse(window.localStorage.getItem('profitpath-settings')).showTooltips;
+      const newTooltipsState = JSON.parse(required(window.localStorage.getItem('profitpath-settings'))).showTooltips;
       expect(prevTooltipsState).toBe(newTooltipsState);
     });
   });
 
   describe('Radio Button State', () => {
     it('should reflect beginner as selected in HTML', () => {
-      const beginnerRadio = document.querySelector('input[name="experienceLevel"][value="beginner"]');
+      const beginnerRadio = document.querySelector<HTMLInputElement>('input[name="experienceLevel"][value="beginner"]');
       expect(beginnerRadio).toBeTruthy();
-      expect(beginnerRadio.type).toBe('radio');
+      expect(required(beginnerRadio).type).toBe('radio');
     });
 
     it('should have all three experience level options', () => {
-      const radios = document.querySelectorAll('input[name="experienceLevel"]');
+      const radios = document.querySelectorAll<HTMLInputElement>('input[name="experienceLevel"]');
       expect(radios.length).toBe(3);
       expect(radios[0].value).toBe('beginner');
       expect(radios[1].value).toBe('intermediate');
@@ -274,68 +275,68 @@ describe('Settings and Experience Levels', () => {
 
   describe('Checkbox State', () => {
     it('should have tooltips checkbox in DOM', () => {
-      const checkbox = document.querySelector('#showTooltips');
+      const checkbox = document.querySelector<HTMLInputElement>('#showTooltips');
       expect(checkbox).toBeTruthy();
-      expect(checkbox.type).toBe('checkbox');
+      expect(required(checkbox).type).toBe('checkbox');
     });
 
     it('should reflect tooltip setting in checkbox', () => {
-      const checkbox = document.querySelector('#showTooltips');
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const checkbox = document.querySelector<HTMLInputElement>('#showTooltips');
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
 
       // Checkbox should be checkable
-      checkbox.checked = settings.showTooltips;
-      expect(checkbox.checked).toBe(settings.showTooltips);
+      required(checkbox).checked = settings.showTooltips;
+      expect(required(checkbox).checked).toBe(settings.showTooltips);
     });
 
     it('should update checkbox when switching to advanced (tooltips off)', () => {
-      const checkbox = document.querySelector('#showTooltips');
-      let settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const checkbox = document.querySelector<HTMLInputElement>('#showTooltips');
+      let settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
 
       // Start with beginner (tooltips on)
       settings.experienceLevel = 'beginner';
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
-      checkbox.checked = true;
-      expect(checkbox.checked).toBe(true);
+      required(checkbox).checked = true;
+      expect(required(checkbox).checked).toBe(true);
 
       // Switch to advanced (tooltips off)
-      settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'advanced';
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
-      checkbox.checked = false;
-      expect(checkbox.checked).toBe(false);
+      required(checkbox).checked = false;
+      expect(required(checkbox).checked).toBe(false);
     });
   });
 
   describe('Settings Persistence', () => {
     it('should persist experience level to localStorage', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.experienceLevel = 'advanced';
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const retrieved = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const retrieved = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(retrieved.experienceLevel).toBe('advanced');
     });
 
     it('should persist tooltip setting to localStorage', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const retrieved = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const retrieved = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(retrieved.showTooltips).toBe(false);
     });
 
     it('should maintain all settings when updating one', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       const originalExperienceLevel = settings.experienceLevel;
 
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const retrieved = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const retrieved = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(retrieved.experienceLevel).toBe(originalExperienceLevel);
       expect(retrieved.showTooltips).toBe(false);
     });
@@ -343,7 +344,7 @@ describe('Settings and Experience Levels', () => {
 
   describe('Toast Queue Behavior', () => {
     it('should show experience level change toast', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       const prevLevel = settings.experienceLevel;
       const newLevel = 'advanced';
 
@@ -352,14 +353,14 @@ describe('Settings and Experience Levels', () => {
     });
 
     it('should show tooltip change toast when tooltip state changes during mode switch', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       const prevTooltips = settings.showTooltips;
 
       settings.experienceLevel = 'advanced';
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const newTooltips = JSON.parse(window.localStorage.getItem('profitpath-settings')).showTooltips;
+      const newTooltips = JSON.parse(required(window.localStorage.getItem('profitpath-settings'))).showTooltips;
 
       // Should trigger both experience level and tooltip toasts
       expect(prevTooltips).toBe(true);
@@ -368,14 +369,14 @@ describe('Settings and Experience Levels', () => {
     });
 
     it('should not show tooltip toast when tooltip state does not change', () => {
-      const settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      const settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       const prevTooltips = settings.showTooltips;
 
       settings.experienceLevel = 'intermediate';
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      const newTooltips = JSON.parse(window.localStorage.getItem('profitpath-settings')).showTooltips;
+      const newTooltips = JSON.parse(required(window.localStorage.getItem('profitpath-settings'))).showTooltips;
 
       // Should only trigger experience level toast (tooltips unchanged)
       expect(prevTooltips).toBe(newTooltips);
@@ -384,7 +385,7 @@ describe('Settings and Experience Levels', () => {
 
   describe('Integration Tests', () => {
     it('should complete full workflow: beginner -> intermediate -> advanced -> beginner', () => {
-      let settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      let settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
 
       // Start: Beginner with tooltips
       expect(settings.experienceLevel).toBe('beginner');
@@ -397,7 +398,7 @@ describe('Settings and Experience Levels', () => {
       settings.showComparisonTools = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(settings.experienceLevel).toBe('intermediate');
       expect(settings.showAdvancedCalculations).toBe(true);
       expect(settings.showTooltips).toBe(true); // Still enabled
@@ -409,7 +410,7 @@ describe('Settings and Experience Levels', () => {
       settings.showTooltips = false;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(settings.experienceLevel).toBe('advanced');
       expect(settings.showExportOptions).toBe(true);
       expect(settings.showTooltips).toBe(false); // Now disabled
@@ -424,7 +425,7 @@ describe('Settings and Experience Levels', () => {
       settings.showTooltips = true;
       window.localStorage.setItem('profitpath-settings', JSON.stringify(settings));
 
-      settings = JSON.parse(window.localStorage.getItem('profitpath-settings'));
+      settings = JSON.parse(required(window.localStorage.getItem('profitpath-settings')));
       expect(settings.experienceLevel).toBe('beginner');
       expect(settings.showAdvancedCalculations).toBe(false);
       expect(settings.showTooltips).toBe(true); // Re-enabled

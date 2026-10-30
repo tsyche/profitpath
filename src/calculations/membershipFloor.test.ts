@@ -3,7 +3,7 @@ import { membershipFloor, membershipValueWarnings } from './membershipFloor';
 import type { MembershipPlan } from '../types';
 
 // Same hand-computed studio fixture as membership.test.ts; no customer data.
-const studio = { id: 'studio', type: 'per-session', priceMonthly: 60, sessionsPerYear: 12, variableCostPerSession: 10, hoursPerSession: 1 };
+const studio = { id: 'studio', type: 'per-session' as const, priceMonthly: 60, sessionsPerYear: 12, variableCostPerSession: 10, hoursPerSession: 1 };
 const plan: MembershipPlan = { id: 'p', name: 'Member', monthlyFee: 100, creditsPerMonth: 120, memberDiscountPct: 25, eligible: ['studio'] };
 
 describe('membership floor and value ladder', () => {
@@ -21,7 +21,7 @@ describe('membership floor and value ladder', () => {
     expect(membershipFloor(studio, [{ ...plan, monthlyFee: 0 }]).price).toBe(0);
     expect(membershipFloor(studio, [{ ...plan, memberDiscountPct: 100, creditsAtMemberPrice: true }]).price).toBe(0);
     expect(membershipFloor({ ...studio, priceMonthly: 0 }, [plan]).discountPct).toBe(0);
-    expect(membershipFloor({ ...studio, type: 'one-time' }, []).price).toBe(720);
+    expect(membershipFloor({ ...studio, type: 'one-time' as const }, []).price).toBe(720);
     expect(membershipFloor(studio, []).planName).toBeNull();
   });
   it('warns only for a lower-fee plan that costs no more on the same actual profile', () => {

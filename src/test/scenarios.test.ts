@@ -1,3 +1,4 @@
+import { required } from './test-utils';
 /**
  * Tests for Scenario Save and Load Functionality
  * These tests should initially FAIL to demonstrate the issues, then PASS after fixes
@@ -5,110 +6,28 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mock DOM elements
-const mockElement = {
-  className: '',
-  classList: { toggle: vi.fn(), contains: vi.fn(() => false), add: vi.fn(), remove: vi.fn() },
-  dataset: {},
-  style: {},
-  textContent: '',
-  innerHTML: '',
-  value: '',
-  click: vi.fn(),
-  focus: vi.fn(),
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn()
-};
-
-// Global mock elements
-const modalMock = {
-  ...mockElement,
-  id: 'scenariosModal',
-  style: { opacity: '1', filter: '' },
-  classList: {
-    contains: (className) => className === 'hidden' ? modalMock.hidden : false,
-    remove: (className) => { if (className === 'hidden') modalMock.hidden = false; },
-    add: (className) => { if (className === 'hidden') modalMock.hidden = true; }
-  },
-  hidden: true
-};
-
-const inputMock = {
-  ...mockElement,
-  id: 'scenarioNameInput',
-  value: '',
-  focus: vi.fn()
-};
-
-const saveBtnMock = {
-  ...mockElement,
-  id: 'saveScenarioBtn',
-  click: vi.fn(),
-  addEventListener: vi.fn()
-};
-
-const listMock = {
-  ...mockElement,
-  id: 'scenariosList',
-  innerHTML: '',
-  appendChild: vi.fn()
-};
-
-// Setup document mock
-if (!window.document || typeof window.document.getElementById !== 'function') {
-  try {
-    Object.defineProperty(window, 'document', {
-      value: {
-        createElement: vi.fn(() => ({ ...mockElement })),
-        body: { appendChild: vi.fn(), removeChild: vi.fn() },
-        getElementById: vi.fn((id) => {
-          if (id === 'scenariosModal') return modalMock;
-          if (id === 'scenarioNameInput') return inputMock;
-          if (id === 'saveScenarioBtn') return saveBtnMock;
-          if (id === 'scenariosList') return listMock;
-          return mockElement;
-        }),
-        querySelector: vi.fn(() => mockElement),
-        querySelectorAll: vi.fn(() => [mockElement]),
-        addEventListener: vi.fn(),
-        get activeElement() {
-          return this._activeElement || null;
-        },
-        set activeElement(element) {
-          this._activeElement = element;
-        }
-      },
-      configurable: true,
-      writable: true
-    });
-  } catch (e) {
-    // If property already exists, update it instead
-    window.document.getElementById = vi.fn((id) => {
-      if (id === 'scenariosModal') return modalMock;
-      if (id === 'scenarioNameInput') return inputMock;
-      if (id === 'saveScenarioBtn') return saveBtnMock;
-      if (id === 'scenariosList') return listMock;
-      return mockElement;
-    });
-  }
-} else {
-  // Update existing document mock with our element IDs
-  const originalGetElementById = window.document.getElementById;
-  window.document.getElementById = vi.fn((id) => {
-    if (id === 'scenariosModal') return modalMock;
-    if (id === 'scenarioNameInput') return inputMock;
-    if (id === 'saveScenarioBtn') return saveBtnMock;
-    if (id === 'scenariosList') return listMock;
-    // Call original with proper context to avoid "not a valid Document instance" error
-    return originalGetElementById.call(window.document, id);
-  });
-}
+// Real DOM fixtures keep element types and focus behavior aligned with the browser.
+let modalMock: HTMLDivElement;
+let inputMock: HTMLInputElement;
+let listMock: HTMLDivElement;
+const uuid = vi.fn(() => 'test-uuid-123');
 
 describe('Scenario Save and Load Functionality', () => {
   beforeEach(() => {
+    document.body.innerHTML = `
+      <div id="scenariosModal" class="hidden" style="opacity:1;filter:none">
+        <input id="scenarioNameInput" />
+        <button id="saveScenarioBtn">Save</button>
+        <div id="scenariosList"></div>
+      </div>
+    `;
+    modalMock = required(document.querySelector<HTMLDivElement>('#scenariosModal'));
+    inputMock = required(document.querySelector<HTMLInputElement>('#scenarioNameInput'));
+    listMock = required(document.querySelector<HTMLDivElement>('#scenariosList'));
+
     // Clear localStorage before each test
     const localStorageMock = {
-      data: {},
+      data: {} as Record<string, string>,
       getItem: vi.fn((key) => localStorageMock.data[key] || null),
       setItem: vi.fn((key, value) => { localStorageMock.data[key] = value; }),
       clear: vi.fn(() => { localStorageMock.data = {}; }),
@@ -117,8 +36,7 @@ describe('Scenario Save and Load Functionality', () => {
     Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
     // Mock the global functions that should exist
-    window.uuid = vi.fn(() => 'test-uuid-123');
-    window.escapeHtml = vi.fn((text) => text);
+    uuid.mockClear();
     window.showNotification = vi.fn();
 
     // Define the actual scenario functions
@@ -127,7 +45,7 @@ describe('Scenario Save and Load Functionality', () => {
       return saved ? JSON.parse(saved) : [];
     };
 
-    window.saveScenario = (name) => {
+    window.saveScenario = (name: string) => {
       if (!name || !name.trim()) {
         window.showNotification('Please enter a scenario name', 'error');
         return;
@@ -136,16 +54,17 @@ describe('Scenario Save and Load Functionality', () => {
       try {
         const scenarios = window.getAllScenarios();
         const newScenario = {
-          id: window.uuid(),
+          id: uuid(),
           name: name.trim(),
           timestamp: new Date().toLocaleString(),
-          state: { test: 'data' }
+          createdAt: new Date().toISOString(),
+          state: { offerings: [] }
         };
         scenarios.push(newScenario);
         localStorage.setItem('profitpath-scenarios', JSON.stringify(scenarios));
 
         // Clear input and re-render list
-        const input = document.getElementById('scenarioNameInput');
+        const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
         if (input) input.value = '';
         window.renderScenariosList();
 
@@ -219,18 +138,17 @@ describe('Scenario Save and Load Functionality', () => {
     localStorage.clear();
     document.body.innerHTML = '';
     // Reset modal state
-    modalMock.hidden = true;
-    document._activeElement = null;
+    modalMock.classList.add('hidden');
   });
 
   it('should save scenario to localStorage when save button is clicked', () => {
     // This test should PASS now - demonstrating the save fix
     const scenarioName = 'Test Scenario';
-    const input = document.getElementById('scenarioNameInput');
+    const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
     const saveBtn = document.getElementById('saveScenarioBtn');
 
     // Set up input value
-    input.value = scenarioName;
+    required(input).value = scenarioName;
 
     // Call saveScenario directly
     window.saveScenario(scenarioName);
@@ -246,7 +164,7 @@ describe('Scenario Save and Load Functionality', () => {
     it('should update scenarios list after saving', () => {
       // This test should FAIL initially - demonstrating the UI update issue
       const scenariosList = document.getElementById('scenariosList');
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
       const saveBtn = document.getElementById('saveScenarioBtn');
 
       if (!scenariosList || !input || !saveBtn) {
@@ -272,7 +190,7 @@ describe('Scenario Save and Load Functionality', () => {
     });
 
     it('should show notification when scenario is saved', () => {
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
 
       if (!input) {
         throw new Error('Test setup failed: input element not found');
@@ -333,7 +251,7 @@ describe('Scenario Save and Load Functionality', () => {
 
       const scenariosList = document.getElementById('scenariosList');
 
-      expect(scenariosList.innerHTML).toBe('has scenarios');
+      expect(required(scenariosList).innerHTML).toBe('has scenarios');
     });
 
     it('should load scenario when load button is clicked', () => {
@@ -369,7 +287,7 @@ describe('Scenario Save and Load Functionality', () => {
       expect(modal.style.filter).not.toContain('brightness');
 
       // Check if there are overlay elements causing dimming
-      const overlays = document.querySelectorAll('.modal-overlay');
+      const overlays = document.querySelectorAll<HTMLElement>('.modal-overlay');
       overlays.forEach(overlay => {
         // Check if style property exists before accessing backgroundColor
         if (overlay.style) {
@@ -395,7 +313,7 @@ describe('Scenario Save and Load Functionality', () => {
 
   describe('Edge Cases', () => {
     it('should handle empty scenario name gracefully', () => {
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
 
       if (!input) {
         throw new Error('Test setup failed: input element not found');
@@ -411,7 +329,7 @@ describe('Scenario Save and Load Functionality', () => {
     });
 
     it('should handle whitespace-only scenario names', () => {
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
 
       if (!input) {
         throw new Error('Test setup failed: input element not found');
@@ -433,7 +351,7 @@ describe('Scenario Save and Load Functionality', () => {
         throw new Error('Storage quota exceeded');
       });
 
-      const input = document.getElementById('scenarioNameInput');
+      const input = document.querySelector<HTMLInputElement>("#scenarioNameInput");
 
       if (!input) {
         throw new Error('Test setup failed: input element not found');

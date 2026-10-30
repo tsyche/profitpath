@@ -2,6 +2,32 @@
  * Test Utilities
  * Common utilities for test setup and isolation
  */
+import { sanitizeScenarioState } from '../../assets/services/miscService';
+import { calc } from '../calculations/index';
+import type { AppState, CalcResult } from '../types';
+
+/** Fail at the fixture boundary instead of dereferencing a missing test element. */
+export function required<T>(value: T | null | undefined): T {
+  if (value === null || value === undefined) throw new Error('Required test fixture is missing');
+  return value;
+}
+
+/** Normalize legacy/partial scenario fixtures through the same boundary as real imports. */
+export function appStateFixture(data: object): AppState {
+  const clean = required(sanitizeScenarioState({ ...data }));
+  return {
+    processingFeePct: 0,
+    processingFeePerTransaction: 0,
+    transactionsPerMonth: 0,
+    ...clean,
+    offerings: clean.offerings.map(offering => ({ ...offering, id: required(offering.id) }))
+  };
+}
+
+/** Start metric fixtures with a complete result from the real calculator. */
+export function calcResultFixture(overrides: Partial<CalcResult> = {}): CalcResult {
+  return { ...calc({ offerings: [] }), ...overrides };
+}
 
 // Set test mode flag globally to prevent module initialization
 export function setTestMode() {

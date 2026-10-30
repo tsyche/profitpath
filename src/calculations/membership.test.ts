@@ -4,8 +4,8 @@ import type { MembershipPlan, MemberProfile } from '../types'
 
 // Roadmap 24a: all figures hand-computed. Studio lists at $60 per session
 // (priceMonthly 60 x 12 / sessionsPerYear 12).
-const studio = { id: 'studio', name: 'Studio hour', type: 'per-session', priceMonthly: 60, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 10, laborPctOfPrice: 0 }
-const mixing = { id: 'mixing', name: 'Mixing', type: 'per-session', priceMonthly: 30, sessionsPerYear: 12, hoursPerSession: 2, variableCostPerSession: 0, laborPctOfPrice: 0 }
+const studio = { id: 'studio', name: 'Studio hour', type: 'per-session' as const, priceMonthly: 60, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 10, laborPctOfPrice: 0 }
+const mixing = { id: 'mixing', name: 'Mixing', type: 'per-session' as const, priceMonthly: 30, sessionsPerYear: 12, hoursPerSession: 2, variableCostPerSession: 0, laborPctOfPrice: 0 }
 const offerings = [studio, mixing]
 
 const plan = (over: Partial<MembershipPlan> = {}): MembershipPlan => ({
@@ -118,7 +118,7 @@ describe('calcMembership', () => {
   })
 
   it('one-time offerings price per sale and use no staff hours', () => {
-    const sale = { id: 'sale', name: 'Sale', type: 'one-time', priceMonthly: 10, sessionsPerYear: 1, hoursPerSession: 3, variableCostPerSession: 0, laborPctOfPrice: 0 }
+    const sale = { id: 'sale', name: 'Sale', type: 'one-time' as const, priceMonthly: 10, sessionsPerYear: 1, hoursPerSession: 3, variableCostPerSession: 0, laborPctOfPrice: 0 }
     const r = calcMembership(plan({ eligible: ['sale'] }), profile({ sale: 1 }), [sale])
     expect(r.regularSpend).toBe(120)
     expect(r.staffHours).toBe(0)
@@ -289,7 +289,7 @@ describe('maxMembers', () => {
 
   it('no delivery hours is unbounded, and one-time rows add none', () => {
     expect(maxMembers(profile({}), offerings, [staff])).toEqual({ members: null, binding: null })
-    const oneTime = { id: 'kit', type: 'one-time', priceMonthly: 50, sessionsPerYear: 1, hoursPerSession: 5 }
+    const oneTime = { id: 'kit', type: 'one-time' as const, priceMonthly: 50, sessionsPerYear: 1, hoursPerSession: 5 }
     expect(maxMembers(profile({ kit: 3 }), [oneTime], [staff])).toEqual({ members: null, binding: null })
   })
 

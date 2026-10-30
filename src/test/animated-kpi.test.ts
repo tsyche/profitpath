@@ -1,7 +1,21 @@
+import { required } from './test-utils';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+function mediaQuery(query: string, matches: boolean): MediaQueryList {
+  return {
+    matches,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(() => true)
+  };
+}
+
 describe('Animated KPI Counters & Micro-interactions', () => {
-  let originalMatchMedia;
+  let originalMatchMedia: typeof window.matchMedia;
 
   beforeEach(() => {
     // Reset DOM
@@ -38,83 +52,75 @@ describe('Animated KPI Counters & Micro-interactions', () => {
   describe('KPI Flash Animation', () => {
     it('should add kpi-flash animation when value changes', () => {
       const kpiEl = document.getElementById('kpiClients');
-      const initialContent = kpiEl.textContent;
+      const initialContent = required(kpiEl).textContent;
 
       // Simulate setKpi function behavior
       const newValue = '15';
-      if (kpiEl.textContent !== newValue) {
-        kpiEl.textContent = newValue;
-        kpiEl.classList.remove('kpi-flash');
-        void kpiEl.offsetWidth; // force reflow
-        kpiEl.classList.add('kpi-flash');
+      if (required(kpiEl).textContent !== newValue) {
+        required(kpiEl).textContent = newValue;
+        required(kpiEl).classList.remove('kpi-flash');
+        void required(kpiEl).offsetWidth; // force reflow
+        required(kpiEl).classList.add('kpi-flash');
       }
 
-      expect(kpiEl.textContent).toBe('15');
-      expect(kpiEl.classList.contains('kpi-flash')).toBe(true);
+      expect(required(kpiEl).textContent).toBe('15');
+      expect(required(kpiEl).classList.contains('kpi-flash')).toBe(true);
     });
 
     it('should not add animation when value does not change', () => {
       const kpiEl = document.getElementById('kpiClients');
-      const value = kpiEl.textContent;
+      const value = required(kpiEl).textContent;
 
       // Try to update with same value
-      if (kpiEl.textContent !== value) {
-        kpiEl.classList.add('kpi-flash');
+      if (required(kpiEl).textContent !== value) {
+        required(kpiEl).classList.add('kpi-flash');
       }
 
-      expect(kpiEl.classList.contains('kpi-flash')).toBe(false);
+      expect(required(kpiEl).classList.contains('kpi-flash')).toBe(false);
     });
   });
 
   describe('KPI Count Up Animation', () => {
     it('should add kpi-count-up class when prefers-reduced-motion is not set', () => {
-      window.matchMedia = (query) => ({
-        matches: query === '(prefers-reduced-motion: reduce)' ? false : false,
-        media: query,
-        addListener: () => {}
-      });
+      window.matchMedia = (query) => mediaQuery(query, false);
 
       const kpiEl = document.getElementById('kpiRevenue');
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       // Simulate setKpi behavior
       const newValue = '$75,000';
-      if (kpiEl.textContent !== newValue) {
-        kpiEl.textContent = newValue;
-        kpiEl.classList.remove('kpi-flash', 'kpi-count-up');
-        void kpiEl.offsetWidth;
-        kpiEl.classList.add('kpi-flash');
+      if (required(kpiEl).textContent !== newValue) {
+        required(kpiEl).textContent = newValue;
+        required(kpiEl).classList.remove('kpi-flash', 'kpi-count-up');
+        void required(kpiEl).offsetWidth;
+        required(kpiEl).classList.add('kpi-flash');
         if (!prefersReducedMotion) {
-          kpiEl.classList.add('kpi-count-up');
+          required(kpiEl).classList.add('kpi-count-up');
         }
       }
 
-      expect(kpiEl.classList.contains('kpi-count-up')).toBe(true);
+      expect(required(kpiEl).classList.contains('kpi-count-up')).toBe(true);
     });
 
     it('should NOT add kpi-count-up class when prefers-reduced-motion is true', () => {
-      window.matchMedia = (query) => ({
-        matches: query === '(prefers-reduced-motion: reduce)' ? true : false,
-        media: query,
-        addListener: () => {}
-      });
+      window.matchMedia = (query) => mediaQuery(query, query === '(prefers-reduced-motion: reduce)');
 
       const kpiEl = document.getElementById('kpiIncome');
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       // Simulate setKpi behavior
       const newValue = '$30,000';
-      if (kpiEl.textContent !== newValue) {
-        kpiEl.textContent = newValue;
-        kpiEl.classList.remove('kpi-flash', 'kpi-count-up');
-        void kpiEl.offsetWidth;
-        kpiEl.classList.add('kpi-flash');
+      if (required(kpiEl).textContent !== newValue) {
+        required(kpiEl).textContent = newValue;
+        required(kpiEl).classList.remove('kpi-flash', 'kpi-count-up');
+        void required(kpiEl).offsetWidth;
+        required(kpiEl).classList.add('kpi-flash');
         if (!prefersReducedMotion) {
-          kpiEl.classList.add('kpi-count-up');
+          required(kpiEl).classList.add('kpi-count-up');
         }
       }
 
-      expect(kpiEl.classList.contains('kpi-count-up')).toBe(false);
+      expect(required(kpiEl).classList.contains('kpi-count-up')).toBe(false);
     });
   });
 
@@ -124,10 +130,10 @@ describe('Animated KPI Counters & Micro-interactions', () => {
       expect(btn).toBeTruthy();
 
       // Check that button is set up for ripple effect (position: relative, overflow: hidden)
-      const style = window.getComputedStyle(btn);
+      const style = window.getComputedStyle(required(btn));
       // Note: These would be applied via CSS, not directly on element
-      expect(btn.classList.contains('btn')).toBe(true);
-      expect(btn.classList.contains('primary')).toBe(true);
+      expect(required(btn).classList.contains('btn')).toBe(true);
+      expect(required(btn).classList.contains('primary')).toBe(true);
     });
 
     it('should trigger ripple animation on click', () => {
@@ -137,7 +143,7 @@ describe('Animated KPI Counters & Micro-interactions', () => {
         cancelable: true
       });
 
-      btn.dispatchEvent(clickEvent);
+      required(btn).dispatchEvent(clickEvent);
 
       // The ripple effect is CSS-based, so we just verify the click event fired
       expect(btn).toBeTruthy();
@@ -146,26 +152,26 @@ describe('Animated KPI Counters & Micro-interactions', () => {
 
   describe('Modal & Toast Animations', () => {
     it('should have modalFadeIn animation on overlay', () => {
-      const modal = document.querySelector('.modal-overlay');
-      modal.style.display = 'flex';
+      const modal = document.querySelector<HTMLElement>('.modal-overlay');
+      required(modal).style.display = 'flex';
 
       // Check that modal has animation applied via CSS
-      expect(modal.classList.contains('modal-overlay')).toBe(true);
+      expect(required(modal).classList.contains('modal-overlay')).toBe(true);
     });
 
     it('should have modalSlideIn animation on content', () => {
       const content = document.querySelector('.modal-content');
 
       // Check that content has animation applied via CSS
-      expect(content.classList.contains('modal-content')).toBe(true);
+      expect(required(content).classList.contains('modal-content')).toBe(true);
     });
 
     it('should have toastSlideIn animation on show', () => {
       const toast = document.querySelector('.toast');
-      toast.classList.add('show');
+      required(toast).classList.add('show');
 
-      expect(toast.classList.contains('show')).toBe(true);
-      expect(toast.classList.contains('toast')).toBe(true);
+      expect(required(toast).classList.contains('show')).toBe(true);
+      expect(required(toast).classList.contains('toast')).toBe(true);
     });
   });
 
@@ -182,33 +188,14 @@ describe('Animated KPI Counters & Micro-interactions', () => {
 
   describe('prefers-reduced-motion Media Query', () => {
     it('should respect prefers-reduced-motion preference', () => {
-      window.matchMedia = (query) => {
-        if (query === '(prefers-reduced-motion: reduce)') {
-          return {
-            matches: true,
-            media: query,
-            addListener: () => {}
-          };
-        }
-        return {
-          matches: false,
-          media: query,
-          addListener: () => {}
-        };
-      };
+      window.matchMedia = (query) => mediaQuery(query, query === '(prefers-reduced-motion: reduce)');
 
       const matches = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       expect(matches).toBe(true);
     });
 
     it('should apply animations when prefers-reduced-motion is not set', () => {
-      window.matchMedia = (query) => {
-        return {
-          matches: false,
-          media: query,
-          addListener: () => {}
-        };
-      };
+      window.matchMedia = (query) => mediaQuery(query, false);
 
       const matches = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       expect(matches).toBe(false);
