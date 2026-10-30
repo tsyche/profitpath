@@ -269,7 +269,7 @@ npm run test:ui      # Run tests with UI interface
 - Service worker integration for PWA features
 
 #### TypeScript Support
-- The codebase is TypeScript with `strict: true`; `tsconfig.json` is `noEmit` (Vite builds, `tsc` only checks). Run `just typecheck`: it must report 0 errors (no ratchet or baseline file). Browser globals are declared in `src/globals.d.ts`. `tests/e2e` is typechecked (included in `tsconfig.json`); unit `**/*.test.ts` files are still excluded (known gap: ~1,150 implicit-any/null errors in the jsdom mock tests).
+- The codebase is TypeScript with `strict: true`; `tsconfig.json` is `noEmit` (Vite builds, `tsc` only checks). Run `just typecheck`: it must report 0 errors (no ratchet or baseline file). Browser globals are declared in `src/globals.d.ts`. `tests/e2e` and unit `**/*.test.ts` files are typechecked too (included in `tsconfig.json`).
 - Only `eslint.config.js`, `vite.config.js` and `public/sw.js` stay `.js`.
 - New code is written in `.ts`; do not add `.js` files.
 - Import `.ts` modules without an extension (`../calculations/index`); `index.html` script tags need the real `.ts` path.

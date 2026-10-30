@@ -58,7 +58,8 @@ try {
   await expect(page.locator('#modeSelect')).toBeDisabled();
   expect(await page.evaluate(() => window.calc(window.state).income)).toBe(income);
   await page.locator('#workspaceTryChange').dispatchEvent('click');
-  await page.getByLabel('Alternative name', { exact: true }).fill('Emulator editable copy');
+  // Skip Playwright's stability wait: the WebView's dialog animation never reads as stable over CDP.
+  await page.getByLabel('Alternative name', { exact: true }).fill('Emulator editable copy', { force: true });
   await page.getByRole('button', { name: 'Create alternative', exact: true }).dispatchEvent('click');
   await expect(page.locator('#modeSelect')).toBeEnabled();
   result.readonlyReloadAndEditableCopy = true;
@@ -104,7 +105,8 @@ try {
   await expect.poll(activity, { timeout: 20000 }).toContain('com.android.printspooler');
   adb('shell', 'uiautomator', 'dump', '/data/local/tmp/profitpath-print.xml');
   const printUI = adb('shell', 'cat', '/data/local/tmp/profitpath-print.xml');
-  expect(printUI).toContain('Save as PDF');
+  // The print dialog's destination varies by device; a rendered page proves the report reached PrintManager.
+  expect(printUI).toContain('Page 1 of 1');
   writeFileSync(resolve(output, 'print-preview.xml'), printUI);
   writeFileSync(resolve(output, 'print-preview.png'), execFileSync('adb', ['-s', serial, 'exec-out', 'screencap', '-p'], { timeout: 15000 }));
   result.printPreview = true;
@@ -113,6 +115,7 @@ try {
   writeFileSync(resolve(output, 'result.json'), JSON.stringify(result, null, 2) + '\n');
   console.log('Native print preview passed; no report was sent to another app');
 } finally {
-  await browser.close();
+  // close() can stall on a backgrounded WebView after a failure and would hide the real error.
+  await Promise.race([browser.close(), new Promise(resolve => setTimeout(resolve, 5000))]);
   adb('forward', '--remove', `tcp:${port}`);
 }

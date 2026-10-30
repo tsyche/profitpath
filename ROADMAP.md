@@ -9,8 +9,7 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 ## Recommended Next 3
 
 1. **Device/human acceptance and layout default** (item 40): test the shipped redesign and workbench on Android, finish human/native handoffs, and decide the new-device default while retaining both layouts.
-2. **Typecheck unit tests** (item 12x): include `**/*.test.ts` in [tsconfig.json](tsconfig.json) and retire accepted casts. In progress.
-3. **Seasonal & Market Adjustments** (item 11): monthly/quarterly demand and geographic pricing variations.
+2. **Seasonal & Market Adjustments** (item 11): monthly/quarterly demand and geographic pricing variations.
 
 Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing trustworthy data, not on code. Shipped work is indexed in the [ledger](docs/ledger/ROADMAP_SHIPPED.md).
 
@@ -37,7 +36,7 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - Implementation items 25 and 38–39 are closed at Tim's direction on 2026-10-29; this item owns every remaining acceptance task. See the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md).
     - Release CI [Tests 40982288978](https://github.com/tsyche/profitpath/actions/runs/40982288978), APK, Pages and mirror passed; all five checks have zero annotations. Local validation passes 832 unit tests (one existing skip), 606/610 browser cases (four existing Firefox skips), four production zoom/PDF cases and four offline cases, with no retries.
     - Android emulator checks passed on 2026-10-29: release APK 0.8.63-beta, Pixel 8 / Android 35, install/launch, remembered Workspaces choice, rename with the native keyboard visible, save/alternative, mode switching, Results, decision workbench, reload persistence and portrait/landscape. Offline reload/edit/save/reload passed with Wi-Fi and cellular data disabled; an external connectivity probe succeeded before disconnection and failed during it. WebView `navigator.onLine` remained true, so it is not the offline oracle.
-    - Finish Android read-only-copy/share/native-export checks and physical phone/tablet coverage. Repeat affected journeys if findings require code changes.
+    - Android emulator (Pixel 8 / Android 35) read-only reload, editable copy, path-traversal rejection, CSV/Excel/HTML share chooser with real file bytes, and native print preview passed on 2026-10-30 via `tests/android/native-export.ts` (disposable `.acceptance` APK; see the script header). Remaining: physical phone/tablet coverage. Repeat affected journeys if findings require code changes.
     - 🧑 needs-human: real touch/keyboard behavior, TalkBack or VoiceOver announcements/navigation, native print/mail-app handoff, and participant task times/comprehension with a re-score against the recorded baseline. Emulator checks supplement physical-device and human observations; they do not establish them.
     - Record findings and fix any blocked journey. Repeat affected release gates if code changes. After acceptance, decide the new-device default explicitly; keep Classic as the current default and retain both layouts and their remembered Settings toggle. Retirement of Classic remains a later decision.
 
@@ -48,8 +47,7 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - Chart ranges, Excel parity, and per-service entitlements are recorded in the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md).
     - No integration work until real usage establishes the need.
 
-12x. **Typecheck unit tests (`**/*.test.ts`) and retire the accepted casts** *(new, TS-migration leftover)*
-    - `**/*.test.ts` is excluded from `tsconfig.json`; including it gives ~1,158 errors (380 TS7005 implicit `any[]`, 204 TS18047, 186 TS2339) in the `src/test/*` jsdom mock tests. Fix per file (type the mocks), then drop the exclude; do it opportunistically when touching a test file.
+12x. **Retire the accepted casts** *(remaining follow-up from shipped unit-test typechecking)*
     - Accepted casts to revisit only if they cause trouble: `as unknown as CalcResult` (AppRender calc-failure fallback) and the `Bag` (`Record<string, unknown>`) casts in RangesMarketPanel, ResourcesPanel, ExpensesPanel and OfferingsTable.
     - Low priority; the migration itself is done (see [ledger](docs/ledger/ROADMAP_SHIPPED.md)).
 

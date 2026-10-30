@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-10-30 — 12x. Unit tests typechecked
 - [x] 2026-10-30 — 24f. Chart uncertainty bands
 - [x] 2026-10-29 — 25. Product-flow redesign, layout choice and UI refinements
 - [x] 2026-10-29 — 38–39. Decision workbench and membership floor/value checks
@@ -69,6 +70,10 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-10-30 — 12x. Unit tests typechecked
+
+`**/*.test.ts` is now part of `tsconfig.json` and `tsc --noEmit` reports 0 errors (was ~1,158 in the jsdom mock tests). Shared typed fixtures (`required`, `appStateFixture`, `calcResultFixture`) live in `src/test/test-utils.ts`. The accepted-casts cleanup stays open in [ROADMAP.md item 12x](../../ROADMAP.md).
 
 ### 2026-10-30 — 24f. Chart uncertainty bands
 
