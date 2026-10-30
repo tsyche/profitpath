@@ -26,8 +26,8 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - Effort: ~4-6 hours (templates done; focus on benchmarking data)
 
 11. **Seasonal & Market Adjustments**
-    - Seasonal demand modeling with monthly/quarterly variations
-    - Geographic pricing variations by region
+    - Design drafted: [seasonal-adjustments plan](docs/plans/seasonal-adjustments.md). Display-only monthly lens (peak capacity, cash trough) over `calc()`; annual figures never change.
+    - Geographic pricing variations by region: recommended move into item 10 (needs sourced regional data); awaiting Tim's call.
     - Effort: ~4-5 hours
 
 **Layout & Information Architecture** *(new category — Tim independently flagged this as "getting very busy on a single scrollable page view," agreed with while building the Sound Stage scenario)*
@@ -36,9 +36,11 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - Implementation items 25 and 38–39 are closed at Tim's direction on 2026-10-29; this item owns every remaining acceptance task. See the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md).
     - Release CI [Tests 40982288978](https://github.com/tsyche/profitpath/actions/runs/40982288978), APK, Pages and mirror passed; all five checks have zero annotations. Local validation passes 832 unit tests (one existing skip), 606/610 browser cases (four existing Firefox skips), four production zoom/PDF cases and four offline cases, with no retries.
     - Android emulator checks passed on 2026-10-29: release APK 0.8.63-beta, Pixel 8 / Android 35, install/launch, remembered Workspaces choice, rename with the native keyboard visible, save/alternative, mode switching, Results, decision workbench, reload persistence and portrait/landscape. Offline reload/edit/save/reload passed with Wi-Fi and cellular data disabled; an external connectivity probe succeeded before disconnection and failed during it. WebView `navigator.onLine` remained true, so it is not the offline oracle.
-    - Android emulator (Pixel 8 / Android 35) read-only reload, editable copy, path-traversal rejection, CSV/Excel/HTML share chooser with real file bytes, and native print preview passed on 2026-10-30 via `tests/android/native-export.ts` (disposable `.acceptance` APK; see the script header). Remaining: physical phone/tablet coverage. Repeat affected journeys if findings require code changes.
-    - 🧑 needs-human: real touch/keyboard behavior, TalkBack or VoiceOver announcements/navigation, native print/mail-app handoff, and participant task times/comprehension with a re-score against the recorded baseline. Emulator checks supplement physical-device and human observations; they do not establish them.
-    - Record findings and fix any blocked journey. Repeat affected release gates if code changes. After acceptance, decide the new-device default explicitly; keep Classic as the current default and retain both layouts and their remembered Settings toggle. Retirement of Classic remains a later decision.
+    - Android emulator (Pixel 8 / Android 35) read-only reload, editable copy, path-traversal rejection, CSV/Excel/HTML share chooser with real file bytes, and native print preview passed on 2026-10-30 via `tests/android/native-export.ts` (disposable `.acceptance` APK; see the script header). Repeat affected journeys if findings require code changes.
+    - Physical-device checks (real touch and software keyboard, core flow, Results, alternative/Compare, reload/Back, orientation, invalid input) passed on build 0.8.64-beta, reported by Tim on 2026-10-30; no findings.
+    - Open finding (2026-10-30): on 0.8.64-beta, Share/export options did nothing on the device. Build 0.8.64 predates the native Android export (`ExportPlugin`, pushed afterward), so the blob download has no handler in the WebView. Reinstall the build after 0.8.64 and re-test share/print/mail; close this once confirmed. A nested body scroller (`html, body { overflow-x: hidden }`) was fixed with a regression test.
+    - TalkBack/VoiceOver pass reported by Tim on 2026-10-30 with no findings. 🧑 needs-human: native print/mail-app handoff, and participant task times/comprehension with a re-score against the recorded baseline. Emulator checks supplement physical-device and human observations; they do not establish them.
+    - Record findings and fix any blocked journey. Repeat affected release gates if code changes. Tim set Workspaces as the new-device default on 2026-10-30 (before the remaining human checks); Classic stays available via the Settings toggle and `?layout=legacy`. Retirement of Classic remains a later decision.
 
 **Business Model Fidelity** *(new category — found trialing a real hybrid subscription+hourly business, The Sound Stage, a voice/acting/recording studio)*
 

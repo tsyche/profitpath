@@ -113,3 +113,20 @@ for (const width of [1440, 375]) {
     await page.screenshot({ path: info.outputPath('workspace-business.png') });
   });
 }
+
+for (const layout of ['workspaces', 'legacy']) {
+  test(`the page scrolls once: body is not a nested scroll container (${layout})`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 812 });
+    await page.addInitScript(model => {
+      localStorage.setItem('profitpath-onboarding-completed', 'true');
+      if (!localStorage.getItem('profitpath-state')) localStorage.setItem('profitpath-state', JSON.stringify(model));
+    }, fitnessFixture());
+    await page.goto(`/?layout=${layout}`);
+    await expect(page.locator('#offeringsBody, #workspaceModel').first()).toBeAttached();
+    const nested = await page.evaluate(() => {
+      const style = getComputedStyle(document.body);
+      return /(auto|scroll)/.test(style.overflowY) && document.body.scrollHeight > document.body.clientHeight + 1;
+    });
+    expect(nested).toBe(false);
+  });
+}

@@ -18,6 +18,12 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     actionTimeout: 10000,
+    // Workspaces is the product default; plain '/' specs exercise Classic, so pin it.
+    // Workspace specs pass ?layout=workspaces, which overrides this preference.
+    storageState: {
+      cookies: [],
+      origins: [{ origin: 'http://127.0.0.1:3121', localStorage: [{ name: 'profitpath-layout', value: 'legacy' }] }],
+    },
   },
 
   projects: [

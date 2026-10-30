@@ -9,13 +9,15 @@ describe('workspace navigation', () => {
     expect(parseWorkspaceView(key)).toEqual(DEFAULT_VIEW);
   });
   it.each([
-    ['', null, 'legacy'],
+    ['', null, 'workspaces'],
+    ['', 'legacy', 'legacy'],
     ['', 'workspaces', 'workspaces'],
-    ['', 'unknown', 'legacy'],
+    ['', 'unknown', 'workspaces'],
     ['?layout=legacy', 'workspaces', 'legacy'],
     ['?layout=workspaces', 'legacy', 'workspaces'],
     ['?layout=unknown', 'workspaces', 'workspaces'],
-    ['?layout=unknown', null, 'legacy']
+    ['?layout=unknown', null, 'workspaces'],
+    ['?layout=unknown', 'legacy', 'legacy']
   ])('resolves %s with device preference %s as %s', (search, preference, expected) => {
     expect(resolveLayout(search, preference)).toBe(expected);
   });

@@ -249,10 +249,15 @@
   }
 }
 
-html,
-body {
+/* html owns the horizontal clip; body must not become a second vertical scroller. */
+html {
   height: 100%;
   overflow-x: hidden;
+  max-width: 100vw;
+}
+body {
+  min-height: 100%;
+  overflow-x: clip;
   max-width: 100vw;
 }
 body.scroll-locked { overflow: hidden; }

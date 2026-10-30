@@ -27,10 +27,10 @@ export type Layout = 'legacy' | 'workspaces';
 export function resolveLayout(search: string, preference: string | null): Layout {
   const requested = new URLSearchParams(search).get('layout');
   if (requested === 'legacy' || requested === 'workspaces') return requested;
-  return preference === 'workspaces' ? 'workspaces' : 'legacy';
+  return preference === 'legacy' ? 'legacy' : 'workspaces';
 }
 
-/** Both layouts remain available during the transition; new devices start in Classic. */
+/** Both layouts remain available during the transition; new devices start in Workspaces. */
 export function usesWorkspaces(): boolean {
   if (typeof window === 'undefined') return false;
   let preference: string | null = null;

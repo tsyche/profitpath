@@ -40,15 +40,8 @@ Object.defineProperty(global, 'localStorage', {
 })
 
 // Mock URL APIs
-class MockURL {
-  href: string
-  pathname: string
-  search: string
-  constructor(url: string) {
-    this.href = url
-    this.pathname = url.split('?')[0]
-    this.search = url.includes('?') ? '?' + url.split('?')[1] : ''
-  }
+const RealURL = URL
+class MockURL extends RealURL {
   static createObjectURL = vi.fn(() => 'mock-object-url')
   static revokeObjectURL = vi.fn()
 }

@@ -46,7 +46,7 @@ just dev
 
 2. Open http://localhost:3120 in your browser.
 
-Choose **Settings → Layout** to switch between Classic (the original single page) and Workspaces (Model, Results, Compare). Both use the same model; the choice is remembered on this device. Classic remains the default for new devices while release validation continues. The [workspace preview](http://localhost:3120/?layout=workspaces) also opens directly. See [experience levels](docs/experience-levels.md#workspace-preview) for navigation and detail behavior.
+Choose **Settings → Layout** to switch between Classic (the original single page) and Workspaces (Model, Results, Compare). Both use the same model; the choice is remembered on this device. Workspaces is the default for new devices; Classic stays available in Settings. The [workspace preview](http://localhost:3120/?layout=workspaces) also opens directly. See [experience levels](docs/experience-levels.md#workspace-preview) for navigation and detail behavior.
 
 ## Development
 
