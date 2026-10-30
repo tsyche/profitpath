@@ -42,7 +42,8 @@ for (const width of [1440, 375]) {
     await page.keyboard.press('ArrowDown');
     await activate(page, page.getByRole('button', { name: 'Use this example', exact: true }));
     await expect(page.locator('#workspaceModel')).toBeFocused();
-    await typeValue(page, page.getByLabel('Scenario name', { exact: true }), 'Keyboard baseline');
+    await activate(page, page.locator('#workspaceRename'));
+    await typeValue(page, page.getByLabel('Model name', { exact: true }), 'Keyboard baseline');
     await activate(page, page.getByRole('button', { name: 'Save scenario', exact: true }));
     await expect(page.locator('#workspaceSaveStatus')).toContainText('Matches saved scenario');
     await activate(page, page.locator('#workspaceTryChange'));

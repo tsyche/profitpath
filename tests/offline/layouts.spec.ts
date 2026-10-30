@@ -57,5 +57,20 @@ for (const layout of ['legacy', 'workspaces']) {
     await page.reload();
     await ready(page, target === 'workspaces');
     expect(await page.evaluate(() => window.state.monthlyCosts)).toBe(1500);
+    // Decision calculation, selection and sharing also stay available without a network.
+    await page.evaluate(() => {
+      localStorage.setItem('profitpath-scenarios', JSON.stringify([0, 1].map(i => ({
+        id: 'offline-' + i, name: i ? 'Alternative' : 'Baseline', timestamp: '', createdAt: '',
+        state: { ...window.state, monthlyCosts: 100 + i * 100 }
+      }))));
+      window.openScenarioModal();
+    });
+    await page.locator('#decisionWorkbenchBtn').click();
+    const picker = page.getByRole('dialog', { name: 'Choose decision options' });
+    for (const checkbox of await picker.getByRole('checkbox').all()) await checkbox.check();
+    await picker.getByRole('button', { name: 'Open workbench' }).click();
+    await expect(page.locator('.decision-verdict')).toContainText('Baseline');
+    await page.locator('#decisionShare').click();
+    await expect(page.locator('#decisionShareURL')).toHaveValue(/decision=1/);
   });
 }

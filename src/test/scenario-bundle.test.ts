@@ -1,6 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import * as compression from 'fflate';
 import { decodeScenarioBundle, encodeScenarioBundle, importScenarioBundle } from '../../assets/services/scenarioBundle';
 import type { Scenario } from '../types';
+
+vi.mock('fflate', { spy: true });
 
 const sample = (name: string): Scenario => ({
   id: name,
@@ -47,5 +50,17 @@ describe('scenario bundle links', () => {
     expect(decodeScenarioBundle('v1.invalid')).toBeNull();
     expect(decodeScenarioBundle('v1.' + 'a'.repeat(20001))).toBeNull();
     expect(encodeScenarioBundle([])).toBeNull();
+  });
+
+  it('bounds the expansion allocation before inflating an untrusted bundle', () => {
+    const spy = vi.spyOn(compression, 'inflateSync');
+    try {
+      const compressed = compression.deflateSync(compression.strToU8(JSON.stringify({ padding: 'x'.repeat(600000) })));
+      const payload = 'v1.' + btoa(String.fromCharCode(...compressed)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      expect(decodeScenarioBundle(payload)).toBeNull();
+      expect(spy.mock.calls[0][1]?.out?.byteLength).toBe(500001);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

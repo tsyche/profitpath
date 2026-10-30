@@ -1,0 +1,24 @@
+.decision-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0;
+}
+.decision-controls label {
+  display: grid;
+  gap: 4px;
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.decision-controls input, .decision-controls select {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+.decision-choice { display: block; padding: 8px 0; overflow-wrap: anywhere; }
+.decision-table { max-width: 100%; overflow-x: auto; }
+.decision-table .table { min-width: 550px; }
+.decision-table td, .decision-table th { white-space: normal; min-width: 100px; overflow-wrap: anywhere; }
+.decision-verdict { font-size: 1.15em; font-weight: 600; overflow-wrap: anywhere; }
+#decisionShareURL { width: 100%; box-sizing: border-box; }
+#decisionWorkbench .modal-header h2 { font-weight: 650; letter-spacing: .3px; }

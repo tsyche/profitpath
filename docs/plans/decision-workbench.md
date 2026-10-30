@@ -2,7 +2,7 @@
 
 **TL;DR:** Turn scenario planning into a decision tool: build options as saved scenarios, compare them in one plain-language view under conservative assumptions, and share the whole set with one link. Most building blocks already exist; this plan connects them.
 
-**Status:** Building (Phases 1-2 shipped)
+**Status:** Building — Phases 1–2 shipped; Phases 3–4 implemented and locally validated. Plan closeout approval and commit/push review are pending.
 **Fold into:** [FEATURES.md](../../FEATURES.md) (scenario and comparison features) and the "Key Files Structure" notes in [AGENTS.md](../../AGENTS.md) and [CLAUDE.md](../../CLAUDE.md).
 
 ## Problem
@@ -38,6 +38,17 @@ Each phase ships on its own. Phase 1 unblocks the TSS owner review today; 3 depe
 
 - **Phase 1 / item 36:** shipped 2026-10-27. Selected saved scenarios can be sent and imported as a client-side compressed bundle.
 - **Phase 2 / item 37:** shipped 2026-10-27. Each offering has low, base, and high sales-loss assumptions after a price change. The calculator applies loss to demand, revenue, costs, and utilization in Forecast and Current modes; the existing Conservative and Optimistic cases select the higher and lower assumptions.
+- **Phase 3 / item 38:** implemented 2026-10-29. Scenarios in both layouts and the workspace Compare view open one shared two-to-four-option workbench. Baseline/case/annual-income goal stay outside financial state. Offering rows match stable IDs or unique names/types, with missing and ambiguous services kept explicit. CSV, print/PDF and decision bundle links retain the reviewed conclusion; shared decisions remain in memory without changing the recipient's draft/library. Mixed currency/mode options are rejected.
+- **Phase 4 / item 39:** implemented 2026-10-29. Single-service full-redemption and cash-limit stress prices derive from membership plans, feed the existing floor flag alongside the manual discount, and leave modeled revenue unchanged. Profile-specific value-order checks flag lower-fee plans that cost no more than higher-fee ones. Tests use the existing hand-computed synthetic studio fixture; private TSS figures are not committed.
+
+## Implementation acceptance — 2026-10-29
+
+- Pure calculations cover selected-case totals, goals, confidence exposure, reordered/new/ambiguous offerings, sales-loss thresholds in both modes, and conservative bounds for cohort costs/negative-contribution services. Thresholds replace total loss only on raised services; other services retain their assumptions. Keeping original Current-mode group run costs and ignoring gains from losing negative-contribution sales provides a safe interval even when actual profit has cohort steps.
+- Membership tests cover credits at list versus opt-in stacking, included visits, eligibility, cash discounts, free benefits, one-time pricing, and same-profile plan comparisons.
+- Focused Chromium/Firefox journeys pass in both layouts at desktop and 375px, including three-scenario bundle import, two/four options, CSV/print content, recipient reloads, hostile names and live membership floor updates. Visual review exposed the global offering-card styles hiding scenario headers; the new visible/aligned-header regression failed before reusing the existing flat-table styles.
+- The shared bundle decoder now supplies a bounded output buffer before decompression. The allocation regression failed before the fix and passes after it.
+- Final local verification: **832 unit tests pass** with one existing skip across 75 files. The **610-case release suite passes 606**, with four existing Firefox skips; all 82 workspace cases and 14 decision cases pass. **Four production zoom/PDF cases and four offline cases pass**, including the decision view. No retries were used. Lint, strict typecheck and production build pass. The decision report renders as a readable six-page landscape PDF with the selected case, goal, options and notes.
+- Durable behavior is folded into FEATURES and the architecture notes. Finalization/archival approval is pending, followed by commit/push review. The product-flow redesign's human/device gates remain separately owned by [ROADMAP item 25](../../ROADMAP.md); both layouts and the existing default remain available.
 
 ## Design notes
 

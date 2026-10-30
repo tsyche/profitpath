@@ -142,7 +142,7 @@ function _announceToScreenReader(message: string, priority = 'polite') {
  */
 function updateAriaLabels() {
   // Update mode toggle button
-  const modeButtons = document.querySelectorAll('[data-mode]');
+  const modeButtons = document.querySelectorAll('button[data-mode], [role="button"][data-mode]');
   modeButtons.forEach((btn) => {
     const mode = btn.getAttribute('data-mode');
     btn.setAttribute('aria-label', `Switch to ${mode} mode`);

@@ -25,7 +25,8 @@ for (const width of [1440, 375]) {
   test(`layout choice keeps the model, selected case and saved scenarios at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 812 });
     await open(page);
-    await page.getByLabel('Scenario name', { exact: true }).fill('Layout baseline');
+    await page.locator('#workspaceRename').click();
+    await page.getByLabel('Model name', { exact: true }).fill('Layout baseline');
     await page.getByRole('button', { name: 'Save scenario', exact: true }).click();
     await page.goto('/?layout=workspaces&view=results&keep=value');
     await page.locator('[data-case="conservative"]').click();
@@ -148,7 +149,8 @@ test('saved scenarios remain available and the comparison destination has an hon
   await open(page);
   await page.getByRole('navigation', { name: 'Workspaces' }).getByRole('link', { name: 'Compare', exact: true }).click();
   await expect(page.locator('#workspaceCompare')).toContainText('Save an option');
-  await page.getByLabel('Scenario name', { exact: true }).fill('Baseline');
+  await page.locator('#workspaceRename').click();
+  await page.getByLabel('Model name', { exact: true }).fill('Baseline');
   await page.getByRole('button', { name: 'Save scenario', exact: true }).click();
   expect(await page.evaluate(() => window.getAllScenarios().map(scenario => scenario.name))).toEqual(['Baseline']);
   await expect(page.locator('#workspaceSaveStatus')).toContainText('Matches saved scenario');

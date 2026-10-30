@@ -5,6 +5,7 @@ import { fmtMoney0 } from '../../src/calculations/currency';
 import type { MemberProfile, MembershipPlan, Resource } from '../../src/types';
 import { escapeHtml } from '../services/miscService';
 import { uuid } from '../utils/helpers';
+import { membershipFloor, membershipValueWarnings } from '../../src/calculations/membershipFloor';
 
 /**
  * Membership what-if panel (ROADMAP 24a). Editors for up to 3 plans and 3 member profiles,
@@ -30,6 +31,7 @@ interface PanelDeps {
   getPoolUsageHours: () => Record<string, number>;
   persist: () => void;
   pushHistory: () => void;
+  refreshFloor?: () => void;
 }
 
 let deps: PanelDeps | null = null;
@@ -194,12 +196,25 @@ function cellHtml(plan: MembershipPlan, profile: MemberProfile, s: PanelState): 
 
 function resultsHtml(s: PanelState): string {
   const { plans, profiles } = listsOf(s);
-  if (!plans.length || !profiles.length) return '<p class="smallprint">Add at least one plan and one member profile to compare.</p>';
+  const floors = plans.length ? '<h4>Membership price floor stress test</h4><p class="smallprint">Single-service full redemption: assign the whole fee to one service, use all its included visits and eligible credits, and compare with the cash-discount limit at high usage. Fractional visits, no breakage; other included services are not valued. This does not change modeled revenue.</p><ul>' +
+    offeringsFloor(s) + '</ul>' : '';
+  if (!plans.length || !profiles.length) return floors + '<p class="smallprint">Add at least one plan and one member profile to compare.</p>';
   const head = plans.map((p) => '<th>' + escapeHtml(p.name) + '<div class="smallprint">Fee ' + fmtMoney0(p.monthlyFee) + ' / month · credits ' + fmtMoney0(p.creditsPerMonth) + ' / month' +
     (Object.keys(p.includedVisits || {}).length ? ' · service visits included' : '') + '</div></th>').join('');
   const rows = profiles.map((pr) =>
     '<tr><th scope="row">' + escapeHtml(pr.name) + '</th>' + plans.map((pl) => '<td>' + cellHtml(pl, pr, s) + '</td>').join('') + '</tr>').join('');
-  return '<div class="table-wrap"><table class="table membership-results" aria-label="Membership comparison"><thead><tr><th></th>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+  const warnings = membershipValueWarnings(plans, profiles, s.offerings);
+  const ladder = '<h4>Plan value order</h4><p class="smallprint">Checks the same visits under every plan. A higher monthly fee need not be better for every member.</p>' +
+    (warnings.length ? '<ul class="membership-value-warnings">' + warnings.map(w => '<li>' + escapeHtml(w.profileName) + ': ' + escapeHtml(w.lowerName) + ' costs ' + fmtMoney0(w.monthlyDifference) + ' less per month than ' + escapeHtml(w.higherName) + ', despite its lower fee.</li>').join('') + '</ul>' : '<p>No lower-fee plan matches or beats a higher-fee plan for the entered profiles.</p>');
+  return floors + '<div class="table-wrap"><table class="table membership-results" aria-label="Membership comparison"><thead><tr><th></th>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>' + ladder;
+}
+
+function offeringsFloor(s: PanelState): string {
+  return s.offerings.map((o, i) => {
+    const floor = membershipFloor(o, s.membershipPlans || []);
+    return '<li>' + escapeHtml(offeringName(o, i)) + ': ' + fmtMoney0(floor.price) + ' / ' + (o.type === 'one-time' ? 'sale' : 'visit') +
+      (floor.planName ? ' (' + escapeHtml(floor.planName) + ', ' + pct1(floor.discountPct) + ' below list; ' + (floor.basis === 'cash-discount' ? 'cash-discount limit' : 'full redemption') + ')' : ' (list price)') + '</li>';
+  }).join('');
 }
 
 /** Re-renders only the comparison; safe to call while the user is typing in the editors. */
@@ -219,6 +234,7 @@ export function renderMembershipPanel(): void {
 
 function changed(structural: boolean): void {
   deps?.persist();
+  deps?.refreshFloor?.();
   if (structural) renderMembershipPanel();
   else renderMembershipResults();
 }

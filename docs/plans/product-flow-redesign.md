@@ -117,7 +117,7 @@ flowchart TD
 - Guide the user through business mode, offerings, people/capacity, and costs with a resumable checklist. Optional assumptions stay optional. Results remain available throughout, with incomplete-input notices.
 - Explain modes by the question: “What can my capacity support? (Forecast)” and “How does my current customer base perform? (Current).” Forecast is capacity-derived, not a demand forecast or sales promise.
 - Distinguish the automatically retained working draft from an explicitly saved scenario. “Draft saved on this device” must not imply a named scenario was updated.
-- Duplicate before exploring an alternative through “Try a change.” Preview the duplicate and let the user name it; preserve the baseline.
+- Duplicate before exploring through **Create alternative** (originally “Try a change”). Let the user name the alternative and preserve the saved baseline.
 
 ### 2. Model and focused offering editor
 
@@ -281,7 +281,7 @@ Prototype limits are explicit in the interface: expense/resource rows are read-o
 Review these tasks on desktop and at 375px:
 
 1. Use Fitness, find the first offering, change its price, and visit Results. Check whether the live summary preserves the edit-and-see loop.
-2. Try a change, name the alternative, edit its price and expected sales loss, save, and compare. Check whether draft versus saved-option status is clear.
+2. Choose **Create alternative**, name it, edit its price and expected sales loss, save, and compare. Check whether draft versus saved-option status is clear.
 3. Open the hybrid example, search “practice,” and inspect its staff-free resource. Clear its price, navigate away/back, correct it, and undo.
 4. Review group delivery fields and assumptions at Beginner and Advanced. Approve or revise the matrix above.
 5. Review Results wording: net income before tax, take-home, and cash flow are distinct. Share is visibly a snapshot preview.
@@ -335,9 +335,16 @@ The application preview is `http://localhost:3120/?layout=workspaces` through `j
 - **Actual browser zoom:** the production acceptance harness uses a disposable extension's `chrome.tabs.setZoom(2)`, checks the factor, doubled pixel ratio and halved CSS viewport, and checks every visible control's bounds. It covers both themes and layout switching. Visual review caught a wrong theme key in the new fixture; it now seeds `profitpath-theme` and asserts the rendered theme. Screenshots capture the native window because CSS-sized full-page clips can crop native zoom.
 - **Printed artifact:** Chromium rendered a two-page PDF; extracted text contains the conclusion, case, notes and per-session/per-sale prices. Both pages were visually checked for readable, complete tables. This proves browser rendering, not a native print dialog or paper output.
 - **Device/app limits:** ADB listed no attached devices. Desktop-app control tools were unavailable. Physical software-keyboard behavior, human screen-reader usability and native mail/print handoff therefore remain open, along with participant task times/comprehension.
-- **Final working-tree verification:** **820 unit tests** pass with one existing skip. The complete **586-case** release run passes **582** with four existing Firefox skips, including all **72 workspace cases**. All **three production zoom/PDF cases** and **four production offline cases** pass. No retries were used. Lint, strict typecheck and production build pass. The report fixes and their coverage are local changes; remote CI above covers the earlier `7f5eee6` commit.
+- **Final report-follow-up verification:** **820 unit tests** pass with one existing skip. The complete **586-case** release run passes **582** with four existing Firefox skips, including all **72 workspace cases**. All **three production zoom/PDF cases** and **four production offline cases** pass. No retries were used. Lint, strict typecheck and production build pass. The report fixes shipped in `be65e21`; [Tests run 40929476667](https://github.com/tsyche/profitpath/actions/runs/40929476667) passed, as did APK, Pages and GitLab mirror. The CI version bump is `d008140` (v0.8.62-beta).
 
 Remaining work stays owned by ROADMAP item 25:
+
+**UI feedback, 2026-10-29:** Tim requested spacing/mobile refinements, equal tabs, click-to-rename titles, clearer scenario actions, proper overflow dismissal, roomier Scenarios controls, and a clearer mode indicator.
+
+- Implemented with native controls and calculations preserved. Rename supports Enter/Escape/reload; Save scenario and Create alternative distinguish snapshots from drafts.
+- Optional guidance respects its own state. Mobile action buttons stay in one row; the tested summary totals no longer clip. Menus close on action/outside/Escape and restore trigger focus after dialogs.
+- Fail-before/pass-after regressions cover menu dismissal/focus, forced guidance, clipped totals, and shared-name reload. Final verification: **832 unit passes** (one existing skip), **606/610 release browser passes** (four existing Firefox skips), **four production zoom/PDF passes**, and **four offline passes**. Lint, strict typecheck and build pass; no retries were used.
+- Physical-device, human screen-reader, native-handoff and measured human acceptance remain open.
 
 | Gate | State / exact action |
 |---|---|

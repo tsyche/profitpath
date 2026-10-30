@@ -1,10 +1,11 @@
 import type { AppOffering, CalcResult, OfferingMetric } from '../../src/types';
 import { calc } from '../../src/calculations/index';
 import { floorStatus, rankOfferings } from '../../src/calculations/offeringRanking';
+import { membershipFloor } from '../../src/calculations/membershipFloor';
 import { displayPrice, isOneTime, isPerSession } from '../../src/calculations/offeringPrice';
 import { bandMoves, calcRange, calcRangeDrivers, suggestRanges, sanitizeOfferingRange } from '../../src/calculations/ranges';
 import type { RangeMetric } from '../../src/calculations/ranges';
-import { getRangeCase } from '../../src/calculations/rangeCase';
+import { applyRangeCase, getRangeCase } from '../../src/calculations/rangeCase';
 import { sanitizeSalesLossBounds, sanitizeSalesLossPct } from '../../src/calculations/salesLoss';
 import { marketBadge, sanitizeOfferingMarket } from '../../src/calculations/marketPosition';
 import { CONFIDENCE_LEVELS, CONFIDENCE_LABELS, MAX_NOTE_LENGTH, sanitizeOfferingMeta } from '../../src/calculations/offeringMeta';
@@ -29,10 +30,17 @@ export function renderOfferingRanking(metrics: CalcResult) {
   const wrap = $('#offeringRanking');
   const body = $('#offeringRankingBody');
   if (!wrap || !body) return;
-  const rows = rankOfferings(metrics?.offeringMetrics || []);
+  const floors = applyRangeCase(state).offerings.map(o => membershipFloor(o, state.membershipPlans || []));
+  const derived = floors.some(f => f.planName) ? calc({
+    ...state, offerings: state.offerings.map((o, i) => ({ ...o, discountPct: Math.max(o.discountPct || 0, floors[i].discountPct) }))
+  }) : metrics;
+  const rows = rankOfferings((derived?.offeringMetrics || []).map((m, i) => ({
+    ...m, discountSource: floors[i]?.planName && floors[i].discountPct > (state.offerings[i].discountPct || 0)
+      ? floors[i].planName! + ' · membership stress price' : undefined
+  })));
   wrap.hidden = rows.length === 0;
   body.innerHTML = rows.map(r => '<tr><td>' + escapeHtml(r.name) + '</td><td class="mono">' + (r.hourFree ? 'n/a' : fmtMoney0(r.marginPerHour) + '/hr') + '</td><td class="mono">' + (r.discountPct > 0 && !r.hourFree ? fmtMoney0(r.discountedMarginPerHour) + '/hr (' + fmtPct1(r.discountPct) + ' off)' : '—') + '</td><td class="mono">' + fmtPct1(r.maxDiscountPct) +
-    '</td><td data-status="' + r.status + '" style="color:' + FLOOR_COLORS[r.status] + '">' + FLOOR_LABELS[r.status] + '</td></tr>').join('');
+    '</td><td data-status="' + r.status + '" style="color:' + FLOOR_COLORS[r.status] + '">' + FLOOR_LABELS[r.status] + (r.discountSource ? '<div class="smallprint">' + escapeHtml(r.discountSource) + '</div>' : '') + '</td></tr>').join('');
 }
 
 const RANGE_ROWS: { metric: RangeMetric; label: string; fmt: (n: number) => string }[] = [
@@ -93,7 +101,8 @@ const BADGE_LABELS = { green: 'In range', yellow: 'Near edge', red: 'Off market'
 const BADGE_COLORS = { green: 'var(--good)', yellow: 'var(--warn)', red: 'var(--bad)' };
 
 function marketBadgeHtml(o: AppOffering, metric?: OfferingMetric) {
-  const status = metric ? floorStatus(metric.maxDiscountPct, o.discountPct || 0) : 'ok';
+  const selectedOffering = applyRangeCase({ offerings: [o] }).offerings[0];
+  const status = metric ? floorStatus(metric.maxDiscountPct, Math.max(o.discountPct || 0, membershipFloor(selectedOffering, state.membershipPlans || []).discountPct)) : 'ok';
   const b = marketBadge(Number(displayPrice(o)) || 0, o, status);
   if (!b) return '<span class="muted">—</span>';
   const arrow = b.direction === 'below' ? ' ▼' : b.direction === 'above' ? ' ▲' : '';

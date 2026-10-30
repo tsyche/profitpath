@@ -3356,6 +3356,25 @@ input[type="checkbox"] {
   font-size: 11px;
 }
 
+#scenariosModal .scenario-save-controls { display: flex; gap: 12px; }
+#scenariosModal .scenario-save-controls input { min-width: 0; }
+#scenariosModal .scenarios-list { display: grid; gap: 10px; padding: 10px; }
+#scenariosModal .scenario-item { gap: 12px; }
+#scenariosModal .scenario-item > div { min-width: 0; }
+#scenariosModal .scenario-bundle-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+#scenariosModal .bundle-choice { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-width: 32px; min-height: 44px; }
+#scenariosModal .comparison-controls { gap: 12px !important; }
+#scenariosModal .scenario-item-name { color: var(--text) !important; }
+#scenariosModal .scenario-item-meta { color: var(--muted) !important; }
+@media (max-width: 600px) {
+  #scenariosModal .scenario-item { display: grid; grid-template-columns: 32px minmax(0, 1fr); }
+  #scenariosModal .scenario-item-actions { grid-column: 2; flex-wrap: wrap; margin-left: 0; }
+  #scenariosModal .scenario-item-actions .btn { min-height: 44px; }
+  #scenariosModal .scenario-bundle-actions > .btn { flex: 1 1 140px; min-height: 44px; }
+  #scenariosModal .scenario-save-controls { flex-wrap: wrap; }
+  #scenariosModal .scenario-save-controls input { flex-basis: 100% !important; }
+}
+
 /* Comparison table styles */
 .comparison-results {
   margin-top: 20px;

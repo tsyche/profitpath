@@ -13,12 +13,13 @@ export interface RankedOffering {
   /** No staff hours per sale: per-hour margin does not apply, so it ranks last. */
   hourFree: boolean;
   status: RankStatus;
+  discountSource?: string;
 }
 
 /** Below this much discount headroom an offering is flagged as thin. */
 export const THIN_DISCOUNT_HEADROOM_PCT = 15;
 
-type RankInput = Pick<OfferingMetric, 'name' | 'marginPerHour' | 'maxDiscountPct'> & Partial<Pick<OfferingMetric, 'discountPct' | 'discountedMarginPerHour' | 'hourFree'>>;
+type RankInput = Pick<OfferingMetric, 'name' | 'marginPerHour' | 'maxDiscountPct'> & Partial<Pick<OfferingMetric, 'discountPct' | 'discountedMarginPerHour' | 'hourFree'>> & { discountSource?: string };
 
 /** Floor status from max-discount headroom after the best-case discount (percentage points of list price). */
 export function floorStatus(maxDiscountPct: number, discountPct = 0): RankStatus {
@@ -43,6 +44,7 @@ export function rankOfferings(metrics: RankInput[]): RankedOffering[] {
         discountedMarginPerHour: m.discountedMarginPerHour ?? m.marginPerHour,
         hourFree: m.hourFree ?? false,
         status: floorStatus(m.maxDiscountPct, discountPct),
+        ...(m.discountSource ? { discountSource: m.discountSource } : {}),
       };
     })
     .sort((a, b) => Number(a.hourFree) - Number(b.hourFree) || b.marginPerHour - a.marginPerHour);

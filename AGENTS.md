@@ -64,12 +64,14 @@ src/
 │   ├── resources.ts      # Optional extra capacity pools (booth, room): sanitizer and annual hours; optional `staffFree` flag (tagged offerings draw no staff hours); calc() caps forecast clients per pool and reports poolUtilization + bottleneck
 │   ├── groupRuns.ts      # Group offerings: costPerRun sanitizer and breakEvenSeats; calc() charges the run cost per cohort (Current) or per filled seat (Forecast); table in assets/components/GroupRunsPanel.ts
 │   ├── membership.ts     # Membership / prepaid-credit what-if: one plan vs one member profile priced from the offerings; credits at list by default, stacking opt-in per plan; display only, never feeds calc() (persisted in scenarios, share URL and CSV as membershipPlans/memberProfiles; optional per-offering visitsLow/visitsHigh on a profile give calcMembershipRange's min/base/max band; maxMembers reports members that fit per staff/pool and recommendFee the lowest fee for a target margin; panel in assets/components/MembershipPanel.ts, docs/plans/archive/membership-calculator.md)
+│   ├── membershipFloor.ts # Single-service full-redemption/cash-limit stress prices and same-profile plan value warnings; floor display only
 │   └── expenses.ts       # Expense line items: categories, frequencies (weekly, monthly, annual, one-time amortized over lifeYears), sanitizer, annualization, cost-by-category breakdown
 ├── insights/           # Rules-based insights + what-ifs, reverse calculator (both built on calc()), mix optimizer
 │   ├── insightsEngine.ts   # Rules-based insights; what-if impacts re-run calc()
 │   ├── reverseCalculator.ts # "What would it take?": bisects each lever against takeHome (after est. tax)
 │   ├── mixOptimizer.ts     # Suggests optimal offering mix for profit/utilization
-│   └── whatIfWizard.ts     # Guided "What If?" wizard: 9 scenarios as state patches, previewed through calc()
+│   ├── whatIfWizard.ts     # Guided "What If?" wizard: 9 scenarios as state patches, previewed through calc()
+│   └── decisionWorkbench.ts # 2–4 saved options under an explicit case; annual goal, offering deltas, confidence exposure and total sales-loss threshold on raised services
 ├── settings/          # Experience levels and feature gating
 │   └── index.ts          # Settings management and feature gates
 └── test/             # Vitest unit/integration tests (incl. fuzz tests)
@@ -87,8 +89,9 @@ manifest.json        # PWA configuration
 - The sticky Setup summary shows Revenue, Net Income, and Utilization below the fixed app bar.
 - Settings → Layout switches between Classic and Workspaces and remembers `profitpath-layout` on this device. Explicit `?layout=legacy` / `?layout=workspaces` links override that preference without changing it. Classic remains the new-device default pending item 25 acceptance; keep both layouts during the transition. `WorkspaceShell.ts` owns Model/Results/Compare navigation and scenario context; `OfferingEditor.ts`, `WorkspaceEntry.ts`, `WorkspaceResults.ts`, and `WorkspaceShare.ts` compose the existing controls and tools. Scoped styles live in `assets/workspaces.css`.
 - `src/ui/workspaceNavigation.ts` parses allowlisted views. Navigation preferences and `assets/state/pendingInputs.ts` invalid text stay outside financial state/undo. Incomplete numeric edits retain last-valid results and block save/share. `persistState()` returns success and publishes draft status; shared payloads stay in the URL if storage fails.
-- Workspace scenario URLs carry the active case independently of financial state. Layout switching preserves the model, case, and read-only locks; incomplete edits or draft-save failures block switching. Read-only snapshots keep native control locks across render/reload in both layouts; Try a change leaves read-only mode. Comparison links/embeds carry both sanitized snapshots and their case, retained in memory for recipient exports without adding saved scenarios or depending on the recipient draft's ranges. Comparison CSV/PDF label the case and annual period and include all eight financial summary rows.
+- Workspace scenario URLs carry the active case independently of financial state. Layout switching preserves the model, case, and read-only locks; incomplete edits or draft-save failures block switching. Read-only snapshots keep native control locks across render/reload in both layouts; Create alternative leaves read-only mode. Comparison links/embeds carry both sanitized snapshots and their case, retained in memory for recipient exports without adding saved scenarios or depending on the recipient draft's ranges. Comparison CSV/PDF label the case and annual period and include all eight financial summary rows.
 - Preview experience levels control initial detail; core inputs, specialist tools, Compare, and exports remain reachable at every level. Advanced diagnostics remain in Settings. See [experience levels](docs/experience-levels.md).
+- `DecisionWorkbench.ts` exposes the same 2–4-option decision surface from Scenarios in either layout and Compare in Workspaces. Baseline/case/goal stay outside financial state. Decision links reuse bounded scenario bundles with `decision=1`, case and optional annual goal; recipients review in memory without importing. Existing two-option comparison links remain compatible. [Decision assumptions](FEATURES.md#decision-assumptions) define the supported loss/floor checks.
 
 #### 1. Calculation Engine (`src/calculations/index.ts`)
 - **Purpose**: Handles all business logic calculations with caching and debugging support
@@ -220,7 +223,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (821 unit tests across 72 files — 820 passing, 1 existing skip — plus 586 Playwright e2e cases across 48 files, Chromium + Firefox)
+#### Test Coverage (833 unit tests across 75 files — 832 passing, 1 existing skip — plus 610 Playwright e2e cases across 50 files, Chromium + Firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)

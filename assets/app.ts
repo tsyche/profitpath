@@ -4,6 +4,7 @@ import { initMembershipPanel, renderMembershipPanel } from './components/Members
 import { errStack } from './utils/helpers';
 import { openScenarioModal, renderScenariosList } from './components/UIHelpers';
 import { bindCsvImport, initScenarioComparison, setSharedComparisonScenarios, showScenarioComparisonDiff } from './components/ScenarioComparison';
+import { openSharedDecision } from './components/DecisionWorkbench';
 import { initAppState, persistState, pushHistory, redo, state, undo } from './state/appState';
 import { bindPanelToggle, initAdvancedChartsPanel, initAdvisorPanel, initAnalysisPanels, initCustomerAnalyticsPanel, initInsightsPanel, initMixOptimizerPanel, initReversePanel, initWhatIfWizard } from './components/AnalysisPanels';
 import { bindControls, render, syncCurrencySelect, updateOutputs } from './components/AppRender';
@@ -25,7 +26,7 @@ import { $, $$ } from './utils/dom';
 import { setHooks } from './state/hooks';
 import { bindOfferingsTable } from './components/OfferingsTable';
 import { bindExpenses } from './components/ExpensesPanel';
-import { bindRangesMarket } from './components/RangesMarketPanel';
+import { bindRangesMarket, renderMarketTable, renderOfferingRanking } from './components/RangesMarketPanel';
 import { bindResources, refreshAfterResourceEdit } from './components/ResourcesPanel';
 import { showToast } from './services/modalService';
 import { INDUSTRY_TEMPLATES } from './services/industryTemplates';
@@ -159,6 +160,7 @@ try {
   if (dbg) dbg.textContent = 'Render error: ' + errStack(e);
 }
 promptScenarioBundleImport();
+openSharedDecision();
 
 // Auto-open comparison if shared link was used
 if (sharedComparisonReady) {
@@ -218,6 +220,7 @@ function initMembershipSection() {
       } catch { return {}; }
     },
     persist: persistState,
+    refreshFloor: () => { const metrics = calc(state); renderOfferingRanking(metrics); renderMarketTable(metrics); },
     pushHistory
   });
   bindPanelToggle('#membershipToggle', '#membershipBody', renderMembershipPanel);

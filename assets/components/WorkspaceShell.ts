@@ -8,6 +8,7 @@ import { getAllScenarios, escapeHtml } from '../services/miscService';
 import { saveScenario, uniqueCopyName, loadScenario } from '../services/scenarioService';
 import { closeScenarioModal, createModal } from './Modal';
 import { showScenarioComparisonDiff } from './ScenarioComparison';
+import { showDecisionPicker } from './DecisionWorkbench';
 import { openScenarioModal } from './UIHelpers';
 import { initOfferingEditor, renderOfferingEditor, refreshOfferingList } from './OfferingEditor';
 import { ensureValidInputs, hasPendingInputs, restorePendingInputs } from '../state/pendingInputs';
@@ -23,7 +24,8 @@ const nameKey = 'profitpath-working-name';
 const labels = ['Business', 'Offerings', 'Costs', 'People & capacity', 'Assumptions'];
 let current: WorkspaceView = { workspace: 'model', section: 'business' };
 let lastModel: WorkspaceView = { ...current };
-let draftName = 'Untitled model';
+let draftName = '';
+let nameBeforeEdit = '';
 let retained = true;
 let ready = false;
 
@@ -50,6 +52,29 @@ function normalizedSnapshot(value: unknown): string {
 }
 function scenarios() { try { return getAllScenarios(); } catch { return []; } }
 function announce(message: string) { const status = $('#workspaceAnnouncement'); if (status) status.textContent = message; }
+const icon = (path: string) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+const pencil = icon('<path d="m15 4 5 5M4 20l4-1L20 7a2 2 0 0 0-5-5L3 14l-1 6Z"/>');
+const saveIcon = icon('<path d="M5 3h12l4 4v14H3V3Zm2 0v6h10V3M7 21v-8h10v8"/>');
+const alternativeIcon = icon('<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V3H3v13h5m6-2v6m-3-3h6"/>');
+const shareIcon = icon('<path d="M12 16V3m-5 5 5-5 5 5M5 13v8h14v-8"/>');
+const moreIcon = icon('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>');
+
+function beginRename() {
+  nameBeforeEdit = draftName;
+  $('#workspaceRename')!.hidden = true;
+  const field = $<HTMLInputElement>('#workspaceName')!;
+  field.hidden = false; field.value = draftName; field.focus(); field.select();
+}
+
+function finishRename(cancel = false, focus = true) {
+  const field = $<HTMLInputElement>('#workspaceName')!;
+  draftName = cancel ? nameBeforeEdit : field.value.trim().slice(0, 120);
+  write(nameKey, draftName);
+  field.hidden = true;
+  $('#workspaceRename')!.hidden = false;
+  refreshWorkspace();
+  if (focus) $('#workspaceRename')!.focus();
+}
 
 export function navigateWorkspace(view: WorkspaceView, options: { replace?: boolean; focus?: boolean } = {}) {
   if (!ready) return;
@@ -90,7 +115,7 @@ function applyView(focus: boolean) {
   $('#workspaceApp')!.dataset.workspace = current.workspace;
   $('#workspaceModelTitle')!.textContent = labels[MODEL_SECTIONS.indexOf(current.section)];
   const section = $(`[data-model-section="${current.section}"]`);
-  section?.querySelectorAll<HTMLDetailsElement>(':scope > details:not(#setupNotes)').forEach(details => { details.open = true; });
+  section?.querySelectorAll<HTMLDetailsElement>(':scope > #setupBasics, :scope > #setupOfferings, :scope > #setupCosts').forEach(details => { details.open = true; });
   refreshWorkspace();
   renderOfferingEditor(current.offeringId, calc(state));
   restorePendingInputs();
@@ -127,15 +152,24 @@ export function refreshWorkspace(metrics: CalcResult = calc(state)) {
   if (!ready) return;
   const name = $<HTMLInputElement>('#workspaceName');
   if (name && document.activeElement !== name) name.value = draftName;
+  $('#workspaceNameDisplay')!.textContent = draftName || 'Name your model';
   const saved = scenarios().find(scenario => scenario.name.toLowerCase() === draftName.toLowerCase());
   const matches = saved && normalizedSnapshot(saved.state || saved.data) === normalizedSnapshot(state);
   $('#workspaceSaveStatus')!.textContent = !retained
     ? 'Draft could not be saved on this device. Free storage and edit again, or export a copy.'
     : matches ? 'Matches saved scenario · draft saved on this device'
-    : 'Draft saved on this device · named scenario unchanged';
+    : saved ? 'Draft saved on this device · named scenario unchanged'
+    : 'Draft saved on this device · save a scenario to compare';
+  $<HTMLButtonElement>('#workspaceSave')!.title = saved ? 'Update this named scenario snapshot' : 'Save a named snapshot for comparison';
   const template = state.loadedTemplate && window.INDUSTRY_TEMPLATES?.[state.loadedTemplate];
   $('#workspaceExample')!.textContent = template ? `Example data · ${template.name}` : 'Working model';
-  $('#workspaceContext')!.textContent = `${state.mode === 'forecast' ? 'Forecast · capacity-supported customers' : 'Current · existing customers'} · ${state.currency} · ${RANGE_CASE_LABELS[getRangeCase()]} case`;
+  $('#workspaceModeBadge')!.textContent = state.mode === 'forecast' ? 'Forecast' : 'Current';
+  $('#workspaceModeBadge')!.dataset.mode = state.mode;
+  $('#workspaceContextDetail')!.textContent = `${state.currency} · ${RANGE_CASE_LABELS[getRangeCase()]} case`;
+  $('#workspaceBusinessSettings')!.dataset.mode = state.mode;
+  $('#workspaceModeDescription')!.textContent = state.mode === 'forecast'
+    ? 'Plan the customers your capacity can support.'
+    : 'Analyze revenue and capacity from your existing customers.';
   $('#workspaceOutcome')!.textContent = `This model produces ${fmtMoney0(metrics.income)} per year before estimated tax, at ${metrics.capacityPct.toFixed(1)}% of productive capacity.`;
   $('#workspaceModelReturn')?.setAttribute('href', urlFor(lastModel));
   $('#workspacePayroll')!.textContent = fmtMoney0(metrics.annualPayroll);
@@ -159,7 +193,7 @@ export function refreshWorkspace(metrics: CalcResult = calc(state)) {
 function saveWorkingScenario() {
   if (!ensureValidInputs()) return;
   const name = draftName.trim();
-  if (!name) { $('#workspaceName')?.focus(); return; }
+  if (!name) { beginRename(); announce('Name your model, then save it as a scenario.'); return; }
   const existing = scenarios().find(scenario => scenario.name.toLowerCase() === name.toLowerCase());
   if (existing && normalizedSnapshot(existing.state || existing.data) !== normalizedSnapshot(state)) {
     createModal({ title: 'Update saved scenario?', content: `Replace the saved “${escapeHtml(existing.name)}” with this draft?`, buttons: [
@@ -170,12 +204,13 @@ function saveWorkingScenario() {
 
 function tryChange() {
   if (!ensureValidInputs()) return;
+  if (!draftName.trim()) { beginRename(); announce('Name your baseline model before creating an alternative.'); return; }
   const saved = scenarios();
   const existing = saved.find(scenario => scenario.name.toLowerCase() === draftName.toLowerCase());
   const suggested = uniqueCopyName(`${draftName} alternative`, saved.map(scenario => scenario.name));
   const modal = createModal({
-    title: 'Try a change',
-    content: `<p>${existing ? `Keep saved “${escapeHtml(existing.name)}” unchanged.` : `Save this draft as “${escapeHtml(draftName)}” first.`} Explore changes in a separately named draft.</p>
+    title: 'Create alternative',
+    content: `<p>${existing ? `Keep saved “${escapeHtml(existing.name)}” unchanged.` : `First save this baseline as “${escapeHtml(draftName)}”.`} Name a separate option, edit it, then save that scenario to compare the results.</p>
       <label for="workspaceAlternativeName">Alternative name</label><input id="workspaceAlternativeName" maxlength="120" value="${escapeHtml(suggested)}">`,
     buttons: [{ text: 'Cancel' }, { text: 'Create alternative', primary: true, action: () => {
       const name = modal.querySelector<HTMLInputElement>('#workspaceAlternativeName')!.value.trim();
@@ -201,11 +236,14 @@ export function initWorkspaceShell({ shared = false } = {}) {
   document.body.classList.add('workspace-layout');
   grid.id = 'workspaceApp'; grid.classList.add('workspace-grid');
   grid.innerHTML = `<section class="workspace-context" aria-label="Scenario context">
-    <div><p id="workspaceExample" class="workspace-eyebrow"></p><label class="visually-hidden" for="workspaceName">Scenario name</label>
-      <input id="workspaceName" maxlength="120" autocomplete="off" value="Untitled model"><p id="workspaceSaveStatus" role="status"></p><p id="workspaceContext"></p></div>
-    <div class="workspace-actions"><button class="btn" id="workspaceSave" type="button" aria-label="Save scenario">Save</button><button class="btn" id="workspaceTryChange" type="button">Try a change</button>
-      <button class="btn" data-workspace-action="share" type="button">Share / export</button>
-      <details class="workspace-context-more"><summary>More</summary><div><button class="btn" data-workspace-action="scenarios" type="button">Saved scenarios</button><button class="btn" data-workspace-action="templates" type="button">New / examples</button><button class="btn" data-workspace-action="import" type="button">Import CSV</button></div></details></div></section>
+    <div><p id="workspaceExample" class="workspace-eyebrow"></p>
+      <button id="workspaceRename" type="button" title="Rename model"><span id="workspaceNameDisplay">Name your model</span>${pencil}<span class="visually-hidden"> · Rename model</span></button>
+      <label class="visually-hidden" for="workspaceName">Model name</label><input id="workspaceName" maxlength="120" autocomplete="off" placeholder="Name your model" hidden>
+      <p id="workspaceSaveStatus" role="status"></p><p id="workspaceContext"><strong id="workspaceModeBadge"></strong><span id="workspaceContextDetail"></span></p></div>
+    <div class="workspace-actions workspace-context-actions"><button class="btn primary" id="workspaceSave" type="button" aria-label="Save scenario">${saveIcon}<span>Save scenario</span></button>
+      <button class="btn" id="workspaceTryChange" type="button" aria-label="Create alternative scenario">${alternativeIcon}<span class="workspace-desktop-label">Create alternative</span><span class="workspace-mobile-label" aria-hidden="true">Alternative</span></button>
+      <button class="btn" data-workspace-action="share" type="button" aria-label="Share / export">${shareIcon}<span class="workspace-desktop-label">Share / export</span><span class="workspace-mobile-label" aria-hidden="true">Share</span></button>
+      <details class="workspace-context-more"><summary aria-label="More model actions">${moreIcon}<span>More</span></summary><div role="group" aria-label="More model actions"><button class="btn" data-workspace-action="scenarios" type="button">Saved scenarios</button><button class="btn" data-workspace-action="templates" type="button">New / examples</button><button class="btn" data-workspace-action="import" type="button">Import CSV</button></div></details></div></section>
     <nav class="workspace-nav" aria-label="Workspaces"><a data-workspace="model">Model</a><a data-workspace="results">Results</a><a data-workspace="compare">Compare</a></nav>
     <div id="workspacePendingStatus" class="workspace-pending-status" role="status" hidden>Incomplete changes are not saved. Results use the last valid values. <button class="btn" id="workspaceFixInput" type="button">Fix incomplete input</button></div>
     <div id="workspaceValidation"></div>
@@ -217,9 +255,9 @@ export function initWorkspaceShell({ shared = false } = {}) {
     <main id="workspaceResults" tabindex="-1" aria-labelledby="workspaceResultsTitle" hidden><p class="workspace-eyebrow">Annual results</p><h1 id="workspaceResultsTitle">Does this model work?</h1><p id="workspaceOutcome" class="workspace-outcome"></p>
       <div id="workspaceResultActions" class="workspace-actions"><a id="workspaceModelReturn" class="btn" href="#">Edit this model</a><button class="btn" data-workspace-action="share" type="button">Share / export</button></div><div id="workspaceOutputs"></div></main>
     <main id="workspaceCompare" tabindex="-1" aria-labelledby="workspaceCompareTitle" hidden><p class="workspace-eyebrow">Saved options</p><h1 id="workspaceCompareTitle">Which change should you make?</h1>
-      <div id="workspaceCompareEmpty" class="workspace-empty"><h2>Save an option to compare.</h2><p>Save a baseline, then use Try a change and save an alternative. Both remain on this device.</p></div>
+      <div id="workspaceCompareEmpty" class="workspace-empty"><h2>Save an option to compare.</h2><p>Save a baseline scenario, then create and save an alternative. Both remain on this device.</p></div>
       <div id="workspaceCompareControls"><div class="workspace-compare-selects"><div><label for="workspaceBaseline">Baseline</label><select id="workspaceBaseline"></select></div><div><label for="workspaceAlternative">Alternative</label><select id="workspaceAlternative"></select></div></div>
-      <div class="workspace-actions"><button class="btn primary" id="workspaceCompareButton" type="button">Compare options</button><button class="btn" id="workspaceEditAlternative" type="button">Edit alternative</button></div><p class="smallprint">Annual values. Comparison opens the existing full detail view, including its export and share actions.</p></div></main>
+      <div class="workspace-actions"><button class="btn primary" id="workspaceCompareButton" type="button">Compare options</button><button class="btn" id="workspaceDecisionButton" type="button">Decision workbench · 2–4 options</button><button class="btn" id="workspaceEditAlternative" type="button">Edit alternative</button></div><p class="smallprint">Annual values. Comparison opens the existing full detail view. The decision workbench adds an income goal, offering deltas and sales-loss thresholds.</p></div></main>
     <p class="visually-hidden" id="workspaceAnnouncement" role="status" aria-live="polite"></p>`;
   $('#workspaceControls')!.appendChild(controls);
   $('#workspaceOutputs')!.appendChild(outputs);
@@ -236,16 +274,25 @@ export function initWorkspaceShell({ shared = false } = {}) {
   }
   const destination = (section: ModelSection) => `[data-model-section="${section}"]`;
   move('#setupBasics', destination('business')); move('#setupNotes', destination('business'));
+  const businessSettings = document.createElement('section');
+  businessSettings.className = 'workspace-fields'; businessSettings.id = 'workspaceBusinessSettings';
+  businessSettings.innerHTML = '<h2>Business setup</h2>';
+  $('#setupBasics')!.after(businessSettings);
+  moveField('modeSelect', '#workspaceBusinessSettings');
   const currency = $('#currencySelect')?.closest('.settings-select-label');
   if (currency) {
     const originalSection = currency.closest<HTMLElement>('.settings-section');
-    $(destination('business'))!.appendChild(currency);
+    businessSettings.appendChild(currency);
     if (originalSection) originalSection.hidden = true;
   }
+  move('#lockMixField', '#workspaceBusinessSettings');
   const mode = $<HTMLSelectElement>('#modeSelect');
   if (mode) {
-    mode.options[0].textContent = 'What can my capacity support? (Forecast)';
-    mode.options[1].textContent = 'How does my current customer base perform? (Current)';
+    mode.options[0].textContent = 'Forecast · capacity plan';
+    mode.options[1].textContent = 'Current · existing customers';
+    const hint = mode.parentElement?.querySelector<HTMLElement>('.hint');
+    if (hint) hint.id = 'workspaceModeDescription';
+    mode.setAttribute('aria-describedby', 'workspaceModeDescription');
   }
   const levelHeading = $('#settingsMenu .settings-section h4');
   if (levelHeading) levelHeading.textContent = 'Initial detail';
@@ -258,7 +305,7 @@ export function initWorkspaceShell({ shared = false } = {}) {
   }
   $(destination('business'))!.insertAdjacentHTML('afterbegin', `<details class="workspace-getting-started"${read('profitpath-onboarding-completed') === 'true' ? '' : ' open'}><summary>Start here · optional guidance</summary><p>Use an example, start blank, or open a saved scenario. Results are available throughout.</p>
     <div class="workspace-actions"><button class="btn" data-workspace-action="templates" type="button">Use an example</button><button class="btn" data-workspace-action="blank" type="button">Start blank</button><button class="btn" data-workspace-action="scenarios" type="button">Open saved scenarios</button></div>
-    <ol><li>Choose the business mode and currency.</li><li>Add your offerings and their prices.</li><li>Review people, capacity, and costs.</li><li>Read Results, then try a change.</li></ol></details>`);
+    <ol><li>Choose the business mode and currency.</li><li>Add your offerings and their prices.</li><li>Review people, capacity, and costs.</li><li>Read Results, then create an alternative to compare.</li></ol></details>`);
   move('#setupOfferings', destination('offerings')); move('#setupCosts', destination('costs'));
   move('#resourcesSection', destination('capacity')); move('#rangesSection', destination('assumptions'));
   move('#marketSection', destination('assumptions')); move('#groupRunsSection', destination('offerings'));
@@ -281,14 +328,29 @@ export function initWorkspaceShell({ shared = false } = {}) {
   const spreads = $('#suggestRangesBtn')?.parentElement;
   if (spreads) $('#workspaceRangePresets')!.appendChild(spreads);
   $('.skip-link')?.setAttribute('href', '#workspaceModel');
-  draftName = shared ? (new URL(location.href).searchParams.get('name') || 'Shared snapshot').slice(0, 120) : read(nameKey) || 'Untitled model';
+  draftName = shared ? (new URL(location.href).searchParams.get('name') || 'Shared snapshot').slice(0, 120) : read(nameKey) || '';
+  if (shared) write(nameKey, draftName);
+  if (draftName === 'Untitled model' && !scenarios().some(s => s.name === draftName)) draftName = '';
   const url = new URL(location.href);
   current = shared ? parseWorkspaceView('results') : parseWorkspaceView(url.searchParams.get('view') ?? read(viewKey));
   if (current.workspace === 'model') lastModel = { ...current };
   ready = true;
+  const more = $<HTMLDetailsElement>('.workspace-context-more')!;
+  const closeMore = (focus = false) => {
+    if (!more.open) return;
+    more.open = false;
+    if (focus) more.querySelector('summary')?.focus();
+  };
+  document.addEventListener('click', event => {
+    if (event.target instanceof Node && !more.contains(event.target)) closeMore();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && more.open) { event.preventDefault(); closeMore(true); }
+  });
   grid.addEventListener('click', event => {
     const target = (event.target as HTMLElement).closest<HTMLElement>('a, button');
     if (!target) return;
+    if (target.dataset.workspaceAction) closeMore(more.contains(target));
     if (target.dataset.workspace) {
       event.preventDefault(); navigateWorkspace(target.dataset.workspace === 'model' ? lastModel : parseWorkspaceView(target.dataset.workspace)); return;
     }
@@ -304,12 +366,16 @@ export function initWorkspaceShell({ shared = false } = {}) {
     if (target.dataset.workspaceAction === 'share') {
       const first = $<HTMLSelectElement>('#workspaceBaseline')!.value;
       const second = $<HTMLSelectElement>('#workspaceAlternative')!.value;
-      showWorkspaceShareReview(draftName, current.workspace === 'compare' && first && second && first !== second ? { first, second } : undefined);
+      showWorkspaceShareReview(draftName || 'Unnamed draft', current.workspace === 'compare' && first && second && first !== second ? { first, second } : undefined);
     }
     if (target.id === 'workspaceSave') saveWorkingScenario();
+    if (target.id === 'workspaceRename') beginRename();
     if (target.id === 'workspaceFixInput') ensureValidInputs();
     if (target.dataset.editOffering) navigateWorkspace({ workspace: 'model', section: 'offerings', offeringId: target.dataset.editOffering });
     if (target.id === 'workspaceTryChange') tryChange();
+    if (target.id === 'workspaceDecisionButton') showDecisionPicker([
+      $<HTMLSelectElement>('#workspaceBaseline')!.value, $<HTMLSelectElement>('#workspaceAlternative')!.value
+    ].filter(Boolean));
     if (target.id === 'workspaceCompareButton') {
       const first = $<HTMLSelectElement>('#workspaceBaseline')!.value;
       const second = $<HTMLSelectElement>('#workspaceAlternative')!.value;
@@ -340,6 +406,12 @@ export function initWorkspaceShell({ shared = false } = {}) {
   $('#workspaceSection')!.addEventListener('change', event => navigateWorkspace({ workspace: 'model', section: (event.target as HTMLSelectElement).value as ModelSection }));
   $('#workspaceName')!.addEventListener('input', event => {
     draftName = (event.target as HTMLInputElement).value.slice(0, 120); write(nameKey, draftName); refreshWorkspace();
+  });
+  $('#workspaceName')!.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === 'Escape') { event.preventDefault(); finishRename(event.key === 'Escape'); }
+  });
+  $('#workspaceName')!.addEventListener('blur', () => {
+    if (!$<HTMLInputElement>('#workspaceName')!.hidden) finishRename(false, false);
   });
   for (const id of ['workspaceBaseline', 'workspaceAlternative']) $('#' + id)!.addEventListener('change', () => {
     write('profitpath-compare-selection', JSON.stringify({ id1: $<HTMLSelectElement>('#workspaceBaseline')!.value, id2: $<HTMLSelectElement>('#workspaceAlternative')!.value }));

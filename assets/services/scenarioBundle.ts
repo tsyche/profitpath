@@ -40,7 +40,9 @@ export function encodeScenarioBundle(scenarios: Scenario[]): string | null {
 export function decodeScenarioBundle(payload: string): BundleEntry[] | null {
   if (!payload.startsWith(PREFIX) || payload.length > MAX_LINK_CHARS) return null;
   try {
-    const raw = inflateSync(fromBase64Url(payload.slice(PREFIX.length)));
+    // fflate truncates a caller-supplied buffer instead of allocating unbounded output.
+    // One sentinel byte lets us reject expansion beyond the documented JSON limit.
+    const raw = inflateSync(fromBase64Url(payload.slice(PREFIX.length)), { out: new Uint8Array(MAX_JSON_BYTES + 1) });
     if (raw.length > MAX_JSON_BYTES) return null;
     const data: unknown = JSON.parse(strFromU8(raw));
     if (!data || typeof data !== 'object' || !('version' in data) || data.version !== 1 || !('scenarios' in data) || !Array.isArray(data.scenarios)) return null;
@@ -111,6 +113,7 @@ export function showScenarioBundleLink(scenarios: Scenario[]): void {
 
 export function promptScenarioBundleImport(): void {
   const url = new URL(window.location.href);
+  if (url.searchParams.get('decision') === '1') return;
   const payload = url.searchParams.get('bundle');
   if (!payload) return;
   const clearParam = () => {

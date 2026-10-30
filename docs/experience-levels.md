@@ -14,12 +14,14 @@ Explicit `?layout=workspaces` and `?layout=legacy` links override the remembered
 
 - **Model:** Business, Offerings, Costs, People & capacity, and Assumptions reuse the existing financial controls. Offerings have a focused editor and an optional dense table.
 - **Results:** Annual net income before tax, revenue, and utilization come first. Expand a question for cost breakdowns, service contributions, growth limits, income tools, customer plans, or assumption exploration.
-- **Compare:** Save a baseline and an alternative, then open the existing two-scenario comparison. This is available at Beginner.
+- **Compare:** Save a baseline and alternatives, then open the existing two-scenario comparison or the two-to-four-option decision workbench. Both are available at Beginner. The workbench adds offering deltas, an annual income goal, sales-loss thresholds, confidence exposure, and portable decision reports; see [decision assumptions](../FEATURES.md#decision-assumptions).
 - **Initial detail:** Advanced opens delivery fields in the offering editor. Specialist tools remain collapsed behind their questions at every level. Debug and performance diagnostics remain Advanced-only in Settings; tooltip preferences remain separate.
 - **Entry:** Optional inline guidance replaces the automatic welcome dialog. Examples preview before replacing a draft.
 - **Share / export:** Review the conclusion and selected case before using an existing format. PDF/HTML/email include annual results, notes, case, and the actual offering price units; CSV/Excel retain canonical monthly prices for model compatibility. Snapshot links preserve the selected case in both layouts; comparison links and embeds carry both scenarios for recipients without local saves.
 
-Navigation and incomplete input text stay outside financial state and undo history. Results retain the last valid numeric values; incomplete edits block saving and sharing. The draft-save status reports storage failures. Opening a shared snapshot asks before replacing an existing draft; read-only links remain locked after reload, and **Try a change** creates an editable draft.
+Click the model title/pencil to rename it. **Save scenario** creates a named snapshot; **Create alternative** preserves the saved baseline while opening a separately named draft. See [workspace behavior](../FEATURES.md#user-experience) for naming, modes and mobile controls.
+
+Navigation and incomplete input text stay outside financial state and undo history. Results retain the last valid numeric values; incomplete edits block saving and sharing. The draft-save status reports storage failures. Opening a shared snapshot asks before replacing an existing draft; read-only links remain locked after reload, and **Create alternative** creates an editable draft.
 
 ## Default layout feature mapping
 

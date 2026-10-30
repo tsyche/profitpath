@@ -29,7 +29,7 @@ async function reflow(page: Page) {
     pageWidth: Math.max(document.body.scrollWidth, document.documentElement.scrollWidth)
   }));
   expect(bounds.pageWidth, JSON.stringify(bounds)).toBeLessThanOrEqual(bounds.width);
-  const controls = await page.locator('#workspaceApp :is(input, select, button, a, summary)').evaluateAll(elements =>
+  const controls = await page.locator('#workspaceApp :is(input, select, button, a, summary), #decisionWorkbench :is(input, select, button)').evaluateAll(elements =>
     elements.filter(element => element.getClientRects().length > 0).map(element => {
       const rect = element.getBoundingClientRect();
       return { name: element.id || element.textContent?.trim().slice(0, 40), left: rect.left, right: rect.right };
@@ -66,6 +66,10 @@ for (const [width, theme] of [[1440, 'light'], [1280, 'dark']] as const) {
         localStorage.setItem('profitpath-state', JSON.stringify(model));
         localStorage.setItem('profitpath-onboarding-completed', 'true');
         localStorage.setItem('profitpath-theme', theme);
+        localStorage.setItem('profitpath-scenarios', JSON.stringify([0, 1, 2].map(i => ({
+          id: 'zoom-' + i, name: ['Today', 'Option A', 'Option B'][i], timestamp: '', createdAt: '',
+          state: { ...model, monthlyCosts: model.monthlyCosts + i * 100 }
+        }))));
       }, { model: hybridFixture(), theme });
       const page = context.pages()[0] || await context.newPage();
       await page.goto('http://127.0.0.2:3124/?layout=workspaces&view=model/offerings');
@@ -91,6 +95,18 @@ for (const [width, theme] of [[1440, 'light'], [1280, 'dark']] as const) {
       for (const workspace of ['Results', 'Compare', 'Model']) {
         await nav.getByRole('link', { name: workspace, exact: true }).click();
         await reflow(page);
+        if (workspace === 'Compare') {
+          await page.locator('#workspaceDecisionButton').click();
+          const picker = page.getByRole('dialog', { name: 'Choose decision options' });
+          for (const checkbox of await picker.getByRole('checkbox').all()) await checkbox.check();
+          await picker.getByRole('button', { name: 'Open workbench' }).click();
+          await expect(page.locator('#decisionWorkbench')).toBeVisible();
+          await expect(page.locator('#decisionResults thead').first()).toBeVisible();
+          await reflow(page);
+          const decisionAxe = await new AxeBuilder({ page }).include('#decisionWorkbench').analyze();
+          expect(decisionAxe.violations).toEqual([]);
+          await page.locator('#decisionWorkbench .modal-close').click();
+        }
       }
       const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
       expect(violations.filter(violation => violation.impact === 'critical' || violation.impact === 'serious')).toEqual([]);

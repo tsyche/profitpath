@@ -103,7 +103,7 @@ test('reviewed CSV keeps the selected case when reimported', async ({ page }) =>
   await expect(page.locator('#workspaceContext')).toContainText('Conservative');
 });
 
-test('shared read-only fields stay locked after rendering and reload; Try a change creates an editable copy', async ({ page, browser }) => {
+test('shared read-only fields stay locked after rendering and reload; Create alternative makes an editable copy', async ({ page, browser }) => {
   await open(page);
   const url = await page.evaluate(() => window.encodeScenarioToURL(window.state, { readonly: true }));
   const context = await browser.newContext();

@@ -32,6 +32,8 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Social Media Sharing**: Open Graph and Twitter Card support for rich previews
 - **Industry Templates**: Pre-built configurations for consulting, cleaning, landscaping, fitness, photography, and handyman services
 - **Scenario Comparison**: Side-by-side comparison of saved scenarios with key metrics and differences
+- **Decision Workbench**: Compare two to four saved options from Scenarios, or Compare in Workspaces. Choose a baseline, assumption case, and optional annual net-income goal; review offering revenue/contribution deltas, guessed and untagged revenue, and a plain-language income verdict. Options must share a currency and calculation mode.
+- **Decision Sharing**: CSV, print/PDF, and snapshot links retain the reviewed options, baseline, case, goal and notes. A decision link opens in memory without replacing the recipient's draft or saved library.
 - **Analytics Tracking**: Background usage tracking for admin analysis (admin-only with user opt-out toggle) ✅
 - **Site Traffic Counter**: Privacy-respecting GoatCounter visit counter (no cookies, honors Do Not Track), separate from the opt-in feature analytics above — see [docs/privacy-policy.md](docs/privacy-policy.md) ✅
 
@@ -42,6 +44,14 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Report Conclusions**: PDF, HTML, and email include the selected case, annual results, scenario context and notes. Readable reports use per-month, per-session, or per-sale prices; CSV/Excel keep canonical monthly prices for model compatibility.
 - **Email Sharing**: Open a report draft in your mail application, including a case-preserving snapshot link
 - **Scheduling Information**: Explains that automated delivery requires a server and is unavailable in this version
+
+### Decision assumptions
+
+The workbench's break-even sales-loss figure is the largest **total** loss on matched services whose prices increased that still matches baseline annual income. It replaces those services' loss assumption and holds other inputs at the selected case. Discrete client counts are recalculated through the normal engine. For stepwise Current-mode group costs, a labeled conservative bound keeps the original run costs; it also ignores any gain from losing negative-contribution sales. This avoids promising a safe interval from a non-monotone profit curve. Forecast remains a capacity-supported ceiling.
+
+Membership What-If shows a per-service price-floor stress test from the entered plans. It assigns the entire fee to one service, fully redeems its included visits and eligible credits without breakage, and also tests the cash-discount limit at high usage. Credits redeem at list unless stacking is explicitly enabled. Other included services are not valued in that service's test. The deepest of this derived discount and the offering's manual discount drives the existing floor warning; modeled revenue stays unchanged.
+
+Plan value-order warnings compare the same entered member profile under every plan. They identify a lower-fee plan whose total monthly payment matches or beats a higher-fee plan; they do not assume every member should upgrade.
 
 ### Testing Infrastructure
 - **Industry Templates**: 6 working templates (consulting, cleaning, landscaping, fitness, photography, handyman) loadable from the Templates menu
@@ -56,7 +66,11 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 
 Choose **Settings → Layout** to switch between Classic and the approved [workspace preview](docs/experience-levels.md#workspace-preview). The choice is remembered on this device; both layouts use the same model. Model groups business setup and focused offering editing; Results leads with annual figures and question-led tools; Compare uses saved baseline/alternative scenarios. Classic remains the default for new devices pending the human walkthrough and release gates in [ROADMAP item 25](ROADMAP.md).
 
-In the preview, experience levels control initial detail while all modeling inputs, specialist tools, Compare, and exports remain reachable. Incomplete numeric edits keep last-valid results and block saving/sharing. Shared snapshot reloads retain the selected case, and read-only recipients can use **Try a change** to create an editable copy.
+Click the model title or pencil to rename it; an unnamed draft prompts **Name your model**. Enter finishes a rename and Escape cancels it. **Save scenario** stores a named snapshot for comparison. **Create alternative** keeps the saved baseline unchanged and starts a separately named draft to edit and save. It also creates an editable copy of a read-only snapshot.
+
+**Forecast** plans customers supported by capacity; **Current** analyzes entered existing customers. A mode badge and short business-setup explanation identify the active calculation. Model/Results/Compare remain equal-sized navigation controls. Mobile context actions use one icon-and-label row; the overflow closes on an action, outside click or Escape.
+
+In the preview, experience levels control initial detail while all modeling inputs, specialist tools, Compare, and exports remain reachable. Incomplete numeric edits keep last-valid results and block saving/sharing. Shared snapshot reloads retain the selected case.
 
 - **Progressive Disclosure**: Beginner-friendly interface with optional advanced features
 - **Experience Levels**: Beginner, Intermediate, and Advanced user modes with appropriate feature sets

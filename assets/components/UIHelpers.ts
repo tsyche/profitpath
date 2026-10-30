@@ -2,6 +2,7 @@ import { deleteScenario, duplicateScenario, loadScenario, saveScenario } from ".
 import { getAllScenarios, escapeHtml, populateComparisonDropdowns } from "../services/miscService";
 import { createModal } from "../components/Modal";
 import { showScenarioBundleLink } from "../services/scenarioBundle";
+import { showDecisionPicker } from './DecisionWorkbench';
 import { showToast } from "../services/modalService";
 
 // UI Components and Helpers
@@ -44,7 +45,7 @@ export function openScenarioModal() {
     <div class="scenarios-container">
       <div class="save-scenario-section" style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
         <h4 style="margin: 0 0 12px; color: var(--text); font-size: 16px;">💾 Save Current Configuration</h4>
-        <div style="display: flex; gap: 8px;">
+        <div class="scenario-save-controls">
           <input type="text" id="scenarioNameInput" placeholder="Enter scenario name..." style="flex: 1; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 14px;">
           <button class="btn primary" id="saveScenarioBtn">💾 Save</button>
         </div>
@@ -56,7 +57,8 @@ export function openScenarioModal() {
         <div id="scenariosList" class="scenarios-list" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(0,0,0,0.1);">
           ${scenarios.length === 0 ? '<div style="padding: 20px; text-align: center; color: var(--muted);">No saved scenarios yet.</div>' : scenariosList}
         </div>
-        <button class="btn small" id="shareBundleBtn" type="button" disabled>Share selected</button>
+        <div class="scenario-bundle-actions"><button class="btn small" id="shareBundleBtn" type="button" disabled>Share selected</button>
+        <button class="btn small" id="decisionWorkbenchBtn" type="button">Decision workbench</button></div>
       </div>
 
       <div class="comparison-section">
@@ -117,6 +119,7 @@ export function openScenarioModal() {
   populateDropdowns();
 
   const selectedIds = () => Array.from(modal.querySelectorAll<HTMLInputElement>('.bundle-select:checked')).map(input => input.value);
+  modal.querySelector('#decisionWorkbenchBtn')?.addEventListener('click', () => showDecisionPicker(selectedIds()));
   modal.addEventListener('change', (event) => {
     const target = event.target;
     if (!(target instanceof HTMLInputElement) || !target.classList.contains('bundle-select')) return;

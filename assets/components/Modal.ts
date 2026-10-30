@@ -14,6 +14,7 @@ export function createModal({
   size = 'medium',
   id = '',
   onClose = null,
+  headingLevel = 3,
 }: {
   title: string;
   content: string | HTMLElement;
@@ -21,6 +22,7 @@ export function createModal({
   size?: string;
   id?: string;
   onClose?: (() => void) | null;
+  headingLevel?: 2 | 3;
 }) {
 
   // Create overlay
@@ -79,7 +81,7 @@ export function createModal({
   // Modal HTML structure (colors come from theme tokens so it matches dark/light)
   modal.innerHTML = `
     <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <h3 id="${titleId}" style="margin: 0; color: var(--text); font-size: 20px;">${title}</h3>
+      <h${headingLevel} id="${titleId}" style="margin: 0; color: var(--text); font-size: 20px;">${title}</h${headingLevel}>
       <button class="modal-close" aria-label="Close dialog" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); padding: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">&times;</button>
     </div>
     <div class="modal-body" style="color: var(--text); line-height: 1.5;">

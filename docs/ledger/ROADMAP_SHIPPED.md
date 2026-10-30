@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-10-27 — 37. Sales loss after a price change (decision workbench Phase 2)
 - [x] 2026-10-27 — 36. Share selected saved scenarios in one snapshot link (decision workbench Phase 1)
 - [x] 2026-10-27 — 12d. "Advisor" unified panel for scattered analytics features
 - [x] 2026-10-27 — 12s. Persisted-state E2E assertion for labor-pct and membership flakes
@@ -366,7 +367,7 @@ Superseded by item 18: the per-session type does this conversion in the Price ce
 
 12f. ✅ **Surface the app's own version in the UI** *(SHIPPED 2026-10-24: Settings footer shows "ProfitPath vX.Y.Z", injected from package.json via Vite `define` as `__APP_VERSION__`; test in `advisor-panels.spec.ts`)* *(new — motivated by this session's Obtainium/versionCode debugging)*
    - Nothing in the UI currently shows what version is running — not in Settings, not in the debug panel, nowhere (`grep` for version display in `assets/app.jsx`/`index.html` returns nothing)
-   - Now that CI reliably stamps a real `versionCode`/`versionName` and generates real release notes from commits (see the Analytics & APK pipeline entry in [the shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)), showing "vX.Y.Z" somewhere small (Settings footer or debug panel) would let users self-report their version when reporting bugs, and is a natural stepping stone toward an in-app "what's new" surface if release notes are ever curated for end users rather than just commit logs
+   - Now that CI reliably stamps a real `versionCode`/`versionName` and generates real release notes from commits (see the Analytics & APK pipeline entry in [the shipped ledger](ROADMAP_SHIPPED.md)), showing "vX.Y.Z" somewhere small (Settings footer or debug panel) would let users self-report their version when reporting bugs, and is a natural stepping stone toward an in-app "what's new" surface if release notes are ever curated for end users rather than just commit logs
    - Effort: ~30-60 minutes
 
 ### 2026-10-24 — 12. Guided "What If?" wizard
@@ -464,6 +465,10 @@ Optional per-offering monthly included visits on a membership plan, accounted fo
 ### 2026-10-27 — 12d. "Advisor" unified panel
 
 One collapsible entry point contains Insights Engine, Reverse Calculator, Mix Optimizer, and Advanced Charts, surfacing their available summaries. Close condition (browser gate) met.
+
+### 2026-10-27 — 37. Sales loss after a price change (decision workbench Phase 2)
+
+Per-offering base/low/high sales-loss assumptions reduce modeled demand, revenue, costs and utilization in Forecast and Current modes. Conservative uses the higher loss and Optimistic the lower loss. Scenario persistence, sharing and CSV retain sanitized assumptions. Richer decision comparison remains owned by [ROADMAP items 38–39](../../ROADMAP.md).
 
 ### 2026-10-27 — 36. Share selected saved scenarios in one snapshot link (decision workbench Phase 1)
 

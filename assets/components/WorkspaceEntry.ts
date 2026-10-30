@@ -60,7 +60,7 @@ export function startBlankWorkspace(applied: (name: string) => void) {
         offerings: [{ id: uuid(), name: 'Your first offering', type: 'subscription', priceMonthly: 0, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 0, mixPct: 100, currentClients: 0 }],
         expenses: [], resources: [], membershipPlans: [], memberProfiles: []
       });
-      applied('My business');
+      applied('');
       persistState(); render(); completed();
     } }]
   });

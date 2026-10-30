@@ -20,13 +20,16 @@ The container runner forwards Playwright arguments. Avoid shell metacharacters i
 
 The default layout remains covered by the existing calculation, scenario, export, mobile, accessibility, security, and tool journeys. Tests use `.spec.ts` files and shared TypeScript helpers.
 
-The opt-in `?layout=workspaces` preview has five suites:
+`decision-workbench.spec.ts` covers both layouts at desktop and 375px: two/three/four options, imported bundles, case/goal/baseline selection, visible aligned scenario headers, axe, CSV/print content, hostile names, portable recipient reloads without draft/library changes, and live membership floor/value-order results.
+
+The opt-in `?layout=workspaces` preview has six suites:
 
 - `workspace-shell.spec.ts`: navigation, URL/history/reload, keyboard focus, undo separation, saved-scenario entry, and the remembered Classic/Workspaces choice, including case/read-only preservation and blocked switching for incomplete edits or draft-save failures.
 - `workspace-model.spec.ts`: optional entry, last-valid numeric input, save/undo, and 12-offering Forecast/Current editing on desktop and mobile.
 - `workspace-results.spec.ts`: tool destinations, first-screen mobile figures, case-preserving CSV/share in both layouts, read-only copying, quota recovery, portable comparison embeds/recipient exports, comparison CSV/PDF financial values across all cases, and report conclusions/notes/price units.
 - `workspace-accessibility.spec.ts`: keyboard workspace focus and axe scans across all experience levels, light/dark themes, desktop/mobile, and the expanded offering editor.
 - `workspace-keyboard.spec.ts`: a complete keyboard-only template → baseline → alternative → edit/correct → Results → Compare → share journey at desktop and 375px in both browsers.
+- `workspace-polish.spec.ts`: click-to-rename/Enter/Escape/reload, explicit scenario saving, equal navigation tabs, mobile context actions, business/currency spacing, mode visibility, and overflow dismissal on actions/outside clicks/Escape.
 
 The separate development prototype and baseline captures use port 3122:
 
@@ -42,7 +45,7 @@ Production offline checks use port 3123 and a separate config:
 just test-e2e-container --config tests/offline/playwright.config.ts
 ```
 
-These build the actual production bundle, warm its service-worker cache, disconnect the browser, and verify reloads, model editing, and switching between both layouts. Loopback `127.0.0.2` exercises production worker registration; localhost development deliberately unregisters the worker.
+These build the actual production bundle, warm its service-worker cache, disconnect the browser, and verify reloads, model editing, switching between both layouts, and decision calculation/link generation. Loopback `127.0.0.2` exercises production worker registration; localhost development deliberately unregisters the worker.
 
 Production browser acceptance uses port 3124:
 
@@ -50,7 +53,7 @@ Production browser acceptance uses port 3124:
 just test-e2e-container --config tests/acceptance/playwright.config.ts
 ```
 
-Two Chromium cases use a temporary extension's `chrome.tabs.setZoom(2)` to prove actual 200% browser zoom: the zoom factor and pixel ratio double while the CSS viewport halves. Light/dark assertions, visible-control bounds, axe scans, and native-window screenshots cover reflow and layout switching. A third case renders the reviewed report to an actual PDF artifact. These prove browser behavior; physical-device keyboard use, human screen-reader usability, and native print/mail-app handoff remain separate gates.
+Two Chromium cases use a temporary extension's `chrome.tabs.setZoom(2)` to prove actual 200% browser zoom: the zoom factor and pixel ratio double while the CSS viewport halves. Light/dark assertions, visible-control bounds, axe scans, and native-window screenshots cover reflow, layout switching, and the decision workbench. Two more cases render the reviewed scenario and decision reports to actual PDF artifacts. These prove browser behavior; physical-device keyboard use, human screen-reader usability, and native print/mail-app handoff remain separate gates.
 
 ## Results and debugging
 
