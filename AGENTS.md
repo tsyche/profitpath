@@ -39,6 +39,7 @@ assets/
 │   ├── businessLogic.ts    # Core business rules and validation
 │   ├── miscService.ts      # Utility functions, exports, scenario URL sharing
 │   ├── modalService.ts     # Modal and toast handling
+│   ├── reportDelivery.ts   # File share and print handoff: Web Share/download on web, native Android bridge in the APK (android/.../ExportPlugin.java)
 │   ├── industryTemplates.ts # INDUSTRY_TEMPLATES presets (Templates menu)
 │   ├── scenarioService.ts  # Scenario management
 │   ├── stateManager.ts     # State persistence helpers
@@ -223,7 +224,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (833 unit tests across 75 files — 832 passing, 1 existing skip — plus 610 Playwright e2e cases across 50 files, Chromium + Firefox)
+#### Test Coverage (849 unit tests across 78 files — 848 passing, 1 existing skip — plus 614 Playwright e2e cases across 51 files, Chromium + Firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)
@@ -269,7 +270,7 @@ npm run test:ui      # Run tests with UI interface
 - Service worker integration for PWA features
 
 #### TypeScript Support
-- The codebase is TypeScript with `strict: true`; `tsconfig.json` is `noEmit` (Vite builds, `tsc` only checks). Run `just typecheck`: it must report 0 errors (no ratchet or baseline file). Browser globals are declared in `src/globals.d.ts`. `tests/e2e` and unit `**/*.test.ts` files are typechecked too (included in `tsconfig.json`).
+- The codebase is TypeScript with `strict: true`; `tsconfig.json` is `noEmit` (Vite builds, `tsc` only checks). Run `just typecheck`: it must report 0 errors (no ratchet or baseline file). Browser globals are declared in `src/globals.d.ts`; `src/css.d.ts` declares side-effect `*.css` imports (TS 6 checks them). TypeScript is 6.0.x (TS 7 is blocked by typescript-eslint's `<6.1.0` peer range). `tests/e2e` and unit `**/*.test.ts` files are typechecked too (included in `tsconfig.json`).
 - Only `eslint.config.js`, `vite.config.js` and `public/sw.js` stay `.js`.
 - New code is written in `.ts`; do not add `.js` files.
 - Import `.ts` modules without an extension (`../calculations/index`); `index.html` script tags need the real `.ts` path.
@@ -287,6 +288,8 @@ The application supports multiple export formats:
 - **Email**: Direct sharing via email client
 - **Embed**: iframe codes for website integration
 - **Schedule**: Explains that automated report delivery requires a server and is unavailable
+
+In the Android APK, file exports go through the native share chooser and PDF/report printing through Android's print dialog; `tests/android/native-export.ts` is the opt-in emulator acceptance check.
 
 PDF/HTML/email summaries use the active case, annual results, notes, and the offering's displayed per-month/per-session/per-sale price. Non-USD take-home summaries retain the US-tax-basis note. CSV/Excel model sheets keep canonical `priceMonthly` for import compatibility; scenario URLs carry the case in either layout.
 

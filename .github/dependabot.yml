@@ -14,8 +14,8 @@ updates:
     schedule:
       interval: monthly
     # Blocked majors (see ROADMAP "Known debt"): Capacitor needs a newer
-    # macOS/Xcode; vitest 5 breaks 11 unit tests; typescript 7, jsdom 30 and
-    # jest-dom 7 are untried.
+    # macOS/Xcode; vitest 5 breaks 11 unit tests; typescript 7 needs
+    # typescript-eslint support (peers <6.1.0); jsdom 30 and jest-dom 7 are untried.
     ignore:
       - dependency-name: "@capacitor/*"
         update-types: ["version-update:semver-major"]

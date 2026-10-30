@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-10-30 — TypeScript 6.0.3 upgrade
 - [x] 2026-10-30 — 12x. Unit tests typechecked
 - [x] 2026-10-30 — 24f. Chart uncertainty bands
 - [x] 2026-10-29 — 25. Product-flow redesign, layout choice and UI refinements
@@ -71,9 +72,13 @@
 
 ## Archived entries
 
+### 2026-10-30 — TypeScript 6.0.3 upgrade
+
+`typescript` 5.9.3 → 6.0.3 and `typescript-eslint` 8.71.2 → 8.72.1. `tsconfig.json` now uses `moduleResolution: bundler` (node10 is removed in TS 7) and `src/css.d.ts` declares side-effect `*.css` imports, which TS 6 type-checks. Production bundle hash unchanged; typecheck, lint, 848 unit tests and build pass. TypeScript 7 remains blocked by typescript-eslint's `<6.1.0` peer range; tracked in the [blocked bumps note](../../ROADMAP.md).
+
 ### 2026-10-30 — 12x. Unit tests typechecked
 
-`**/*.test.ts` is now part of `tsconfig.json` and `tsc --noEmit` reports 0 errors (was ~1,158 in the jsdom mock tests). Shared typed fixtures (`required`, `appStateFixture`, `calcResultFixture`) live in `src/test/test-utils.ts`. The accepted-casts cleanup stays open in [ROADMAP.md item 12x](../../ROADMAP.md).
+`**/*.test.ts` is now part of `tsconfig.json` and `tsc --noEmit` reports 0 errors (was ~1,158 in the jsdom mock tests). Shared typed fixtures (`required`, `appStateFixture`, `calcResultFixture`) live in `src/test/test-utils.ts`. The remaining casts are accepted design, not debt: `Bag` (`Record<string, unknown>`) in RangesMarketPanel, ResourcesPanel, ExpensesPanel and OfferingsTable is the write-by-`data-k` idiom, and `as unknown as CalcResult` is the calc-failure fallback. Retiring them needs typed key unions and writer helpers for no behavior gain; revisit only if one causes a real bug.
 
 ### 2026-10-30 — 24f. Chart uncertainty bands
 
@@ -91,7 +96,7 @@ Original entry (the remaining conditional work is owned by the active roadmap):
 
 ### 2026-10-25 — TypeScript migration
 
-All source and tests are `.ts` with `strict: true`; the ratchet is retired (`tsc --noEmit` must be 0). `tests/e2e` is typechecked; unit `*.test.ts` files stay excluded (known gap, ~1,150 errors in the jsdom mock tests; tracked in [ROADMAP.md item 12x](../../ROADMAP.md)); `$`/`$$` are typed. Migration also surfaced and fixed real bugs, each with a test: insights under-utilization, dashboard export `getSummary`, customer analytics revenue, table focus restore (`tests/e2e/table-focus.spec.ts`). Plan: [typescript-migration](../plans/archive/typescript-migration.md).
+All source and tests are `.ts` with `strict: true`; the ratchet is retired (`tsc --noEmit` must be 0). `tests/e2e` is typechecked; unit `*.test.ts` files were typechecked later (see [12x](#2026-10-30--12x-unit-tests-typechecked)); `$`/`$$` are typed. Migration also surfaced and fixed real bugs, each with a test: insights under-utilization, dashboard export `getSummary`, customer analytics revenue, table focus restore (`tests/e2e/table-focus.spec.ts`). Plan: [typescript-migration](../plans/archive/typescript-migration.md).
 
 ### 2026-10-26 — 32. Repo-wide accessibility e2e (axe-core)
 

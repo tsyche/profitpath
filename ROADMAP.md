@@ -47,10 +47,6 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - Chart ranges, Excel parity, and per-service entitlements are recorded in the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md).
     - No integration work until real usage establishes the need.
 
-12x. **Retire the accepted casts** *(remaining follow-up from shipped unit-test typechecking)*
-    - Accepted casts to revisit only if they cause trouble: `as unknown as CalcResult` (AppRender calc-failure fallback) and the `Bag` (`Record<string, unknown>`) casts in RangesMarketPanel, ResourcesPanel, ExpensesPanel and OfferingsTable.
-    - Low priority; the migration itself is done (see [ledger](docs/ledger/ROADMAP_SHIPPED.md)).
-
 **Mobile & Platform Support (Deferred — needs full Xcode)**
 
 13. **Native Android & iOS App via Capacitor**
@@ -115,7 +111,7 @@ Privacy-first freemium model planned post-launch. The app will remain fully free
 - **Next priorities**: see Recommended Next 3 above.
 - **Strategic positioning**: Core financial-modeling + export + performance + advanced-analytics + accessibility-scan foundation is complete, and the release/distribution pipeline (web + APK) is now solid after this round of hardening. Insights and Reverse Calculator are now reachable; the data-model gaps from the 2026-08 trial (per-session, one-time, group, expenses, pools, ranges, membership) are shipped. The product-flow redesign and decision workbench are shipped; device/human acceptance and the layout-default decision remain in item 40. Mobile app launch is waiting on a full Xcode install. Enterprise features deferred until market demand validates investment.
 - **Known debt**: Capacitor stuck at v5.7.8 until Xcode 15+ is installed (macOS is no longer the blocker) — 5 high-severity tar vulnerabilities in @capacitor/cli will resolve with the Capacitor v8 upgrade.
-- **Blocked major bumps** (ignored in `.github/dependabot.yml`; 2026-09-25): vitest/@vitest/ui 5 fails 11 unit tests; jsdom 30, jest-dom 7 and typescript 7 untried. Also note `@capacitor/cli` is ^8 while `@capacitor/core` and the platform packages are ^5 — a pre-existing mismatch to resolve with the Capacitor upgrade. Remove each ignore once fixed.
+- **Blocked major bumps** (ignored in `.github/dependabot.yml`; 2026-09-25): vitest/@vitest/ui 5 fails 11 unit tests; jsdom 30 and jest-dom 7 untried; typescript 7 is blocked because typescript-eslint peers `typescript <6.1.0` (project is on 6.0.3; recheck when typescript-eslint supports 7). Also note `@capacitor/cli` is ^8 while `@capacitor/core` and the platform packages are ^5 — a pre-existing mismatch to resolve with the Capacitor upgrade. Remove each ignore once fixed.
 
 ### User Feedback & Research Loop
 
