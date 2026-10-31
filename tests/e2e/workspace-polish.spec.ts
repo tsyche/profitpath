@@ -125,7 +125,9 @@ for (const layout of ['workspaces', 'legacy']) {
     await expect(page.locator('#offeringsBody, #workspaceModel').first()).toBeAttached();
     const nested = await page.evaluate(() => {
       const style = getComputedStyle(document.body);
-      return /(auto|scroll)/.test(style.overflowY) && document.body.scrollHeight > document.body.clientHeight + 1;
+      // Any auto/scroll body is a scroll container, even with nothing to scroll: it becomes the
+      // scrollport for position: sticky descendants and they stop sticking to the viewport.
+      return /(auto|scroll|hidden)/.test(style.overflowY) || /(auto|scroll|hidden)/.test(style.overflowX);
     });
     expect(nested).toBe(false);
   });

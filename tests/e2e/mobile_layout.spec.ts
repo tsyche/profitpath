@@ -214,9 +214,8 @@ test.describe('Mobile layout & modal consistency', () => {
       await page.waitForTimeout(200);
     }
 
-    // body is its own scroll container here (html,body both get height:100%),
-    // so window.scrollTo doesn't move it — scroll body.scrollTop directly.
-    await page.evaluate(() => { document.body.scrollTop = document.body.scrollHeight; });
+    // The document is the single scroller (body is not a scroll container), so scroll the window.
+    await page.evaluate(() => { window.scrollTo(0, document.documentElement.scrollHeight); });
     await page.waitForTimeout(200);
 
     const clearance = await page.evaluate(() => {

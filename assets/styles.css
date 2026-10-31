@@ -518,10 +518,17 @@ body {
     padding-right: 8px;
   }
 
-  /* Ensure no horizontal scrolling */
-  body,
+  /* Ensure no horizontal scrolling. html clips; body uses `clip` so it never becomes a
+     scroll container (that would break position: sticky and the page's single scroller). */
   html {
     overflow-x: hidden;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    overflow-x: clip;
     width: 100%;
     margin: 0;
     padding: 0;
