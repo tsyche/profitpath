@@ -1,6 +1,6 @@
 # Experience Levels
 
-**TL;DR:** In the default layout, Beginner keeps the core simulator visible, Intermediate unlocks analysis, and Advanced adds charts and diagnostics. The opt-in workspace preview keeps modeling inputs, specialist tools, comparison, and exports reachable at every level; levels control initial detail.
+**TL;DR:** In the default layout, Beginner keeps the core simulator visible, Intermediate unlocks analysis, and Advanced adds charts and diagnostics. The default Workspaces layout keeps modeling inputs, specialist tools, comparison, and exports reachable at every level; levels control initial detail.
 
 ProfitPath exposes three experience levels that control which UI features are visible by default and which advanced controls are available in the Settings panel.
 

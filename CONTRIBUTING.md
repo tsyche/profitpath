@@ -21,7 +21,7 @@ details.
 
 ## Git workflow
 
-`origin` pushes to both GitHub and GitLab — one `git push` updates both.
+`origin` pushes to GitHub; the `Mirror to GitLab` workflow copies `main` and tags to GitLab.
 
 CI is designed to auto-bump the patch version on every push to `main`
 (commits back with `[skip ci]`), so the remote is normally 1 commit ahead.
@@ -54,7 +54,7 @@ git pull --rebase && git push
 
 If you add a setting that should be gated by experience level:
 1. Add the key to `DEFAULT_SETTINGS` and all three `FEATURE_GATES` tiers in
-   `src/settings/index.js`
+   `src/settings/index.ts`
 2. Add the DOM selector to `elementsToToggle` in `assets/components/SettingsPanel.ts`'s
    `updateUIForSettings()`
 3. Update `docs/experience-levels.md`

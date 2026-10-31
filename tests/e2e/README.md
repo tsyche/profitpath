@@ -22,7 +22,7 @@ The default layout remains covered by the existing calculation, scenario, export
 
 `decision-workbench.spec.ts` covers both layouts at desktop and 375px: two/three/four options, imported bundles, case/goal/baseline selection, visible aligned scenario headers, axe, CSV/print content, hostile names, portable recipient reloads without draft/library changes, and live membership floor/value-order results.
 
-The opt-in `?layout=workspaces` preview has six suites:
+The Workspaces layout (the default; `?layout=workspaces` forces it) has six suites:
 
 - `workspace-shell.spec.ts`: navigation, URL/history/reload, keyboard focus, undo separation, saved-scenario entry, and the remembered Classic/Workspaces choice, including case/read-only preservation and blocked switching for incomplete edits or draft-save failures.
 - `workspace-model.spec.ts`: optional entry, last-valid numeric input, save/undo, and 12-offering Forecast/Current editing on desktop and mobile.
