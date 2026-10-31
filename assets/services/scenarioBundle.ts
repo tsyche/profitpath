@@ -71,11 +71,15 @@ function uniqueName(name: string, used: Set<string>): string {
   return result;
 }
 
-export function importScenarioBundle(entries: BundleEntry[]): number {
+const baseName = (name: string) => name.replace(/ \(imported \d+\)$/, '').toLowerCase();
+
+export function importScenarioBundle(entries: BundleEntry[]): { imported: number; skipped: number } {
   const existing = getAllScenarios();
   const names = new Set(existing.map(s => s.name.toLowerCase()));
+  const saved = new Set(existing.map(s => baseName(s.name) + '\n' + JSON.stringify(s.state)));
+  const fresh = entries.filter(item => !saved.has(baseName(item.name) + '\n' + JSON.stringify(item.state)));
   const now = new Date();
-  const imported: Scenario[] = entries.map(item => ({
+  const imported: Scenario[] = fresh.map(item => ({
     id: uuid(),
     name: uniqueName(item.name, names),
     timestamp: now.toLocaleString(),
@@ -83,7 +87,7 @@ export function importScenarioBundle(entries: BundleEntry[]): number {
     state: item.state
   }));
   localStorage.setItem('profitpath-scenarios', JSON.stringify([...existing, ...imported]));
-  return imported.length;
+  return { imported: imported.length, skipped: entries.length - imported.length };
 }
 
 export function showScenarioBundleLink(scenarios: Scenario[]): void {
@@ -130,13 +134,14 @@ export function promptScenarioBundleImport(): void {
     title: 'Import saved scenarios',
     content: '<p>Import ' + entries.length + ' saved snapshot' + (entries.length === 1 ? '' : 's') + ' to this device?</p><ul>' +
       entries.map(item => '<li>' + escapeHtml(item.name) + '</li>').join('') + '</ul>' +
-      '<p>Your current work and saved scenarios remain available. Name conflicts get an imported suffix.</p>',
+      '<p>Your current work and saved scenarios remain available. Identical copies already saved are skipped; other name conflicts get an imported suffix.</p>',
     buttons: [
       { text: 'Cancel', action: clearParam },
       { text: 'Import', primary: true, action: () => {
         try {
-          const count = importScenarioBundle(entries);
-          showToast('Imported ' + count + ' saved scenarios', 'success');
+          const { imported, skipped } = importScenarioBundle(entries);
+          showToast('Imported ' + imported + ' saved scenario' + (imported === 1 ? '' : 's') +
+            (skipped ? ' (' + skipped + ' already saved, skipped)' : ''), 'success');
           clearParam();
         } catch {
           showToast('Unable to save the imported scenarios', 'error');

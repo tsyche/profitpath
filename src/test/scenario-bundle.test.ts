@@ -41,10 +41,18 @@ describe('scenario bundle links', () => {
     localStorage.setItem('profitpath-scenarios', JSON.stringify([sample('Today')]));
     const url = encodeScenarioBundle([sample('Today'), sample('Option B')])!;
     const entries = decodeScenarioBundle(url.split('?bundle=')[1])!;
-    expect(importScenarioBundle(entries)).toBe(2);
+    const other = entries.map(e => e.name === 'Today' ? { ...e, state: { ...e.state, monthlyCosts: 999 } } : e);
+    expect(importScenarioBundle(other)).toEqual({ imported: 2, skipped: 0 });
     const saved = JSON.parse(localStorage.getItem('profitpath-scenarios')!);
     expect(saved.map((scenario: Scenario) => scenario.name)).toEqual(['Today', 'Today (imported 2)', 'Option B']);
     expect(new Set(saved.map((scenario: Scenario) => scenario.id)).size).toBe(3);
+  });
+
+  it('skips scenarios identical to one already saved, so reopening a link adds nothing', () => {
+    const entries = decodeScenarioBundle(encodeScenarioBundle([sample('Today'), sample('Option B')])!.split('?bundle=')[1])!;
+    expect(importScenarioBundle(entries)).toEqual({ imported: 2, skipped: 0 });
+    expect(importScenarioBundle(entries)).toEqual({ imported: 0, skipped: 2 });
+    expect(JSON.parse(localStorage.getItem('profitpath-scenarios')!)).toHaveLength(2);
   });
 
   it('rejects malformed and oversized payloads', () => {
