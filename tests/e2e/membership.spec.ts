@@ -42,6 +42,24 @@ test.describe('Membership what-if', () => {
     await expect(page2.locator('#membershipWrapper')).toBeVisible();
   });
 
+  test('expanded panel is never clipped, even with many offerings and plans', async ({ page }) => {
+    await open(page, 'intermediate');
+    await page.evaluate(() => {
+      const w = window as any;
+      w.state.offerings = Array.from({ length: 7 }, (_, i) => ({ id: `o${i}`, name: `Service ${i}`, priceMonthly: 60, sessionsPerYear: 12, hoursPerSession: 1, variableCostPerSession: 10, laborPctOfPrice: 0, type: 'per-session', mixPct: i === 0 ? 94 : 1, currentClients: 0 }));
+      const eligible = w.state.offerings.map((o: { id: string }) => o.id);
+      w.state.membershipPlans = [1, 2].map((n) => ({ id: `p${n}`, name: `Plan ${n}`, monthlyFee: 100 * n, creditsPerMonth: 75 * n, memberDiscountPct: 10, eligible }));
+      w.state.memberProfiles = [{ id: 'm1', name: 'Typical', visits: { o0: 1 } }];
+      w.persistState();
+      w.render();
+    });
+    await openPanel(page);
+    const body = page.locator('#membershipBody');
+    // The panel animates open; wait for it to settle, then require that nothing overflows its box.
+    await expect.poll(() => body.evaluate((el) => el.clientHeight)).toBeGreaterThan(500);
+    await expect.poll(() => body.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(1);
+  });
+
   test('worked example: $100 fee, $120 credits, one $60 hour', async ({ page }) => {
     await open(page, 'intermediate');
     await seedStudio(page);

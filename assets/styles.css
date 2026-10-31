@@ -1834,6 +1834,11 @@ button:focus {
   transition: max-height 0.25s ease-out, opacity 0.2s ease-out, margin 0.2s ease-out;
 }
 
+/* Open panels size to their content; a fixed cap clipped long ones (membership plans, charts) with no way to scroll. */
+.debug-body:not(.collapsed) {
+  max-height: none;
+}
+
 .debug-body.collapsed {
   max-height: 0;
   opacity: 0;
@@ -1936,16 +1941,10 @@ button:focus {
   margin-bottom: 8px;
 }
 
-/* Advanced Charts panel: heat map, radar scorecard, client funnel.
-   Three stacked charts run taller than the other debug panels, so this
-   needs a higher cap than the shared .debug-body max-height: 500px. */
+/* Advanced Charts panel: heat map, radar scorecard, client funnel. */
 .advanced-charts-wrapper {
   margin-top: 12px;
   margin-bottom: 8px;
-}
-
-.advanced-charts-wrapper .debug-body {
-  max-height: 1200px;
 }
 
 .heatmap-table {
