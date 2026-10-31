@@ -59,6 +59,12 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
 
 **Enterprise Features (Scale Layer — Deferred)**
 
+13a. **Open share links in the installed app (Android App Links / iOS Universal Links)** *(optional; no demand yet)*
+    - Today a tapped share link opens the web app in the browser and loads the data from the URL; the APK registers no deep links (only the launcher intent filter).
+    - Android: `https` `intent-filter` with `autoVerify` for `profitpath.tsyche.workers.dev`, a `/.well-known/assetlinks.json` carrying the APK signing-cert SHA-256 (use the release key, not debug), and a Capacitor `appUrlOpen` listener that passes the URL to the existing scenario/bundle/decision loaders.
+    - iOS: Associated Domains entitlement plus `apple-app-site-association`; blocked on item 13 (full Xcode).
+    - Keep the browser fallback for recipients without the app. Needs a device test that a tapped link lands in the app with the data loaded.
+
 14. **Advanced Scenario Management**
     - 🧑 needs-human: team sharing needs backend infrastructure and a hosting/account decision
     - Scenario versioning and history tracking
@@ -101,7 +107,7 @@ Privacy-first freemium model planned post-launch. The app will remain fully free
 
 ## Status & Notes
 
-- **Current status**: 851 unit tests across 78 files (850 passing, one existing skip), 620 release Playwright cases across 51 files on Chromium + Firefox, plus four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases; axe a11y scans included. Classic and Workspaces remain available during item 25 acceptance. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
+- **Current status**: 852 unit tests across 78 files (851 passing, one existing skip), 622 release Playwright cases across 51 files on Chromium + Firefox, plus four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases; axe a11y scans included. Classic and Workspaces remain available during item 25 acceptance. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
 - **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ advanced visualizations (heat map, radar, funnel), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard, ✅ data visualization KPI indicators, ✅ help & onboarding enhancements, ✅ UI modernization (dark/light, Material, app-bar, all-modals theming), ✅ financial report export, ✅ LRU calc cache, ✅ client mix optimizer.
 - **Latest milestones** (July 2026):
   - Client Mix Optimizer: grid-search + hill-climbing mix suggestions, fully wired panel
@@ -131,6 +137,6 @@ This section tracks common feature requests, friction points, and competitive ga
 **How to use**: Update this list after customer conversations, support tickets, or user interviews. Use to validate roadmap priorities and surface unexpected user needs.
 
 ### Test Coverage Status (October 2026)
-- **851 unit tests** across 78 files (850 passing, one existing skip), plus **620 release Playwright cases** across 51 files on Chromium + Firefox; four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases. Lint, strict typecheck, and production build pass. The 2026-10-29 full release run used no retries; the design-review suite remains separate historical evidence.
+- **852 unit tests** across 78 files (851 passing, one existing skip), plus **622 release Playwright cases** across 51 files on Chromium + Firefox; four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases. Lint, strict typecheck, and production build pass. The 2026-10-29 full release run used no retries; the design-review suite remains separate historical evidence.
 - Key areas: calculation engine and fuzz tests, scenarios, feature gating, export/import, scroll lock, mobile layout, tooltips, security (XSS, CSV injection), performance, optimizer and advanced charts, axe a11y at every experience level in both themes
 - Detail lives in [CLAUDE.md](CLAUDE.md#testing-strategy)

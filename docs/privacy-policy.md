@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last Updated:** July 2026
+**Last Updated:** October 2026
 
 ## Overview
 
@@ -29,6 +29,7 @@ This is a **count of visits, not a record of usage** — it does not know what y
 - Uses no cookies and does no fingerprinting
 - Automatically honors your browser's Do Not Track setting
 - Is skipped entirely on local development servers
+- Records only the page path, never the address query, so scenario data inside a shared link is not sent
 
 The counter data is visible only to the app's developer, purely to answer "is anyone using this, and how much." It is unrelated to the separate in-app feature-usage analytics described below.
 

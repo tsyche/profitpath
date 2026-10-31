@@ -1,7 +1,7 @@
 /* Temporary opt-in shell. Every rule is scoped so the previous layout remains available. */
 .workspace-layout .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .workspace-layout .ab-primary, .workspace-layout .ab-kpis { display: none !important; }
-.workspace-layout .grid.workspace-grid { display: block; width: min(1400px, calc(100% - 64px)); max-width: 100%; margin: 28px auto 120px; padding: 0; }
+.workspace-layout .grid.workspace-grid { display: block; width: min(1400px, calc(100% - 64px)); max-width: 100%; margin: 28px auto 0; padding: 0; padding-bottom: 104px !important; }
 .workspace-layout .workspace-context { display: flex; justify-content: space-between; gap: 24px; align-items: start; padding: 22px 0; border-bottom: 1px solid var(--border); }
 .workspace-layout .workspace-context > div { min-width: 0; }
 .workspace-layout #workspaceName { font-size: 20px; font-weight: 650; width: min(100%, 420px); padding: 7px 10px; }
@@ -50,7 +50,7 @@
 .workspace-layout #workspaceBusinessSettings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .workspace-layout #workspaceBusinessSettings h2 { grid-column: 1 / -1; }
 .workspace-layout #workspaceBusinessSettings #lockMixField { grid-column: 1 / -1; }
-.workspace-layout #workspaceBusinessSettings > :is(.field,.settings-select-label) { min-width: 0 !important; margin: 0; display: grid; align-content: start; gap: 8px; }
+.workspace-layout #workspaceBusinessSettings > :is(.field,.settings-select-label) { min-width: 0 !important; margin: 0; display: grid; align-content: start; gap: 12px; }
 .workspace-layout #workspaceBusinessSettings label { margin: 0; }
 .workspace-layout #workspaceBusinessSettings .settings-select-label > span { margin: 0; }
 .workspace-layout #workspaceBusinessSettings select { min-height: 48px; width: 100%; }
@@ -134,7 +134,7 @@
   .workspace-layout .workspace-context > div { width: 100%; }
 }
 @media (max-width: 760px) {
-  .workspace-layout .grid.workspace-grid { width: 100%; padding: 0 16px; margin-top: 8px; margin-bottom: 170px; }
+  .workspace-layout .grid.workspace-grid { width: 100%; padding: 0 16px; padding-bottom: 130px !important; margin-top: 8px; margin-bottom: 0; }
   .workspace-layout .workspace-context { gap: 14px; padding: 14px 0; }
   .workspace-layout .workspace-actions { gap: 6px; }
   .workspace-layout .workspace-actions .btn { font-size: 12px; padding: 8px 10px; }
@@ -179,3 +179,9 @@
   .workspace-layout .workspace-question-content { padding: 0 16px 18px; }
   .workspace-layout.workspace-keyboard-open .setup-summary.workspace-summary, .workspace-layout.workspace-keyboard-open .workspace-nav { position: static; }
 }
+
+/* Keep focused/scrolled-to controls clear of the fixed results bar (and the mobile nav above it). */
+html:has(body.workspace-layout) { scroll-padding-bottom: 110px; }
+@media (max-width: 760px) { html:has(body.workspace-layout) { scroll-padding-bottom: 170px; } }
+#workspaceOfferingEditor { scroll-margin-top: 72px; }
+@media (min-width: 761px) { .workspace-layout #scenarioNotes { min-height: 140px; } }

@@ -1,5 +1,7 @@
 # Usability Audit Report — Heuristics
 
+**TL;DR:** A 2026-10-27 Nielsen-heuristics audit of the original single-page layout found 0 catastrophic, 4 major, 6 minor and 3 cosmetic issues; the core loop is solid and information architecture is the weakness. It fed the Workspaces redesign ([ROADMAP_SHIPPED.md](ledger/ROADMAP_SHIPPED.md)).
+
 **Scope**: ProfitPath web app (single-page calculator), Setup (`#controls`) + Outputs (`#outputs`) layout, gating, mobile ≤768px  |  **Persona**: recurring-service business owner, beginner→advanced experience levels, desktop + mobile  |  **Date**: 2026-10-27
 
 ## Executive Summary

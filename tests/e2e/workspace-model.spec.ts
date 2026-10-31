@@ -96,3 +96,45 @@ for (const width of [1440, 375]) {
     });
   }
 }
+
+test('picking an offering on desktop keeps the scroll position unless the editor is off-screen', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await open(page);
+  const rows = page.locator('.workspace-offering-row');
+  await rows.nth(2).scrollIntoViewIfNeeded();
+  const before = await page.evaluate(() => window.scrollY);
+  expect(before).toBeGreaterThan(0);
+  await rows.nth(2).click();
+  await expect(page.locator('#workspaceOfferingEditor')).toBeVisible();
+  expect(await page.evaluate(() => window.scrollY)).toBe(before);
+});
+
+test('the view-the-whole-app tooltip opens below its toggle', async ({ page }) => {
+  await open(page);
+  await page.goto('/?layout=workspaces&view=results');
+  await page.evaluate(() => { document.querySelector<HTMLElement>('#workspaceCase')!.hidden = false; });
+  const toggle = page.locator('#rangeCaseToggle');
+  await expect(toggle).toBeVisible();
+  await toggle.hover();
+  const tip = page.locator('.enhanced-tooltip');
+  await expect(tip).toBeVisible();
+  const [tipBox, toggleBox] = [await tip.boundingBox(), await toggle.boundingBox()];
+  expect(tipBox!.y).toBeGreaterThanOrEqual(toggleBox!.y + toggleBox!.height);
+});
+
+for (const [label, size, max] of [['desktop', { width: 1280, height: 800 }, 140], ['mobile', { width: 375, height: 812 }, 110]] as const) {
+  test(`${label}: the last Business card clears the results bar without excess scroll space`, async ({ page }) => {
+    await page.setViewportSize(size);
+    await open(page);
+    await page.goto('/?layout=workspaces&view=model/business');
+    await page.locator('#setupNotes > summary').click();
+    await expect(page.locator('#scenarioNotes')).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const gap = await page.evaluate(() => {
+      const bar = document.querySelector('.workspace-summary')!.getBoundingClientRect();
+      return bar.top - document.getElementById('scenarioNotes')!.getBoundingClientRect().bottom;
+    });
+    expect(gap).toBeGreaterThanOrEqual(8);
+    expect(gap).toBeLessThanOrEqual(max);
+  });
+}

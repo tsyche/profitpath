@@ -85,10 +85,13 @@ export function navigateWorkspace(view: WorkspaceView, options: { replace?: bool
   if (options.replace) history.replaceState(history.state, '', urlFor(current));
   else if (key !== previous) history.pushState(history.state, '', urlFor(current));
   write(viewKey, key);
-  applyView(options.focus !== false);
+  // Picking another offering on the same desktop page keeps the scroll position; other moves start at the top.
+  const before = parseWorkspaceView(previous);
+  const samePage = before.workspace === current.workspace && before.section === current.section;
+  applyView(options.focus !== false, !(samePage && window.matchMedia('(min-width: 761px)').matches));
 }
 
-function applyView(focus: boolean) {
+function applyView(focus: boolean, resetScroll = true) {
   for (const workspace of ['model', 'results', 'compare']) {
     const element = $(`#workspace${workspace[0].toUpperCase() + workspace.slice(1)}`);
     if (element) { element.hidden = current.workspace !== workspace; element.inert = element.hidden; }
@@ -121,8 +124,14 @@ function applyView(focus: boolean) {
   restorePendingInputs();
   if (focus) {
     $(`#workspace${current.workspace[0].toUpperCase() + current.workspace.slice(1)}`)?.focus({ preventScroll: true });
-    document.body.scrollTo(0, 0);
-    window.scrollTo(0, 0);
+    if (resetScroll) {
+      document.body.scrollTo(0, 0);
+      window.scrollTo(0, 0);
+    } else {
+      // Only move when the freshly rendered editor starts above the viewport.
+      const editor = $('#workspaceOfferingEditor');
+      if (editor && editor.getBoundingClientRect().top < 0) editor.scrollIntoView({ block: 'start' });
+    }
   }
   // Existing canvas/chart consumers listen for resize; wait until the view has measurable dimensions.
   requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
