@@ -86,14 +86,16 @@ jobs:
           sed -i "s/versionCode .*/versionCode ${{ github.run_number }}/" android/app/build.gradle
           sed -i "s/versionName .*/versionName \"${{ steps.resolved.outputs.value }}\"/" android/app/build.gradle
 
+      # Dependabot PRs can't read Actions secrets; they fall back to Gradle's default debug keystore.
       - name: Restore signing keystore
+        if: github.actor != 'dependabot[bot]'
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/profitpath-debug.keystore
 
       - name: Build APK
         run: cd android && ./gradlew assembleDebug
         env:
-          KEYSTORE_PATH: profitpath-debug.keystore
+          KEYSTORE_PATH: ${{ github.actor != 'dependabot[bot]' && 'profitpath-debug.keystore' || '' }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEYSTORE_PASSWORD: android
           KEY_PASSWORD: android
