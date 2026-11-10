@@ -1,6 +1,6 @@
 # ProfitPath — Consolidated Roadmap (single source of truth)
 
-**TL;DR:** This roadmap is the single source of truth for ProfitPath's ideas, priorities, and next actions.
+**TL;DR:** Active work and blockers only; last audited 2026-11-10 against v0.8.73-beta. Scenario-sharing bundles, identical-import skipping, one-time purchases, and membership service entitlements are shipped. The intended additional bundle behavior needs clarification before feature work starts.
 
 See [README.md](README.md) for setup and development instructions. Shipped work lives in [docs/ledger/ROADMAP_SHIPPED.md](docs/ledger/ROADMAP_SHIPPED.md).
 
@@ -8,8 +8,16 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **Device/human acceptance and layout default** (item 40): test the shipped redesign and workbench on Android, finish human/native handoffs, and decide the new-device default while retaining both layouts.
-2. **Seasonal & Market Adjustments** (item 11): monthly/quarterly demand and geographic pricing variations.
+1. **Clarify bundle scope**: distinguish sharing saved scenarios from selling service packages; existing behavior is summarized below. Feature implementation is paused at Tim's direction.
+2. **Finish device/human acceptance** (item 40): native share/print/mail and participant comprehension remain open. Workspaces is already the new-device default.
+3. **Seasonal adjustments** (item 11): the best existing agent-doable feature after bundle scope is resolved; keep regional pricing dependent on trusted data.
+
+### Bundle status
+
+- **Scenario sharing (item 36): shipped.** [Scenarios UI](assets/components/UIHelpers.ts) exposes Share selected for up to four saves; the [bundle service](assets/services/scenarioBundle.ts) validates compressed snapshots, confirms import, preserves existing work, skips identical saved copies, and suffixes conflicting names.
+- **Verification:** all five [bundle tests](src/test/scenario-bundle.test.ts) passed on 2026-11-10. The existing [browser journey](tests/e2e/scenario-bundle.spec.ts) covers share/import; browsers were not rerun during this documentation audit.
+- **Service purchases:** [item 19](docs/ledger/ROADMAP_SHIPPED.md#2026-10-24--19-one-time--bundled-purchase-line-items) provides per-sale revenue with no capacity use. [Membership entitlements](docs/ledger/ROADMAP_SHIPPED.md#2026-10-27--24g-membership-per-service-entitlements) provide included visits in a display-only what-if.
+- **Open scope:** a package sale that consumes multiple underlying services is not established by either implementation. 🧑 needs-human: Tim must identify the intended bundle behavior before a new feature is scoped.
 
 Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing trustworthy data, not on code. Shipped work is indexed in the [ledger](docs/ledger/ROADMAP_SHIPPED.md).
 
@@ -17,22 +25,43 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
 
 ## Fully Prioritized Backlog (high → low)
 
+41. **Development dependency security advisories** *(audit finding, 2026-11-10)*
+    - Full `npm audit` reports 11 moderate findings through glob/minimatch, ESLint and typescript-eslint; production-only audit reports zero. These are development-tool dependency findings.
+    - Acceptance: update compatible dependencies, rerun audit/lint/typecheck/tests, and document any remaining advisories. Avoid the suggested forced ESLint downgrade without compatibility proof.
+    - Effort: ~1-2 hours; remediation deferred during this documentation-only audit.
+
+42. **Workspace tour repair**
+    - Stop the Classic guided tour from targeting hidden controls in Workspaces, then define guidance for Model / Results / Compare.
+    - Acceptance: Classic guidance remains usable; Workspaces cannot launch the misplaced Classic cards; new guidance targets visible controls and supports keyboard dismissal without leaving scrolling locked.
+    - Effort: ~2-4 hours.
+
+43. **CI worker benchmark**
+    - Compare the full release browser suite with one and two workers to reduce CI duration and runner minutes.
+    - Acceptance: record duration, failures and retries under comparable conditions; retain two workers only if reliability is preserved and runtime materially improves.
+    - Effort: ~1-2 hours, including runner time.
+
+44. **Bundle review clarity**
+    - Make the selected scenario names and point-in-time snapshot semantics visible before copying a bundle link.
+    - Acceptance: the share dialog identifies every included scenario and explains that later edits require a new link; verify the review is usable on narrow screens and by keyboard.
+    - Effort: ~1-2 hours.
+
 **Advanced Analytics (4-6 Hour Tasks)**
 
 10. **Industry Benchmarks & Competitive Pricing**
     - 🧑 needs-human: benchmark and regional pricing data must be sourced and trusted by Tim; code is the easy part
-    - ✅ Templates complete (consulting, cleaning, landscaping, fitness, photography, handyman)
     - Remaining: industry benchmark comparisons, regional pricing data, success metric standards
     - Effort: ~4-6 hours (templates done; focus on benchmarking data)
 
 11. **Seasonal & Market Adjustments**
     - Design drafted: [seasonal-adjustments plan](docs/plans/seasonal-adjustments.md). Display-only monthly lens (peak capacity, cash trough) over `calc()`; annual figures never change.
     - Geographic pricing variations by region: recommended move into item 10 (needs sourced regional data); awaiting Tim's call.
+    - Acceptance: monthly results reconcile to the annual base and expose peak capacity/cash trough; regional pricing scope needs Tim's decision.
     - Effort: ~4-5 hours
 
 **Layout & Information Architecture** *(new category — Tim independently flagged this as "getting very busy on a single scrollable page view," agreed with while building the Sound Stage scenario)*
 
-40. **Post-redesign device/human acceptance and default-layout decision**
+40. **Post-redesign device/human acceptance**
+    - Effort: ~2-4 hours of coordinated acceptance; fixes estimated after findings.
     - Implementation items 25 and 38–39 are closed at Tim's direction on 2026-10-29; this item owns every remaining acceptance task. See the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md).
     - Release CI [Tests 40982288978](https://github.com/tsyche/profitpath/actions/runs/40982288978), APK, Pages and mirror passed; all five checks have zero annotations. Local validation passes 832 unit tests (one existing skip), 606/610 browser cases (four existing Firefox skips), four production zoom/PDF cases and four offline cases, with no retries.
     - Android emulator checks passed on 2026-10-29: release APK 0.8.63-beta, Pixel 8 / Android 35, install/launch, remembered Workspaces choice, rename with the native keyboard visible, save/alternative, mode switching, Results, decision workbench, reload persistence and portrait/landscape. Offline reload/edit/save/reload passed with Wi-Fi and cellular data disabled; an external connectivity probe succeeded before disconnection and failed during it. WebView `navigator.onLine` remained true, so it is not the offline oracle.
@@ -48,12 +77,14 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - Membership headroom now subtracts modeled scenario load, and the target-margin optimizer suggests fee, credits or discount separately. The remaining conditional follow-up is to feed members into `calc()` only if real use shows the display-only panel is insufficient.
     - Chart ranges, Excel parity, and per-service entitlements are recorded in the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md).
     - No integration work until real usage establishes the need.
+    - 🧑 needs-human: real usage must demonstrate the gap and establish integration semantics.
+    - Effort: scope after evidence; acceptance must prevent double-counting plan revenue, redemptions, labor and capacity.
 
 **Mobile & Platform Support (Deferred — needs full Xcode)**
 
 13. **Native Android & iOS App via Capacitor**
     - 🧑 needs-human: macOS is now current (26.6.2) but only Command Line Tools are installed; install full Xcode, then revalidate the Capacitor upgrade
-    - **Partly unblocked (2026-10-24)**: the dev machine now runs a current macOS, but full Xcode is not installed (Command Line Tools only). Capacitor v6+ needs Xcode 15+. Capacitor v5 infrastructure (ios/, android/, capacitor.config.ts) is already in place. The 5 high-severity `tar` vulnerabilities in `@capacitor/cli` also resolve with the Capacitor v8 upgrade.
+    - Last recorded machine check (2026-10-24): current macOS, Command Line Tools only. Recheck Xcode before iOS work. [Package versions](package.json) already use CLI 8.6 with core/platform 5.7; align the supported toolchain and revalidate native exports. The old claim that CLI v8 is still pending was stale.
     - Strategy doc available locally (gitignored)
     - Effort: ~36-45 hours remaining (Phase 1 partially done; revalidate once Xcode is installed)
 
@@ -64,13 +95,16 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - Android: `https` `intent-filter` with `autoVerify` for `profitpath.tsyche.workers.dev`, a `/.well-known/assetlinks.json` carrying the APK signing-cert SHA-256 (use the release key, not debug), and a Capacitor `appUrlOpen` listener that passes the URL to the existing scenario/bundle/decision loaders.
     - iOS: Associated Domains entitlement plus `apple-app-site-association`; blocked on item 13 (full Xcode).
     - Keep the browser fallback for recipients without the app. Needs a device test that a tapped link lands in the app with the data loaded.
+    - Effort: ~3-5 hours Android, iOS estimated after item 13.
+    - 🧑 needs-human: release-signing certificate access and physical-device link verification; iOS also needs Xcode.
 
 14. **Advanced Scenario Management**
     - 🧑 needs-human: team sharing needs backend infrastructure and a hosting/account decision
     - Scenario versioning and history tracking
-    - Bulk import/export operations
+    - Bulk snapshot-link import/export is shipped (item 36); remaining work is file-based bulk operations and version history.
     - Team sharing and permissions (requires backend infrastructure)
     - Effort: ~8-10 hours
+    - Acceptance: define retained versions and restore behavior; team permissions require a separate backend design.
 
 15. **Integration & Automation**
     - 🧑 needs-human: backend infrastructure plus third-party accounts/credentials
@@ -79,36 +113,43 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - CRM/ERP system connections
     - **Note**: Requires backend infrastructure
     - Effort: ~10-12 hours
+    - Acceptance: scope one integration with authenticated delivery, retry behavior and no accidental business-data transmission.
 
 16. **Multi-Year Strategic Planning**
     - 3-5 year financial projections
     - Hiring and scaling recommendations
     - Investment payback analysis
     - Effort: ~8-10 hours
+    - Acceptance: explicit annual assumptions, hiring costs and payback reconcile across the selected years.
 
 17. **Optimizer Mode & AI Insights** *(rules-based Insights Engine and Mix Optimizer shipped; only the ML parts remain)*
     - Machine learning price optimization
     - Predictive analytics for business outcomes
     - **Note**: Significant scope, may require ML infrastructure
     - Effort: ~12-15 hours
+    - 🧑 needs-human: approved training/data source, provider/cost decision and measurable benefit over existing rules.
+    - Acceptance: evaluate against the existing rules before exposing predictions to users.
 
 12o. **Server-hosted short share links** *(deferred; backend-dependent)*
     - Store shared scenarios behind short opaque IDs to reduce link length and let recipients see updated scenarios.
     - Requires backend infrastructure, hosting, and an account / retention decision. No backend work is planned until the roadmap reaches that phase.
     - Current compressed links remain point-in-time snapshots; the Share flow warns users to resend after edits.
+    - Effort: ~6-10 hours after infrastructure decisions.
+    - 🧑 needs-human: hosting, retention and account decisions.
+    - Acceptance: opaque IDs, explicit snapshot/update semantics, expiry and abuse limits.
 
 ---
 
 ## Monetization Strategy
 
-Privacy-first freemium model planned post-launch. The app will remain fully free until market demand is validated; no ads, no tracking.
+Privacy-first freemium model planned post-launch. The app remains free until demand is validated. No ads; anonymous page-load counting is disclosed in the [privacy policy](docs/privacy-policy.md).
 
 ---
 
 ## Status & Notes
 
 - **Current status**: 852 unit tests across 78 files (851 passing, one existing skip), 628 release Playwright cases across 51 files on Chromium + Firefox, plus four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases; axe a11y scans included. Classic and Workspaces remain available during item 25 acceptance. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
-- **Foundation complete**: ✅ Modern Vite build system, ✅ comprehensive test suite, ✅ analytics refactor, ✅ documentation consolidated, ✅ experience levels with feature gating, ✅ micro-interactions & animation polish, ✅ simple visualizations (gauge & waterfall), ✅ advanced visualizations (heat map, radar, funnel), ✅ scenario comparison (side-by-side diff with exports and sharing), ✅ CSV import, ✅ undo/redo, ✅ performance dashboard, ✅ data visualization KPI indicators, ✅ help & onboarding enhancements, ✅ UI modernization (dark/light, Material, app-bar, all-modals theming), ✅ financial report export, ✅ LRU calc cache, ✅ client mix optimizer.
+- **Foundation history**: see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md); completed work is indexed there.
 - **Latest milestones** (July 2026):
   - Client Mix Optimizer: grid-search + hill-climbing mix suggestions, fully wired panel
   - Advanced Charts: price × utilization sensitivity heat map, balanced scorecard radar, client capacity funnel
@@ -117,17 +158,15 @@ Privacy-first freemium model planned post-launch. The app will remain fully free
   - GoatCounter analytics + APK release pipeline hardened: build-time platform stamping (web vs APK), real `versionCode`/`versionName` on every build, auto-generated release notes
   - Scroll lock reference-counting leaks fixed across 3 sites (modal double-open, analytics↔advanced dashboard transition); dead logo link fixed
 - **Next priorities**: see Recommended Next 3 above.
-- **Strategic positioning**: Core financial-modeling + export + performance + advanced-analytics + accessibility-scan foundation is complete, and the release/distribution pipeline (web + APK) is now solid after this round of hardening. Insights and Reverse Calculator are now reachable; the data-model gaps from the 2026-08 trial (per-session, one-time, group, expenses, pools, ranges, membership) are shipped. The product-flow redesign and decision workbench are shipped; device/human acceptance and the layout-default decision remain in item 40. Mobile app launch is waiting on a full Xcode install. Enterprise features deferred until market demand validates investment.
-- **Known debt**: Capacitor stuck at v5.7.8 until Xcode 15+ is installed (macOS is no longer the blocker) — 5 high-severity tar vulnerabilities in @capacitor/cli will resolve with the Capacitor v8 upgrade.
+- **Strategic positioning**: prioritize concrete modeling gaps over backend expansion. Workspaces is the default; item 40 owns remaining acceptance. Android ships today; iOS/toolchain alignment remains in item 13.
+- **Known debt**: CLI 8.6 and core/platform 5.7 remain mismatched; item 13 owns alignment. `npm audit --omit=dev` reported zero vulnerabilities on 2026-11-10; that check does not establish the security status of development dependencies.
 - **Blocked major bumps** (ignored in `.github/dependabot.yml`; 2026-09-25): vitest/@vitest/ui 5 fails 11 unit tests; jsdom 30 and jest-dom 7 untried; typescript 7 is blocked because typescript-eslint peers `typescript <6.1.0` (project is on 6.0.3; recheck when typescript-eslint supports 7). Also note `@capacitor/cli` is ^8 while `@capacitor/core` and the platform packages are ^5 — a pre-existing mismatch to resolve with the Capacitor upgrade. Remove each ignore once fixed.
 
 ### User Feedback & Research Loop
 
 This section tracks common feature requests, friction points, and competitive gaps reported by users:
 
-- **Collaboration**: Teams requesting read-only sharing and comment features for client presentations (✅ shipped)
-- **Financial Reporting**: Users wanting tax liability estimates and quarterly summaries (✅ shipped)
-- **Performance**: Large scenario reports occasionally show slowdowns with multi-service businesses (✅ shipped)
+- **Historical feedback**: read-only sharing, reporting and performance work are recorded in the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md). The old combined claim that sharing and comments were shipped did not establish a comments feature.
 - **Reverse calculation**: "Tell me what I need to hit X take-home" — shipped as the "What Would It Take?" panel (`src/insights/reverseCalculator.ts`); follow-ups in item 12r
 - **Goal-setting wizard**: Users unsure which inputs to adjust for desired outcomes — tracked as Guided "What If?" Wizard
 - **Accessibility**: Keyboard navigation and screen reader support (shipped)

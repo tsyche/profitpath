@@ -4,6 +4,11 @@
 
 ## Shipped index
 
+- [x] 2026-11-02 — Dependency group update (Capacitor CLI, Playwright, ESLint)
+- [x] 2026-11-01 — Dependabot APK secret guard
+- [x] 2026-10-31 — Workspace scroll clearance and taller notes
+- [x] 2026-10-31 — Identical scenario-bundle import skipping
+- [x] 2026-10-30 — Workspaces new-device default
 - [x] 2026-10-30 — TypeScript 6.0.3 upgrade
 - [x] 2026-10-30 — 12x. Unit tests typechecked
 - [x] 2026-10-30 — 24f. Chart uncertainty bands
@@ -71,6 +76,28 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-11-02 — Dependency group update
+
+Commit `b9da340` updates Capacitor CLI to 8.6.0, Playwright to 1.64.1 and ESLint to 10.13.0. Core/platform Capacitor alignment remains in [item 13](../../ROADMAP.md).
+
+### 2026-11-01 — Dependabot APK secret guard
+
+Commit `1638ee9` skips secret-keystore setup on Dependabot PRs. The [APK workflow](../../.github/workflows/build-apk.yml) preserves release signing for authorized builds.
+
+### 2026-10-31 — Workspace scroll clearance and taller notes
+
+Commit `6bf19b4` fixes workspace scroll clearance, preserves scroll when switching offerings, enlarges notes and adds two browser regressions in [workspace-polish.spec.ts](../../tests/e2e/workspace-polish.spec.ts).
+
+### 2026-10-31 — Identical scenario-bundle import skipping
+
+Commit `88b5608` skips entries matching an existing saved scenario instead of adding repeated imported copies. Other name conflicts still get suffixes. All five [bundle tests](../../src/test/scenario-bundle.test.ts) passed during the 2026-11-10 audit; the browser suite was not rerun.
+
+### 2026-10-30 — Workspaces new-device default
+
+Commit `de6ff49` makes Workspaces the default while retaining Classic through Settings and explicit links. Human/native acceptance remains in [item 40](../../ROADMAP.md).
+
+Dates above come from implementing commits.
 
 ### 2026-10-30 — TypeScript 6.0.3 upgrade
 
