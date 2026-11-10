@@ -76,6 +76,14 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - 🧑 needs-human: real usage must demonstrate the gap and establish integration semantics.
     - Effort: scope after evidence; acceptance must prevent double-counting plan revenue, redemptions, labor and capacity.
 
+45. **Live driver slider in the decision workbench** *(idea, 2026-11-10; from the Sound Stage price decision)*
+    - Problem: an owner's real question is "what if I run 4 classes a month instead of 8?" Today that means editing a group row's Clients (seat-sales, not runs) one scenario at a time. The tornado chart, the price × utilization heat map and the reverse calculator answer neighbouring questions, but none move one driver live across every option at once.
+    - Shape: in the decision workbench, pick one driver (group runs per month, a row's clients, price, fill % or sales-loss %) and drag a slider. Every option's net income and the "highest income" verdict recompute through `calc()` as it moves, and the slider marks the crossover point where the leading option changes, if any.
+    - Display-only lens: the slider never writes to saved scenarios or the bundle; reset returns to the loaded values. Group drivers are in runs, converted with seats × fill (the same rule as `runs = ceil(clients / (seats × fill))`).
+    - Acceptance: values at the slider's base position equal the workbench table exactly; a unit test pins one known crossover; keyboard and screen-reader operable (native `input type="range"` plus a number field); results update without visible lag on a four-option bundle.
+    - Out of scope: multi-driver sliders (the heat map covers two drivers) and saving slider positions to links until someone asks.
+    - Effort: ~3-5 hours.
+
 **Mobile & Platform Support (Deferred — needs full Xcode)**
 
 13. **Native Android & iOS App via Capacitor**
