@@ -27,7 +27,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Scenario Saving**: Save unlimited scenarios with descriptive names
 - **Auto-save**: Automatic persistence of current work to localStorage
 - **Shareable URLs**: Encode scenarios in URLs for easy sharing with stakeholders
-- **Scenario Bundles**: Select up to four saved scenarios and share one snapshot link; recipients choose whether to import them, identical copies already saved are skipped, and other duplicate names get a suffix
+- **Scenario Bundles**: Select up to four saved scenarios, review their names and the snapshot warning, then copy one link; recipients choose whether to import them, identical copies already saved are skipped, and other duplicate names get a suffix
 - **Import/Export**: Load scenarios from URLs or share via email
 - **Embeddable Widgets**: Generate iframe codes with portable scenario snapshots, including both options for a comparison
 - **Social Media Sharing**: Open Graph and Twitter Card support for rich previews

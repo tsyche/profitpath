@@ -40,11 +40,6 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - Acceptance: record duration, failures and retries under comparable conditions; retain two workers only if reliability is preserved and runtime materially improves.
     - Effort: ~1-2 hours, including runner time.
 
-44. **Bundle review clarity**
-    - Make the selected scenario names and point-in-time snapshot semantics visible before copying a bundle link.
-    - Acceptance: the share dialog identifies every included scenario and explains that later edits require a new link; verify the review is usable on narrow screens and by keyboard.
-    - Effort: ~1-2 hours.
-
 **Advanced Analytics (4-6 Hour Tasks)**
 
 10. **Industry Benchmarks & Competitive Pricing**
@@ -148,7 +143,7 @@ Privacy-first freemium model planned post-launch. The app remains free until dem
 
 ## Status & Notes
 
-- **Current status**: 854 unit tests across 79 files (853 passing, one existing skip), 628 release Playwright cases across 51 files on Chromium + Firefox, plus four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases; axe a11y scans included. Classic and Workspaces remain available during item 25 acceptance. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
+- **Current status**: 854 unit tests across 79 files (853 passing, one existing skip), 630 release Playwright cases across 51 files on Chromium + Firefox, plus four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases; axe a11y scans included. Classic and Workspaces remain available during item 25 acceptance. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
 - **Foundation history**: see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md); completed work is indexed there.
 - **Latest milestones** (July 2026):
   - Client Mix Optimizer: grid-search + hill-climbing mix suggestions, fully wired panel
@@ -176,6 +171,6 @@ This section tracks common feature requests, friction points, and competitive ga
 **How to use**: Update this list after customer conversations, support tickets, or user interviews. Use to validate roadmap priorities and surface unexpected user needs.
 
 ### Test Coverage Status (October 2026)
-- **854 unit tests** across 79 files (853 passing, one existing skip), plus **628 release Playwright cases** across 51 files on Chromium + Firefox; four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases. Lint, strict typecheck, and production build pass. The 2026-10-29 full release run used no retries; the design-review suite remains separate historical evidence.
+- **854 unit tests** across 79 files (853 passing, one existing skip), plus **630 release Playwright cases** across 51 files on Chromium + Firefox; four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases. Lint, strict typecheck, and production build pass. The 2026-10-29 full release run used no retries; the design-review suite remains separate historical evidence.
 - Key areas: calculation engine and fuzz tests, scenarios, feature gating, export/import, scroll lock, mobile layout, tooltips, security (XSS, CSV injection), performance, optimizer and advanced charts, axe a11y at every experience level in both themes
 - Detail lives in [CLAUDE.md](CLAUDE.md#testing-strategy)

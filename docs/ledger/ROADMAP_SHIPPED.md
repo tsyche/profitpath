@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-11-10 — 44. Bundle review clarity
 - [x] 2026-11-10 — External decision-link encoder for Node generators
 - [x] 2026-11-02 — Dependency group update (Capacitor CLI, Playwright, ESLint)
 - [x] 2026-11-01 — Dependabot APK secret guard
@@ -77,6 +78,25 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-11-10 — 44. Bundle review clarity
+
+The Share saved scenarios dialog lists every selected scenario before the link
+and Copy button, alongside the existing warning that later edits require a new
+link. Names are HTML-escaped and wrap on narrow screens.
+
+The mobile/keyboard browser regression failed before the change because the list
+was absent. All 18 bundle/decision cases then passed on Chromium and Firefox
+without retries, including long-name wrapping, literal HTML-shaped names and
+keyboard copying. Lint, strict typecheck and production build pass. Release
+browser inventory is now 630 cases across 51 files.
+
+Original entry:
+
+44. **Bundle review clarity**
+    - Make the selected scenario names and point-in-time snapshot semantics visible before copying a bundle link.
+    - Acceptance: the share dialog identifies every included scenario and explains that later edits require a new link; verify the review is usable on narrow screens and by keyboard.
+    - Effort: ~1-2 hours.
 
 ### 2026-11-10 — External decision-link encoder for Node generators
 

@@ -48,7 +48,9 @@ export function showScenarioBundleLink(scenarios: Scenario[]): void {
   }
   const modal = createModal({
     title: 'Share saved scenarios',
-    content: '<p>Recipients can import these saved snapshots. Later edits require a new link.</p>' +
+    content: '<p>Included scenarios:</p><ul aria-label="Included scenarios" style="overflow-wrap:anywhere">' +
+      scenarios.map(scenario => '<li>' + escapeHtml(scenario.name) + '</li>').join('') + '</ul>' +
+      '<p>Recipients can import these saved snapshots. Later edits require a new link.</p>' +
       '<input id="bundleShareUrl" class="copy-on-click share-url-input" type="text" readonly aria-label="Scenario bundle link" value="' + escapeHtml(url) + '" style="width:100%">' +
       '<button id="copyBundleUrl" class="btn small" type="button">Copy link</button>'
   });
