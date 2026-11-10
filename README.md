@@ -12,6 +12,17 @@ Client-side profitability and capacity simulator for recurring service businesse
 
 **Live**: [profitpath.tsyche.workers.dev](https://profitpath.tsyche.workers.dev) (Cloudflare Workers, deployed from the [GitLab mirror](https://gitlab.com/tsyche/profitpath)) · [tsyche.github.io/profitpath](https://tsyche.github.io/profitpath/) (GitHub Pages)
 
+## Contents
+
+- [What's included](#whats-included)
+- [Key Features](#key-features)
+- [Quick Start](#quick-start)
+- [Development](#development)
+- [Documentation](#documentation)
+- [Guided Tour](#guided-tour)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## What's included
 
 - `index.html`, `assets/app.ts`, `assets/styles.css` — main app code (TypeScript with Vite)
@@ -49,6 +60,47 @@ just dev
 Choose **Settings → Layout** to switch between Classic (the original single page) and Workspaces (Model, Results, Compare). Both use the same model; the choice is remembered on this device. Workspaces is the default for new devices; Classic stays available in Settings. The [workspace preview](http://localhost:3120/?layout=workspaces) also opens directly. See [experience levels](docs/experience-levels.md#workspace-preview) for navigation and detail behavior.
 
 ## Development
+
+### Generate a decision link from Node
+
+Build the DOM-free encoder with the installed Vite toolchain:
+
+```bash
+npm exec vite build -- --ssr src/sharing/decisionLink.ts --outDir dist/node
+```
+
+Import the generated module from your Node script (Node 24+), supplying two to four
+`{ name, state }` options. Each state is a normal calculation input; the first
+option is the baseline. Keep the built file inside this checkout so Node can
+resolve `fflate` from its installed dependencies.
+
+```ts
+import { encodeDecisionLink } from './dist/node/decisionLink.js';
+
+const link = encodeDecisionLink(options, {
+  baseUrl: 'https://profitpath.tsyche.workers.dev/',
+  selectedCase: 'base',
+  annualGoal: 100000 // Optional annual net income before tax; omit for no goal.
+});
+if (!link) throw new Error('Invalid options or bundle exceeds the share limits');
+console.log(link);
+```
+
+The URL is `?bundle=v1.<payload>&decision=1&case=base[&goal=100000]`.
+`payload` is unpadded base64url of raw DEFLATE-compressed UTF-8 JSON:
+`{"version":1,"scenarios":[{"name":"Option 0","state":{...}},...]}`.
+Names are trimmed and limited to 120 characters; states use the same allowlist,
+defaults and clamps as browser imports. Supply stable IDs for offerings,
+expenses, resources and membership references; missing IDs are generated.
+
+The unchanged bundle limits are four scenarios, 500,000 uncompressed JSON bytes
+and 20,000 characters for the `v1.` payload (excluding the URL and decision
+parameters). Invalid or oversized states return `null`; invalid base URLs throw.
+Cases are `base`, `conservative`, or `optimistic`; the optional goal is a whole
+number from 0 through 1,000,000,000,000. Options must share currency and calculation
+mode for the workbench to calculate. Links open the decision in memory without
+importing saved scenarios. Rebuild the encoder after source changes; a normal
+web build replaces `dist/`.
 
 ### Common commands
 

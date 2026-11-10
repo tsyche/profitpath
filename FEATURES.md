@@ -35,6 +35,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Scenario Comparison**: Side-by-side comparison of saved scenarios with key metrics and differences
 - **Decision Workbench**: Compare two to four saved options from Scenarios, or Compare in Workspaces. Choose a baseline, assumption case, and optional annual net-income goal; review offering revenue/contribution deltas, guessed and untagged revenue, and a plain-language income verdict. Options must share a currency and calculation mode.
 - **Decision Sharing**: CSV, print/PDF, and snapshot links retain the reviewed options, baseline, case, goal and notes. A decision link opens in memory without replacing the recipient's draft or saved library.
+- **External Decision Generators**: A shared DOM-free encoder accepts two to four named calculation states from Node and emits the same bounded decision link as the UI. See [Node usage and URL format](README.md#generate-a-decision-link-from-node).
 - **Analytics Tracking**: Background usage tracking for admin analysis (admin-only with user opt-out toggle) ✅
 - **Site Traffic Counter**: Privacy-respecting GoatCounter visit counter (no cookies, honors Do Not Track), separate from the opt-in feature analytics above — see [docs/privacy-policy.md](docs/privacy-policy.md) ✅
 

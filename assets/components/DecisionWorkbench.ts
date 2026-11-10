@@ -1,10 +1,10 @@
 import { buildDecision, type DecisionOption } from '../../src/insights/decisionWorkbench';
 import { formatMoney0 } from '../../src/calculations/currency';
 import { getRangeCase, RANGE_CASE_LABELS, RANGE_CASES, type RangeCase } from '../../src/calculations/rangeCase';
-import type { Offering, Scenario } from '../../src/types';
+import type { Offering } from '../../src/types';
 import { displayPrice } from '../../src/calculations/offeringPrice';
-import { csvCell, escapeHtml, getAllScenarios } from '../services/miscService';
-import { decodeScenarioBundle, encodeScenarioBundle } from '../services/scenarioBundle';
+import { csvCell, escapeHtml, getAllScenarios, getShareBase } from '../services/miscService';
+import { decodeScenarioBundle, encodeDecisionLink } from '../../src/sharing/decisionLink';
 import { showToast } from '../services/modalService';
 import { downloadOrShare, openPrintTarget } from '../services/reportDelivery';
 import { createModal } from './Modal';
@@ -117,15 +117,10 @@ export function showDecisionWorkbench(options: DecisionOption[], selectedCase: R
     report.document.close(); report.focus(); report.print();
   });
   q('#decisionShare').addEventListener('click', () => {
-    const scenarios: Scenario[] = ordered.map((o, i) => ({ ...o, id: 'decision-' + i, timestamp: '', createdAt: '' }));
-    const encoded = encodeScenarioBundle(scenarios);
+    const encoded = encodeDecisionLink(ordered, { baseUrl: getShareBase(), selectedCase: activeCase, annualGoal });
     if (!encoded) { showToast('These options are too large for one link. Export a CSV instead.', 'error'); return; }
-    const url = new URL(encoded);
-    url.searchParams.set('decision', '1');
-    url.searchParams.set('case', activeCase);
-    if (annualGoal !== null) url.searchParams.set('goal', String(annualGoal));
     createModal({ title: 'Share decision', content: '<p>This snapshot includes every option, baseline, case and goal. Recipients can review it without changing their draft or saved scenarios.</p>' +
-      `<input id="decisionShareURL" class="copy-on-click share-url-input" readonly aria-label="Decision link" value="${escapeHtml(url.toString())}">` });
+      `<input id="decisionShareURL" class="copy-on-click share-url-input" readonly aria-label="Decision link" value="${escapeHtml(encoded)}">` });
   });
   update();
 }

@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-11-10 — External decision-link encoder for Node generators
 - [x] 2026-11-02 — Dependency group update (Capacitor CLI, Playwright, ESLint)
 - [x] 2026-11-01 — Dependabot APK secret guard
 - [x] 2026-10-31 — Workspace scroll clearance and taller notes
@@ -76,6 +77,29 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-11-10 — External decision-link encoder for Node generators
+
+Extracted the existing bundle codec and scenario sanitizer into DOM-free sharing
+modules, preserving the v1 format, allowlist and size bounds. The decision UI and
+external generators use [encodeDecisionLink](../../src/sharing/decisionLink.ts):
+two to four named calculation states, first option as baseline, explicit case and
+optional annual goal. [Node usage and URL format](../../README.md#generate-a-decision-link-from-node)
+use Vite SSR; no generator-specific code or private figures belong in this repo.
+
+Verification: 853 unit tests pass with one existing skip (854 total, 79 files);
+16 existing bundle/decision journeys pass on Chromium and Firefox without retries.
+Lint, strict typecheck, production build and Node SSR import pass. The deployed
+Cloudflare asset reports v0.8.72-beta and includes the existing bundle/decision
+receiver, so consuming generated links does not require a deployment.
+
+Synthetic 14-offering states with individual v2 URLs of 3,774 / 3,775 / 3,773
+characters produce one 6,402-character decision URL including an annual goal.
+This measures representative size, not private TSS data or a guaranteed maximum;
+compression depends on shared content. Google Chrome 157 opened that decision
+URL in a new isolated headless tab on the deployed site and displayed Option 0
+(baseline), Option A and Option B side by side. This verifies Chrome navigation;
+the Claude in Chrome extension's separate URL-length gate was not exercised.
 
 ### 2026-11-02 — Dependency group update
 

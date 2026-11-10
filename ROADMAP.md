@@ -1,6 +1,6 @@
 # ProfitPath — Consolidated Roadmap (single source of truth)
 
-**TL;DR:** Active work and blockers only; last audited 2026-11-10 against v0.8.73-beta. Scenario-sharing bundles, identical-import skipping, one-time purchases, and membership service entitlements are shipped. The intended additional bundle behavior needs clarification before feature work starts.
+**TL;DR:** Active work and blockers only; last audited 2026-11-10 against v0.8.73-beta. The requested bundle feature is external generation of one decision link for two to four scenarios; its shared encoder and Node usage are documented in the shipped ledger.
 
 See [README.md](README.md) for setup and development instructions. Shipped work lives in [docs/ledger/ROADMAP_SHIPPED.md](docs/ledger/ROADMAP_SHIPPED.md).
 
@@ -8,16 +8,16 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **Clarify bundle scope**: distinguish sharing saved scenarios from selling service packages; existing behavior is summarized below. Feature implementation is paused at Tim's direction.
+1. **Development dependency advisories** (item 41): resolve the audit's moderate tooling findings with compatible upgrades.
 2. **Finish device/human acceptance** (item 40): native share/print/mail and participant comprehension remain open. Workspaces is already the new-device default.
-3. **Seasonal adjustments** (item 11): the best existing agent-doable feature after bundle scope is resolved; keep regional pricing dependent on trusted data.
+3. **Workspace tour repair** (item 42): address the known misplaced guidance before adding more onboarding.
 
 ### Bundle status
 
 - **Scenario sharing (item 36): shipped.** [Scenarios UI](assets/components/UIHelpers.ts) exposes Share selected for up to four saves; the [bundle service](assets/services/scenarioBundle.ts) validates compressed snapshots, confirms import, preserves existing work, skips identical saved copies, and suffixes conflicting names.
 - **Verification:** all five [bundle tests](src/test/scenario-bundle.test.ts) passed on 2026-11-10. The existing [browser journey](tests/e2e/scenario-bundle.spec.ts) covers share/import; browsers were not rerun during this documentation audit.
 - **Service purchases:** [item 19](docs/ledger/ROADMAP_SHIPPED.md#2026-10-24--19-one-time--bundled-purchase-line-items) provides per-sale revenue with no capacity use. [Membership entitlements](docs/ledger/ROADMAP_SHIPPED.md#2026-10-27--24g-membership-per-service-entitlements) provide included visits in a display-only what-if.
-- **Open scope:** a package sale that consumes multiple underlying services is not established by either implementation. 🧑 needs-human: Tim must identify the intended bundle behavior before a new feature is scoped.
+- **External generation:** Tim clarified the request on 2026-11-10: one decision link for multiple named calculation states. See [Node encoder usage](README.md#generate-a-decision-link-from-node). This request does not add service-package modeling.
 
 Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing trustworthy data, not on code. Shipped work is indexed in the [ledger](docs/ledger/ROADMAP_SHIPPED.md).
 
@@ -148,7 +148,7 @@ Privacy-first freemium model planned post-launch. The app remains free until dem
 
 ## Status & Notes
 
-- **Current status**: 852 unit tests across 78 files (851 passing, one existing skip), 628 release Playwright cases across 51 files on Chromium + Firefox, plus four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases; axe a11y scans included. Classic and Workspaces remain available during item 25 acceptance. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
+- **Current status**: 854 unit tests across 79 files (853 passing, one existing skip), 628 release Playwright cases across 51 files on Chromium + Firefox, plus four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases; axe a11y scans included. Classic and Workspaces remain available during item 25 acceptance. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
 - **Foundation history**: see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md); completed work is indexed there.
 - **Latest milestones** (July 2026):
   - Client Mix Optimizer: grid-search + hill-climbing mix suggestions, fully wired panel
@@ -176,6 +176,6 @@ This section tracks common feature requests, friction points, and competitive ga
 **How to use**: Update this list after customer conversations, support tickets, or user interviews. Use to validate roadmap priorities and surface unexpected user needs.
 
 ### Test Coverage Status (October 2026)
-- **852 unit tests** across 78 files (851 passing, one existing skip), plus **628 release Playwright cases** across 51 files on Chromium + Firefox; four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases. Lint, strict typecheck, and production build pass. The 2026-10-29 full release run used no retries; the design-review suite remains separate historical evidence.
+- **854 unit tests** across 79 files (853 passing, one existing skip), plus **628 release Playwright cases** across 51 files on Chromium + Firefox; four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases. Lint, strict typecheck, and production build pass. The 2026-10-29 full release run used no retries; the design-review suite remains separate historical evidence.
 - Key areas: calculation engine and fuzz tests, scenarios, feature gating, export/import, scroll lock, mobile layout, tooltips, security (XSS, CSV injection), performance, optimizer and advanced charts, axe a11y at every experience level in both themes
 - Detail lives in [CLAUDE.md](CLAUDE.md#testing-strategy)
