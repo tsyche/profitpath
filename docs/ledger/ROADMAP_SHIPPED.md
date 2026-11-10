@@ -4,6 +4,7 @@
 
 ## Shipped index
 
+- [x] 2026-11-10 — 41. Development dependency security advisories
 - [x] 2026-11-10 — 44. Bundle review clarity
 - [x] 2026-11-10 — External decision-link encoder for Node generators
 - [x] 2026-11-02 — Dependency group update (Capacitor CLI, Playwright, ESLint)
@@ -78,6 +79,26 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-11-10 — 41. Development dependency security advisories
+
+Updated rimraf 6.1.3 → 6.1.4, which supports glob 14.0.4, and overrode minimatch
+10.2.6 with 11.0.6. This clears the AbortSignal cancellation advisory
+[GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4) and globparts
+amplification advisory [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249)
+without downgrading ESLint/typescript-eslint. Override retirement is tracked in
+[ROADMAP.md item 41](../../ROADMAP.md).
+
+A fresh `npm ci` and full `npm audit` report zero vulnerabilities (previously 11
+moderate dependency findings). Lint, strict typecheck, all 853 passing unit tests
+(one existing skip), production build and Capacitor CLI smoke check pass.
+
+Original entry:
+
+41. **Development dependency security advisories** *(audit finding, 2026-11-10)*
+    - Full `npm audit` reports 11 moderate findings through glob/minimatch, ESLint and typescript-eslint; production-only audit reports zero. These are development-tool dependency findings.
+    - Acceptance: update compatible dependencies, rerun audit/lint/typecheck/tests, and document any remaining advisories. Avoid the suggested forced ESLint downgrade without compatibility proof.
+    - Effort: ~1-2 hours; remediation deferred during this documentation-only audit.
 
 ### 2026-11-10 — 44. Bundle review clarity
 

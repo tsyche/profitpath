@@ -8,9 +8,9 @@ See [README.md](README.md) for setup and development instructions. Shipped work 
 
 ## Recommended Next 3
 
-1. **Development dependency advisories** (item 41): resolve the audit's moderate tooling findings with compatible upgrades.
+1. **Workspace tour repair** (item 42): address the known misplaced guidance before adding more onboarding.
 2. **Finish device/human acceptance** (item 40): native share/print/mail and participant comprehension remain open. Workspaces is already the new-device default.
-3. **Workspace tour repair** (item 42): address the known misplaced guidance before adding more onboarding.
+3. **CI worker benchmark** (item 43): measure whether two browser workers reliably reduce runner time.
 
 ### Bundle status
 
@@ -25,10 +25,11 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
 
 ## Fully Prioritized Backlog (high → low)
 
-41. **Development dependency security advisories** *(audit finding, 2026-11-10)*
-    - Full `npm audit` reports 11 moderate findings through glob/minimatch, ESLint and typescript-eslint; production-only audit reports zero. These are development-tool dependency findings.
-    - Acceptance: update compatible dependencies, rerun audit/lint/typecheck/tests, and document any remaining advisories. Avoid the suggested forced ESLint downgrade without compatibility proof.
-    - Effort: ~1-2 hours; remediation deferred during this documentation-only audit.
+41. **Retire the temporary minimatch override** *(conditional follow-up, 2026-11-10)*
+    - The 11 moderate development dependency findings are resolved: full `npm audit` reports zero after rimraf 6.1.4/glob 14.0.4 and the minimatch 11.0.6 override. See the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md).
+    - Wait for ESLint/config-array and typescript-eslint to request patched minimatch themselves. Retain the override while their declared ranges still select vulnerable 10.x.
+    - Acceptance: remove the override only when a fresh lockfile install, full audit, lint, typecheck and unit tests pass without it.
+    - Effort: ~30 minutes once upstream ranges support the patched dependency.
 
 42. **Workspace tour repair**
     - Stop the Classic guided tour from targeting hidden controls in Workspaces, then define guidance for Model / Results / Compare.
