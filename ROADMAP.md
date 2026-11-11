@@ -56,6 +56,15 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
 
 **Layout & Information Architecture** *(new category — Tim independently flagged this as "getting very busy on a single scrollable page view," agreed with while building the Sound Stage scenario)*
 
+46. **Mobile UX density research and alternative-design spike** *(requested 2026-11-11; deferred)*
+    - Feedback: the improved comparison is much clearer, but mobile still feels too spacious and cumbersome across the app. There is too much information for the available screen area; excessive spacing, large elements and default-looking radio/selection controls add friction.
+    - Scope: mobile only, across Model, Results, Compare and dialogs. Preserve the accepted desktop/web comparison and layout; its information density is manageable for users willing to read and learn.
+    - Research: use the relevant UX/UI skills and study how data-rich finance, analytics, spreadsheet and planning apps handle small screens. Collect annotated examples with sources and explain which patterns fit ProfitPath.
+    - Spike alternatives: compare a modest spacing/control-density polish with stronger grouping, progressive disclosure and task-focused mobile views. Consider better-styled selection controls; do not assume shrinking every element or font is the answer.
+    - Acceptance: present 2–3 mobile prototypes with tradeoffs and representative data-heavy journeys. Keep scenario identity and compared values obvious, preserve readable text, accessible touch targets, keyboard/screen-reader support and exports, and demonstrate unchanged desktop layouts.
+    - Gate: research/prototypes first; Tim chooses an approach before implementation. No UI changes as part of recording this item.
+    - Effort: ~4–6 hours for research and prototypes; estimate implementation after review.
+
 40. **Post-redesign device/human acceptance**
     - Effort: ~2-4 hours of coordinated acceptance; fixes estimated after findings.
     - Implementation items 25 and 38–39 are closed at Tim's direction on 2026-10-29; this item owns every remaining acceptance task. See the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md).
