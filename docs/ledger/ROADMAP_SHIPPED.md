@@ -4,6 +4,8 @@
 
 ## Shipped index
 
+- [x] 2026-11-10 — Responsive decision comparison review
+- [x] 2026-11-10 — 45. Live driver slider in the decision workbench
 - [x] 2026-11-10 — 41. Development dependency security advisories
 - [x] 2026-11-10 — 44. Bundle review clarity
 - [x] 2026-11-10 — External decision-link encoder for Node generators
@@ -79,6 +81,67 @@
 - [x] 2026-04 to 2026-06 (months documented) — 1-3. Read-only Scenario Sharing, Tax & Financial Report Generator, Performance Optimization & Caching
 
 ## Archived entries
+
+### 2026-11-10 — Responsive decision comparison review
+
+Desktop workbench tables use equal-width columns, left-aligned readable metric
+labels, centered tabular values, clearer grids, sticky scenario headers and
+highlighted income rows. Mobile groups the named options under each metric,
+with consistent color markers and no horizontal table scrolling. Compact settings
+leave more room for the comparison.
+
+Service-level comparisons expand on demand and retain their disclosure state
+when results refresh. Print/PDF includes every service in full. The inactive
+driver panel respects its hidden state. Calculations, saved options and share
+formats are unchanged.
+
+Verification uses synthetic fixtures: twelve new layout cases cover four options,
+long names, 1440/375/320px viewports, both themes and browsers, keyboard disclosure,
+unchanged values across resize, and axe. The focused comparison/share suite has
+34 cases including the driver audit regressions. Lint, strict typecheck,
+production build and 865 unit tests pass (one existing skip). Release browser
+inventory is 646 cases across 52 files.
+
+### 2026-11-10 — 45. Live driver slider in the decision workbench
+
+The decision workbench gained a display-only driver lens: pick one matched row
+driver (price, clients, group runs, fill % or sales-loss %), move a native
+slider or the number field, and every option's income, tables and verdict
+recompute through `calc()`. Crossover marks show where the leading option
+changes. The lens applies a change from each option's own loaded value inside
+`buildDecision` ([decisionDriver.ts](../../src/insights/decisionDriver.ts)), so
+the base position reproduces the workbench table exactly and saved scenarios,
+bundles and share links never see it. Group drivers move in whole runs through
+seats × fill when at least one filled seat makes each integer run representable.
+
+A unit test pins the price crossover at delta 10 and base-position identity; a
+browser case drives the sales-loss slider by keyboard and number field, flips
+the verdict, checks the crossover mark bounds, axe, CSV driver row and scenario
+non-mutation on Chromium and Firefox. The final audit adds price-unit, bounds,
+zero-grid, case-clamping, baseline-reordering, queued-reset and share-warning
+regressions. Price changes now use displayed units rather than canonical
+monthly-equivalent amounts. Baseline changes reset the driver; pending input is
+cancelled on reset, selection changes and close. Active-driver links explicitly
+warn that the original options are shared. These regressions failed before their
+corresponding fixes.
+
+865 unit tests pass with one existing skip (866 total, 80 files); the focused
+browser gate has 34 cases across Chromium and Firefox. A synthetic four-option,
+14-service Node probe measured ~3 ms for a rebuild and ~10 ms for a crossover
+scan on the development machine; this is not physical-device performance proof.
+Lint and strict typecheck pass. The parked
+follow-ups (multi-driver sliders, persisting slider positions) are
+[ROADMAP 45f](../../ROADMAP.md).
+
+Original entry:
+
+45. **Live driver slider in the decision workbench** *(idea, 2026-11-10; from the Sound Stage price decision)*
+    - Problem: an owner's real question is "what if I run 4 classes a month instead of 8?" Today that means editing a group row's Clients (seat-sales, not runs) one scenario at a time. The tornado chart, the price × utilization heat map and the reverse calculator answer neighbouring questions, but none move one driver live across every option at once.
+    - Shape: in the decision workbench, pick one driver (group runs per month, a row's clients, price, fill % or sales-loss %) and drag a slider. Every option's net income and the "highest income" verdict recompute through `calc()` as it moves, and the slider marks the crossover point where the leading option changes, if any.
+    - Display-only lens: the slider never writes to saved scenarios or the bundle; reset returns to the loaded values. Group drivers are in runs, converted with seats × fill (the same rule as `runs = ceil(clients / (seats × fill))`).
+    - Acceptance: values at the slider's base position equal the workbench table exactly; a unit test pins one known crossover; keyboard and screen-reader operable (native `input type="range"` plus a number field); results update without visible lag on a four-option bundle.
+    - Out of scope: multi-driver sliders (the heat map covers two drivers) and saving slider positions to links until someone asks.
+    - Effort: ~3-5 hours.
 
 ### 2026-11-10 — 41. Development dependency security advisories
 

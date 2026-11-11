@@ -76,13 +76,10 @@ Industry Benchmarks (item 10) stays out of the top 3: it is blocked on sourcing 
     - 🧑 needs-human: real usage must demonstrate the gap and establish integration semantics.
     - Effort: scope after evidence; acceptance must prevent double-counting plan revenue, redemptions, labor and capacity.
 
-45. **Live driver slider in the decision workbench** *(idea, 2026-11-10; from the Sound Stage price decision)*
-    - Problem: an owner's real question is "what if I run 4 classes a month instead of 8?" Today that means editing a group row's Clients (seat-sales, not runs) one scenario at a time. The tornado chart, the price × utilization heat map and the reverse calculator answer neighbouring questions, but none move one driver live across every option at once.
-    - Shape: in the decision workbench, pick one driver (group runs per month, a row's clients, price, fill % or sales-loss %) and drag a slider. Every option's net income and the "highest income" verdict recompute through `calc()` as it moves, and the slider marks the crossover point where the leading option changes, if any.
-    - Display-only lens: the slider never writes to saved scenarios or the bundle; reset returns to the loaded values. Group drivers are in runs, converted with seats × fill (the same rule as `runs = ceil(clients / (seats × fill))`).
-    - Acceptance: values at the slider's base position equal the workbench table exactly; a unit test pins one known crossover; keyboard and screen-reader operable (native `input type="range"` plus a number field); results update without visible lag on a four-option bundle.
-    - Out of scope: multi-driver sliders (the heat map covers two drivers) and saving slider positions to links until someone asks.
-    - Effort: ~3-5 hours.
+45f. **Live driver follow-ups (conditional)** *(remaining follow-up from shipped 45)*
+    - The decision workbench driver slider (ROADMAP 45, shipped 2026-11-10) is display-only and single-driver. Two parked next steps from its original out-of-scope line: multi-driver sliders (the price × utilization heat map already covers two drivers) and saving slider positions in decision links.
+    - No work on either until someone asks. Saving positions needs an explicit share-format decision first, because the driver deliberately never persists today.
+    - Effort: scope after a request.
 
 **Mobile & Platform Support (Deferred — needs full Xcode)**
 
@@ -152,7 +149,7 @@ Privacy-first freemium model planned post-launch. The app remains free until dem
 
 ## Status & Notes
 
-- **Current status**: 854 unit tests across 79 files (853 passing, one existing skip), 630 release Playwright cases across 51 files on Chromium + Firefox, plus four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases; axe a11y scans included. Classic and Workspaces remain available during item 25 acceptance. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
+- **Current status**: 866 unit tests across 80 files (865 passing, one existing skip), 646 release Playwright cases across 52 files on Chromium + Firefox, plus four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases; axe a11y scans included. Classic and Workspaces remain available during item 25 acceptance. July 2026: client mix optimizer, advanced chart types (heat map/radar/funnel), KPI visual polish, animated counters, GoatCounter analytics + APK release pipeline hardened, scroll-lock reference-counting leaks fixed. October 2026: bug sweep, per-scenario currency, expenses, ranges, offering types, and the Insights and Reverse Calculator panels (see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md)).
 - **Foundation history**: see the [shipped ledger](docs/ledger/ROADMAP_SHIPPED.md); completed work is indexed there.
 - **Latest milestones** (July 2026):
   - Client Mix Optimizer: grid-search + hill-climbing mix suggestions, fully wired panel
@@ -180,6 +177,6 @@ This section tracks common feature requests, friction points, and competitive ga
 **How to use**: Update this list after customer conversations, support tickets, or user interviews. Use to validate roadmap priorities and surface unexpected user needs.
 
 ### Test Coverage Status (October 2026)
-- **854 unit tests** across 79 files (853 passing, one existing skip), plus **630 release Playwright cases** across 51 files on Chromium + Firefox; four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases. Lint, strict typecheck, and production build pass. The 2026-10-29 full release run used no retries; the design-review suite remains separate historical evidence.
+- **866 unit tests** across 80 files (865 passing, one existing skip), plus **646 release Playwright cases** across 52 files on Chromium + Firefox; four production zoom/PDF cases, four production offline cases, and 30 separate design-review cases. Lint, strict typecheck, and production build pass. The 2026-10-29 full release run used no retries; the design-review suite remains separate historical evidence.
 - Key areas: calculation engine and fuzz tests, scenarios, feature gating, export/import, scroll lock, mobile layout, tooltips, security (XSS, CSV injection), performance, optimizer and advanced charts, axe a11y at every experience level in both themes
 - Detail lives in [CLAUDE.md](CLAUDE.md#testing-strategy)

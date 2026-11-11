@@ -33,7 +33,7 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 - **Social Media Sharing**: Open Graph and Twitter Card support for rich previews
 - **Industry Templates**: Pre-built configurations for consulting, cleaning, landscaping, fitness, photography, and handyman services
 - **Scenario Comparison**: Side-by-side comparison of saved scenarios with key metrics and differences
-- **Decision Workbench**: Compare two to four saved options from Scenarios, or Compare in Workspaces. Choose a baseline, assumption case, and optional annual net-income goal; review offering revenue/contribution deltas, guessed and untagged revenue, and a plain-language income verdict. Options must share a currency and calculation mode.
+- **Decision Workbench**: Compare two to four saved options from Scenarios, or Compare in Workspaces. Desktop uses equal-width columns, centered values and left-aligned metric labels; mobile groups named, color-marked options under each metric without horizontal scrolling. Expand individual services for pricing and contribution detail; print/PDF includes every service. Choose a baseline, assumption case, and optional annual net-income goal; review offering deltas, guessed and untagged revenue, and a plain-language income verdict. Options must share a currency and calculation mode.
 - **Decision Sharing**: CSV, print/PDF, and snapshot links retain the reviewed options, baseline, case, goal and notes. A decision link opens in memory without replacing the recipient's draft or saved library.
 - **External Decision Generators**: A shared DOM-free encoder accepts two to four named calculation states from Node and emits the same bounded decision link as the UI. See [Node usage and URL format](README.md#generate-a-decision-link-from-node).
 - **Analytics Tracking**: Background usage tracking for admin analysis (admin-only with user opt-out toggle) ✅
@@ -50,6 +50,14 @@ ProfitPath is a comprehensive profitability and capacity simulator for recurring
 ### Decision assumptions
 
 The workbench's break-even sales-loss figure is the largest **total** loss on matched services whose prices increased that still matches baseline annual income. It replaces those services' loss assumption and holds other inputs at the selected case. Discrete client counts are recalculated through the normal engine. For stepwise Current-mode group costs, a labeled conservative bound keeps the original run costs; it also ignores any gain from losing negative-contribution sales. This avoids promising a safe interval from a non-monotone profit curve. Forecast remains a capacity-supported ceiling.
+
+The live driver slider is a display-only lens over the loaded options: it applies one change (price, clients, group runs, fill % or sales-loss %) from each option's own loaded value, so the slider's base position equals the workbench table exactly. It marks crossover points where the leading option changes and never writes to saved scenarios or shared links; Reset returns to the loaded values. Group drivers move in whole runs through seats × fill.
+
+Price changes use the displayed per-month, per-session or per-sale unit. Changing
+baseline resets the driver; changing case snaps it to that case's valid range and
+step. Whole-run controls require at least one filled seat per cohort. An active
+driver's changed results can be exported through CSV/PDF; sharing a link warns
+that it opens the original options instead.
 
 Membership What-If shows a per-service price-floor stress test from the entered plans. It assigns the entire fee to one service, fully redeems its included visits and eligible credits without breakage, and also tests the cash-discount limit at high usage. Credits redeem at list unless stacking is explicitly enabled. Other included services are not valued in that service's test. The deepest of this derived discount and the offering's manual discount drives the existing floor warning; modeled revenue stays unchanged.
 

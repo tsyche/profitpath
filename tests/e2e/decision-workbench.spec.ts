@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 import { fitnessFixture } from '../../assets/prototypes/fixtures';
+import { decodeScenarioBundle } from '../../src/sharing/scenarioBundle';
 
 async function seed(page: Page) {
   await page.addInitScript(model => {
@@ -45,16 +46,21 @@ for (const layout of ['legacy', 'workspaces']) {
       await expect(workbench).toContainText('Conservative case');
       await expect(workbench).toContainText('100.0%');
       const summary = workbench.locator('[aria-label="Decision summary"]');
-      await expect(summary.getByRole('columnheader', { name: 'Today (baseline)', exact: true })).toBeVisible();
-      const header = await summary.getByRole('columnheader', { name: 'Today (baseline)', exact: true }).boundingBox();
-      const firstValue = await summary.locator('tbody tr').first().locator('td').first().boundingBox();
-      expect(header).not.toBeNull();
-      expect(firstValue).not.toBeNull();
-      expect(Math.abs(header!.x - firstValue!.x)).toBeLessThan(2);
+      if (width > 640) {
+        await expect(summary.getByRole('columnheader', { name: 'Today (baseline)', exact: true })).toBeVisible();
+        const header = await summary.getByRole('columnheader', { name: 'Today (baseline)', exact: true }).boundingBox();
+        const firstValue = await summary.locator('tbody tr').first().locator('td').first().boundingBox();
+        expect(header).not.toBeNull();
+        expect(firstValue).not.toBeNull();
+        expect(Math.abs(header!.x - firstValue!.x)).toBeLessThan(2);
+      } else {
+        await expect(summary.locator('tbody tr').first().locator('.decision-option-label')).toHaveText(['Today (baseline)', 'Raise', 'Stress']);
+        expect(await summary.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+      }
       const results = await new AxeBuilder({ page }).include('#decisionResults').analyze();
       expect(results.violations).toEqual([]);
       expect(await workbench.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
-      await workbench.screenshot({ path: testInfo.outputPath('decision-workbench.png') });
+      await page.screenshot({ path: testInfo.outputPath('decision-workbench.png'), animations: 'disabled' });
 
       const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#decisionCSV').click()]);
       const csv = await readFile((await download.path())!, 'utf8');
@@ -76,6 +82,7 @@ for (const layout of ['legacy', 'workspaces']) {
       expect(printed).toContain('Goal:');
       expect(printed).toMatch(/60[,.]000/);
       expect(printed).toContain('Stress');
+      expect(printed).toMatch(/class="decision-offering"[^>]* open/);
       await page.locator('#decisionShare').click();
       const url = await page.locator('#decisionShareURL').inputValue();
       expect(new URL(url).searchParams.get('goal')).toBe('60000');
@@ -155,6 +162,116 @@ test('two and four options, keyboard selection, and untrusted names remain usabl
   await page.goto(url);
   await expect(page.locator('#decisionResults [aria-label="Decision summary"] thead th')).toHaveCount(5);
   await expect(page.locator('#decisionResults img')).toHaveCount(0);
+});
+
+test('live driver slider moves every option, flips the verdict, and never touches saved scenarios', async ({ page }) => {
+  await seed(page);
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean(window.lastMetrics));
+  await page.evaluate(() => window.openScenarioModal());
+  await page.locator('#decisionWorkbenchBtn').click();
+  const picker = page.getByRole('dialog', { name: 'Choose decision options' });
+  for (const checkbox of await picker.getByRole('checkbox').all()) await checkbox.check();
+  await picker.getByRole('button', { name: 'Open workbench' }).click();
+  const workbench = page.getByRole('dialog', { name: 'Decision workbench', exact: true });
+  const beforeScenarios = await page.evaluate(() => localStorage.getItem('profitpath-scenarios'));
+  await expect(workbench.locator('.decision-verdict')).toContainText('Raise has the highest');
+
+  await workbench.locator('#decisionDriver').selectOption('salesLoss:0');
+  await expect(workbench.locator('#decisionDriverPanel')).toBeVisible();
+  await expect(workbench.locator('#decisionDriverStatus')).toContainText('No change');
+  await expect(workbench.locator('.decision-verdict')).toContainText('Raise has the highest');
+
+  // Native range is keyboard operable: End jumps to the slider maximum.
+  const range = workbench.locator('#decisionDriverRange');
+  await range.focus();
+  await page.keyboard.press('End');
+  await expect(workbench.locator('#decisionDriverNumber')).toHaveValue('90');
+  await expect(workbench.locator('.decision-verdict')).toContainText('Today matches or exceeds');
+  expect(await workbench.locator('.decision-driver-mark').count()).toBeGreaterThan(0);
+  await expect(workbench.locator('#decisionDriverStatus')).toContainText('Leader changes at');
+
+  // The number field drives the same lens, and the crossover mark sits in range.
+  await workbench.locator('#decisionDriverNumber').fill('60');
+  await expect(workbench.locator('.decision-verdict')).toContainText('Today matches or exceeds');
+  const markX = await workbench.locator('.decision-driver-mark').first().boundingBox();
+  const trackX = await workbench.locator('.decision-driver-track').boundingBox();
+  expect(markX).not.toBeNull();
+  expect(trackX).not.toBeNull();
+  expect(markX!.x).toBeGreaterThan(trackX!.x - 1);
+  expect(markX!.x + markX!.width).toBeLessThan(trackX!.x + trackX!.width + 3);
+
+  const [download] = await Promise.all([page.waitForEvent('download'), workbench.locator('#decisionCSV').click()]);
+  const csv = await readFile((await download.path())!, 'utf8');
+  expect(csv).toContain('Driver');
+  expect(csv).toContain('Sales loss % — Studio');
+  expect(csv).toContain('+60%');
+
+  await workbench.locator('#decisionShare').click();
+  const shared = page.getByRole('dialog', { name: 'Share decision', exact: true });
+  await expect(shared).toContainText('The current driver change is not included');
+  const sharedUrl = new URL(await shared.locator('#decisionShareURL').inputValue());
+  expect(decodeScenarioBundle(sharedUrl.searchParams.get('bundle')!)!.map(o => o.state.offerings?.[0].salesLossPct))
+    .toEqual([0, 10, 10, 10]);
+  await shared.getByRole('button', { name: 'Close dialog' }).click();
+
+  // Reset returns to the loaded table, and saved scenarios never see the lens.
+  await workbench.locator('#decisionDriverReset').click();
+  await expect(workbench.locator('.decision-verdict')).toContainText('Raise has the highest');
+  await expect(workbench.locator('#decisionDriverStatus')).toContainText('No change');
+  expect(await page.evaluate(() => localStorage.getItem('profitpath-scenarios'))).toBe(beforeScenarios);
+
+  const results = await new AxeBuilder({ page }).include('#decisionDriverPanel').analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test('driver controls keep zero, reset and reordered baselines consistent', async ({ page }) => {
+  await seed(page);
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean(window.lastMetrics));
+  await page.evaluate(() => {
+    const saved = window.getAllScenarios();
+    saved.forEach((scenario, i) => {
+      const first = { ...scenario.state.offerings![0], currentClientsLow: 10, currentClientsHigh: 1000 };
+      const second = { ...first, id: 'other', name: 'Other', priceMonthly: 350.25, currentClients: 0,
+        currentClientsLow: 0, currentClientsHigh: 0 };
+      scenario.state.offerings = i ? [second, first] : [first, second];
+    });
+    localStorage.setItem('profitpath-scenarios', JSON.stringify(saved));
+    window.openScenarioModal();
+  });
+  await page.locator('#decisionWorkbenchBtn').click();
+  const picker = page.getByRole('dialog', { name: 'Choose decision options' });
+  for (const checkbox of await picker.getByRole('checkbox').all()) await checkbox.check();
+  await picker.getByRole('button', { name: 'Open workbench' }).click();
+  await page.locator('#decisionDriver').selectOption('clients:0');
+  await page.locator('#decisionDriverNumber').fill('70');
+  await expect(page.locator('#decisionDriverNumber')).toHaveValue('70');
+  const clients = page.locator('[aria-label="Decision summary"]').getByRole('rowheader', { name: 'Clients', exact: true }).locator('..');
+  await expect(clients.locator('.decision-value').first()).toHaveText('170');
+  await page.locator('#decisionCase').selectOption('conservative');
+  await expect(page.locator('#decisionDriverNumber')).toHaveValue('10');
+  await expect(clients.locator('.decision-value').first()).toHaveText('20');
+  await page.evaluate(() => {
+    const number = document.querySelector<HTMLInputElement>('#decisionDriverNumber')!;
+    number.value = '5';
+    number.dispatchEvent(new Event('input', { bubbles: true }));
+    document.querySelector<HTMLButtonElement>('#decisionDriverReset')!.click();
+  });
+  await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+  await expect(page.locator('#decisionDriverNumber')).toHaveValue('0');
+  await page.locator('#decisionDriverNumber').fill('7');
+  await expect(clients.locator('.decision-value').first()).toHaveText('17');
+  await page.locator('#decisionCase').selectOption('optimistic');
+  await expect(page.locator('#decisionDriverNumber')).toHaveValue('5');
+  await expect(clients.locator('.decision-value').first()).toHaveText('1005');
+  await page.locator('#decisionBaseline').selectOption('1');
+  await expect(page.locator('#decisionDriver')).toHaveValue('');
+  await expect(page.locator('#decisionDriverPanel')).toBeHidden();
+  await expect(page.locator('#decisionDriver option[value="price:0"]')).toHaveText('Price — Other');
+  await page.locator('#decisionDriver').selectOption('price:0');
+  await expect(page.locator('#decisionDriverRange')).toHaveValue('0');
+  expect(await page.locator('#decisionDriverNumber').evaluate(el => (el as HTMLInputElement).validity.stepMismatch)).toBe(false);
 });
 
 test('membership plans drive live floor status and profile-specific value warnings', async ({ page }) => {

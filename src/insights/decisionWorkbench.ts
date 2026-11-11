@@ -3,6 +3,10 @@ import { calc } from '../calculations';
 import { applyRangeCase, type RangeCase } from '../calculations/rangeCase';
 import { normalizeCurrency } from '../calculations/currency';
 import { displayPrice } from '../calculations/offeringPrice';
+import {
+  applyDriverToOffering, listDriverDefs, scanWinnerChanges,
+  type DriverCrossover, type DriverDef, type DriverSpec
+} from './decisionDriver';
 
 export interface DecisionOption {
   name: string;
@@ -67,7 +71,54 @@ export function breakEvenSalesLoss(baseline: CalcState, option: CalcState, selec
   return { pct, conservative, reason: 'Total loss on raised services while still matching baseline income' };
 }
 
-export function buildDecision(options: DecisionOption[], selectedCase: RangeCase, annualGoal: number | null = null) {
+interface OfferingGroup {
+  offering: Offering;
+  source: Offering[];
+  /** Offering index each option uses for this matched row; null when absent. */
+  indices: (number | null)[];
+}
+
+/**
+ * Which offering index each option uses for a matched row, from the cased (undriven)
+ * states so a driver change can never alter row identity. Ambiguous duplicate names
+ * stay separate instead of silently pairing unrelated rows.
+ */
+export function buildOfferingGroups(states: CalcState[]): OfferingGroup[] {
+  const groups: OfferingGroup[] = [];
+  states.forEach((state, optionIndex) => {
+    const offerings = state.offerings || [];
+    offerings.forEach((offering, i) => {
+      const group = groups.find(g => g.indices[optionIndex] === null &&
+        matchOffering(offering, offerings, g.source) === g.source.indexOf(g.offering));
+      if (group) group.indices[optionIndex] = i;
+      else groups.push({ offering, source: offerings, indices: states.map((_, oi) => oi === optionIndex ? i : null) });
+    });
+  });
+  return groups;
+}
+
+/** One option's state with the driver applied to its matched row; a no-op returns the same object. */
+function applyDriverToState(state: CalcState, groups: OfferingGroup[], driver: DriverSpec | null, optionIndex: number): CalcState {
+  if (!driver) return state;
+  const idx = groups[driver.rowIndex]?.indices[optionIndex];
+  if (idx === null || idx === undefined) return state;
+  const offerings = state.offerings || [];
+  let changed = false;
+  const driven = offerings.map((o, i) => {
+    if (i !== idx) return o;
+    const next = applyDriverToOffering(o, driver.kind, driver.delta);
+    if (next !== o) changed = true;
+    return next;
+  });
+  return changed ? { ...state, offerings: driven } : state;
+}
+
+export function buildDecision(
+  options: DecisionOption[],
+  selectedCase: RangeCase,
+  annualGoal: number | null = null,
+  driver: DriverSpec | null = null
+) {
   if (options.length < 2 || options.length > 4) throw new Error('Choose two to four saved scenarios.');
   const currency = normalizeCurrency(options[0].state.currency);
   const mode = options[0].state.mode || 'forecast';
@@ -75,34 +126,54 @@ export function buildDecision(options: DecisionOption[], selectedCase: RangeCase
     throw new Error('Choose scenarios with the same currency and calculation mode. Currency conversion and mixed-mode rankings are not supported.');
   }
   const goal = annualGoal !== null && Number.isFinite(annualGoal) && annualGoal >= 0 ? annualGoal : null;
+  const casedStates = options.map(option => applyRangeCase(option.state, selectedCase));
+  const groups = buildOfferingGroups(casedStates);
+  // The driver is a lens over the loaded values: it moves cased copies inside this call
+  // and never reaches saved scenarios, bundles or share links.
+  const drivenStates = casedStates.map((state, optionIndex) => applyDriverToState(state, groups, driver, optionIndex));
   const results = options.map((option, index) => {
-    const state = applyRangeCase(option.state, selectedCase);
+    const state = drivenStates[index];
     const metrics = calc(state, { ignoreCase: true });
     const revenueShare = (confidence: Offering['confidence']) => metrics.revenue > 0
       ? metrics.offeringMetrics.reduce((sum, row, i) => sum + ((state.offerings || [])[i]?.confidence === confidence ? row.revenue : 0), 0) / metrics.revenue * 100 : 0;
     return { ...option, state, metrics, guessRevenuePct: revenueShare('guess'), untaggedRevenuePct: revenueShare(undefined),
       goalGap: goal === null ? null : metrics.income - goal,
-      loss: index === 0 ? null : breakEvenSalesLoss(options[0].state, option.state, selectedCase) };
+      loss: index === 0 ? null : breakEvenSalesLoss(drivenStates[0], state, selectedCase) };
   });
   const baseline = results[0];
   const winner = results.reduce((best, row) => row.metrics.income > best.metrics.income ? row : best, baseline);
-  const offeringRows: { name: string; values: (OfferingMetric | null)[]; inputs: (Offering | null)[] }[] = [];
-  // Keep ambiguous duplicate names separate instead of silently pairing unrelated rows.
-  const groups: { offering: Offering; source: Offering[]; values: (OfferingMetric | null)[]; inputs: (Offering | null)[] }[] = [];
-  results.forEach((result, optionIndex) => {
-    const offerings = result.state.offerings || [];
-    offerings.forEach((offering, i) => {
-      const group = groups.find(g => !g.values[optionIndex] && matchOffering(offering, offerings, g.source) === g.source.indexOf(g.offering));
-      if (group) { group.values[optionIndex] = result.metrics.offeringMetrics[i]; group.inputs[optionIndex] = offering; }
-      else {
-        const values = results.map((): OfferingMetric | null => null);
-        values[optionIndex] = result.metrics.offeringMetrics[i];
-        const inputs = results.map((): Offering | null => null);
-        inputs[optionIndex] = offering;
-        groups.push({ offering, source: offerings, values, inputs });
-      }
+  const offeringRows: { name: string; values: (OfferingMetric | null)[]; inputs: (Offering | null)[]; indices: (number | null)[] }[] =
+    groups.map(g => ({
+      name: g.offering.name || 'Unnamed offering',
+      values: g.indices.map((idx, optionIndex) => idx === null ? null : results[optionIndex].metrics.offeringMetrics[idx]),
+      inputs: g.indices.map((idx, optionIndex) => idx === null ? null : drivenStates[optionIndex].offerings?.[idx] ?? null),
+      indices: g.indices
+    }));
+  const driverDefs = listDriverDefs({ rows: offeringRows, states: casedStates, mode, optionNames: options.map(o => o.name) });
+  return { currency, mode, selectedCase, goal, results, winner, offeringRows, improvement: winner.metrics.income - baseline.metrics.income, driver, driverDefs };
+}
+
+/**
+ * Slider positions where the leading option changes, scanned with calc only (no loss
+ * solver) so a 400-step walk over four options stays interactive. Ties keep the earlier
+ * option, matching buildDecision's winner rule.
+ */
+export function scanDriverCrossovers(
+  options: DecisionOption[],
+  selectedCase: RangeCase,
+  def: DriverDef
+): DriverCrossover[] {
+  const casedStates = options.map(option => applyRangeCase(option.state, selectedCase));
+  const groups = buildOfferingGroups(casedStates);
+  const driver: DriverSpec = { kind: def.kind, rowIndex: def.rowIndex, delta: 0 };
+  const winnerAt = (delta: number) => {
+    let bestIndex = 0;
+    let bestIncome = -Infinity;
+    casedStates.forEach((state, optionIndex) => {
+      const income = calc(applyDriverToState(state, groups, { ...driver, delta }, optionIndex), { ignoreCase: true }).income;
+      if (income > bestIncome) { bestIncome = income; bestIndex = optionIndex; }
     });
-  });
-  groups.forEach(g => offeringRows.push({ name: g.offering.name || 'Unnamed offering', values: g.values, inputs: g.inputs }));
-  return { currency, mode, selectedCase, goal, results, winner, offeringRows, improvement: winner.metrics.income - baseline.metrics.income };
+    return bestIndex;
+  };
+  return scanWinnerChanges(def.min, def.max, def.step, winnerAt);
 }

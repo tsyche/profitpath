@@ -20,7 +20,9 @@ The container runner forwards Playwright arguments. Avoid shell metacharacters i
 
 The default layout remains covered by the existing calculation, scenario, export, mobile, accessibility, security, and tool journeys. Tests use `.spec.ts` files and shared TypeScript helpers.
 
-`decision-workbench.spec.ts` covers both layouts at desktop and 375px: two/three/four options, imported bundles, case/goal/baseline selection, visible aligned scenario headers, axe, CSV/print content, hostile names, portable recipient reloads without draft/library changes, and live membership floor/value-order results.
+`decision-workbench.spec.ts` covers both layouts at desktop and 375px: two/three/four options, imported bundles, case/goal/baseline selection, aligned desktop headers and mobile labels, axe, CSV/print content, hostile names, portable recipient reloads without draft/library changes, the live driver slider (keyboard and number input, verdict flip, crossover marks, scenario non-mutation, share warning, reset cancellation, baseline reordering, case bounds and step alignment), and live membership floor/value-order results.
+
+`decision-layout.spec.ts` covers equal desktop column widths/alignment and mobile metric cards at 375px and 320px in both themes and browsers: four labeled options, unchanged values across resize, long names, no horizontal overflow, keyboard service disclosure, and axe scans. All fixtures are synthetic.
 
 The Workspaces layout (the default; `?layout=workspaces` forces it) has six suites:
 

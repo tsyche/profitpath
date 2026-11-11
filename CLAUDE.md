@@ -72,7 +72,8 @@ src/
 │   ├── reverseCalculator.ts # "What would it take?": bisects each lever against takeHome (after est. tax)
 │   ├── mixOptimizer.ts     # Suggests optimal offering mix for profit/utilization
 │   ├── whatIfWizard.ts     # Guided "What If?" wizard: 9 scenarios as state patches, previewed through calc()
-│   └── decisionWorkbench.ts # 2–4 saved options under an explicit case; annual goal, offering deltas, confidence exposure and total sales-loss threshold on raised services
+│   ├── decisionWorkbench.ts # 2–4 saved options under an explicit case; annual goal, offering deltas, confidence exposure and total sales-loss threshold on raised services
+│   └── decisionDriver.ts   # Display-only live driver lens for the workbench: change-from-loaded bounds, runs×fill conversion, crossover scan
 ├── settings/          # Experience levels and feature gating
 │   └── index.ts          # Settings management and feature gates
 └── test/             # Vitest unit/integration tests (incl. fuzz tests)
@@ -92,7 +93,7 @@ manifest.json        # PWA configuration
 - `src/ui/workspaceNavigation.ts` parses allowlisted views. Navigation preferences and `assets/state/pendingInputs.ts` invalid text stay outside financial state/undo. Incomplete numeric edits retain last-valid results and block save/share. `persistState()` returns success and publishes draft status; shared payloads stay in the URL if storage fails.
 - Workspace scenario URLs carry the active case independently of financial state. Layout switching preserves the model, case, and read-only locks; incomplete edits or draft-save failures block switching. Read-only snapshots keep native control locks across render/reload in both layouts; Create alternative leaves read-only mode. Comparison links/embeds carry both sanitized snapshots and their case, retained in memory for recipient exports without adding saved scenarios or depending on the recipient draft's ranges. Comparison CSV/PDF label the case and annual period and include all eight financial summary rows.
 - Preview experience levels control initial detail; core inputs, specialist tools, Compare, and exports remain reachable at every level. Advanced diagnostics remain in Settings. See [experience levels](docs/experience-levels.md).
-- `DecisionWorkbench.ts` exposes the same 2–4-option decision surface from Scenarios in either layout and Compare in Workspaces. Baseline/case/goal stay outside financial state. Decision links reuse bounded scenario bundles with `decision=1`, case and optional annual goal; recipients review in memory without importing. Existing two-option comparison links remain compatible. [Decision assumptions](FEATURES.md#decision-assumptions) define the supported loss/floor checks.
+- `DecisionWorkbench.ts` exposes the same 2–4-option decision surface from Scenarios in either layout and Compare in Workspaces. Baseline/case/goal stay outside financial state. Its display-only driver slider moves one matched row input (price, clients, group runs, fill %, sales-loss %) across every option through `calc()`, marks leader crossovers, and never persists to scenarios or links. Price deltas use displayed units; baseline changes reset the lens. Decision links reuse bounded scenario bundles with `decision=1`, case and optional annual goal; recipients review in memory without importing. Desktop comparisons use equal-width columns and centered values; mobile groups labeled option values under each metric. Offering details expand on demand and remain fully included in print/PDF. Existing two-option comparison links remain compatible. [Decision assumptions](FEATURES.md#decision-assumptions) define the supported loss/floor checks.
 
 #### 1. Calculation Engine (`src/calculations/index.ts`)
 - **Purpose**: Handles all business logic calculations with caching and debugging support
@@ -224,7 +225,7 @@ To exercise different business situations, use the Templates menu, which loads r
 
 ### Testing Strategy
 
-#### Test Coverage (854 unit tests across 79 files — 853 passing, 1 existing skip — plus 630 Playwright e2e cases across 51 files, Chromium + Firefox)
+#### Test Coverage (866 unit tests across 80 files — 865 passing, 1 existing skip — plus 646 Playwright e2e cases across 52 files, Chromium + Firefox)
 - **Unit Tests**: Business logic, calculation engine, utility functions
 - **Integration Tests**: UI components and user workflows
 - **Fuzz Tests**: Seeded property tests for the calculation engine and input sanitizers (`src/test/fuzz.test.ts`)
